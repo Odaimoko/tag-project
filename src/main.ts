@@ -121,8 +121,6 @@ export default class OdaPmToolPlugin extends Plugin {
         // Remove existing views.
         this.app.workspace.detachLeavesOfType(ManagePageViewId);
 
-        console.log(this.app.vault)
-
         await this.app.workspace.getRightLeaf(false).setViewState({
             type: ManagePageViewId,
             active: true,
