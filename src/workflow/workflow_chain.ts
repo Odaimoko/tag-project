@@ -24,12 +24,54 @@ export function getTypeDefTag(type: WorkflowType): string {
     return Type_Definition_Tags[Workflow_Type_Enum_Array.indexOf(type)];
 }
 
-
-type Step = string;
-
-export interface OdaPmWorkflow {
-    type: WorkflowType;
-    steps: Step[];
+export class OdaPmStep {
+    tag: string;
     name: string;
 
+
+    constructor(tag: string) {
+        this.tag = tag;
+        this.name = tag.replace("#iPm/step/", "");
+    }
+
+    toObject() {
+        return {
+            tag: this.tag,
+            name: this.name,
+        }
+    }
+}
+
+interface I_OdaPmWorkflowType {
+
+    type: WorkflowType;
+    steps: OdaPmStep[];
+    name: string;
+}
+
+export class OdaPmWorkflowType implements I_OdaPmWorkflowType {
+
+    name: string;
+    steps: OdaPmStep[];
+    type: WorkflowType;
+
+    constructor(type: WorkflowType, name: string) {
+
+        this.type = type;
+        this.steps = [];
+        this.name = name;
+    }
+
+    addStep(tag: string) {
+        this.steps.push(new OdaPmStep(tag));
+    }
+
+    // dataview won't render class. so we need to convert to object
+    toObject() {
+        return {
+            type: this.type,
+            steps: this.steps.map(k => k.toObject()),
+            name: this.name,
+        }
+    }
 }
