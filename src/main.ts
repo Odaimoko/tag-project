@@ -103,6 +103,9 @@ export default class OdaPmToolPlugin extends Plugin {
                 console.log(leaf.getViewState().type);
             });
         });
+        this.registerEvent(this.app.metadataCache.on("dataview:metadata-change", () => {
+            this.activateView()
+        }));
     }
 
     // region Example View integration
@@ -123,7 +126,7 @@ export default class OdaPmToolPlugin extends Plugin {
 
         await this.app.workspace.getRightLeaf(false).setViewState({
             type: ManagePageViewId,
-            active: true,
+            active: false,
         });
 
         this.app.workspace.revealLeaf(

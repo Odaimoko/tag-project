@@ -49,7 +49,7 @@ export class OdaPmStep {
     }
 }
 
-export class OdaPmWorkflowType {
+export class OdaPmWorkflow {
 
     name: string;
     stepsDef: OdaPmStep[];
@@ -86,7 +86,6 @@ export class OdaPmWorkflowType {
     toTableRow(currentSteps: OdaPmStep[]) {
         return [...this.stepsDef.map(k => {
             // TODO performance
-            // TODO replace emoji
             return currentSteps.map(m => m.tag).includes(k.tag) ? "✅" : "❌"
         })]
     }
@@ -97,18 +96,17 @@ export class OdaPmTask {
     summary: string;
     // raw
     text: string;
-    type: OdaPmWorkflowType;
+    type: OdaPmWorkflow;
     // One for chain. Many for checkbox
     currentSteps: OdaPmStep[];
 
-    constructor(type: OdaPmWorkflowType, task: STask) {
+    constructor(type: OdaPmWorkflow, task: STask) {
         this.text = task.text;
         this.type = type;
         this.summary = trimTagsFromTask(task)
         this.currentSteps = [];
         for (const tag of task.tags) {
             if (type.includesStep(tag)) {
-                // TODO tag should be global
                 this.currentSteps.push(new OdaPmStep(tag))
             }
         }

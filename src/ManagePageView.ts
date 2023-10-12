@@ -4,7 +4,7 @@ import {
     getDefTags,
     getTypeDefTag, OdaPmStep,
     OdaPmTask,
-    OdaPmWorkflowType,
+    OdaPmWorkflow,
     trimTagsFromTask,
     Workflow_Type_Enum_Array
 } from "./workflow/workflow_chain";
@@ -13,14 +13,13 @@ export const ManagePageViewId = "iPm-Tool-ManageView";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
 
-function createWorkflowFromTask(task: STask): OdaPmWorkflowType[] {
+function createWorkflowFromTask(task: STask): OdaPmWorkflow[] {
     const workflows = []
     const defTags = getDefTags();
     for (const wfType of Workflow_Type_Enum_Array) {
         const defTag = getTypeDefTag(wfType);
         if (task.tags.includes(defTag)) {
-            const workflow: OdaPmWorkflowType = new OdaPmWorkflowType(wfType, trimTagsFromTask(task));
-            // TODO name cannot have space and special chars, it must form a valid tag
+            const workflow: OdaPmWorkflow = new OdaPmWorkflow(wfType, trimTagsFromTask(task));
 
             for (const tag of task.tags) {
                 // exclude def tags. we allow both OdaPmWorkflowType on the same task
@@ -37,7 +36,7 @@ function createWorkflowFromTask(task: STask): OdaPmWorkflowType[] {
 }
 
 // Create an OdaPmTask from a STask
-function createPmTaskFromTask(taskDefTags: string[], taskDefs: OdaPmWorkflowType[], task: STask): OdaPmTask | null {
+function createPmTaskFromTask(taskDefTags: string[], taskDefs: OdaPmWorkflow[], task: STask): OdaPmTask | null {
     // A task can have only one workflow
     for (let i = 0; i < taskDefTags.length; i++) {
         const defTag = taskDefTags[i];
@@ -55,7 +54,7 @@ function createDvEl(container: Element, plugin: Plugin) {
     // DataArray supports some linq expressions
     // SMarkdownPage is a page. STask is a task. SListItemBase is a list item.
     // Replace .file.tasks with index access
-    const taskTypeDefs =
+    const workflows =
         dv.pages()["file"]["tasks"].where(function (k: STask) {
                 for (const defTag of getDefTags()) {
                     if (k.tags.includes(defTag)) return true;
@@ -69,12 +68,12 @@ function createDvEl(container: Element, plugin: Plugin) {
     // Vis
     const defitionstDiv = container.createEl("div", {text: "Task Types"});
     let bodyDiv = defitionstDiv.createEl("body");
-    const torender = taskTypeDefs.map((wf: OdaPmWorkflowType): Literal => {
-        return wf;
+    const torender = workflows.map((wf: OdaPmWorkflow): Literal => {
+        return wf.name;
     })
     dv.list(torender, bodyDiv, plugin);
     // all task def tags
-    const task_def_tags = taskTypeDefs.map(function (k: OdaPmWorkflowType) {
+    const task_def_tags = workflows.map(function (k: OdaPmWorkflow) {
         return k.tag;
     });
     // all tasks that has a workflow
@@ -86,27 +85,29 @@ function createDvEl(container: Element, plugin: Plugin) {
             }
         )
             .map((task: STask) => {
-                return createPmTaskFromTask(task_def_tags, taskTypeDefs, task)
+                return createPmTaskFromTask(task_def_tags, workflows, task)
             })
     ;
     // draw tables
-    for (const taskTypeDef of taskTypeDefs) {
+    for (const workflow of workflows) {
         // find all tasks with this type
         const tasksWithThisType = tasks_with_workflow.filter(function (k: OdaPmTask) {
-            return k.type === taskTypeDef;
-        }).map(function (k: OdaPmTask) {
+            return k.type === workflow;
+        })
+
+        const taskRows = tasksWithThisType.map(function (k: OdaPmTask) {
             return k.toTableRow();
         });
-
-        bodyDiv = defitionstDiv.createEl("body");
+        console.log(`${workflow.name} has ${taskRows.length} tasks`)
+        // TODO use the best practice to create multiple divs
+        bodyDiv = container.createEl(`body-${workflow.name}`);
 
         dv.table(
-            [taskTypeDef.name, ...taskTypeDef.stepsDef.map(function (k: OdaPmStep) {
+            [workflow.name, ...workflow.stepsDef.map(function (k: OdaPmStep) {
                 return k.name;
             })],
-            tasksWithThisType, bodyDiv, plugin);
+            taskRows, bodyDiv, plugin);
     }
-    // TODO make links and tasks actually work in this page
 }
 
 export class ManagePageView extends ItemView {
