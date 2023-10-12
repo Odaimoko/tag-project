@@ -9,13 +9,13 @@ import {
 } from "../data-model/workflow_chain";
 import {getAPI, Literal, STask} from "obsidian-dataview";
 import {ButtonComponent, Plugin, Workspace} from "obsidian";
-import React, {createContext, useContext, useMemo, useState} from "react";
+import React, {useContext, useMemo, useState} from "react";
 import {I_Renderable} from "./i_Renderable";
 
 import {rewriteTask} from "../utils/io_util";
+import {PluginContext} from "./ManagePageView";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
-const PluginContext = createContext<Plugin>(null);
 
 function createWorkflowFromTask(task: STask): OdaPmWorkflow[] {
     const workflows = []
@@ -178,11 +178,12 @@ function openTaskPrecisely(workspace: Workspace, task: STask) {
     );
 }
 
-export function ReactManagePage({plugin}: { plugin: Plugin }) {
+export function ReactManagePage() {
     const workflows = useMemo(getAllWorkflows, []);
     if (workflows.length === 0)
         return <label>No Workflow defined.</label>
 
+    const plugin = useContext(PluginContext);
     // all tasks that has a data-model
     // Memo to avoid re-compute
     const tasks_with_workflow = useMemo(getAllPmTasks, []);
@@ -246,7 +247,7 @@ export function ReactManagePage({plugin}: { plugin: Plugin }) {
     // console.log(`ReactManagePage Render. All managed tasks: ${tasksWithThisType.length}. Row count: ${taskRows.length}`)
     const curWfName = currentWorkflow?.name;
     return (
-        <PluginContext.Provider value={plugin}>
+        <>
             <h2>Filters</h2>
             {workflows.map((workflow: OdaPmWorkflow) => {
                 return (
@@ -268,7 +269,7 @@ export function ReactManagePage({plugin}: { plugin: Plugin }) {
                 headers={[curWfName, ...stepNames]}
                 rows={taskRows}
             />
-        </PluginContext.Provider>
+        </>
     )
 }
 

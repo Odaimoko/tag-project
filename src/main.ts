@@ -106,15 +106,12 @@ export default class OdaPmToolPlugin extends Plugin {
         // When registering intervals, this function will automatically clear the interval when the plugin is disabled.
         this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 
-        this.initExampleView();
+        this.initView();
         this.addRibbonIcon("arrow-big-left", "Print leaf types", () => {
             this.app.workspace.iterateAllLeaves((leaf) => {
                 console.log(leaf.getViewState().type);
             });
         });
-        this.registerEvent(this.app.metadataCache.on("dataview:metadata-change", () => {
-            this.activateView(ManagePageViewId)
-        }));
     }
 
     hasDataviewPlugin() {
@@ -122,7 +119,7 @@ export default class OdaPmToolPlugin extends Plugin {
     }
 
     // region Example View integration
-    private initExampleView() {
+    private initView() {
         this.registerView(
             ManagePageViewId,
             (leaf) => new ManagePageView(leaf, this)

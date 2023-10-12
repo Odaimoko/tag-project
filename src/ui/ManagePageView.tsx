@@ -2,7 +2,7 @@
 import {ItemView, Plugin, WorkspaceLeaf} from "obsidian";
 import {ReactManagePage} from "./viewCreator";
 import {createRoot, Root} from "react-dom/client";
-import {StrictMode} from "react";
+import {createContext, StrictMode} from "react";
 
 export const ManagePageViewId = "iPm-Tool-ManageView";
 
@@ -25,6 +25,14 @@ export class ManagePageView extends ItemView {
     }
 
     async onOpen() {
+        this.registerEvent(this.app.metadataCache.on("dataview:metadata-change", () => {
+            this.renderPage()
+        }));
+        this.renderPage();
+    }
+
+
+    private renderPage() {
         // TODOQ Why [1]? What is the first child?
         const container = this.containerEl.children[1];
 
@@ -36,11 +44,12 @@ export class ManagePageView extends ItemView {
         this.root = createRoot(this.containerEl.children[1]); // Override the previous container
         this.root.render(
             <StrictMode>
-                <ReactManagePage plugin={this.plugin}/>
+                <PluginContext.Provider value={this.plugin}>
+                    <ReactManagePage/>
+                </PluginContext.Provider>
             </StrictMode>,
         );
     }
-
 
     async onClose() {
         this.root?.unmount();
@@ -48,3 +57,4 @@ export class ManagePageView extends ItemView {
 
 }
 
+export const PluginContext = createContext<Plugin>(null);
