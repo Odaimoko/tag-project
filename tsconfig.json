@@ -17,8 +17,10 @@
       "ES6",
       "ES7"
     ],
-    "jsx": "react-jsx"
     // Essential. In the tutorial it uses "preserve" but it's wrong.
+    "jsx": "react-jsx",
+    // add this to avoid complaints about "React exported with export ="  
+    "allowSyntheticDefaultImports": true
   },
   "include": [
     "**/*.ts"

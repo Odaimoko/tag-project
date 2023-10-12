@@ -9,6 +9,7 @@ import {
 } from "./workflow/workflow_chain";
 import {getAPI, Literal, STask} from "obsidian-dataview";
 import {ButtonComponent, Plugin} from "obsidian";
+import React, {useMemo, useState} from "react";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
 function createWorkflowFromTask(task: STask): OdaPmWorkflow[] {
@@ -72,22 +73,24 @@ function renderTable(tasks_with_workflow: OdaPmTask[], workflow: OdaPmWorkflow, 
         [workflow.name, ...stepNames], taskRows, tableDiv, plugin);
 }
 
+export function getAllWorkflows() {
+    return dv.pages()["file"]["tasks"].where(function (k: STask) {
+            for (const defTag of getDefTags()) {
+                if (k.tags.includes(defTag)) return true;
+            }
+            return false;
+        }
+    )
+        .flatMap((task: STask) => createWorkflowFromTask(task));
+}
+
 export function viewCreator(container: Element, plugin: Plugin) {
 
     // const f = await dv.pages() // DataArray<SMarkdownPage[]>, 
     // DataArray supports some linq expressions
     // SMarkdownPage is a page. STask is a task. SListItemBase is a list item.
     // Replace .file.tasks with index access
-    const workflows =
-        dv.pages()["file"]["tasks"].where(function (k: STask) {
-                for (const defTag of getDefTags()) {
-                    if (k.tags.includes(defTag)) return true;
-                }
-                return false;
-            }
-        )
-            .flatMap((task: STask) => createWorkflowFromTask(task))
-    ;
+    const workflows = getAllWorkflows();
 
     // Vis
     const definitionDiv = container.createEl("div", {text: "Task Types"});
@@ -132,8 +135,93 @@ export function viewCreator(container: Element, plugin: Plugin) {
             }
         )
         renderTable(tasks_with_workflow, workflow, container, plugin);
-
-
     }
 
+}
+
+export function ReactManagePage() {
+    const workflows = useMemo(getAllWorkflows, []);
+    // all tasks that has a workflow
+    // Memo to avoid re-compute
+    const tasks_with_workflow = useMemo(getAllPmTasks, []);
+
+    function getAllPmTasks() {
+        const task_def_tags = workflows.map(function (k: OdaPmWorkflow) {
+            return k.tag;
+        });
+        return dv.pages()["file"]["tasks"].where(function (k: STask) {
+                for (const defTag of task_def_tags) {
+                    if (k.tags.includes(defTag)) return true;
+                }
+                return false;
+            }
+        )
+            .map((task: STask) => {
+                return createPmTaskFromTask(task_def_tags, workflows, task)
+            })
+            ;
+    }
+
+    const [currentWorkflow, setCurrentWorkflow] = useState<OdaPmWorkflow>(null);
+    const usingWorkflow = currentWorkflow !== null ? currentWorkflow : workflows[0];
+    const tasksWithThisType = tasks_with_workflow.filter(function (k: OdaPmTask) {
+        return k.type === usingWorkflow;
+    })
+
+    const stepNames = usingWorkflow.stepsDef.map(function (k: I_OdaPmStep) {
+        return k.name;
+    });
+    const taskRows = tasksWithThisType.map(function (k: OdaPmTask) {
+        return k.toTableRow();
+    });
+    console.log(`ReactManagePage Render. All managed tasks: ${tasksWithThisType.length}. Row count: ${taskRows.length}`)
+    return (
+        <>
+            <h2>Filters</h2>
+            {workflows.map((workflow: OdaPmWorkflow) => {
+                return (
+                    <view key={workflow.name}>
+                        <button onClick={() => setCurrentWorkflow(workflow)}>{workflow.name}</button>
+                    </view>
+                )
+            })}
+            <h2>Workflow: {usingWorkflow?.name}</h2>
+            <DataTable
+                tableTitle={usingWorkflow?.name}
+                headers={[usingWorkflow.name, ...stepNames]}
+                rows={taskRows}
+            ></DataTable>
+        </>
+    )
+}
+
+const DataTable = ({
+                       tableTitle,
+                       headers, rows
+                   }: { tableTitle: string, headers: Literal[], rows: Literal[][] }) => {
+    return (
+        <table key={tableTitle}>
+            <thead>
+            <tr>
+                {headers.map((header: string) => {
+                    console.log(`header  ${header}`)
+                    return <th key={header}>{header}</th>;
+                })}
+            </tr>
+            </thead>
+            <tbody>
+            {rows.map((items, index) => (
+                <tr key={index}>
+                    {items.map(
+                        function (k) {
+                            console.log(`Item  ${index} ${k}`)
+
+                            return <td key={`${tableTitle}_${index}`}>{k}</td>;
+                        }
+                    )}
+                </tr>))
+            }
+            </tbody>
+        </table>
+    );
 }
