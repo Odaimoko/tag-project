@@ -55,6 +55,7 @@ class OdaPmStep implements I_OdaPmStep {
 }
 
 const globalStepMap: Map<string, OdaPmStep> = new Map<string, OdaPmStep>();
+const globalOdaPmWorkflowMap: Map<string, OdaPmWorkflow> = new Map<string, OdaPmWorkflow>();
 
 /**
  * use global Pm Step library instead of creating new instances
@@ -69,7 +70,28 @@ export function getOrCreateStep(tag: string): OdaPmStep {
     return step;
 }
 
-export class OdaPmWorkflow {
+// TODO temporarily use name as the identifier. Need to use both name and type
+export function getOrCreateWorkflow(type: WorkflowType, name: string): OdaPmWorkflow {
+    if (globalOdaPmWorkflowMap.has(name)) {
+        return <OdaPmWorkflow>globalOdaPmWorkflowMap.get(name);
+    }
+    const workflow = new OdaPmWorkflow(type, name);
+    globalOdaPmWorkflowMap.set(name, workflow);
+    return workflow;
+}
+
+export interface I_OdaPmWorkflow {
+
+    name: string;
+    stepsDef: OdaPmStep[];
+    type: WorkflowType;
+    tag: string;
+    clearSteps: () => void
+    addStep: (tag: string) => void
+    includesStep: (tag: string) => boolean
+}
+
+class OdaPmWorkflow implements I_OdaPmWorkflow {
     name: string;
     stepsDef: OdaPmStep[];
     type: WorkflowType;
@@ -101,6 +123,10 @@ export class OdaPmWorkflow {
         }
     }
 
+    clearSteps(): void {
+        this.stepsDef = []
+    }
+
 
 }
 
@@ -110,11 +136,11 @@ export class OdaPmTask {
     summary: string;
     // raw
     text: string;
-    type: OdaPmWorkflow;
+    type: I_OdaPmWorkflow;
     // One for chain. Many for checkbox
     currentSteps: OdaPmStep[];
 
-    constructor(type: OdaPmWorkflow, task: STask) {
+    constructor(type: I_OdaPmWorkflow, task: STask) {
         this.boundTask = task;
         this.text = task.text;
         this.type = type;

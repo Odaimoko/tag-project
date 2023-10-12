@@ -1,30 +1,31 @@
 import {
-    getDefTags,
+    getDefTags, getOrCreateWorkflow,
     getTypeDefTag,
-    I_OdaPmStep,
+    I_OdaPmStep, I_OdaPmWorkflow,
     OdaPmTask,
-    OdaPmWorkflow,
+
     trimTagsFromTask,
     Workflow_Type_Enum_Array
 } from "../data-model/workflow_chain";
 import {getAPI, Literal, STask} from "obsidian-dataview";
 import {ButtonComponent, Plugin, Workspace} from "obsidian";
-import React, {useContext, useMemo, useState} from "react";
+import React, {useContext, useEffect, useMemo, useState} from "react";
 import {I_Renderable} from "./i_Renderable";
 
 import {rewriteTask} from "../utils/io_util";
-import {PluginContext} from "./ManagePageView";
+import {DataviewMetadataChangeEvent, PluginContext} from "./ManagePageView";
+import {EventEmitter} from "events";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
 
-function createWorkflowFromTask(task: STask): OdaPmWorkflow[] {
+function createWorkflowFromTask(task: STask): I_OdaPmWorkflow[] {
     const workflows = []
     const defTags = getDefTags();
     for (const wfType of Workflow_Type_Enum_Array) {
         const defTag = getTypeDefTag(wfType);
         if (task.tags.includes(defTag)) {
-            const workflow: OdaPmWorkflow = new OdaPmWorkflow(wfType, trimTagsFromTask(task));
-
+            const workflow: I_OdaPmWorkflow = getOrCreateWorkflow(wfType, trimTagsFromTask(task));
+            workflow.clearSteps()
             for (const tag of task.tags) {
                 // exclude def tags. we allow both OdaPmWorkflowType on the same task
                 if (defTags.includes(tag)) {
@@ -40,7 +41,7 @@ function createWorkflowFromTask(task: STask): OdaPmWorkflow[] {
 }
 
 // Create an OdaPmTask from a STask
-function createPmTaskFromTask(taskDefTags: string[], taskDefs: OdaPmWorkflow[], task: STask): OdaPmTask | null {
+function createPmTaskFromTask(taskDefTags: string[], taskDefs: I_OdaPmWorkflow[], task: STask): OdaPmTask | null {
     // A task can have only one data-model
     for (let i = 0; i < taskDefTags.length; i++) {
         const defTag = taskDefTags[i];
@@ -59,7 +60,7 @@ function createPmTaskFromTask(taskDefTags: string[], taskDefs: OdaPmWorkflow[], 
  * @param container
  * @param plugin
  */
-function renderTable(tasks_with_workflow: OdaPmTask[], workflow: OdaPmWorkflow, container: Element, plugin: Plugin) {
+function renderTable(tasks_with_workflow: OdaPmTask[], workflow: I_OdaPmWorkflow, container: Element, plugin: Plugin) {
     // find all tasks with this type
     const tasksWithThisType = tasks_with_workflow.filter(function (k: OdaPmTask) {
         return k.type === workflow;
@@ -115,12 +116,12 @@ function viewCreator(container: Element, plugin: Plugin) {
     // Vis
     const definitionDiv = container.createEl("div", {text: "Task Types"});
     const bodyDiv = definitionDiv.createEl("body");
-    const torender = workflows.map((wf: OdaPmWorkflow): Literal => {
+    const torender = workflows.map((wf: I_OdaPmWorkflow): Literal => {
         return wf.name;
     })
     dv.list(torender, bodyDiv, plugin);
     // all task def tags
-    const task_def_tags = workflows.map(function (k: OdaPmWorkflow) {
+    const task_def_tags = workflows.map(function (k: I_OdaPmWorkflow) {
         return k.tag;
     });
     // all tasks that has a data-model
@@ -178,18 +179,37 @@ function openTaskPrecisely(workspace: Workspace, task: STask) {
     );
 }
 
-export function ReactManagePage() {
-    const workflows = useMemo(getAllWorkflows, []);
+export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
+    // only for re-render
+    const [rerenderState, setRerenderState] = useState(0);
+
+    function triggerRerender() {
+        console.log(`ReactManagePage triggerRerender ${rerenderState + 1}`)
+        setRerenderState(rerenderState + 1)
+    }
+
+    // How to prevent add listener multiple times? use custom emitter instead of obsidian's event emitter
+    useEffect(() => {
+        console.log("ReactManagePage addListener")
+        eventCenter?.addListener(DataviewMetadataChangeEvent, triggerRerender)
+
+        return () => {
+            console.log("ReactManagePage removeListener")
+            eventCenter?.removeListener(DataviewMetadataChangeEvent, triggerRerender)
+        }
+    }, [rerenderState]);
+    const workflows = useMemo(getAllWorkflows, [rerenderState]);
     if (workflows.length === 0)
         return <label>No Workflow defined.</label>
+
 
     const plugin = useContext(PluginContext);
     // all tasks that has a data-model
     // Memo to avoid re-compute
-    const tasks_with_workflow = useMemo(getAllPmTasks, []);
+    const tasks_with_workflow = useMemo(getAllPmTasks, [rerenderState]);
 
     function getAllPmTasks() {
-        const task_def_tags = workflows.map(function (k: OdaPmWorkflow) {
+        const task_def_tags = workflows.map(function (k: I_OdaPmWorkflow) {
             return k.tag;
         });
         return dv.pages()["file"]["tasks"].where(function (k: STask) {
@@ -205,10 +225,10 @@ export function ReactManagePage() {
             ;
     }
 
-    const [currentWorkflow, setCurrentWorkflow] = useState<OdaPmWorkflow>(workflows[0]);
+    const [currentWorkflow, setCurrentWorkflow] = useState<I_OdaPmWorkflow>(workflows[0]);
     const [includeCompleted, setIncludeCompleted] = useState(true);
-
     const workspace = plugin.app.workspace;
+    // Here we use reference equality to filter tasks. Using reference is prone to bugs since we tend to new a lot in js, but using string id is memory consuming. Trade-off.
     const tasksWithThisType = tasks_with_workflow.filter(function (k: OdaPmTask) {
         return k.type === currentWorkflow && (includeCompleted || !k.boundTask.checked);
     })
@@ -244,12 +264,12 @@ export function ReactManagePage() {
         return row;
     });
 
-    // console.log(`ReactManagePage Render. All managed tasks: ${tasksWithThisType.length}. Row count: ${taskRows.length}`)
     const curWfName = currentWorkflow?.name;
+    // console.log(`ReactManagePage Render. All tasks: ${tasks_with_workflow.length}. Filtered Tasks: ${tasksWithThisType.length}. Workflow: ${curWfName}. IncludeCompleted: ${includeCompleted}`)
     return (
         <>
-            <h2>Filters</h2>
-            {workflows.map((workflow: OdaPmWorkflow) => {
+            <h2>{workflows.length} Filter(s)</h2>
+            {workflows.map((workflow: I_OdaPmWorkflow) => {
                 return (
                     <view key={workflow.name}>
                         <button onClick={() => setCurrentWorkflow(workflow)}>{workflow.name}</button>
@@ -295,8 +315,8 @@ function OdaPmTaskCell({oTask, step}: { oTask: OdaPmTask, step: I_OdaPmStep }) {
 
 // For checkbox
 function odaWorkflowToTableCells(oTask: OdaPmTask) {
-    const workflow: OdaPmWorkflow = oTask.type;
-    return [...workflow.stepsDef.map(step => {
+    const workflow: I_OdaPmWorkflow = oTask.type;
+    return [...workflow.stepsDef.map((step: I_OdaPmStep) => {
         return <OdaPmTaskCell key={step.name} oTask={oTask} step={step}/>
     })]
 }
