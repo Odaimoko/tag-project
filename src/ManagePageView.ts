@@ -2,7 +2,7 @@ import {ButtonComponent, ItemView, MarkdownView, Plugin, WorkspaceLeaf} from "ob
 import {getAPI, Literal, STask} from "obsidian-dataview";
 import {
     getDefTags,
-    getTypeDefTag, OdaPmStep,
+    getTypeDefTag, I_OdaPmStep,
     OdaPmTask,
     OdaPmWorkflow,
     trimTagsFromTask,
@@ -118,11 +118,19 @@ function createDvEl(container: Element, plugin: Plugin) {
         // console.log(`${workflow.name} has ${taskRows.length} tasks`)
         // TODO use the best practice to create multiple divs
         const tableDiv = container.createEl(`body-${workflow.name}`);
+        // const buttonComp = new ButtonComponent(tableDiv)
+        // buttonComp.setButtonText("Log Link")
+        // buttonComp.onClick(
+        //     () => {
+        //         console.log(tasksWithThisType[0].boundTask.link) // TODO Is this dataview Link? Yep. But we cannot click it. WHY?
+        //     }
+        // )
+        const stepNames = workflow.stepsDef.map(function (k: I_OdaPmStep) {
+            return k.name;
+        });
         dv.table(
-            [workflow.name, ...workflow.stepsDef.map(function (k: OdaPmStep) {
-                return k.name;
-            })],
-            taskRows, tableDiv, plugin);
+            [workflow.name, ...stepNames], taskRows, tableDiv, plugin);
+
     }
 }
 

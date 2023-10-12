@@ -30,8 +30,12 @@ export function getTypeDefTag(type: WorkflowType): string {
     return Type_Definition_Tags[Workflow_Type_Enum_Array.indexOf(type)];
 }
 
+export interface I_OdaPmStep {
+    tag: string;
+    name: string;
+}
 
-export class OdaPmStep {
+class OdaPmStep implements I_OdaPmStep {
     tag: string;
     name: string;
 
@@ -47,6 +51,21 @@ export class OdaPmStep {
             name: this.name,
         }
     }
+}
+
+const globalStepMap: Map<string, OdaPmStep> = new Map<string, OdaPmStep>();
+
+/**
+ * use global Pm Step library instead of creating new instances
+ * @param tag
+ */
+export function getOrCreateStep(tag: string): OdaPmStep {
+    if (globalStepMap.has(tag)) {
+        return <OdaPmStep>globalStepMap.get(tag);
+    }
+    const step = new OdaPmStep(tag);
+    globalStepMap.set(tag, step);
+    return step;
 }
 
 export class OdaPmWorkflow {
@@ -65,7 +84,7 @@ export class OdaPmWorkflow {
     }
 
     addStep(tag: string) {
-        this.stepsDef.push(new OdaPmStep(tag));
+        this.stepsDef.push(getOrCreateStep(tag));
     }
 
     includesStep(tag: string): boolean {
@@ -92,6 +111,7 @@ export class OdaPmWorkflow {
 }
 
 export class OdaPmTask {
+    boundTask: STask;
     // without any step and typeDef tags
     summary: string;
     // raw
@@ -101,13 +121,14 @@ export class OdaPmTask {
     currentSteps: OdaPmStep[];
 
     constructor(type: OdaPmWorkflow, task: STask) {
+        this.boundTask = task;
         this.text = task.text;
         this.type = type;
         this.summary = trimTagsFromTask(task)
         this.currentSteps = [];
         for (const tag of task.tags) {
             if (type.includesStep(tag)) {
-                this.currentSteps.push(new OdaPmStep(tag))
+                this.currentSteps.push(getOrCreateStep(tag))
             }
         }
     }
@@ -124,7 +145,7 @@ export class OdaPmTask {
     // For checkbox 
     toTableRow() {
         // TODO this link is not clickable
-        return [`[[${this.summary}]]`, ...this.type.toTableRow(this.currentSteps)]
+        return [`${this.summary}`, ...this.type.toTableRow(this.currentSteps)]
     }
 }
 

@@ -1,5 +1,4 @@
 import {App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting} from 'obsidian';
-import {ExampleView, VIEW_TYPE_EXAMPLE} from "./Samples/exampleView";
 import {ManagePageView, ManagePageViewId} from "./ManagePageView";
 
 
