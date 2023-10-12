@@ -1,7 +1,9 @@
 import {App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting} from 'obsidian';
 import {ManagePageView, ManagePageViewId} from "./ui/ManagePageView";
 import {React_Example_View_Id, ReactExampleView} from "./Samples/reactExample";
+import {ONotice} from "./utils/ONotice";
 
+export const PLUGIN_NAME = 'iPm';
 
 // Remember to rename these classes and interfaces!
 
@@ -13,15 +15,24 @@ const DEFAULT_SETTINGS: OdaPmToolSettings = {
     mySetting: 'default'
 }
 
-// const Ep = ExamplePlugin;
-// export default Ep;
-
 export default class OdaPmToolPlugin extends Plugin {
     settings: OdaPmToolSettings;
 
     async onload() {
-        console.log('loading plugin')
+        console.log(this.app)
+        if (!this.hasDataviewPlugin()) {
+            new ONotice("Dataview plugin is not enabled. Please enable it to use this plugin.");
 
+            this.registerEvent(this.app.metadataCache.on("dataview:index-ready", () => {
+                this.initPlugin()
+            }));
+            return;
+        }
+
+        await this.initPlugin();
+    }
+
+    private async initPlugin() {
         await this.loadSettings();
         // region Ribbon integration
         // This creates an icon in the left ribbon.
@@ -106,6 +117,10 @@ export default class OdaPmToolPlugin extends Plugin {
         this.registerEvent(this.app.metadataCache.on("dataview:metadata-change", () => {
             this.activateView(ManagePageViewId)
         }));
+    }
+
+    hasDataviewPlugin() {
+        return this.app.plugins.enabledPlugins.has("dataview");
     }
 
     // region Example View integration

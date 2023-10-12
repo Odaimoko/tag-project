@@ -12,7 +12,7 @@ import {ButtonComponent, Plugin, Workspace} from "obsidian";
 import React, {createContext, useContext, useMemo, useState} from "react";
 import {I_Renderable} from "./i_Renderable";
 
-import {rewriteTask} from "../io_util";
+import {rewriteTask} from "../utils/io_util";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
 const PluginContext = createContext<Plugin>(null);
@@ -222,7 +222,7 @@ export function ReactManagePage({plugin}: { plugin: Plugin }) {
                               () => {
                                   // k.boundTask.checked = !k.boundTask.checked// No good, this is dataview cache.
                                   const nextStatus = k.boundTask.checked ? " " : "x";
-                                  // TODO performace Change the file content will trigger dataview re-index, thus the whole page will re-render. This will unmount the whole page and re-mount it. We should use a better way to reserve which page we are in.
+                                  // TODO performace
                                   rewriteTask(plugin.app.vault, k.boundTask,
                                       nextStatus)
                               }
