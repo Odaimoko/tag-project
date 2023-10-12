@@ -104,7 +104,7 @@ export default class OdaPmToolPlugin extends Plugin {
             });
         });
         this.registerEvent(this.app.metadataCache.on("dataview:metadata-change", () => {
-            this.activateView()
+            this.activateView(ManagePageViewId)
         }));
     }
 
@@ -200,3 +200,4 @@ class SampleSettingTab extends PluginSettingTab {
                 }));
     }
 }
+
