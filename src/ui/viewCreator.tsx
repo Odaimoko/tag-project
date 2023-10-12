@@ -13,7 +13,11 @@ import React, {Fragment, useContext, useEffect, useMemo, useState} from "react";
 import {I_Renderable} from "./i_Renderable";
 
 import {rewriteTask} from "../utils/io_util";
-import {DataviewMetadataChangeEvent, PluginContext} from "./ManagePageView";
+import {
+    DataviewAPIReadyEvent,
+    DataviewMetadataChangeEvent,
+    PluginContext
+} from "./ManagePageView";
 import {EventEmitter} from "events";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
@@ -184,7 +188,8 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
     const [rerenderState, setRerenderState] = useState(0);
 
     function triggerRerender() {
-        setRerenderState(rerenderState + 1)
+        console.log(`ReactManagePage rerender triggered. ${rerenderState + 1}`)
+        setRerenderState((prevState) => prevState + 1)
     }
 
     // How to prevent add listener multiple times? use custom emitter instead of obsidian's event emitter
@@ -195,15 +200,26 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
             eventCenter?.removeListener(DataviewMetadataChangeEvent, triggerRerender)
         }
     }, [rerenderState]);
-    const workflows = useMemo(getAllWorkflows, [rerenderState]);
-    if (workflows.length === 0)
-        return <label>No Workflow defined.</label>
 
+    useEffect(() => {
+        eventCenter?.addListener(DataviewAPIReadyEvent, triggerRerender)
+
+        return () => {
+            eventCenter?.removeListener(DataviewAPIReadyEvent, triggerRerender)
+        }
+    }, [rerenderState]);
+
+    // place all hooks before return. React doesn't allow the order to be changed.
+    const workflows = useMemo(getAllWorkflows, [rerenderState]);
+
+    const [currentWorkflow, setCurrentWorkflow] = useState<I_OdaPmWorkflow>(workflows[0]);
+    const [includeCompleted, setIncludeCompleted] = useState(false);
 
     const plugin = useContext(PluginContext);
-    // all tasks that has a data-model
+    // all tasks that has a workflow
     // Memo to avoid re-compute
     const tasks_with_workflow = useMemo(getAllPmTasks, [rerenderState]);
+    const [sortCode, setSortCode] = useState(0); // 0 = unsorted, 1 = asc, 2 = desc
 
     function getAllPmTasks() {
         const task_def_tags = workflows.map(function (k: I_OdaPmWorkflow) {
@@ -222,20 +238,26 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
             ;
     }
 
-    const [currentWorkflow, setCurrentWorkflow] = useState<I_OdaPmWorkflow>(workflows[0]);
-    const [includeCompleted, setIncludeCompleted] = useState(true);
+    if (workflows.length === 0)
+        return <label>No Workflow defined.</label>
+
+
     const workspace = plugin.app.workspace;
+    if (!currentWorkflow) {
+        setCurrentWorkflow(workflows[0])
+        // We return here because if current workflow is not initialized, we cannot get the stepsDef, TypeError will be thrown.
+        // Remember React will re-render after this whole function (and further component calls). It won't stop at setState calls.
+        return null
+    }
     const stepNames = currentWorkflow.stepsDef.map(function (k: I_OdaPmStep) {
         return k.name;
     });
 
     const curWfName = currentWorkflow?.name;
-    // console.log(`ReactManagePage Render. All tasks: ${tasks_with_workflow.length}. Filtered Tasks: ${tasksWithThisType.length}. Workflow: ${curWfName}. IncludeCompleted: ${includeCompleted}`)
     const headers = [curWfName, ...stepNames];
 
     // sort
     const totalSortMethods = 3;
-    const [sortCode, setSortCode] = useState(0); // 0 = unsorted, 1 = asc, 2 = desc
     const nextSortCode = (sortCode + 1) % totalSortMethods;
 
     // Here we use reference equality to filter tasks. Using reference is prone to bugs since we tend to new a lot in js, but using string id is memory consuming. Trade-off.
@@ -284,6 +306,7 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
         return row;
     });
 
+    console.log(`ReactManagePage Render. All tasks: ${tasks_with_workflow.length}. Filtered Tasks: ${tasksWithThisType.length}. Workflow: ${curWfName}. IncludeCompleted: ${includeCompleted}`)
     return (
         <>
             <h2>{workflows.length} Filter(s)</h2>
@@ -375,9 +398,11 @@ const DataTable = ({
             <thead>
             <tr>
                 {headers.map((header: string, index) => {
-                    return <th key={header}><a onClick={() => {
-                        onHeaderClicked?.(index)
-                    }}>{header}</a></th>;
+                    return <th key={header}>
+                        <div onClick={() => {
+                            onHeaderClicked?.(index)
+                        }}>{header}</div>
+                    </th>;
                 })}
             </tr>
             </thead>
