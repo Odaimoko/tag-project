@@ -7,9 +7,9 @@ import {
     trimTagsFromTask,
     Workflow_Type_Enum_Array
 } from "../data-model/workflow_chain";
-import {getAPI, Literal, STask} from "obsidian-dataview";
+import {DataArray, getAPI, Literal, STask} from "obsidian-dataview";
 import {ButtonComponent, Plugin, Workspace} from "obsidian";
-import React, {useContext, useEffect, useMemo, useState} from "react";
+import React, {Fragment, useContext, useEffect, useMemo, useState} from "react";
 import {I_Renderable} from "./i_Renderable";
 
 import {rewriteTask} from "../utils/io_util";
@@ -184,17 +184,14 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
     const [rerenderState, setRerenderState] = useState(0);
 
     function triggerRerender() {
-        console.log(`ReactManagePage triggerRerender ${rerenderState + 1}`)
         setRerenderState(rerenderState + 1)
     }
 
     // How to prevent add listener multiple times? use custom emitter instead of obsidian's event emitter
     useEffect(() => {
-        console.log("ReactManagePage addListener")
         eventCenter?.addListener(DataviewMetadataChangeEvent, triggerRerender)
 
         return () => {
-            console.log("ReactManagePage removeListener")
             eventCenter?.removeListener(DataviewMetadataChangeEvent, triggerRerender)
         }
     }, [rerenderState]);
@@ -228,15 +225,38 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
     const [currentWorkflow, setCurrentWorkflow] = useState<I_OdaPmWorkflow>(workflows[0]);
     const [includeCompleted, setIncludeCompleted] = useState(true);
     const workspace = plugin.app.workspace;
-    // Here we use reference equality to filter tasks. Using reference is prone to bugs since we tend to new a lot in js, but using string id is memory consuming. Trade-off.
-    const tasksWithThisType = tasks_with_workflow.filter(function (k: OdaPmTask) {
-        return k.type === currentWorkflow && (includeCompleted || !k.boundTask.checked);
-    })
-
     const stepNames = currentWorkflow.stepsDef.map(function (k: I_OdaPmStep) {
         return k.name;
     });
-    const taskRows = tasksWithThisType.map(function (k: OdaPmTask) {
+
+    const curWfName = currentWorkflow?.name;
+    // console.log(`ReactManagePage Render. All tasks: ${tasks_with_workflow.length}. Filtered Tasks: ${tasksWithThisType.length}. Workflow: ${curWfName}. IncludeCompleted: ${includeCompleted}`)
+    const headers = [curWfName, ...stepNames];
+
+    // sort
+    const totalSortMethods = 3;
+    const [sortCode, setSortCode] = useState(0); // 0 = unsorted, 1 = asc, 2 = desc
+    const nextSortCode = (sortCode + 1) % totalSortMethods;
+
+    // Here we use reference equality to filter tasks. Using reference is prone to bugs since we tend to new a lot in js, but using string id is memory consuming. Trade-off.
+    const tasksWithThisType: DataArray<OdaPmTask> = tasks_with_workflow.filter(function (k: OdaPmTask) {
+        return k.type === currentWorkflow && (includeCompleted || !k.boundTask.checked);
+    })
+    const tasksArray = tasksWithThisType.array();
+    const ascending = sortCode === 1;
+    if (sortCode !== 0) {
+        tasksArray.sort(
+            function (a: OdaPmTask, b: OdaPmTask) {
+                // Case-insensitive compare string 
+                // a.b = ascending
+                if (ascending)
+                    return a.summary.localeCompare(b.summary)
+                else return b.summary.localeCompare(a.summary)
+            }, sortCode
+        )
+    }
+
+    const taskRows = tasksArray.map(function (k: OdaPmTask) {
         const row = odaTaskToTableRow(k)
         row[0] = (
             <>
@@ -264,16 +284,14 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
         return row;
     });
 
-    const curWfName = currentWorkflow?.name;
-    // console.log(`ReactManagePage Render. All tasks: ${tasks_with_workflow.length}. Filtered Tasks: ${tasksWithThisType.length}. Workflow: ${curWfName}. IncludeCompleted: ${includeCompleted}`)
     return (
         <>
             <h2>{workflows.length} Filter(s)</h2>
             {workflows.map((workflow: I_OdaPmWorkflow) => {
                 return (
-                    <view key={workflow.name}>
+                    <Fragment key={workflow.name}>
                         <button onClick={() => setCurrentWorkflow(workflow)}>{workflow.name}</button>
-                    </view>
+                    </Fragment>
                 )
             })}
             <Checkbox text={"Include Completed"} onChanged={
@@ -283,10 +301,20 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
             }
                       initialState={includeCompleted}
             />
+            <label> Sort </label>
+            <button onClick={
+                () => {
+                    // Loop
+                    setSortCode(nextSortCode)
+                }
+            }
+            >
+                {sortCode === 0 ? "By Appearance" : ascending ? "Ascending" : "Descending"}
+            </button>
             <h2> Workflow: {curWfName}</h2>
             <DataTable
                 tableTitle={curWfName}
-                headers={[curWfName, ...stepNames]}
+                headers={headers}
                 rows={taskRows}
             />
         </>
@@ -325,7 +353,6 @@ function odaWorkflowToTableCells(oTask: OdaPmTask) {
 // region Workflow Ui wrapper
 function odaTaskToTableRow(oTask: OdaPmTask): I_Renderable[] {
 
-    // TODO this link is not clickable
     return [`${oTask.summary}`, ...odaWorkflowToTableCells(oTask)]
 }
 
@@ -336,15 +363,21 @@ function odaTaskToTableRow(oTask: OdaPmTask): I_Renderable[] {
 
 const DataTable = ({
                        tableTitle,
-                       headers, rows
-                   }: { tableTitle: string, headers: I_Renderable[], rows: I_Renderable[][] }) => {
+                       headers, rows,
+                       onHeaderClicked
+                   }: {
+    tableTitle: string, headers: I_Renderable[], rows: I_Renderable[][],
+    onHeaderClicked?: (arg0: number) => void
+}) => {
 
     return (
         <table key={tableTitle}>
             <thead>
             <tr>
-                {headers.map((header: string) => {
-                    return <th key={header}>{header}</th>;
+                {headers.map((header: string, index) => {
+                    return <th key={header}><a onClick={() => {
+                        onHeaderClicked?.(index)
+                    }}>{header}</a></th>;
                 })}
             </tr>
             </thead>
