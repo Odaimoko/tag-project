@@ -9,12 +9,14 @@ import {
 } from "../data-model/workflow_chain";
 import {getAPI, Literal, STask} from "obsidian-dataview";
 import {ButtonComponent, Plugin, Workspace} from "obsidian";
-import React, {useMemo, useState} from "react";
+import React, {createContext, useContext, useMemo, useState} from "react";
 import {I_Renderable} from "./i_Renderable";
 
 import {rewriteTask} from "../io_util";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
+const PluginContext = createContext<Plugin>(null);
+
 function createWorkflowFromTask(task: STask): OdaPmWorkflow[] {
     const workflows = []
     const defTags = getDefTags();
@@ -50,6 +52,13 @@ function createPmTaskFromTask(taskDefTags: string[], taskDefs: OdaPmWorkflow[], 
     return null;
 }
 
+/**
+ * @deprecated
+ * @param tasks_with_workflow
+ * @param workflow
+ * @param container
+ * @param plugin
+ */
 function renderTable(tasks_with_workflow: OdaPmTask[], workflow: OdaPmWorkflow, container: Element, plugin: Plugin) {
     // find all tasks with this type
     const tasksWithThisType = tasks_with_workflow.filter(function (k: OdaPmTask) {
@@ -57,7 +66,7 @@ function renderTable(tasks_with_workflow: OdaPmTask[], workflow: OdaPmWorkflow, 
     })
 
     const taskRows = tasksWithThisType.map(function (k: OdaPmTask) {
-        return k.toTableRow();
+        return odaTaskToTableRow(k)
     });
     // console.log(`${data-model.name} has ${taskRows.length} tasks`)
     // TODO use the best practice to create multiple divs
@@ -152,6 +161,7 @@ function viewCreator(container: Element, plugin: Plugin) {
 
 // if we use workspace.openLinkText, a task without a block id will be opened with its section
 function openTaskPrecisely(workspace: Workspace, task: STask) {
+    // Copy from dataview. See TaskItem.
     workspace.openLinkText(
         task.link.toFile().obsidianLink(),
         task.path,
@@ -172,6 +182,7 @@ export function ReactManagePage({plugin}: { plugin: Plugin }) {
     const workflows = useMemo(getAllWorkflows, []);
     if (workflows.length === 0)
         return <label>No Workflow defined.</label>
+
     // all tasks that has a data-model
     // Memo to avoid re-compute
     const tasks_with_workflow = useMemo(getAllPmTasks, []);
@@ -193,33 +204,31 @@ export function ReactManagePage({plugin}: { plugin: Plugin }) {
             ;
     }
 
-    const [currentWorkflow, setCurrentWorkflow] = useState<OdaPmWorkflow>(null);
-    const usingWorkflow = currentWorkflow !== null ? currentWorkflow : workflows[0];
+    const [currentWorkflow, setCurrentWorkflow] = useState<OdaPmWorkflow>(workflows[0]);
     const workspace = plugin.app.workspace;
     const tasksWithThisType = tasks_with_workflow.filter(function (k: OdaPmTask) {
-        return k.type === usingWorkflow;
+        return k.type === currentWorkflow;
     })
 
-    const stepNames = usingWorkflow.stepsDef.map(function (k: I_OdaPmStep) {
+    const stepNames = currentWorkflow.stepsDef.map(function (k: I_OdaPmStep) {
         return k.name;
     });
     const taskRows = tasksWithThisType.map(function (k: OdaPmTask) {
-        const row = k.toTableRow();
+        const row = odaTaskToTableRow(k)
         row[0] = (
             <>
                 <Checkbox text={row[0]}
                           onChanged={
                               () => {
                                   // k.boundTask.checked = !k.boundTask.checked// No good, this is dataview cache.
-                                  rewriteTask(plugin.app.vault, k.boundTask, k.boundTask.checked ? " " : "x").then(
-                                      () => console.log("Rewrite to ?")
-                                  )
+                                  const nextStatus = k.boundTask.checked ? " " : "x";
+                                  // TODO performace Change the file content will trigger dataview re-index, thus the whole page will re-render. This will unmount the whole page and re-mount it. We should use a better way to reserve which page we are in.
+                                  rewriteTask(plugin.app.vault, k.boundTask,
+                                      nextStatus)
                               }
                           }
                           onLabelClicked={
                               () => {
-
-                                  // Copy from dataview. See TaskItem.
                                   openTaskPrecisely(workspace, k.boundTask);
                               }
                           }
@@ -232,7 +241,7 @@ export function ReactManagePage({plugin}: { plugin: Plugin }) {
 
     // console.log(`ReactManagePage Render. All managed tasks: ${tasksWithThisType.length}. Row count: ${taskRows.length}`)
     return (
-        <>
+        <PluginContext.Provider value={plugin}>
             <h2>Filters</h2>
             {workflows.map((workflow: OdaPmWorkflow) => {
                 return (
@@ -241,29 +250,66 @@ export function ReactManagePage({plugin}: { plugin: Plugin }) {
                     </view>
                 )
             })}
-            <h2>Workflow: {usingWorkflow?.name}</h2>
+            <h2>Workflow: {currentWorkflow?.name}</h2>
             <DataTable
-                tableTitle={usingWorkflow?.name}
-                headers={[usingWorkflow.name, ...stepNames]}
+                tableTitle={currentWorkflow?.name}
+                headers={[currentWorkflow.name, ...stepNames]}
                 rows={taskRows}
             ></DataTable>
-        </>
+        </PluginContext.Provider>
     )
 }
 
+function OdaPmTaskCell({oTask, step}: { oTask: OdaPmTask, step: I_OdaPmStep }) {
+    const currentSteps = oTask.currentSteps;
+    const plugin = useContext(PluginContext);
+    // TODO performance
+    const includes = currentSteps.map(m => m.tag).includes(step.tag);
+    return <Checkbox text={""}
+                     initialState={includes}
+                     onChanged={() => {
+                         // preserve the status, but add or remove the step tag
+                         const next_status = !includes;
+                         const next_text = !next_status ?
+                             oTask.boundTask.text.replace(step.tag, "") :
+                             `${oTask.boundTask.text} ${step.tag}`; // We believe dataview gives the correct result. In the latter case there will be no step.tag in the original text if includes is false. 
+                         rewriteTask(plugin.app.vault, oTask.boundTask,
+                             oTask.boundTask.status, next_text)
+                     }}
+    />
+}
+
+// For checkbox
+function odaWorkflowToTableCells(oTask: OdaPmTask) {
+    const workflow: OdaPmWorkflow = oTask.type;
+    return [...workflow.stepsDef.map(step => {
+        return <OdaPmTaskCell key={step.name} oTask={oTask} step={step}/>
+    })]
+}
+
+// For checkbox  
+// region Workflow Ui wrapper
+function odaTaskToTableRow(oTask: OdaPmTask): I_Renderable[] {
+
+    // TODO this link is not clickable
+    return [`${oTask.summary}`, ...odaWorkflowToTableCells(oTask)]
+}
+
+// endregion
+
+//region View definitions
 // We cannot interact in Dataview Table, so we create our own.
 
 const DataTable = ({
                        tableTitle,
                        headers, rows
                    }: { tableTitle: string, headers: I_Renderable[], rows: I_Renderable[][] }) => {
-    // console.log(rows)
+
     return (
         <table key={tableTitle}>
             <thead>
             <tr>
                 {headers.map((header: string) => {
-                    console.log(`header ${header}`)
                     return <th key={header}>{header}</th>;
                 })}
             </tr>
@@ -297,30 +343,31 @@ const Checkbox = ({
                       onLabelClicked?: () => void,
                       initialState?: boolean
                   }
-    ) => {
+) => {
     const [isChecked, setIsChecked] = useState(initialState);
 
-        const handleCheckboxChange = () => {
-            setIsChecked(!isChecked);
-            onChanged?.();
-            if (!isChecked)
-                onChecked?.();
-            else
-                onUnchecked?.();
-        };
-        // Click the label won't trigger the checkbox change event
-        return (
-            <div>
-                <input
-                    type="checkbox"
-                    checked={isChecked}
-                    onChange={handleCheckboxChange}
-                />
-                <label onClick={onLabelClicked}>
+    const handleCheckboxChange = () => {
+        setIsChecked(!isChecked);
+        onChanged?.();
+        if (!isChecked)
+            onChecked?.();
+        else
+            onUnchecked?.();
+    };
+    // Click the label won't trigger the checkbox change event
+    return (
+        <div>
+            <input
+                type="checkbox"
+                checked={isChecked}
+                onChange={handleCheckboxChange}
+            />
+            <label onClick={onLabelClicked}>
 
-                    {text}
-                </label>
-            </div>
-        );
-    }
-;
+                {text}
+            </label>
+        </div>
+    );
+}
+
+// endregion

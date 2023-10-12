@@ -8,7 +8,6 @@ import {STask} from "obsidian-dataview";
 export async function rewriteTask(vault: Vault, task: STask, desiredStatus: string, desiredText?: string) {
     if (desiredStatus == task.status && (desiredText == undefined || desiredText == task.text)) return;
     desiredStatus = desiredStatus == "" ? " " : desiredStatus;
-    console.log(task)
     const rawFiletext = await vault.adapter.read(task.path);
     const hasRN = rawFiletext.contains("\r");
     const filetext = rawFiletext.split(/\r?\n/u);
@@ -35,7 +34,6 @@ export async function rewriteTask(vault: Vault, task: STask, desiredStatus: stri
     }
 
     const newText = filetext.join(hasRN ? "\r\n" : "\n");
-    console.log(newText)
     await vault.adapter.write(task.path, newText);
 }
 

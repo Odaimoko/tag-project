@@ -101,13 +101,7 @@ export class OdaPmWorkflow {
         }
     }
 
-    // For checkbox
-    toTableRow(currentSteps: OdaPmStep[]) {
-        return [...this.stepsDef.map(k => {
-            // TODO performance
-            return currentSteps.map(m => m.tag).includes(k.tag) ? "✅" : "❌"
-        })]
-    }
+
 }
 
 export class OdaPmTask {
@@ -142,11 +136,6 @@ export class OdaPmTask {
         }
     }
 
-    // For checkbox 
-    toTableRow(): I_Renderable[] {
-        // TODO this link is not clickable
-        return [`${this.summary}`, ...this.type.toTableRow(this.currentSteps)]
-    }
 }
 
 export function trimTagsFromTask(task: STask): string {
