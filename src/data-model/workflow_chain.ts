@@ -2,7 +2,7 @@ import {STask} from "obsidian-dataview";
 import {I_Renderable} from "../ui/i_Renderable";
 
 const Tag_Prefix_Step = "#iPm/step/";
-const Tag_Prefix_Workflow = "#iPm/data-model/";
+const Tag_Prefix_Workflow = "#iPm/workflow/";
 
 export const Workflow_Type_Enum_Array = [
     "chain",
@@ -70,7 +70,6 @@ export function getOrCreateStep(tag: string): OdaPmStep {
 }
 
 export class OdaPmWorkflow {
-
     name: string;
     stepsDef: OdaPmStep[];
     type: WorkflowType;

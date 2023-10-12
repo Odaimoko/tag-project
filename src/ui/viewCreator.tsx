@@ -77,7 +77,11 @@ function renderTable(tasks_with_workflow: OdaPmTask[], workflow: OdaPmWorkflow, 
 export function getAllWorkflows() {
     return dv.pages()["file"]["tasks"].where(function (k: STask) {
             for (const defTag of getDefTags()) {
-                if (k.tags.includes(defTag)) return true;
+                if (k.tags.length === 0) continue;
+                console.log(k.tags)
+                if (k.tags.includes(defTag)) {
+                    return true;
+                }
             }
             return false;
         }
@@ -165,6 +169,8 @@ function openTaskPrecisely(workspace: Workspace, task: STask) {
 
 export function ReactManagePage({plugin}: { plugin: Plugin }) {
     const workflows = useMemo(getAllWorkflows, []);
+    if (workflows.length === 0)
+        return <label>No Workflow defined.</label>
     // all tasks that has a data-model
     // Memo to avoid re-compute
     const tasks_with_workflow = useMemo(getAllPmTasks, []);
