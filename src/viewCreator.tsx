@@ -199,24 +199,24 @@ const DataTable = ({
                        tableTitle,
                        headers, rows
                    }: { tableTitle: string, headers: Literal[], rows: Literal[][] }) => {
+    console.log(rows)
     return (
         <table key={tableTitle}>
             <thead>
             <tr>
                 {headers.map((header: string) => {
-                    console.log(`header  ${header}`)
+                    console.log(`header ${header}`)
                     return <th key={header}>{header}</th>;
                 })}
             </tr>
             </thead>
             <tbody>
-            {rows.map((items, index) => (
-                <tr key={index}>
+            {rows.map((items, rowIdx) => (
+                <tr key={rowIdx}>
                     {items.map(
-                        function (k) {
-                            console.log(`Item  ${index} ${k}`)
-
-                            return <td key={`${tableTitle}_${index}`}>{k}</td>;
+                        function (k, columnIdx) {
+                            const key = `${tableTitle}_${rowIdx}_${columnIdx}`;
+                            return <td key={key}>{k}</td>;
                         }
                     )}
                 </tr>))

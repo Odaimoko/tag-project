@@ -36,8 +36,6 @@ export class ManagePageView extends ItemView {
         this.root = createRoot(this.containerEl.children[1]); // Override the previous container
         this.root.render(
             <StrictMode>
-                <h2>Button</h2>
-                <button onClick={() => console.log("Cool with you")}>Holy Crap!</button>
                 <ReactManagePage/>
             </StrictMode>,
         );
