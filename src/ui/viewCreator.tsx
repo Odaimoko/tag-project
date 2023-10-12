@@ -262,12 +262,21 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
 
     // Here we use reference equality to filter tasks. Using reference is prone to bugs since we tend to new a lot in js, but using string id is memory consuming. Trade-off.
     const tasksWithThisType: DataArray<OdaPmTask> = tasks_with_workflow.filter(function (k: OdaPmTask) {
-        return k.type === currentWorkflow && (includeCompleted || !k.boundTask.checked);
+        return k.type === currentWorkflow;
     })
-    const tasksArray = tasksWithThisType.array();
+    const totalCount = tasksWithThisType.length;
+    const completedTasks = tasksWithThisType.filter(function (k: OdaPmTask) {
+        return k.boundTask.checked;
+    });
+    const completedCount = completedTasks.length;
+    const completionRate = totalCount === 0 ? "100" : (completedCount / totalCount * 100).toFixed(2);
+
+    const displayedTasks = tasksWithThisType.filter(function (k: OdaPmTask) {
+        return (includeCompleted || !k.boundTask.checked);
+    }).array();
     const ascending = sortCode === 1;
     if (sortCode !== 0) {
-        tasksArray.sort(
+        displayedTasks.sort(
             function (a: OdaPmTask, b: OdaPmTask) {
                 // Case-insensitive compare string 
                 // a.b = ascending
@@ -278,7 +287,8 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
         )
     }
 
-    const taskRows = tasksArray.map(function (k: OdaPmTask) {
+
+    const taskRows = displayedTasks.map(function (k: OdaPmTask) {
         const row = odaTaskToTableRow(k)
         row[0] = (
             <>
@@ -306,7 +316,8 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
         return row;
     });
 
-    console.log(`ReactManagePage Render. All tasks: ${tasks_with_workflow.length}. Filtered Tasks: ${tasksWithThisType.length}. Workflow: ${curWfName}. IncludeCompleted: ${includeCompleted}`)
+    // console.log(`ReactManagePage Render. All tasks: ${tasks_with_workflow.length}. Filtered Tasks: ${tasksWithThisType.length}. Workflow: ${curWfName}. IncludeCompleted: ${includeCompleted}`)
+    
     return (
         <>
             <h2>{workflows.length} Filter(s)</h2>
@@ -334,7 +345,8 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
             >
                 {sortCode === 0 ? "By Appearance" : ascending ? "Ascending" : "Descending"}
             </button>
-            <h2> Workflow: {curWfName}</h2>
+            <h2> Workflow: {curWfName}.</h2>
+            <label>Completion: {completedCount}/{totalCount}, {completionRate}%</label>
             <DataTable
                 tableTitle={curWfName}
                 headers={headers}
