@@ -205,9 +205,11 @@ export function ReactManagePage({plugin}: { plugin: Plugin }) {
     }
 
     const [currentWorkflow, setCurrentWorkflow] = useState<OdaPmWorkflow>(workflows[0]);
+    const [includeCompleted, setIncludeCompleted] = useState(true);
+
     const workspace = plugin.app.workspace;
     const tasksWithThisType = tasks_with_workflow.filter(function (k: OdaPmTask) {
-        return k.type === currentWorkflow;
+        return k.type === currentWorkflow && (includeCompleted || !k.boundTask.checked);
     })
 
     const stepNames = currentWorkflow.stepsDef.map(function (k: I_OdaPmStep) {
@@ -217,22 +219,24 @@ export function ReactManagePage({plugin}: { plugin: Plugin }) {
         const row = odaTaskToTableRow(k)
         row[0] = (
             <>
-                <Checkbox text={row[0]}
-                          onChanged={
-                              () => {
-                                  // k.boundTask.checked = !k.boundTask.checked// No good, this is dataview cache.
-                                  const nextStatus = k.boundTask.checked ? " " : "x";
-                                  // TODO performace
-                                  rewriteTask(plugin.app.vault, k.boundTask,
-                                      nextStatus)
-                              }
-                          }
-                          onLabelClicked={
-                              () => {
-                                  openTaskPrecisely(workspace, k.boundTask);
-                              }
-                          }
-                          initialState={k.boundTask.checked}
+                <Checkbox
+                    key={k.text}
+                    text={row[0]}
+                    onChanged={
+                        () => {
+                            // k.boundTask.checked = !k.boundTask.checked// No good, this is dataview cache.
+                            const nextStatus = k.boundTask.checked ? " " : "x";
+                            // TODO performace
+                            rewriteTask(plugin.app.vault, k.boundTask,
+                                nextStatus)
+                        }
+                    }
+                    onLabelClicked={
+                        () => {
+                            openTaskPrecisely(workspace, k.boundTask);
+                        }
+                    }
+                    initialState={k.boundTask.checked}
                 />
             </>
         )
@@ -240,6 +244,7 @@ export function ReactManagePage({plugin}: { plugin: Plugin }) {
     });
 
     // console.log(`ReactManagePage Render. All managed tasks: ${tasksWithThisType.length}. Row count: ${taskRows.length}`)
+    const curWfName = currentWorkflow?.name;
     return (
         <PluginContext.Provider value={plugin}>
             <h2>Filters</h2>
@@ -250,12 +255,19 @@ export function ReactManagePage({plugin}: { plugin: Plugin }) {
                     </view>
                 )
             })}
-            <h2>Workflow: {currentWorkflow?.name}</h2>
+            <Checkbox text={"Include Completed"} onChanged={
+                (nextChecked) => {
+                    setIncludeCompleted(nextChecked)
+                }
+            }
+                      initialState={includeCompleted}
+            />
+            <h2> Workflow: {curWfName}</h2>
             <DataTable
-                tableTitle={currentWorkflow?.name}
-                headers={[currentWorkflow.name, ...stepNames]}
+                tableTitle={curWfName}
+                headers={[curWfName, ...stepNames]}
                 rows={taskRows}
-            ></DataTable>
+            />
         </PluginContext.Provider>
     )
 }
@@ -265,17 +277,18 @@ function OdaPmTaskCell({oTask, step}: { oTask: OdaPmTask, step: I_OdaPmStep }) {
     const plugin = useContext(PluginContext);
     // TODO performance
     const includes = currentSteps.map(m => m.tag).includes(step.tag);
-    return <Checkbox text={""}
-                     initialState={includes}
-                     onChanged={() => {
-                         // preserve the status, but add or remove the step tag
-                         const next_status = !includes;
-                         const next_text = !next_status ?
-                             oTask.boundTask.text.replace(step.tag, "") :
-                             `${oTask.boundTask.text} ${step.tag}`; // We believe dataview gives the correct result. In the latter case there will be no step.tag in the original text if includes is false. 
-                         rewriteTask(plugin.app.vault, oTask.boundTask,
-                             oTask.boundTask.status, next_text)
-                     }}
+    return <Checkbox
+        key={oTask.text + step.tag}
+        initialState={includes}
+        onChanged={() => {
+            // preserve the status, but add or remove the step tag
+            const next_status = !includes;
+            const next_text = !next_status ?
+                oTask.boundTask.text.replace(step.tag, "") :
+                `${oTask.boundTask.text} ${step.tag}`; // We believe dataview gives the correct result. In the latter case there will be no step.tag in the original text if includes is false. 
+            rewriteTask(plugin.app.vault, oTask.boundTask,
+                oTask.boundTask.status, next_text)
+        }}
     />
 }
 
@@ -332,14 +345,12 @@ const DataTable = ({
 
 
 const Checkbox = ({
-                      text, onChanged, onChecked, onUnchecked,
+                      text, onChanged,
                       onLabelClicked,
                       initialState = false
                   }: {
-                      text: string,
-                      onChanged?: () => void,
-                      onChecked?: () => void,
-                      onUnchecked?: () => void,
+    text?: string,
+    onChanged?: (nextChecked: boolean) => void,
                       onLabelClicked?: () => void,
                       initialState?: boolean
                   }
@@ -348,11 +359,7 @@ const Checkbox = ({
 
     const handleCheckboxChange = () => {
         setIsChecked(!isChecked);
-        onChanged?.();
-        if (!isChecked)
-            onChecked?.();
-        else
-            onUnchecked?.();
+        onChanged?.(!isChecked);
     };
     // Click the label won't trigger the checkbox change event
     return (

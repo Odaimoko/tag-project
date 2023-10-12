@@ -19,7 +19,6 @@ export default class OdaPmToolPlugin extends Plugin {
     settings: OdaPmToolSettings;
 
     async onload() {
-        console.log(this.app)
         if (!this.hasDataviewPlugin()) {
             new ONotice("Dataview plugin is not enabled. Please enable it to use this plugin.");
 
