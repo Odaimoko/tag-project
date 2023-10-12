@@ -36,7 +36,7 @@ export class ManagePageView extends ItemView {
         this.root = createRoot(this.containerEl.children[1]); // Override the previous container
         this.root.render(
             <StrictMode>
-                <ReactManagePage/>
+                <ReactManagePage plugin={this.plugin}/>
             </StrictMode>,
         );
     }

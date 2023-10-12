@@ -6,10 +6,11 @@ import {
     OdaPmWorkflow,
     trimTagsFromTask,
     Workflow_Type_Enum_Array
-} from "./workflow/workflow_chain";
+} from "../data-model/workflow_chain";
 import {getAPI, Literal, STask} from "obsidian-dataview";
-import {ButtonComponent, Plugin} from "obsidian";
+import {ButtonComponent, Plugin, Workspace} from "obsidian";
 import React, {useMemo, useState} from "react";
+import {I_Renderable} from "./i_Renderable";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
 function createWorkflowFromTask(task: STask): OdaPmWorkflow[] {
@@ -36,7 +37,7 @@ function createWorkflowFromTask(task: STask): OdaPmWorkflow[] {
 
 // Create an OdaPmTask from a STask
 function createPmTaskFromTask(taskDefTags: string[], taskDefs: OdaPmWorkflow[], task: STask): OdaPmTask | null {
-    // A task can have only one workflow
+    // A task can have only one data-model
     for (let i = 0; i < taskDefTags.length; i++) {
         const defTag = taskDefTags[i];
         if (task.tags.includes(defTag)) {
@@ -56,7 +57,7 @@ function renderTable(tasks_with_workflow: OdaPmTask[], workflow: OdaPmWorkflow, 
     const taskRows = tasksWithThisType.map(function (k: OdaPmTask) {
         return k.toTableRow();
     });
-    // console.log(`${workflow.name} has ${taskRows.length} tasks`)
+    // console.log(`${data-model.name} has ${taskRows.length} tasks`)
     // TODO use the best practice to create multiple divs
     const tableDiv = container.createEl(`body-${workflow.name}`);
     // const buttonComp = new ButtonComponent(tableDiv)
@@ -84,7 +85,12 @@ export function getAllWorkflows() {
         .flatMap((task: STask) => createWorkflowFromTask(task));
 }
 
-export function viewCreator(container: Element, plugin: Plugin) {
+/**
+ * @deprecated
+ * @param container
+ * @param plugin
+ */
+function viewCreator(container: Element, plugin: Plugin) {
 
     // const f = await dv.pages() // DataArray<SMarkdownPage[]>, 
     // DataArray supports some linq expressions
@@ -103,7 +109,7 @@ export function viewCreator(container: Element, plugin: Plugin) {
     const task_def_tags = workflows.map(function (k: OdaPmWorkflow) {
         return k.tag;
     });
-    // all tasks that has a workflow
+    // all tasks that has a data-model
     const tasks_with_workflow = dv.pages()["file"]["tasks"].where(function (k: STask) {
                 for (const defTag of task_def_tags) {
                     if (k.tags.includes(defTag)) return true;
@@ -139,9 +145,27 @@ export function viewCreator(container: Element, plugin: Plugin) {
 
 }
 
-export function ReactManagePage() {
+// if we use workspace.openLinkText, a task without a block id will be opened with its section
+function openTaskPrecisely(workspace: Workspace, task: STask) {
+    workspace.openLinkText(
+        task.link.toFile().obsidianLink(),
+        task.path,
+        false,
+        {
+            eState: {
+                cursor: {
+                    from: {line: task.line, ch: task.position.start.col},
+                    to: {line: task.line + task.lineCount - 1, ch: task.position.end.col},
+                },
+                line: task.line,
+            },
+        }
+    );
+}
+
+export function ReactManagePage({plugin}: { plugin: Plugin }) {
     const workflows = useMemo(getAllWorkflows, []);
-    // all tasks that has a workflow
+    // all tasks that has a data-model
     // Memo to avoid re-compute
     const tasks_with_workflow = useMemo(getAllPmTasks, []);
 
@@ -164,6 +188,7 @@ export function ReactManagePage() {
 
     const [currentWorkflow, setCurrentWorkflow] = useState<OdaPmWorkflow>(null);
     const usingWorkflow = currentWorkflow !== null ? currentWorkflow : workflows[0];
+    const workspace = plugin.app.workspace;
     const tasksWithThisType = tasks_with_workflow.filter(function (k: OdaPmTask) {
         return k.type === usingWorkflow;
     })
@@ -172,9 +197,29 @@ export function ReactManagePage() {
         return k.name;
     });
     const taskRows = tasksWithThisType.map(function (k: OdaPmTask) {
-        return k.toTableRow();
+        const row = k.toTableRow();
+        row[0] = (
+            <>
+                <Checkbox text={row[0]}
+                          onChanged={
+                              () => {
+                                  console.log(k.boundTask)
+                              }
+                          }
+                          onLabelClicked={
+                              () => {
+
+                                  // Copy from dataview. See TaskItem.
+                                  openTaskPrecisely(workspace, k.boundTask);
+                              }
+                          }
+                />
+            </>
+        )
+        return row;
     });
-    console.log(`ReactManagePage Render. All managed tasks: ${tasksWithThisType.length}. Row count: ${taskRows.length}`)
+
+    // console.log(`ReactManagePage Render. All managed tasks: ${tasksWithThisType.length}. Row count: ${taskRows.length}`)
     return (
         <>
             <h2>Filters</h2>
@@ -195,11 +240,13 @@ export function ReactManagePage() {
     )
 }
 
+// We cannot interact in Dataview Table, so we create our own.
+
 const DataTable = ({
                        tableTitle,
                        headers, rows
-                   }: { tableTitle: string, headers: Literal[], rows: Literal[][] }) => {
-    console.log(rows)
+                   }: { tableTitle: string, headers: I_Renderable[], rows: I_Renderable[][] }) => {
+    // console.log(rows)
     return (
         <table key={tableTitle}>
             <thead>
@@ -225,3 +272,42 @@ const DataTable = ({
         </table>
     );
 }
+
+
+const Checkbox = ({
+                      text, onChanged, onChecked, onUnchecked,
+                      onLabelClicked
+                  }: {
+                      text: string,
+                      onChanged?: () => void,
+                      onChecked?: () => void,
+                      onUnchecked?: () => void,
+                      onLabelClicked?: () => void,
+                  }
+    ) => {
+        const [isChecked, setIsChecked] = useState(false);
+
+        const handleCheckboxChange = () => {
+            setIsChecked(!isChecked);
+            onChanged?.();
+            if (!isChecked)
+                onChecked?.();
+            else
+                onUnchecked?.();
+        };
+        // Click the label won't trigger the checkbox change event
+        return (
+            <div>
+                <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={handleCheckboxChange}
+                />
+                <label onClick={onLabelClicked}>
+
+                    {text}
+                </label>
+            </div>
+        );
+    }
+;

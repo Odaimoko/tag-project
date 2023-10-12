@@ -1,5 +1,5 @@
 import {App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting} from 'obsidian';
-import {ManagePageView, ManagePageViewId} from "./ManagePageView";
+import {ManagePageView, ManagePageViewId} from "./ui/ManagePageView";
 import {React_Example_View_Id, ReactExampleView} from "./Samples/reactExample";
 
 

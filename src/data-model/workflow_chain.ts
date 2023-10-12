@@ -1,7 +1,8 @@
 import {STask} from "obsidian-dataview";
+import {I_Renderable} from "../ui/i_Renderable";
 
 const Tag_Prefix_Step = "#iPm/step/";
-const Tag_Prefix_Workflow = "#iPm/workflow/";
+const Tag_Prefix_Workflow = "#iPm/data-model/";
 
 export const Workflow_Type_Enum_Array = [
     "chain",
@@ -143,7 +144,7 @@ export class OdaPmTask {
     }
 
     // For checkbox 
-    toTableRow() {
+    toTableRow(): I_Renderable[] {
         // TODO this link is not clickable
         return [`${this.summary}`, ...this.type.toTableRow(this.currentSteps)]
     }
