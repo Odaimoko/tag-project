@@ -123,7 +123,8 @@ export class OdaPmTask {
 
     // For checkbox 
     toTableRow() {
-        return [this.summary, ...this.type.toTableRow(this.currentSteps)]
+        // TODO this link is not clickable
+        return [`[[${this.summary}]]`, ...this.type.toTableRow(this.currentSteps)]
     }
 }
 

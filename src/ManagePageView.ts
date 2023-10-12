@@ -1,4 +1,4 @@
-import {ItemView, Plugin, WorkspaceLeaf} from "obsidian";
+import {ButtonComponent, ItemView, MarkdownView, Plugin, WorkspaceLeaf} from "obsidian";
 import {getAPI, Literal, STask} from "obsidian-dataview";
 import {
     getDefTags,
@@ -66,8 +66,8 @@ function createDvEl(container: Element, plugin: Plugin) {
     ;
 
     // Vis
-    const defitionstDiv = container.createEl("div", {text: "Task Types"});
-    let bodyDiv = defitionstDiv.createEl("body");
+    const definitionDiv = container.createEl("div", {text: "Task Types"});
+    const bodyDiv = definitionDiv.createEl("body");
     const torender = workflows.map((wf: OdaPmWorkflow): Literal => {
         return wf.name;
     })
@@ -88,6 +88,23 @@ function createDvEl(container: Element, plugin: Plugin) {
                 return createPmTaskFromTask(task_def_tags, workflows, task)
             })
     ;
+    // leaf is Editor tab
+    const workspace = plugin.app.workspace;
+    const markdownLeaves = workspace.getLeavesOfType("markdown");
+    const leaf = markdownLeaves[0] // 某一个 Tab
+    // console.log(markdownLeaves) // use "markdown" instead of MarkdownView，holy...!
+    const editor = (leaf.view as MarkdownView).editor;
+    const buttonComp = new ButtonComponent(definitionDiv)
+    buttonComp.setButtonText("Jump to the first markdown file's line 25")
+    buttonComp.onClick(
+        () => {
+            editor.focus()
+            editor.setCursor(25)
+
+        }
+    )
+
+
     // draw tables
     for (const workflow of workflows) {
         // find all tasks with this type
@@ -98,15 +115,14 @@ function createDvEl(container: Element, plugin: Plugin) {
         const taskRows = tasksWithThisType.map(function (k: OdaPmTask) {
             return k.toTableRow();
         });
-        console.log(`${workflow.name} has ${taskRows.length} tasks`)
+        // console.log(`${workflow.name} has ${taskRows.length} tasks`)
         // TODO use the best practice to create multiple divs
-        bodyDiv = container.createEl(`body-${workflow.name}`);
-
+        const tableDiv = container.createEl(`body-${workflow.name}`);
         dv.table(
             [workflow.name, ...workflow.stepsDef.map(function (k: OdaPmStep) {
                 return k.name;
             })],
-            taskRows, bodyDiv, plugin);
+            taskRows, tableDiv, plugin);
     }
 }
 
