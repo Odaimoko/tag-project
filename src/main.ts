@@ -1,6 +1,5 @@
 import {App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting} from 'obsidian';
 import {ManagePageView, ManagePageViewId} from "./ui/ManagePageView";
-import {React_Example_View_Id, ReactExampleView} from "./Samples/reactExample";
 import {ONotice} from "./utils/ONotice";
 
 export const PLUGIN_NAME = 'iPm';
@@ -128,31 +127,34 @@ export default class OdaPmToolPlugin extends Plugin {
             ManagePageViewId,
             (leaf) => new ManagePageView(leaf, this)
         );
-        this.registerView(
-            React_Example_View_Id,
-            (leaf) => new ReactExampleView(leaf)
-        )
 
         this.addRibbonIcon("bell-plus", "Show Pm Window", () => {
             this.activateView(ManagePageViewId);
         });
 
-        this.addRibbonIcon("align-end-horizontal", "Show React example", () => {
-            this.activateView(React_Example_View_Id);
-        });
     }
 
+    // Supports only one leaf.
     async activateView(viewTypeId: string) {
+
         // Remove existing views.
-        this.app.workspace.detachLeavesOfType(viewTypeId);
+        const workspace = this.app.workspace;
+        const leaves = workspace.getLeavesOfType(ManagePageViewId);
+        // Close all but one view.
+        while (leaves.length > 1) {
+            leaves[0].detach()
+            leaves.remove(leaves[0])
+        }
+        // Create if none exists.
+        if (leaves.length === 0) {
+            await workspace.getRightLeaf(false).setViewState({
+                type: viewTypeId,
+                active: false,
+            });
+        }
 
-        await this.app.workspace.getRightLeaf(false).setViewState({
-            type: viewTypeId,
-            active: false,
-        });
-
-        this.app.workspace.revealLeaf(
-            this.app.workspace.getLeavesOfType(viewTypeId)[0]
+        workspace.revealLeaf(
+            workspace.getLeavesOfType(viewTypeId)[0]
         );
     }
 
