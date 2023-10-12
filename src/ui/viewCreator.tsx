@@ -12,6 +12,8 @@ import {ButtonComponent, Plugin, Workspace} from "obsidian";
 import React, {useMemo, useState} from "react";
 import {I_Renderable} from "./i_Renderable";
 
+import {rewriteTask} from "../io_util";
+
 const dv = getAPI(); // We can use dv just like the examples in the docs
 function createWorkflowFromTask(task: STask): OdaPmWorkflow[] {
     const workflows = []
@@ -78,7 +80,6 @@ export function getAllWorkflows() {
     return dv.pages()["file"]["tasks"].where(function (k: STask) {
             for (const defTag of getDefTags()) {
                 if (k.tags.length === 0) continue;
-                console.log(k.tags)
                 if (k.tags.includes(defTag)) {
                     return true;
                 }
@@ -209,7 +210,10 @@ export function ReactManagePage({plugin}: { plugin: Plugin }) {
                 <Checkbox text={row[0]}
                           onChanged={
                               () => {
-                                  console.log(k.boundTask)
+                                  // k.boundTask.checked = !k.boundTask.checked// No good, this is dataview cache.
+                                  rewriteTask(plugin.app.vault, k.boundTask, k.boundTask.checked ? " " : "x").then(
+                                      () => console.log("Rewrite to ?")
+                                  )
                               }
                           }
                           onLabelClicked={
@@ -219,6 +223,7 @@ export function ReactManagePage({plugin}: { plugin: Plugin }) {
                                   openTaskPrecisely(workspace, k.boundTask);
                               }
                           }
+                          initialState={k.boundTask.checked}
                 />
             </>
         )
@@ -282,16 +287,18 @@ const DataTable = ({
 
 const Checkbox = ({
                       text, onChanged, onChecked, onUnchecked,
-                      onLabelClicked
+                      onLabelClicked,
+                      initialState = false
                   }: {
                       text: string,
                       onChanged?: () => void,
                       onChecked?: () => void,
                       onUnchecked?: () => void,
                       onLabelClicked?: () => void,
+                      initialState?: boolean
                   }
     ) => {
-        const [isChecked, setIsChecked] = useState(false);
+    const [isChecked, setIsChecked] = useState(initialState);
 
         const handleCheckboxChange = () => {
             setIsChecked(!isChecked);
