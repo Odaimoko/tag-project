@@ -1,13 +1,26 @@
 import {App, PluginSettingTab, Setting, ValueComponent} from "obsidian";
 import IPmToolPlugin from "./main";
 
+type SerializedType =
+    string
+    | number
+    | boolean
+    | null
+    | undefined
+    | SerializedType[]
+    | { [key: string]: SerializedType };
+
 export interface IPmSettings {
-    report_malformed_task: boolean;
+    report_malformed_task: SerializedType;
+    // personalized settings, not exposed in settings tab
+    include_completed_tasks: SerializedType;
 }
 
 export const IPM_DEFAULT_SETTINGS: Partial<IPmSettings> = {
-    report_malformed_task: true
+    report_malformed_task: true,
+    include_completed_tasks: true
 }
+
 type SettingName = keyof IPmSettings;
 
 export class IPmSettingsTab extends PluginSettingTab {
@@ -41,10 +54,11 @@ export class IPmSettingsTab extends PluginSettingTab {
 
     }
 
-    // TODO can this be static typed?
-    setValueAndSave<T>(settingName: SettingName) {
+    setValueAndSave<T extends SerializedType>(settingName: SettingName) {
         return (vc: ValueComponent<T>) =>
+            // @ts-ignore
             vc.setValue(this.plugin.settings[settingName])
+                // @ts-ignore
                 .onChange?.(async (value: T) => {
                     this.plugin.settings[settingName] = value;
                     await this.plugin.saveSettings();

@@ -2,11 +2,11 @@ import {App, Editor, MarkdownView, Modal, Notice, Plugin} from 'obsidian';
 import {ManagePageView, ManagePageViewId} from "./ui/manage-page-view";
 import {ONotice} from "./utils/o-notice";
 import {IPM_DEFAULT_SETTINGS, IPmSettings, IPmSettingsTab} from "./Settings";
-import {getWorkflowNameFromRawText} from "./data-model/workflow_def";
+
+import {DataviewIndexReadyEvent} from "./typing/dataview-event";
 
 export const PLUGIN_NAME = 'iPm';
 
-// Remember to rename these classes and interfaces!
 
 export default class OdaPmToolPlugin extends Plugin {
     settings: IPmSettings;
@@ -15,7 +15,7 @@ export default class OdaPmToolPlugin extends Plugin {
         if (!this.hasDataviewPlugin()) {
             new ONotice("Dataview plugin is not enabled. Please enable it to use this plugin.");
 
-            this.registerEvent(this.app.metadataCache.on("dataview:index-ready", () => {
+            this.registerEvent(this.app.metadataCache.on(DataviewIndexReadyEvent, () => {
                 this.initPlugin()
             }));
             return;

@@ -64,7 +64,7 @@ export function getOrCreateWorkflow(type: WorkflowType, name: string | null, tas
     if (name === null) return null;
 
     if (globalOdaPmWorkflowMap.has(name)) {
-        console.log(`Return Existing Workflow ${name}`)
+        // console.log(`Return Existing Workflow ${name}`)
         return <OdaPmWorkflow>globalOdaPmWorkflowMap.get(name);
     }
     if (!isTaskValidForPm(task)) {
@@ -74,7 +74,7 @@ export function getOrCreateWorkflow(type: WorkflowType, name: string | null, tas
     if (task === null) return null;
     // All set.
     const workflow = new OdaPmWorkflow(task, type, name);
-    console.log(`Create New Workflow ${name}`)
+    // console.log(`Create New Workflow ${name}`)
     globalOdaPmWorkflowMap.set(name, workflow);
     return workflow;
 }

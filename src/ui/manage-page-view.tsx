@@ -1,23 +1,22 @@
 // https://docs.obsidian.md/Plugins/User+interface/Views
-import {ItemView, Plugin, WorkspaceLeaf} from "obsidian";
+import {ItemView, WorkspaceLeaf} from "obsidian";
 import {ReactManagePage} from "./view-creator";
 import {createRoot, Root} from "react-dom/client";
 import {createContext, StrictMode} from "react";
 import {EventEmitter} from "events"
 import OdaPmToolPlugin from "../main";
 
+import {DataviewAPIReadyEvent, DataviewMetadataChangeEvent} from "../typing/dataview-event";
+
 export const ManagePageViewId = "iPm-Tool-ManageView";
-export const DataviewMetadataChangeEvent = "dataview:metadata-change";
-export const DataviewIndexReadyEvent = "dataview:index-ready";
-export const DataviewAPIReadyEvent = "dataview:api-ready"
 
 export class ManagePageView extends ItemView {
     root: Root | null = null;
     emitter: EventEmitter;
-    plugin: Plugin;
+    plugin: OdaPmToolPlugin;
 
 
-    constructor(leaf: WorkspaceLeaf, plugin: Plugin) {
+    constructor(leaf: WorkspaceLeaf, plugin: OdaPmToolPlugin) {
         super(leaf);
         this.emitter = new EventEmitter();
         this.plugin = plugin;
@@ -44,11 +43,13 @@ export class ManagePageView extends ItemView {
     // Thus, we cannot pass registerEvent function directly to a React component. 
     // Instead, we use a custom event emitter, which allows us to clear the listener with useEffect.
     listenToMetadataChange() {
+        // @ts-ignore
         this.registerEvent(this.app.metadataCache.on(DataviewMetadataChangeEvent, (...args) => {
             this.emitter.emit(DataviewMetadataChangeEvent, ...args);
         }));
         // Don't use DataviewIndexReadyEvent, because it is fired when the full index is processed.
         // Otherwise, we may get partial data.
+        // @ts-ignore
         this.registerEvent(this.app.metadataCache.on(DataviewAPIReadyEvent, (...args) => {
             // render only when index is ready
             this.emitter.emit(DataviewAPIReadyEvent, ...args);
@@ -85,4 +86,4 @@ export class ManagePageView extends ItemView {
 }
 
 
-export const PluginContext = createContext<OdaPmToolPlugin>(null);
+export const PluginContext = createContext<OdaPmToolPlugin>(undefined as any);

@@ -15,13 +15,13 @@ import {I_Renderable} from "./i_Renderable";
 
 import {rewriteTask} from "../utils/io_util";
 import {
-    DataviewAPIReadyEvent,
-    DataviewMetadataChangeEvent,
     PluginContext
 } from "./manage-page-view";
 import {EventEmitter} from "events";
 import OdaPmToolPlugin from "../main";
 import {ONotice} from "../utils/o-notice";
+
+import {DataviewAPIReadyEvent, DataviewMetadataChangeEvent} from "../typing/dataview-event";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
 let pmPlugin: OdaPmToolPlugin; // locally global
