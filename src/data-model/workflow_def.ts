@@ -99,19 +99,21 @@ export function trimTagsFromTask(task: STask): string {
     return text.trim()
 }
 
-const WHOLE_WORD_REGEX = /\S+/g;
+// https://github.com/blacksmithgu/obsidian-dataview/blob/322217ad563defbc213f6731c9cd5a5f5a7e3638/src/data-import/common.ts#L5
+// Forbid @ since obsidian does not allow it
+const POTENTIAL_TAG_MATCHER = /[^@\s,;.:!?'"`()\[\]{}]+/giu;
 
 /**
  * Only take the first word
  * @param text workflow name without tags
  */
 export function getWorkflowNameFromRawText(text: string) {
-    const found = text.match(WHOLE_WORD_REGEX)
+    const found = text.match(POTENTIAL_TAG_MATCHER)
     return found ? found[0] : null;
 }
 
 // Unit Test
-// trimWorkflowName("带你飞 带你飞2  \n vads ads f \t li")
+// console.log(getWorkflowNameFromRawText("带你飞 带你飞2  \n vads ads f \t li"))
 
 export interface I_OdaPmStep {
     tag: string;
