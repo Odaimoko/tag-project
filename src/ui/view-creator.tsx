@@ -12,8 +12,8 @@ import {
     Workflow_Type_Enum_Array
 } from "../data-model/workflow_def";
 import {DataArray, getAPI, STask} from "obsidian-dataview";
-import {getIcon, Workspace} from "obsidian";
-import React, {Fragment, JSX, ReactNode, useContext, useEffect, useMemo, useState} from "react";
+import {Workspace} from "obsidian";
+import React, {Fragment, useContext, useEffect, useMemo, useState} from "react";
 import {I_Renderable} from "./i_Renderable";
 
 import {rewriteTask} from "../utils/io_util";
@@ -25,10 +25,10 @@ import {ONotice} from "../utils/o-notice";
 import {DataviewAPIReadyEvent, DataviewMetadataChangeEvent} from "../typing/dataview-event";
 import {initialToUpper, isStringNullOrEmpty, simpleFilter} from "../utils/format_util";
 import {setSettingsValueAndSave} from "../Settings";
+import {Checkbox, DataTable, ExternalControlledCheckbox, HStack, InternalLinkView} from "./view-template";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
 let pmPlugin: OdaPmToolPlugin; // locally global
-const taskLinkHtmlString = getIcon("link")?.outerHTML;
 
 function notifyMalformedTask(task: STask) {
     // console.log(pmPlugin && pmPlugin.settings.report_malformed_task)
@@ -128,7 +128,9 @@ function openTaskPrecisely(workspace: Workspace, task: STask) {
 }
 
 
-export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
+export function ReactManagePage({eventCenter}: {
+    eventCenter?: EventEmitter
+}) {
 
     // only for re-render
     const [rerenderState, setRerenderState] = useState(0);
@@ -207,21 +209,8 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
             </HStack>
             {workflows.map((workflow: I_OdaPmWorkflow) => {
                 return (
-                    <ExternalControlledCheckbox key={workflow.name}
-                                                content={<InternalLinkView content={workflow.name}/>}
-                                                onChange={() => {
-                                                    // invert the checkbox
-                                                    const v = !displayWorkflows.includes(workflow)
-                                                    const newArr = v ? [...displayWorkflows, workflow] : displayWorkflows.filter(k => k != workflow)
-                                                    setDisplayWorkflows(newArr)
-                                                }}
-                                                onLabelClicked={() =>
-                                                    // Go to workflow def
-                                                    openTaskPrecisely(plugin.app.workspace, workflow.boundTask)
-                                                }
-                                                externalControl={displayWorkflows.includes(workflow)}
-                    />
-
+                    <WorkflowFilterCheckbox displayWorkflows={displayWorkflows} workflow={workflow}
+                                            setDisplayWorkflows={setDisplayWorkflows}/>
                 )
             })}
             <WorkflowView workflows={displayWorkflows} completedCount={completedCount} totalCount={totalCount}/>
@@ -232,21 +221,30 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
     )
 }
 
-// Render an html string as a React component.
-// https://reactjs.org/docs/dom-elements.html#dangerouslysetinnerhtml
-function InternalLinkView({content}: { content: I_Renderable }) {
-    return <span>
+const WorkflowFilterCheckbox = ({workflow, displayWorkflows, setDisplayWorkflows}: {
+    workflow: I_OdaPmWorkflow,
+    displayWorkflows: I_OdaPmWorkflow[],
+    setDisplayWorkflows: React.Dispatch<React.SetStateAction<I_OdaPmWorkflow[]>>
+}) => {
+    const plugin = useContext(PluginContext);
 
-        <a className={"cm-underline"}>
-            <HTMLStringComponent htmlString={taskLinkHtmlString}/>
-        </a>
-        <>
-        {content}
-        </>
-    </span>
+    function tickCheckbox() {
+        // invert the checkbox
+        const v = !displayWorkflows.includes(workflow)
+        const newArr = v ? [...displayWorkflows, workflow] : displayWorkflows.filter(k => k != workflow)
+        setDisplayWorkflows(newArr)
+    }
+
+    return <ExternalControlledCheckbox key={workflow.name}
+                                       content={<InternalLinkView content={workflow.name} onIconClicked={() =>
+                                           // Go to workflow def
+                                           openTaskPrecisely(plugin.app.workspace, workflow.boundTask)}
+                                                                  onContentClicked={tickCheckbox}/>}
+                                       onChange={tickCheckbox}
+                                       externalControl={displayWorkflows.includes(workflow)}
+    />
 
 }
-
 /**
  * The first column of the table, which is a checkbox representing the task.
  * @param oTask
@@ -254,7 +252,11 @@ function InternalLinkView({content}: { content: I_Renderable }) {
  * @param taskFirstColumn
  * @constructor
  */
-const OdaTaskSummaryCell = ({oTask, plugin, taskFirstColumn}: { oTask: OdaPmTask, plugin: OdaPmToolPlugin, taskFirstColumn: I_Renderable }) => {
+const OdaTaskSummaryCell = ({oTask, plugin, taskFirstColumn}: {
+    oTask: OdaPmTask,
+    plugin: OdaPmToolPlugin,
+    taskFirstColumn: I_Renderable
+}) => {
     const workspace = plugin.app.workspace;
     return <Fragment key={`${oTask.boundTask.path}:${oTask.boundTask.line}`}>
         <Checkbox
@@ -463,147 +465,4 @@ function odaTaskToTableRow(displayStepTags: string[], oTask: OdaPmTask): I_Rende
 // endregion
 
 // endregion
-
-//region View definitions
-// We cannot interact in Dataview Table, so we create our own.
-
-const DataTable = ({
-                       tableTitle,
-                       headers, rows,
-                       onHeaderClicked,
-                       tableStyle,
-                       headerStyle,
-                       cellStyle,
-                   }: {
-    tableTitle: string,
-    headers: I_Renderable[],
-    rows: I_Renderable[][],
-    onHeaderClicked?: (arg0: number) => void,
-    tableStyle?: React.CSSProperties,
-    headerStyle?: React.CSSProperties,
-    cellStyle?: React.CSSProperties,
-}) => {
-
-    return (
-        <table style={tableStyle} key={tableTitle}>
-            <thead>
-            <tr>
-                {headers.map((header: string, index) => {
-                    return <th style={headerStyle} key={header}>
-                        <div onClick={() => {
-                            onHeaderClicked?.(index)
-                        }}>{header}</div>
-                    </th>;
-                })}
-            </tr>
-            </thead>
-            <tbody>
-            {rows.map((items, rowIdx) => (
-                <tr key={rowIdx}>
-                    {items.map(
-                        function (k, columnIdx) {
-                            const key = `${tableTitle}_${rowIdx}_${columnIdx}`;
-                            return <td style={cellStyle} key={key}>{k}</td>;
-                        }
-                    )}
-                </tr>))
-            }
-            </tbody>
-        </table>
-    );
-}
-
-/**
- * A checkbox that is totally controlled by its parent.
- * @param externalControl
- * @param onChange
- * @param onLabelClicked
- * @param content
- * @constructor
- */
-const ExternalControlledCheckbox = ({externalControl, onChange, onLabelClicked, content}:
-                                        {
-                                            externalControl: boolean,
-                                            onChange: () => void,
-                                            onLabelClicked?: () => void,
-                                            content?: I_Renderable
-
-                                        }) => {
-    // Click the label won't trigger the checkbox change event
-    return (
-        <Fragment>
-            <input
-                type="checkbox"
-                checked={externalControl}
-                onChange={onChange}
-            />
-            <label onClick={onLabelClicked}>
-                {content}
-            </label>
-        </Fragment>
-    );
-};
-/**
- * A self-controlled checkbox. Note the difference in parameters with {@link ExternalControlledCheckbox}
- * @param content
- * @param onChange
- * @param onLabelClicked
- * @param initialState
- * @constructor
- */
-const Checkbox = ({
-                      content,
-                      onChange,
-                      onLabelClicked,
-                      initialState = false,
-                  }: {
-    content?: string | JSX.Element,
-    onChange?: (nextChecked: boolean) => void,
-                      onLabelClicked?: () => void,
-    initialState?: boolean,
-                  }
-) => {
-    const [isChecked, setIsChecked] = useState(initialState);
-
-    const handleCheckboxChange = () => {
-        const nextToggle = !isChecked;
-        setIsChecked(nextToggle);
-        onChange?.(nextToggle);
-    };
-    return <ExternalControlledCheckbox externalControl={isChecked}
-                                       onChange={handleCheckboxChange} onLabelClicked={onLabelClicked}
-                                       content={content}/>
-}
-
-function getSpacingStyle(spacing: number | undefined, isHorizontal = true) {
-    return isHorizontal ? {width: spacing} : {height: spacing}
-}
-
-// https://react.dev/learn/rendering-lists#keeping-list-items-in-order-with-key
-// JSX elements directly inside a map() call always need keys! 
-interface StackProps {
-    style?: React.CSSProperties,
-    spacing?: number,
-    children: ReactNode[],
-}
-
-export function HStack(props: StackProps) {
-    return <div style={Object.assign({}, {display: "flex", flexDirection: "row"}, props.style)}>
-        {props.children?.map((child: ReactNode, i: number) => {
-            return <Fragment key={i}>
-                {i > 0 ? <div style={getSpacingStyle(props.spacing)}/> : null}
-                {child}
-            </Fragment>
-        })}
-    </div>
-}
-
-function HTMLStringComponent({htmlString, useSpan = true}: { htmlString?: string, useSpan?: boolean }) {
-    if (useSpan)
-        return (
-            <span dangerouslySetInnerHTML={{__html: htmlString ?? ""}}/>
-        );
-    else return <div dangerouslySetInnerHTML={{__html: htmlString ?? ""}}/>
-}
-
-// endregion
+ 
