@@ -55,7 +55,7 @@ function createWorkflowsFromTask(task: STask): I_OdaPmWorkflow[] {
             }
             workflow.boundTask = task // Override task
             workflow.type = wfType // override 
-            
+
             // The latter found workflow overrides the former one's steps, but not the STask.
             workflow.clearSteps()
             for (const tag of task.tags) {
@@ -157,11 +157,11 @@ export function ReactManagePage({eventCenter}: {
     // place all hooks before return. React doesn't allow the order to be changed.
     const workflows = useMemo(getAllWorkflows, [rerenderState]);
 
-    const [currentWorkflow, setCurrentWorkflow] = useState<I_OdaPmWorkflow>(workflows[0]);
-
+    // const [currentWorkflow, setCurrentWorkflow] = useState<I_OdaPmWorkflow>(workflows[0]);
+    const [displayWorkflows, setDisplayWorkflows] = useState<I_OdaPmWorkflow[]>([]);
     const plugin = useContext(PluginContext);
-    // Init here
-    pmPlugin = plugin;
+
+    pmPlugin = plugin;// Init here
 
     const [includeCompleted, setIncludeCompleted] = useState(plugin.settings.include_completed_tasks as boolean);
     const [searchText, setSearchText] = useState("");
@@ -195,18 +195,17 @@ export function ReactManagePage({eventCenter}: {
 
 
     const workspace = plugin.app.workspace;
-    if (!currentWorkflow) {
-        setCurrentWorkflow(workflows[0])
-        // We return here because if current workflow is not initialized, we cannot get the stepsDef, TypeError will be thrown.
-        // Remember React will re-render after this whole function (and further component calls). It won't stop at setState calls.
-        return null
-    }
-    const stepNames = currentWorkflow.stepsDef.map(function (k: I_OdaPmStep) {
-        return k.name;
-    });
 
-    const curWfName = currentWorkflow?.name;
-    const headers = [curWfName, ...stepNames];
+    // Union
+    const displayStepNames = displayWorkflows.map(wf => wf.stepsDef.map(function (k: I_OdaPmStep) {
+        return k.name;
+    })).flatMap(k => k).unique();
+    const displayStepTags = displayWorkflows.map(wf => wf.stepsDef.map(function (k: I_OdaPmStep) {
+        return k.tag;
+    })).flatMap(k => k).unique();
+
+    const curWfName = displayWorkflows.map(k => k.name).join(", ")
+    const headers = [curWfName, ...displayStepNames];
 
     // sort
     const totalSortMethods = 3;
@@ -214,7 +213,7 @@ export function ReactManagePage({eventCenter}: {
 
     // Here we use reference equality to filter tasks. Using reference is prone to bugs since we tend to new a lot in js, but using string id is memory consuming. Trade-off.
     const tasksWithThisType: DataArray<OdaPmTask> = tasks_with_workflow.filter(function (k: OdaPmTask) {
-        return k.type === currentWorkflow;
+        return displayWorkflows.includes(k.type);
     })
     const totalCount = tasksWithThisType.length;
     const completedTasks = tasksWithThisType.filter(function (k: OdaPmTask) {
@@ -242,28 +241,25 @@ export function ReactManagePage({eventCenter}: {
     }
 
 
-    const taskRows = displayedTasks.map(function (k: OdaPmTask) {
-        const row = odaTaskToTableRow(k)
+    const taskRows = displayedTasks.map(function (oTask: OdaPmTask) {
+        const row = odaTaskToTableRow(displayStepTags, oTask)
         row[0] = (
-            <Fragment key={`${k.boundTask.path}:${k.boundTask.line}`}>
+            <Fragment key={`${oTask.boundTask.path}:${oTask.boundTask.line}`}>
                 <Checkbox
-
                     content={plugin.settings.capitalize_table_row_initial ? initialToUpper(row[0]) : row[0]}
-                    onChanged={
+                    onChange={
                         () => {
                             // k.boundTask.checked = !k.boundTask.checked// No good, this is dataview cache.
-                            const nextStatus = k.boundTask.checked ? " " : "x";
+                            const nextStatus = oTask.boundTask.checked ? " " : "x";
                             // TODO performace
-                            rewriteTask(plugin.app.vault, k.boundTask,
+                            rewriteTask(plugin.app.vault, oTask.boundTask,
                                 nextStatus)
                         }
                     }
-                    onLabelClicked={
-                        () => {
-                            openTaskPrecisely(workspace, k.boundTask);
-                        }
-                    }
-                    initialState={k.boundTask.checked}
+                    onLabelClicked={() => {
+                        openTaskPrecisely(workspace, oTask.boundTask);
+                    }}
+                    initialState={oTask.boundTask.checked}
                 />
             </Fragment>
         )
@@ -274,18 +270,42 @@ export function ReactManagePage({eventCenter}: {
 
     return (
         <>
-            <h2>{workflows.length} Filter(s)</h2>
+            <HStack style={{alignItems: "center"}} spacing={10}>
+
+                <h2>{workflows.length} Workflow(s)</h2>
+                <button onClick={() => {
+                    setDisplayWorkflows([...workflows]);
+                }}>Select All
+                </button>
+                <button onClick={() => {
+                    setDisplayWorkflows([]);
+                }}>Unselect All
+                </button>
+            </HStack>
             {workflows.map((workflow: I_OdaPmWorkflow) => {
                 return (
-                    <Fragment key={workflow.name}>
-                        <button onClick={() => setCurrentWorkflow(workflow)}>{workflow.name}</button>
-                    </Fragment>
+
+                    <ExternalControlledCheckbox key={workflow.name}
+                                                content={workflow.name}
+                                                onChange={() => {
+                                                    // invert the checkbox
+                                                    const v = !displayWorkflows.includes(workflow)
+                                                    const newArr = v ? [...displayWorkflows, workflow] : displayWorkflows.filter(k => k != workflow)
+                                                    setDisplayWorkflows(newArr)
+                                                }}
+                                                onLabelClicked={() =>
+                                                    // Go to workflow def
+                                                    openTaskPrecisely(plugin.app.workspace, workflow.boundTask)
+                                                }
+                                                externalControl={displayWorkflows.includes(workflow)}
+                    />
+
                 )
             })}
-
-            <WorkflowView workflow={currentWorkflow} completedCount={completedCount} totalCount={totalCount}/>
+            <WorkflowView workflows={displayWorkflows} completedCount={completedCount} totalCount={totalCount}/>
             <p/>
-            {/*Some vertical space*/}
+            {/*Some vertical space*/
+            }
 
             <HStack style={{
                 justifyContent: "flex-start",
@@ -312,7 +332,7 @@ export function ReactManagePage({eventCenter}: {
                         {sortCode === 0 ? "By Appearance" : ascending ? "Ascending" : "Descending"}
                     </button>
                 </>
-                <Checkbox content={"Include Completed"} onChanged={
+                <Checkbox content={"Show Completed"} onChange={
                     (nextChecked) => {
                         setIncludeCompleted(nextChecked)
                         setSettingsValueAndSave(plugin, "include_completed_tasks", nextChecked)
@@ -321,25 +341,29 @@ export function ReactManagePage({eventCenter}: {
                           initialState={includeCompleted}
                 />
             </HStack>
-            {taskRows.length > 0 ? <DataTable
-                tableTitle={curWfName}
-                headers={headers}
-                rows={taskRows}
-            /> : <label>No results.</label>}
+            {
+                displayWorkflows.length === 0 ? <label>No Workflow selected.</label> : (
+                    taskRows.length > 0 ? <DataTable
+                        tableTitle={curWfName}
+                        headers={headers}
+                        rows={taskRows}
+                    /> : <label>No results.</label>
+                )
+            }
         </>
     )
 }
 
 //  region Custom View
-function WorkflowView({workflow, completedCount = 0, totalCount = 0}: {
-    workflow: I_OdaPmWorkflow,
+function WorkflowView({workflows, completedCount = 0, totalCount = 0}: {
+    workflows: I_OdaPmWorkflow[],
     completedCount?: number,
     totalCount?: number
 }) {
-    const wfName = workflow?.name;
+    // const wfName = workflow?.name;
     const completeRatio = completedCount / totalCount;
     const ratioString = totalCount === 0 ? "100" : (completeRatio * 100).toFixed(2);
-    const plugin = useContext(PluginContext);
+    if (workflows.length === 0) return <></>
 
     let color = null
     if (!isNaN(completeRatio)) {
@@ -348,17 +372,13 @@ function WorkflowView({workflow, completedCount = 0, totalCount = 0}: {
         else if (completeRatio >= 0.5)
             color = "orange"
     }
-
     const labelColorStype = isStringNullOrEmpty(color) ? {} : {color: color};
     return (<>
             <HStack style={{alignItems: "center"}} spacing={10}>
-                <h2> Workflow: {wfName} ({initialToUpper(workflow.type)})
+                <h2>
+                    Workflow: {workflows.map(k => `${k.name} (${initialToUpper(k.type)})`).join(", ")}
                 </h2>
-
-                <button onClick={() =>
-                    openTaskPrecisely(plugin.app.workspace, workflow.boundTask)
-                }>Go to Workflow Definition
-                </button>
+                <></>
             </HStack>
             <label style={labelColorStype}>{completedCount}/{totalCount} tasks
                 completed: {ratioString}%.</label>
@@ -375,25 +395,28 @@ function addStepTagToTaskText(oTask: OdaPmTask, stepTag: string): string {
     return `${text.trimEnd()} ${stepTag}` + (hasTrailingEol ? "\n" : "");
 }
 
-function OdaPmTaskCell({oTask, step}: {
+function OdaPmTaskCell({oTask, stepTag}: {
     oTask: OdaPmTask,
-    step: I_OdaPmStep
+    stepTag: string
 }) {
-    const currentSteps = oTask.currentSteps;
     const plugin = useContext(PluginContext);
     // TODO performance
-    const stepTag = step.tag;
-    const includes = currentSteps.map(m => m.tag).includes(stepTag);
+    // If this workflow does not need this step, we show nothing.
+    if (!oTask.type.stepsDef.map(k => k.tag).includes(stepTag))
+        return <></>
+    // Otherwise, we show a checkbox showing if current task completes this step.
+    const includes = oTask.currentSteps.map(k => k.tag).includes(stepTag);
     return <Checkbox
         key={oTask.text + stepTag}
         initialState={includes}
-        onChanged={() => {
+        onChange={() => {
             // preserve the status, but add or remove the step tag
             const next_status = !includes;
 
             const next_text = !next_status ?
                 oTask.boundTask.text.replace(stepTag, "") :
                 addStepTagToTaskText(oTask, stepTag)
+
             rewriteTask(plugin.app.vault, oTask.boundTask,
                 oTask.boundTask.status, next_text)
         }}
@@ -402,18 +425,17 @@ function OdaPmTaskCell({oTask, step}: {
 
 
 // For checkbox
-function odaWorkflowToTableCells(oTask: OdaPmTask) {
-    const workflow: I_OdaPmWorkflow = oTask.type;
-    return [...workflow.stepsDef.map((step: I_OdaPmStep) => {
-        return <OdaPmTaskCell key={step.name} oTask={oTask} step={step}/>
+function odaWorkflowToTableCells(displayStepTags: string[], oTask: OdaPmTask) {
+    return [...displayStepTags.map((stepTag: string) => {
+        return <OdaPmTaskCell key={stepTag} oTask={oTask} stepTag={stepTag}/>
     })]
 }
 
 // For checkbox  
 // region Workflow Ui wrapper
-function odaTaskToTableRow(oTask: OdaPmTask): I_Renderable[] {
+function odaTaskToTableRow(displayStepTags: string[], oTask: OdaPmTask): I_Renderable[] {
 
-    return [`${oTask.summary}`, ...odaWorkflowToTableCells(oTask)]
+    return [`${oTask.summary}`, ...odaWorkflowToTableCells(displayStepTags, oTask)]
 }
 
 // endregion
@@ -469,37 +491,66 @@ const DataTable = ({
     );
 }
 
+/**
+ * A checkbox that is totally controlled by its parent.
+ * @param externalControl
+ * @param onChange
+ * @param onLabelClicked
+ * @param content
+ * @constructor
+ */
+const ExternalControlledCheckbox = ({externalControl, onChange, onLabelClicked, content}:
+                                        {
+                                            externalControl: boolean,
+                                            onChange: () => void,
+                                            onLabelClicked?: () => void,
+                                            content?: string | React.JSX.Element
 
-const Checkbox = ({
-                      content, onChanged,
-                      onLabelClicked,
-                      initialState = false
-                  }: {
-    content?: string | JSX.Element,
-    onChanged?: (nextChecked: boolean) => void,
-                      onLabelClicked?: () => void,
-                      initialState?: boolean
-                  }
-) => {
-    const [isChecked, setIsChecked] = useState(initialState);
-
-    const handleCheckboxChange = () => {
-        setIsChecked(!isChecked);
-        onChanged?.(!isChecked);
-    };
+                                        }) => {
     // Click the label won't trigger the checkbox change event
     return (
         <Fragment>
             <input
                 type="checkbox"
-                checked={isChecked}
-                onChange={handleCheckboxChange}
+                checked={externalControl}
+                onChange={onChange}
             />
             <label onClick={onLabelClicked}>
                 {content}
             </label>
         </Fragment>
     );
+};
+/**
+ * A self-controlled checkbox. Note the difference in parameters with {@link ExternalControlledCheckbox}
+ * @param content
+ * @param onChange
+ * @param onLabelClicked
+ * @param initialState
+ * @constructor
+ */
+const Checkbox = ({
+                      content,
+                      onChange,
+                      onLabelClicked,
+                      initialState = false,
+                  }: {
+    content?: string | JSX.Element,
+    onChange?: (nextChecked: boolean) => void,
+                      onLabelClicked?: () => void,
+    initialState?: boolean,
+                  }
+) => {
+    const [isChecked, setIsChecked] = useState(initialState);
+
+    const handleCheckboxChange = () => {
+        const nextToggle = !isChecked;
+        setIsChecked(nextToggle);
+        onChange?.(nextToggle);
+    };
+    return <ExternalControlledCheckbox externalControl={isChecked}
+                                       onChange={handleCheckboxChange} onLabelClicked={onLabelClicked}
+                                       content={content}/>
 }
 
 function getSpacingStyle(spacing: number | undefined, isHorizontal = true) {
@@ -516,7 +567,7 @@ interface StackProps {
 
 export function HStack(props: StackProps) {
     return <div style={Object.assign({}, {display: "flex", flexDirection: "row"}, props.style)}>
-        {props.children.map((child: ReactNode, i: number) => {
+        {props.children?.map((child: ReactNode, i: number) => {
             return <Fragment key={i}>
                 {i > 0 ? <div style={getSpacingStyle(props.spacing)}/> : null}
                 {child}
