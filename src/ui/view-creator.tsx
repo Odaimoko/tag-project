@@ -1,9 +1,9 @@
 import {
     factoryTask,
     getDefTags, getOrCreateWorkflow,
-    getTypeDefTag,
+    getTypeDefTag, getWorkflowNameFromRawText,
     I_OdaPmStep, I_OdaPmWorkflow,
-    OdaPmTask,
+    OdaPmTask, Tag_Prefix_Step,
 
     trimTagsFromTask,
     Workflow_Type_Enum_Array
@@ -36,21 +36,26 @@ function getTaskMalformedMsg(task: STask) {
     return `Task is not valid for PM.\nYou can disable this popup in settings.\n\nSee Task:\n\t${task.text}`
 }
 
-function createWorkflowFromTask(task: STask): I_OdaPmWorkflow[] {
+/**
+ * Create workflows from one task. Do not process multiple definitions across different tasks.
+ * @param task
+ */
+function createWorkflowsFromTask(task: STask): I_OdaPmWorkflow[] {
     const workflows = []
     const defTags = getDefTags();
     for (const wfType of Workflow_Type_Enum_Array) {
         const defTag = getTypeDefTag(wfType);
         if (task.tags.includes(defTag)) {
-            const workflow = getOrCreateWorkflow(wfType, trimTagsFromTask(task), task);
+            const workflow = getOrCreateWorkflow(wfType, getWorkflowNameFromRawText(trimTagsFromTask(task)), task);
             if (workflow === null) {
                 notifyMalformedTask(task)
                 continue;
             }
+            // The latter found workflow overrides the former one.
             workflow.clearSteps()
             for (const tag of task.tags) {
                 // exclude def tags. we allow both OdaPmWorkflowType on the same task
-                if (defTags.includes(tag)) {
+                if (defTags.includes(tag) || !tag.startsWith(Tag_Prefix_Step)) {
                     continue;
                 }
                 workflow.addStep(tag)
@@ -79,7 +84,8 @@ function createPmTaskFromTask(taskDefTags: string[], taskDefs: I_OdaPmWorkflow[]
     return null;
 }
 
-export function getAllWorkflows() {
+export function getAllWorkflows(): I_OdaPmWorkflow[] {
+
     return dv.pages()["file"]["tasks"].where(function (k: STask) {
             for (const defTag of getDefTags()) {
                 if (k.tags.length === 0) continue;
@@ -90,7 +96,9 @@ export function getAllWorkflows() {
             return false;
         }
     )
-        .flatMap((task: STask) => createWorkflowFromTask(task));
+        .flatMap((task: STask) => createWorkflowsFromTask(task))
+        .array()
+        .unique();
 }
 
 // if we use workspace.openLinkText, a task without a block id will be opened with its section

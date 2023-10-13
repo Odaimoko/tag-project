@@ -1,6 +1,6 @@
 import {STask} from "obsidian-dataview";
 
-const Tag_Prefix_Step = "#iPm/step/";
+export const Tag_Prefix_Step = "#iPm/step/";
 const Tag_Prefix_Workflow = "#iPm/workflow/";
 
 export const Workflow_Type_Enum_Array = [
@@ -30,6 +30,89 @@ export function getTypeDefTag(type: WorkflowType): string {
     return Type_Definition_Tags[Workflow_Type_Enum_Array.indexOf(type)];
 }
 
+const globalStepMap: Map<string, OdaPmStep> = new Map<string, OdaPmStep>();
+const globalOdaPmWorkflowMap: Map<string, OdaPmWorkflow> = new Map<string, OdaPmWorkflow>();
+
+/**
+ * use global Pm Step library instead of creating new instances
+ * @param tag
+ */
+export function getOrCreateStep(tag: string): OdaPmStep {
+    if (globalStepMap.has(tag)) {
+        return <OdaPmStep>globalStepMap.get(tag);
+    }
+    const step = new OdaPmStep(tag);
+    globalStepMap.set(tag, step);
+    return step;
+}
+
+export const clearWorkflowCache = () => {
+    console.log("Clear Workflow Cache")
+    globalOdaPmWorkflowMap.clear();
+}
+
+/**
+ *
+ * @param type
+ * @param name
+ * @param task
+ * @return null if name is null or task is not valid
+ * @return OdaPmWorkflow if a workflow is found or created
+ */
+// TODO temporarily use name as the identifier. Need to use both name and type
+export function getOrCreateWorkflow(type: WorkflowType, name: string | null, task: STask = null): OdaPmWorkflow | null {
+    if (name === null) return null;
+
+    if (globalOdaPmWorkflowMap.has(name)) {
+        console.log(`Return Existing Workflow ${name}`)
+        return <OdaPmWorkflow>globalOdaPmWorkflowMap.get(name);
+    }
+    if (!isTaskValidForPm(task)) {
+        return null;
+    }
+    // If we cannot find an existing workflow, but a task is not given, we cannot create a new one.
+    if (task === null) return null;
+    // All set.
+    const workflow = new OdaPmWorkflow(task, type, name);
+    console.log(`Create New Workflow ${name}`)
+    globalOdaPmWorkflowMap.set(name, workflow);
+    return workflow;
+}
+
+export function isTaskValidForPm(task: STask) {
+    if (!task.text) return false;
+    if (!task.text.includes("\n")) return true;
+    const firstOccurrence = task.text.indexOf("\n");
+    // check if there are text after the first occurrence
+    const hasTextAfterEol = task.text.length <= firstOccurrence + 1;
+
+    return hasTextAfterEol;
+}
+
+
+export function trimTagsFromTask(task: STask): string {
+    // remove all tags from text
+    let text: string = task.text;
+    for (const tag of task.tags) {
+        text = text.replace(tag, "")
+    }
+    return text.trim()
+}
+
+const WHOLE_WORD_REGEX = /\S+/g;
+
+/**
+ * Only take the first word
+ * @param text workflow name without tags
+ */
+export function getWorkflowNameFromRawText(text: string) {
+    const found = text.match(WHOLE_WORD_REGEX)
+    return found ? found[0] : null;
+}
+
+// Unit Test
+// trimWorkflowName("带你飞 带你飞2  \n vads ads f \t li")
+
 export interface I_OdaPmStep {
     tag: string;
     name: string;
@@ -51,49 +134,6 @@ class OdaPmStep implements I_OdaPmStep {
             name: this.name,
         }
     }
-}
-
-const globalStepMap: Map<string, OdaPmStep> = new Map<string, OdaPmStep>();
-const globalOdaPmWorkflowMap: Map<string, OdaPmWorkflow> = new Map<string, OdaPmWorkflow>();
-
-/**
- * use global Pm Step library instead of creating new instances
- * @param tag
- */
-export function getOrCreateStep(tag: string): OdaPmStep {
-    if (globalStepMap.has(tag)) {
-        return <OdaPmStep>globalStepMap.get(tag);
-    }
-    const step = new OdaPmStep(tag);
-    globalStepMap.set(tag, step);
-    return step;
-}
-
-// TODO temporarily use name as the identifier. Need to use both name and type
-export function getOrCreateWorkflow(type: WorkflowType, name: string, task: STask = null): OdaPmWorkflow | null {
-
-    if (globalOdaPmWorkflowMap.has(name)) {
-        return <OdaPmWorkflow>globalOdaPmWorkflowMap.get(name);
-    }
-    if (!isTaskValidForPm(task)) {
-        return null;
-    }
-    // If we cannot find an existing workflow, but a task is not given, we cannot create a new one.
-    if (task === null) return null;
-    // All set.
-    const workflow = new OdaPmWorkflow(task, type, name);
-    globalOdaPmWorkflowMap.set(name, workflow);
-    return workflow;
-}
-
-export function isTaskValidForPm(task: STask) {
-    if (!task.text) return false;
-    if (!task.text.includes("\n")) return true;
-    const firstOccurrence = task.text.indexOf("\n");
-    // check if there are text after the first occurrence
-    const hasTextAfterEol = task.text.length <= firstOccurrence + 1;
-
-    return hasTextAfterEol;
 }
 
 
@@ -183,13 +223,4 @@ export class OdaPmTask {
         }
     }
 
-}
-
-export function trimTagsFromTask(task: STask): string {
-    // remove all tags from text
-    let text: string = task.text;
-    for (const tag of task.tags) {
-        text = text.replace(tag, "")
-    }
-    return text.trim()
 }
