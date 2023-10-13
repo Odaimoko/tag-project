@@ -24,6 +24,12 @@ export const IPM_DEFAULT_SETTINGS: Partial<IPmSettings> = {
 
 type SettingName = keyof IPmSettings;
 
+export
+async function setSettingsValueAndSave<T extends SerializedType>(plugin: OdaPmToolPlugin, settingName: SettingName, value: T) {
+    plugin.settings[settingName] = value;
+    await plugin.saveSettings();
+}
+
 export class IPmSettingsTab extends PluginSettingTab {
     plugin: IPmToolPlugin;
 
@@ -61,14 +67,10 @@ export class IPmSettingsTab extends PluginSettingTab {
             vc.setValue(this.plugin.settings[settingName])
                 // @ts-ignore
                 .onChange?.(async (value: T) => {
-                await IPmSettingsTab.setValueAndSaveImpl(this.plugin, settingName, value)
+                await setSettingsValueAndSave(this.plugin, settingName, value)
                 }
             );
     }
 
-    static async setValueAndSaveImpl<T extends SerializedType>(plugin: OdaPmToolPlugin, settingName: SettingName, value: T) {
-        plugin.settings[settingName] = value;
-        await plugin.saveSettings();
-    }
 
 }
