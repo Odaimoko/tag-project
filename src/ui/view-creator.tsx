@@ -22,8 +22,8 @@ import OdaPmToolPlugin from "../main";
 import {ONotice} from "../utils/o-notice";
 
 import {DataviewAPIReadyEvent, DataviewMetadataChangeEvent} from "../typing/dataview-event";
-import {initialToUpper} from "../utils/format_util";
-import {IPmSettingsTab, setSettingsValueAndSave} from "../Settings";
+import {initialToUpper, isStringNullOrEmpty, simpleFilter} from "../utils/format_util";
+import {setSettingsValueAndSave} from "../Settings";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
 let pmPlugin: OdaPmToolPlugin; // locally global
@@ -122,12 +122,13 @@ function openTaskPrecisely(workspace: Workspace, task: STask) {
     );
 }
 
+
 export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
     // only for re-render
     const [rerenderState, setRerenderState] = useState(0);
 
     function triggerRerender() {
-        console.log(`ReactManagePage rerender triggered. ${rerenderState + 1}`)
+        // console.log(`ReactManagePage rerender triggered. ${rerenderState + 1}`)
         setRerenderState((prevState) => prevState + 1)
     }
 
@@ -158,6 +159,7 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
     pmPlugin = plugin;
 
     const [includeCompleted, setIncludeCompleted] = useState(plugin.settings.include_completed_tasks as boolean);
+    const [searchText, setSearchText] = useState("");
 
     // all tasks that has a workflow
     // Memo to avoid re-compute
@@ -217,7 +219,10 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
 
     const displayedTasks = tasksWithThisType.filter(function (k: OdaPmTask) {
         return (includeCompleted || !k.boundTask.checked);
-    }).array();
+    }).filter(function (k: OdaPmTask) {
+        return isStringNullOrEmpty(searchText) ? true : simpleFilter(searchText, k);
+    })
+        .array();
     const ascending = sortCode === 1;
     if (sortCode !== 0) {
         displayedTasks.sort(
@@ -260,7 +265,7 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
         return row;
     });
 
-    // console.log(`ReactManagePage Render. All tasks: ${tasks_with_workflow.length}. Filtered Tasks: ${tasksWithThisType.length}. Workflow: ${curWfName}. IncludeCompleted: ${includeCompleted}`)
+    console.log(`ReactManagePage Render. All tasks: ${tasks_with_workflow.length}. Filtered Tasks: ${tasksWithThisType.length}. Workflow: ${curWfName}. IncludeCompleted: ${includeCompleted}`)
 
     return (
         <>
@@ -272,17 +277,16 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
                     </Fragment>
                 )
             })}
-            <Checkbox text={"Include Completed"} onChanged={
-                (nextChecked) => {
-                    setIncludeCompleted(nextChecked)
-                    setSettingsValueAndSave(plugin, "include_completed_tasks", nextChecked)
-                }
-            }
-                      initialState={includeCompleted}
-            />
 
             <WorkflowView workflow={currentWorkflow} completedCount={completedCount} totalCount={totalCount}/>
             <div>
+                <input
+                    type="text" // You can change the "type" attribute for different input types
+                    value={searchText}
+                    onChange={(evt) => {
+                        setSearchText(evt.target.value)
+                    }}
+                />
                 <label> Sort </label>
                 <button onClick={
                     () => {
@@ -293,12 +297,21 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
                 >
                     {sortCode === 0 ? "By Appearance" : ascending ? "Ascending" : "Descending"}
                 </button>
+                <Checkbox text={"Include Completed"} onChanged={
+                    (nextChecked) => {
+                        setIncludeCompleted(nextChecked)
+                        setSettingsValueAndSave(plugin, "include_completed_tasks", nextChecked)
+                    }
+                }
+                          initialState={includeCompleted}
+                />
             </div>
-            <DataTable
+
+            {taskRows.length > 0 ? <DataTable
                 tableTitle={curWfName}
                 headers={headers}
                 rows={taskRows}
-            />
+            /> : <label>No results.</label>}
         </>
     )
 }
@@ -423,17 +436,16 @@ const Checkbox = ({
     };
     // Click the label won't trigger the checkbox change event
     return (
-        <div>
+        <Fragment>
             <input
                 type="checkbox"
                 checked={isChecked}
                 onChange={handleCheckboxChange}
             />
             <label onClick={onLabelClicked}>
-
                 {text}
             </label>
-        </div>
+        </Fragment>
     );
 }
 
