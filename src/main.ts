@@ -1,5 +1,5 @@
 import {App, Editor, MarkdownView, Modal, Notice, Plugin} from 'obsidian';
-import {ManagePageView, ManagePageViewId} from "./ui/ManagePageView";
+import {ManagePageView, ManagePageViewId} from "./ui/manage-page-view";
 import {ONotice} from "./utils/o-notice";
 import {IPM_DEFAULT_SETTINGS, IPmSettings, IPmSettingsTab} from "./Settings";
 

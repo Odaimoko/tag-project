@@ -1,9 +1,10 @@
 // https://docs.obsidian.md/Plugins/User+interface/Views
 import {ItemView, Plugin, WorkspaceLeaf} from "obsidian";
-import {ReactManagePage} from "./viewCreator";
+import {ReactManagePage} from "./view-creator";
 import {createRoot, Root} from "react-dom/client";
 import {createContext, StrictMode} from "react";
 import {EventEmitter} from "events"
+import OdaPmToolPlugin from "../main";
 
 export const ManagePageViewId = "iPm-Tool-ManageView";
 export const DataviewMetadataChangeEvent = "dataview:metadata-change";
@@ -84,4 +85,4 @@ export class ManagePageView extends ItemView {
 }
 
 
-export const PluginContext = createContext<Plugin>(null);
+export const PluginContext = createContext<OdaPmToolPlugin>(null);

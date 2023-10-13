@@ -7,7 +7,7 @@ import {
 
     trimTagsFromTask,
     Workflow_Type_Enum_Array
-} from "../data-model/workflow_chain";
+} from "../data-model/workflow_def";
 import {DataArray, getAPI, STask} from "obsidian-dataview";
 import {Workspace} from "obsidian";
 import React, {Fragment, useContext, useEffect, useMemo, useState} from "react";
@@ -18,7 +18,7 @@ import {
     DataviewAPIReadyEvent,
     DataviewMetadataChangeEvent,
     PluginContext
-} from "./ManagePageView";
+} from "./manage-page-view";
 import {EventEmitter} from "events";
 import OdaPmToolPlugin from "../main";
 import {ONotice} from "../utils/o-notice";
