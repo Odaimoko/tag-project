@@ -28,7 +28,7 @@ export class ManagePageView extends ItemView {
     }
 
     getDisplayText() {
-        return "Project Management";
+        return "iPM Manage Page";
     }
 
     async onOpen() {

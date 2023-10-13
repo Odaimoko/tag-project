@@ -10,7 +10,7 @@ import {
 } from "../data-model/workflow_def";
 import {DataArray, getAPI, STask} from "obsidian-dataview";
 import {Workspace} from "obsidian";
-import React, {Fragment, useContext, useEffect, useMemo, useState} from "react";
+import React, {Fragment, JSX, ReactNode, useContext, useEffect, useMemo, useState} from "react";
 import {I_Renderable} from "./i_Renderable";
 
 import {rewriteTask} from "../utils/io_util";
@@ -123,7 +123,9 @@ function openTaskPrecisely(workspace: Workspace, task: STask) {
 }
 
 
-export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
+export function ReactManagePage({eventCenter}: {
+    eventCenter?: EventEmitter
+}) {
     // only for re-render
     const [rerenderState, setRerenderState] = useState(0);
 
@@ -243,7 +245,7 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
             <Fragment key={`${k.boundTask.path}:${k.boundTask.line}`}>
                 <Checkbox
 
-                    text={plugin.settings.capitalize_table_row_initial ? initialToUpper(row[0]) : row[0]}
+                    content={plugin.settings.capitalize_table_row_initial ? initialToUpper(row[0]) : row[0]}
                     onChanged={
                         () => {
                             // k.boundTask.checked = !k.boundTask.checked// No good, this is dataview cache.
@@ -279,25 +281,35 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
             })}
 
             <WorkflowView workflow={currentWorkflow} completedCount={completedCount} totalCount={totalCount}/>
-            <div>
-                <input
-                    type="text" // You can change the "type" attribute for different input types
-                    value={searchText}
-                    onChange={(evt) => {
-                        setSearchText(evt.target.value)
-                    }}
-                />
-                <label> Sort </label>
-                <button onClick={
-                    () => {
-                        // Loop
-                        setSortCode(nextSortCode)
+            <p/>
+            {/*Some vertical space*/}
+
+            <HStack style={{
+                justifyContent: "flex-start",
+                alignItems: "center"
+            }} spacing={15}>
+                <>
+                    <input
+                        type="text" // You can change the "type" attribute for different input types
+                        value={searchText}
+                        placeholder={"Search task name..."}
+                        onChange={(evt) => {
+                            setSearchText(evt.target.value)
+                        }}
+                    />
+                </>
+                <><label> Sort </label>
+                    <button onClick={
+                        () => {
+                            // Loop
+                            setSortCode(nextSortCode)
+                        }
                     }
-                }
-                >
-                    {sortCode === 0 ? "By Appearance" : ascending ? "Ascending" : "Descending"}
-                </button>
-                <Checkbox text={"Include Completed"} onChanged={
+                    >
+                        {sortCode === 0 ? "By Appearance" : ascending ? "Ascending" : "Descending"}
+                    </button>
+                </>
+                <Checkbox content={"Include Completed"} onChanged={
                     (nextChecked) => {
                         setIncludeCompleted(nextChecked)
                         setSettingsValueAndSave(plugin, "include_completed_tasks", nextChecked)
@@ -305,8 +317,7 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
                 }
                           initialState={includeCompleted}
                 />
-            </div>
-
+            </HStack>
             {taskRows.length > 0 ? <DataTable
                 tableTitle={curWfName}
                 headers={headers}
@@ -317,19 +328,37 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
 }
 
 //  region Custom View
-function WorkflowView({workflow, completedCount = 0, totalCount = 0}: { workflow: I_OdaPmWorkflow, completedCount?: number, totalCount?: number }) {
+function WorkflowView({workflow, completedCount = 0, totalCount = 0}: {
+    workflow: I_OdaPmWorkflow,
+    completedCount?: number,
+    totalCount?: number
+}) {
     const wfName = workflow?.name;
-    const completionRate = totalCount === 0 ? "100" : (completedCount / totalCount * 100).toFixed(2);
+    const completeRatio = completedCount / totalCount;
+    const ratioString = totalCount === 0 ? "100" : (completeRatio * 100).toFixed(2);
     const plugin = useContext(PluginContext);
-    return (
-        <>
-            <h2> Workflow: {wfName}.
+
+    let color = null
+    if (!isNaN(completeRatio)) {
+        if (completeRatio >= 0.8)
+            color = "green"
+        else if (completeRatio >= 0.5)
+            color = "orange"
+    }
+
+    const labelColorStype = isStringNullOrEmpty(color) ? {} : {color: color};
+    return (<>
+            <HStack style={{alignItems: "center"}} spacing={10}>
+                <h2> Workflow: {wfName}.
+                </h2>
+                <label style={labelColorStype}>{completedCount}/{totalCount} tasks
+                    completed: {ratioString}%.</label>
+                
                 <button onClick={() =>
                     openTaskPrecisely(plugin.app.workspace, workflow.boundTask)
                 }>Go to Workflow Definition
                 </button>
-            </h2>
-            <label>Completion: {completedCount}/{totalCount}, {completionRate}%</label>
+            </HStack>
         </>
     )
 }
@@ -343,7 +372,10 @@ function addStepTagToTaskText(oTask: OdaPmTask, stepTag: string): string {
     return `${text.trimEnd()} ${stepTag}` + (hasTrailingEol ? "\n" : "");
 }
 
-function OdaPmTaskCell({oTask, step}: { oTask: OdaPmTask, step: I_OdaPmStep }) {
+function OdaPmTaskCell({oTask, step}: {
+    oTask: OdaPmTask,
+    step: I_OdaPmStep
+}) {
     const currentSteps = oTask.currentSteps;
     const plugin = useContext(PluginContext);
     // TODO performance
@@ -391,18 +423,26 @@ function odaTaskToTableRow(oTask: OdaPmTask): I_Renderable[] {
 const DataTable = ({
                        tableTitle,
                        headers, rows,
-                       onHeaderClicked
+                       onHeaderClicked,
+                       tableStyle,
+                       headerStyle,
+                       cellStyle,
                    }: {
-    tableTitle: string, headers: I_Renderable[], rows: I_Renderable[][],
-    onHeaderClicked?: (arg0: number) => void
+    tableTitle: string,
+    headers: I_Renderable[],
+    rows: I_Renderable[][],
+    onHeaderClicked?: (arg0: number) => void,
+    tableStyle?: React.CSSProperties,
+    headerStyle?: React.CSSProperties,
+    cellStyle?: React.CSSProperties,
 }) => {
 
     return (
-        <table key={tableTitle}>
+        <table style={tableStyle} key={tableTitle}>
             <thead>
             <tr>
                 {headers.map((header: string, index) => {
-                    return <th key={header}>
+                    return <th style={headerStyle} key={header}>
                         <div onClick={() => {
                             onHeaderClicked?.(index)
                         }}>{header}</div>
@@ -416,7 +456,7 @@ const DataTable = ({
                     {items.map(
                         function (k, columnIdx) {
                             const key = `${tableTitle}_${rowIdx}_${columnIdx}`;
-                            return <td key={key}>{k}</td>;
+                            return <td style={cellStyle} key={key}>{k}</td>;
                         }
                     )}
                 </tr>))
@@ -428,11 +468,11 @@ const DataTable = ({
 
 
 const Checkbox = ({
-                      text, onChanged,
+                      content, onChanged,
                       onLabelClicked,
                       initialState = false
                   }: {
-    text?: string,
+    content?: string | JSX.Element,
     onChanged?: (nextChecked: boolean) => void,
                       onLabelClicked?: () => void,
                       initialState?: boolean
@@ -453,10 +493,33 @@ const Checkbox = ({
                 onChange={handleCheckboxChange}
             />
             <label onClick={onLabelClicked}>
-                {text}
+                {content}
             </label>
         </Fragment>
     );
+}
+
+function getSpacingStyle(spacing: number | undefined, isHorizontal = true) {
+    return isHorizontal ? {width: spacing} : {height: spacing}
+}
+
+// https://react.dev/learn/rendering-lists#keeping-list-items-in-order-with-key
+// JSX elements directly inside a map() call always need keys! 
+interface StackProps {
+    style?: React.CSSProperties,
+    spacing?: number,
+    children: ReactNode[],
+}
+
+export function HStack(props: StackProps) {
+    return <div style={Object.assign({}, {display: "flex", flexDirection: "row"}, props.style)}>
+        {props.children.map((child: ReactNode, i: number) => {
+            return <Fragment key={i}>
+                {i > 0 ? <div style={getSpacingStyle(props.spacing)}/> : null}
+                {child}
+            </Fragment>
+        })}
+    </div>
 }
 
 // endregion

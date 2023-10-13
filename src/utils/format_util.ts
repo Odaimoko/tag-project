@@ -5,7 +5,7 @@ export function initialToUpper(word: string) {
     return word[0].toUpperCase() + word.slice(1);
 }
 
-export function isStringNullOrEmpty(text: string): boolean {
+export function isStringNullOrEmpty(text: string | null | undefined): boolean {
     if (!text) return true;
     return text.length === 0;
 
