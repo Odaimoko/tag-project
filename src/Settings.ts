@@ -13,9 +13,9 @@ type SerializedType =
 
 export interface IPmSettings {
     report_malformed_task: SerializedType;
+    capitalize_table_row_initial: SerializedType;
     // personalized settings, not exposed in settings tab
     include_completed_tasks: SerializedType;
-    capitalize_table_row_initial: SerializedType;
 }
 
 export const IPM_DEFAULT_SETTINGS: Partial<IPmSettings> = {
