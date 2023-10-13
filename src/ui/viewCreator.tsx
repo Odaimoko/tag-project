@@ -20,8 +20,21 @@ import {
     PluginContext
 } from "./ManagePageView";
 import {EventEmitter} from "events";
+import OdaPmToolPlugin from "../main";
+import {ONotice} from "../utils/o-notice";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
+let pmPlugin: OdaPmToolPlugin; // locally global
+
+function notifyMalformedTask(task: STask) {
+    // console.log(pmPlugin && pmPlugin.settings.report_malformed_task)
+    if (pmPlugin && pmPlugin.settings.report_malformed_task)
+        new ONotice(getTaskMalformedMsg(task))
+}
+
+function getTaskMalformedMsg(task: STask) {
+    return `Task is not valid for PM.\nYou can disable this popup in settings.\n\nSee Task:\n\t${task.text}`
+}
 
 function createWorkflowFromTask(task: STask): I_OdaPmWorkflow[] {
     const workflows = []
@@ -30,7 +43,10 @@ function createWorkflowFromTask(task: STask): I_OdaPmWorkflow[] {
         const defTag = getTypeDefTag(wfType);
         if (task.tags.includes(defTag)) {
             const workflow = getOrCreateWorkflow(wfType, trimTagsFromTask(task), task);
-            if (workflow === null) continue;
+            if (workflow === null) {
+                notifyMalformedTask(task)
+                continue;
+            }
             workflow.clearSteps()
             for (const tag of task.tags) {
                 // exclude def tags. we allow both OdaPmWorkflowType on the same task
@@ -53,7 +69,11 @@ function createPmTaskFromTask(taskDefTags: string[], taskDefs: I_OdaPmWorkflow[]
         const defTag = taskDefTags[i];
         if (task.tags.includes(defTag)) {
             const workflow = taskDefs[i];
-            return factoryTask(task, workflow)
+            const oTask = factoryTask(task, workflow);
+            if (oTask === null) {
+                notifyMalformedTask(task)
+            }
+            return oTask
         }
     }
     return null;
@@ -125,6 +145,9 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
     const [includeCompleted, setIncludeCompleted] = useState(false);
 
     const plugin = useContext(PluginContext);
+    // Init here
+    pmPlugin = plugin;
+
     // all tasks that has a workflow
     // Memo to avoid re-compute
     const tasks_with_workflow = useMemo(getAllPmTasks, [rerenderState]);

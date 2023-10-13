@@ -1,5 +1,4 @@
 import {STask} from "obsidian-dataview";
-import {ONotice} from "../utils/ONotice";
 
 const Tag_Prefix_Step = "#iPm/step/";
 const Tag_Prefix_Workflow = "#iPm/workflow/";
@@ -93,9 +92,6 @@ export function isTaskValidForPm(task: STask) {
     const firstOccurrence = task.text.indexOf("\n");
     // check if there are text after the first occurrence
     const hasTextAfterEol = task.text.length <= firstOccurrence + 1;
-    if (!hasTextAfterEol) {
-        new ONotice(`Task is not valid for PM. See Task:\n${task.text}`)
-    }
 
     return hasTextAfterEol;
 }
