@@ -258,6 +258,9 @@ const OdaTaskSummaryCell = ({oTask, taskFirstColumn}: {
 }) => {
     const plugin = useContext(PluginContext);
     const workspace = plugin.app.workspace;
+    //  State: summary unticked, all steps are ticked. Outcome: auto tick summary and the original task.
+    if (!oTask.boundTask.checked && oTask.allStepsCompleted())
+        rewriteTask(plugin.app.vault, oTask.boundTask, TaskStatus_checked, oTask.boundTask.text)
 
     function tickSummary() {
         // Automatically add tags when checking in manage page 
