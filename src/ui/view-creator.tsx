@@ -1,10 +1,13 @@
 import {
     factoryTask,
-    getDefTags, getOrCreateWorkflow,
-    getTypeDefTag, getWorkflowNameFromRawText,
-    I_OdaPmStep, I_OdaPmWorkflow,
-    OdaPmTask, Tag_Prefix_Step,
-
+    getDefTags,
+    getOrCreateWorkflow,
+    getTypeDefTag,
+    getWorkflowNameFromRawText,
+    I_OdaPmStep,
+    I_OdaPmWorkflow,
+    OdaPmTask,
+    Tag_Prefix_Step,
     trimTagsFromTask,
     Workflow_Type_Enum_Array
 } from "../data-model/workflow_def";
@@ -14,9 +17,7 @@ import React, {Fragment, JSX, ReactNode, useContext, useEffect, useMemo, useStat
 import {I_Renderable} from "./i_Renderable";
 
 import {rewriteTask} from "../utils/io_util";
-import {
-    PluginContext
-} from "./manage-page-view";
+import {PluginContext} from "./manage-page-view";
 import {EventEmitter} from "events";
 import OdaPmToolPlugin from "../main";
 import {ONotice} from "../utils/o-notice";
@@ -126,9 +127,8 @@ function openTaskPrecisely(workspace: Workspace, task: STask) {
 }
 
 
-export function ReactManagePage({eventCenter}: {
-    eventCenter?: EventEmitter
-}) {
+export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
+
     // only for re-render
     const [rerenderState, setRerenderState] = useState(0);
 
@@ -140,16 +140,10 @@ export function ReactManagePage({eventCenter}: {
     // How to prevent add listener multiple times? use custom emitter instead of obsidian's event emitter
     useEffect(() => {
         eventCenter?.addListener(DataviewMetadataChangeEvent, triggerRerender)
-
-        return () => {
-            eventCenter?.removeListener(DataviewMetadataChangeEvent, triggerRerender)
-        }
-    }, [rerenderState]);
-
-    useEffect(() => {
         eventCenter?.addListener(DataviewAPIReadyEvent, triggerRerender)
 
         return () => {
+            eventCenter?.removeListener(DataviewMetadataChangeEvent, triggerRerender)
             eventCenter?.removeListener(DataviewAPIReadyEvent, triggerRerender)
         }
     }, [rerenderState]);
@@ -160,16 +154,11 @@ export function ReactManagePage({eventCenter}: {
     // const [currentWorkflow, setCurrentWorkflow] = useState<I_OdaPmWorkflow>(workflows[0]);
     const [displayWorkflows, setDisplayWorkflows] = useState<I_OdaPmWorkflow[]>([]);
     const plugin = useContext(PluginContext);
-
-    pmPlugin = plugin;// Init here
-
-    const [includeCompleted, setIncludeCompleted] = useState(plugin.settings.include_completed_tasks as boolean);
-    const [searchText, setSearchText] = useState("");
+    pmPlugin = plugin;
 
     // all tasks that has a workflow
     // Memo to avoid re-compute
     const tasks_with_workflow = useMemo(getAllPmTasks, [rerenderState]);
-    const [sortCode, setSortCode] = useState(0); // 0 = unsorted, 1 = asc, 2 = desc
 
     function getAllPmTasks() {
         const task_def_tags = workflows.map(function (k: I_OdaPmWorkflow) {
@@ -191,25 +180,8 @@ export function ReactManagePage({eventCenter}: {
     }
 
     if (workflows.length === 0)
-        return <label>No Workflow defined.</label>
+        return <label>No Workflow defined. TODO #hint_no_work_flow_defined </label>
 
-
-    const workspace = plugin.app.workspace;
-
-    // Union
-    const displayStepNames = displayWorkflows.map(wf => wf.stepsDef.map(function (k: I_OdaPmStep) {
-        return k.name;
-    })).flatMap(k => k).unique();
-    const displayStepTags = displayWorkflows.map(wf => wf.stepsDef.map(function (k: I_OdaPmStep) {
-        return k.tag;
-    })).flatMap(k => k).unique();
-
-    const curWfName = displayWorkflows.map(k => k.name).join(", ")
-    const headers = [curWfName, ...displayStepNames];
-
-    // sort
-    const totalSortMethods = 3;
-    const nextSortCode = (sortCode + 1) % totalSortMethods;
 
     // Here we use reference equality to filter tasks. Using reference is prone to bugs since we tend to new a lot in js, but using string id is memory consuming. Trade-off.
     const tasksWithThisType: DataArray<OdaPmTask> = tasks_with_workflow.filter(function (k: OdaPmTask) {
@@ -221,6 +193,56 @@ export function ReactManagePage({eventCenter}: {
     });
     const completedCount = completedTasks.length;
 
+    // console.log(`ReactManagePage Render. All tasks: ${tasks_with_workflow.length}. Filtered Tasks: ${tasksWithThisType.length}. Workflow: ${curWfName}. IncludeCompleted: ${includeCompleted}`)
+
+    return (
+        <>
+            <HStack style={{alignItems: "center"}} spacing={10}>
+                <h2>{workflows.length} Workflow(s)</h2>
+                <button onClick={() => setDisplayWorkflows([...workflows])}>Select All
+                </button>
+                <button onClick={() => setDisplayWorkflows([])}>Unselect All
+                </button>
+            </HStack>
+            {workflows.map((workflow: I_OdaPmWorkflow) => {
+                return (
+                    <ExternalControlledCheckbox key={workflow.name}
+                                                content={workflow.name}
+                                                onChange={() => {
+                                                    // invert the checkbox
+                                                    const v = !displayWorkflows.includes(workflow)
+                                                    const newArr = v ? [...displayWorkflows, workflow] : displayWorkflows.filter(k => k != workflow)
+                                                    setDisplayWorkflows(newArr)
+                                                }}
+                                                onLabelClicked={() =>
+                                                    // Go to workflow def
+                                                    openTaskPrecisely(plugin.app.workspace, workflow.boundTask)
+                                                }
+                                                externalControl={displayWorkflows.includes(workflow)}
+                    />
+
+                )
+            })}
+            <WorkflowView workflows={displayWorkflows} completedCount={completedCount} totalCount={totalCount}/>
+            <p/>
+            <TaskCheckboxTableView displayWorkflows={displayWorkflows} tasksWithThisType={tasksWithThisType}/>
+
+        </>
+    )
+}
+
+function TaskCheckboxTableView({displayWorkflows, tasksWithThisType}: {
+    displayWorkflows: I_OdaPmWorkflow[],
+    tasksWithThisType: DataArray<OdaPmTask>
+}) {
+    const plugin = useContext(PluginContext);
+    const workspace = plugin.app.workspace;
+    const [searchText, setSearchText] = useState("");
+    const [sortCode, setSortCode] = useState(0); // 0 = unsorted, 1 = asc, 2 = desc
+    const [includeCompleted, setIncludeCompleted] = useState(plugin.settings.include_completed_tasks as boolean);
+    // sort
+    const totalSortMethods = 3;
+    const nextSortCode = (sortCode + 1) % totalSortMethods;
     const displayedTasks = tasksWithThisType.filter(function (k: OdaPmTask) {
         return (includeCompleted || !k.boundTask.checked);
     }).filter(function (k: OdaPmTask) {
@@ -239,6 +261,16 @@ export function ReactManagePage({eventCenter}: {
             }, sortCode
         )
     }
+    // Union
+    const displayStepNames = displayWorkflows.map(wf => wf.stepsDef.map(function (k: I_OdaPmStep) {
+        return k.name;
+    })).flatMap(k => k).unique();
+    const displayStepTags = displayWorkflows.map(wf => wf.stepsDef.map(function (k: I_OdaPmStep) {
+        return k.tag;
+    })).flatMap(k => k).unique();
+
+    const curWfName = displayWorkflows.map(k => k.name).join(", ")
+    const headers = [curWfName, ...displayStepNames];
 
 
     const taskRows = displayedTasks.map(function (oTask: OdaPmTask) {
@@ -266,47 +298,8 @@ export function ReactManagePage({eventCenter}: {
         return row;
     });
 
-    // console.log(`ReactManagePage Render. All tasks: ${tasks_with_workflow.length}. Filtered Tasks: ${tasksWithThisType.length}. Workflow: ${curWfName}. IncludeCompleted: ${includeCompleted}`)
-
     return (
         <>
-            <HStack style={{alignItems: "center"}} spacing={10}>
-
-                <h2>{workflows.length} Workflow(s)</h2>
-                <button onClick={() => {
-                    setDisplayWorkflows([...workflows]);
-                }}>Select All
-                </button>
-                <button onClick={() => {
-                    setDisplayWorkflows([]);
-                }}>Unselect All
-                </button>
-            </HStack>
-            {workflows.map((workflow: I_OdaPmWorkflow) => {
-                return (
-
-                    <ExternalControlledCheckbox key={workflow.name}
-                                                content={workflow.name}
-                                                onChange={() => {
-                                                    // invert the checkbox
-                                                    const v = !displayWorkflows.includes(workflow)
-                                                    const newArr = v ? [...displayWorkflows, workflow] : displayWorkflows.filter(k => k != workflow)
-                                                    setDisplayWorkflows(newArr)
-                                                }}
-                                                onLabelClicked={() =>
-                                                    // Go to workflow def
-                                                    openTaskPrecisely(plugin.app.workspace, workflow.boundTask)
-                                                }
-                                                externalControl={displayWorkflows.includes(workflow)}
-                    />
-
-                )
-            })}
-            <WorkflowView workflows={displayWorkflows} completedCount={completedCount} totalCount={totalCount}/>
-            <p/>
-            {/*Some vertical space*/
-            }
-
             <HStack style={{
                 justifyContent: "flex-start",
                 alignItems: "center"
@@ -341,6 +334,7 @@ export function ReactManagePage({eventCenter}: {
                           initialState={includeCompleted}
                 />
             </HStack>
+            <p/>
             {
                 displayWorkflows.length === 0 ? <label>No Workflow selected.</label> : (
                     taskRows.length > 0 ? <DataTable
@@ -352,6 +346,7 @@ export function ReactManagePage({eventCenter}: {
             }
         </>
     )
+
 }
 
 //  region Custom View
