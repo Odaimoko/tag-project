@@ -1,5 +1,5 @@
 import {STask} from "obsidian-dataview";
-import {I_Renderable} from "../ui/i_Renderable";
+import {ONotice} from "../utils/ONotice";
 
 const Tag_Prefix_Step = "#iPm/step/";
 const Tag_Prefix_Workflow = "#iPm/workflow/";
@@ -71,17 +71,38 @@ export function getOrCreateStep(tag: string): OdaPmStep {
 }
 
 // TODO temporarily use name as the identifier. Need to use both name and type
-export function getOrCreateWorkflow(type: WorkflowType, name: string): OdaPmWorkflow {
+export function getOrCreateWorkflow(type: WorkflowType, name: string, task: STask = null): OdaPmWorkflow | null {
+
     if (globalOdaPmWorkflowMap.has(name)) {
         return <OdaPmWorkflow>globalOdaPmWorkflowMap.get(name);
     }
-    const workflow = new OdaPmWorkflow(type, name);
+    if (!isTaskValidForPm(task)) {
+        return null;
+    }
+    // If we cannot find an existing workflow, but a task is not given, we cannot create a new one.
+    if (task === null) return null;
+    // All set.
+    const workflow = new OdaPmWorkflow(task, type, name);
     globalOdaPmWorkflowMap.set(name, workflow);
     return workflow;
 }
 
-export interface I_OdaPmWorkflow {
+export function isTaskValidForPm(task: STask) {
+    if (!task.text) return false;
+    if (!task.text.includes("\n")) return true;
+    const firstOccurrence = task.text.indexOf("\n");
+    // check if there are text after the first occurrence
+    const hasTextAfterEol = task.text.length <= firstOccurrence + 1;
+    if (!hasTextAfterEol) {
+        new ONotice(`Task is not valid for PM. See Task:\n${task.text}`)
+    }
 
+    return hasTextAfterEol;
+}
+
+
+export interface I_OdaPmWorkflow {
+    boundTask: STask;
     name: string;
     stepsDef: OdaPmStep[];
     type: WorkflowType;
@@ -92,13 +113,14 @@ export interface I_OdaPmWorkflow {
 }
 
 class OdaPmWorkflow implements I_OdaPmWorkflow {
+    boundTask: STask;
     name: string;
     stepsDef: OdaPmStep[];
     type: WorkflowType;
     tag: string;
 
-    constructor(type: WorkflowType, name: string) {
-
+    constructor(task: STask, type: WorkflowType, name: string) {
+        this.boundTask = task;
         this.type = type;
         this.stepsDef = [];
         this.name = name;
@@ -126,8 +148,11 @@ class OdaPmWorkflow implements I_OdaPmWorkflow {
     clearSteps(): void {
         this.stepsDef = []
     }
+}
 
-
+export function factoryTask(task: STask, type: I_OdaPmWorkflow) {
+    if (!isTaskValidForPm(task)) return null;
+    return new OdaPmTask(type, task)
 }
 
 export class OdaPmTask {
