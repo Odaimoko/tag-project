@@ -67,11 +67,15 @@ export function getOrCreateWorkflow(type: WorkflowType, name: string | null, tas
         // console.log(`Return Existing Workflow ${name}`)
         return <OdaPmWorkflow>globalOdaPmWorkflowMap.get(name);
     }
-    if (!isTaskValidForPm(task)) {
+    if (!isTaskSingleLine(task)) {
         return null;
     }
     // If we cannot find an existing workflow, but a task is not given, we cannot create a new one.
     if (task === null) return null;
+    return createWorkflow(task, type, name);
+}
+
+function createWorkflow(task: STask, type: WorkflowType, name: string) {
     // All set.
     const workflow = new OdaPmWorkflow(task, type, name);
     // console.log(`Create New Workflow ${name}`)
@@ -79,7 +83,7 @@ export function getOrCreateWorkflow(type: WorkflowType, name: string | null, tas
     return workflow;
 }
 
-export function isTaskValidForPm(task: STask) {
+export function isTaskSingleLine(task: STask) {
     if (!task.text) return false;
     if (!task.text.includes("\n")) return true;
     const firstOccurrence = task.text.indexOf("\n");
@@ -189,7 +193,7 @@ class OdaPmWorkflow implements I_OdaPmWorkflow {
 }
 
 export function factoryTask(task: STask, type: I_OdaPmWorkflow) {
-    if (!isTaskValidForPm(task)) return null;
+    if (!isTaskSingleLine(task)) return null;
     return new OdaPmTask(type, task)
 }
 

@@ -53,7 +53,7 @@ function createWorkflowsFromTask(task: STask): I_OdaPmWorkflow[] {
                 notifyMalformedTask(task)
                 continue;
             }
-            // The latter found workflow overrides the former one.
+            // The latter found workflow overrides the former one's steps, but not the STask.
             workflow.clearSteps()
             for (const tag of task.tags) {
                 // exclude def tags. we allow both OdaPmWorkflowType on the same task
@@ -265,7 +265,7 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
         return row;
     });
 
-    console.log(`ReactManagePage Render. All tasks: ${tasks_with_workflow.length}. Filtered Tasks: ${tasksWithThisType.length}. Workflow: ${curWfName}. IncludeCompleted: ${includeCompleted}`)
+    // console.log(`ReactManagePage Render. All tasks: ${tasks_with_workflow.length}. Filtered Tasks: ${tasksWithThisType.length}. Workflow: ${curWfName}. IncludeCompleted: ${includeCompleted}`)
 
     return (
         <>
@@ -335,20 +335,30 @@ function WorkflowView({workflow, completedCount = 0, totalCount = 0}: { workflow
 }
 
 
+function addStepTagToTaskText(oTask: OdaPmTask, stepTag: string): string {
+    const text = oTask.boundTask.text;
+    // With the rule that a task cannot cross multiple lines, we can safely assume that the last char is \n if there is a \n.
+    const hasTrailingEol = text.indexOf("\n") == text.length - 1
+    // We believe dataview gives the correct result. In the latter case there will be no step.tag in the original text if includes is false.
+    return `${text.trimEnd()} ${stepTag}` + (hasTrailingEol ? "\n" : "");
+}
+
 function OdaPmTaskCell({oTask, step}: { oTask: OdaPmTask, step: I_OdaPmStep }) {
     const currentSteps = oTask.currentSteps;
     const plugin = useContext(PluginContext);
     // TODO performance
-    const includes = currentSteps.map(m => m.tag).includes(step.tag);
+    const stepTag = step.tag;
+    const includes = currentSteps.map(m => m.tag).includes(stepTag);
     return <Checkbox
-        key={oTask.text + step.tag}
+        key={oTask.text + stepTag}
         initialState={includes}
         onChanged={() => {
             // preserve the status, but add or remove the step tag
             const next_status = !includes;
+
             const next_text = !next_status ?
-                oTask.boundTask.text.replace(step.tag, "") :
-                `${oTask.boundTask.text} ${step.tag}`; // We believe dataview gives the correct result. In the latter case there will be no step.tag in the original text if includes is false. 
+                oTask.boundTask.text.replace(stepTag, "") :
+                addStepTagToTaskText(oTask, stepTag)
             rewriteTask(plugin.app.vault, oTask.boundTask,
                 oTask.boundTask.status, next_text)
         }}
