@@ -22,6 +22,7 @@ import OdaPmToolPlugin from "../main";
 import {ONotice} from "../utils/o-notice";
 
 import {DataviewAPIReadyEvent, DataviewMetadataChangeEvent} from "../typing/dataview-event";
+import {initialToUpper} from "../utils/format_util";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
 let pmPlugin: OdaPmToolPlugin; // locally global
@@ -234,8 +235,8 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
         row[0] = (
             <Fragment key={`${k.boundTask.path}:${k.boundTask.line}`}>
                 <Checkbox
-                   
-                    text={row[0]}
+
+                    text={initialToUpper(row[0])}
                     onChanged={
                         () => {
                             // k.boundTask.checked = !k.boundTask.checked// No good, this is dataview cache.
