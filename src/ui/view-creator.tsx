@@ -53,6 +53,9 @@ function createWorkflowsFromTask(task: STask): I_OdaPmWorkflow[] {
                 notifyMalformedTask(task)
                 continue;
             }
+            workflow.boundTask = task // Override task
+            workflow.type = wfType // override 
+            
             // The latter found workflow overrides the former one's steps, but not the STask.
             workflow.clearSteps()
             for (const tag of task.tags) {
@@ -349,16 +352,16 @@ function WorkflowView({workflow, completedCount = 0, totalCount = 0}: {
     const labelColorStype = isStringNullOrEmpty(color) ? {} : {color: color};
     return (<>
             <HStack style={{alignItems: "center"}} spacing={10}>
-                <h2> Workflow: {wfName}.
+                <h2> Workflow: {wfName} ({initialToUpper(workflow.type)})
                 </h2>
-                <label style={labelColorStype}>{completedCount}/{totalCount} tasks
-                    completed: {ratioString}%.</label>
-                
+
                 <button onClick={() =>
                     openTaskPrecisely(plugin.app.workspace, workflow.boundTask)
                 }>Go to Workflow Definition
                 </button>
             </HStack>
+            <label style={labelColorStype}>{completedCount}/{totalCount} tasks
+                completed: {ratioString}%.</label>
         </>
     )
 }

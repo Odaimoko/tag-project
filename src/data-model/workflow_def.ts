@@ -156,9 +156,9 @@ export interface I_OdaPmWorkflow {
 
 class OdaPmWorkflow implements I_OdaPmWorkflow {
     boundTask: STask;
-    name: string;
     stepsDef: OdaPmStep[];
     type: WorkflowType;
+    name: string;
     tag: string;
 
     constructor(task: STask, type: WorkflowType, name: string) {
