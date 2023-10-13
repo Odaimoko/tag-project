@@ -238,7 +238,7 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
             <Fragment key={`${k.boundTask.path}:${k.boundTask.line}`}>
                 <Checkbox
 
-                    text={initialToUpper(row[0])}
+                    text={plugin.settings.capitalize_table_row_initial ? initialToUpper(row[0]) : row[0]}
                     onChanged={
                         () => {
                             // k.boundTask.checked = !k.boundTask.checked// No good, this is dataview cache.

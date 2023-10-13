@@ -15,11 +15,13 @@ export interface IPmSettings {
     report_malformed_task: SerializedType;
     // personalized settings, not exposed in settings tab
     include_completed_tasks: SerializedType;
+    capitalize_table_row_initial: SerializedType;
 }
 
 export const IPM_DEFAULT_SETTINGS: Partial<IPmSettings> = {
     report_malformed_task: true,
-    include_completed_tasks: true
+    include_completed_tasks: true,
+    capitalize_table_row_initial: true,
 }
 
 type SettingName = keyof IPmSettings;
@@ -51,14 +53,9 @@ export class IPmSettingsTab extends PluginSettingTab {
             .setName('Notice when a task is malformed')
             .setDesc('A task or workflow definition is malformed if it contains multiple lines. Try adding bland line before or after the task.')
             .addToggle(this.setValueAndSave("report_malformed_task"));
-        // .addText(text => text
-        //     .setPlaceholder('Enter your secret')
-        //     .setValue(this.plugin.settings.mySetting)
-        //     .onChange(async (value) => {
-        //         this.plugin.settings.mySetting = value;
-        //         await this.plugin.saveSettings();
-        //     }));
-
+        new Setting(containerEl)
+            .setName('Capitalized the first letter in table row')
+            .addToggle(this.setValueAndSave("capitalize_table_row_initial"));
     }
 
     setValueAndSave<T extends SerializedType>(settingName: SettingName) {
