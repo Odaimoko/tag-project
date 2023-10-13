@@ -7,7 +7,7 @@ import {
     I_OdaPmStep,
     I_OdaPmWorkflow,
     OdaPmTask,
-    Tag_Prefix_Step,
+    Tag_Prefix_Step, TaskStatus_checked, TaskStatus_unchecked,
     trimTagsFromTask,
     Workflow_Type_Enum_Array
 } from "../data-model/workflow_def";
@@ -209,7 +209,7 @@ export function ReactManagePage({eventCenter}: {
             </HStack>
             {workflows.map((workflow: I_OdaPmWorkflow) => {
                 return (
-                    <WorkflowFilterCheckbox displayWorkflows={displayWorkflows} workflow={workflow}
+                    <WorkflowFilterCheckbox key={workflow.name} displayWorkflows={displayWorkflows} workflow={workflow}
                                             setDisplayWorkflows={setDisplayWorkflows}/>
                 )
             })}
@@ -235,13 +235,13 @@ const WorkflowFilterCheckbox = ({workflow, displayWorkflows, setDisplayWorkflows
         setDisplayWorkflows(newArr)
     }
 
-    return <ExternalControlledCheckbox key={workflow.name}
-                                       content={<InternalLinkView content={workflow.name} onIconClicked={() =>
-                                           // Go to workflow def
-                                           openTaskPrecisely(plugin.app.workspace, workflow.boundTask)}
-                                                                  onContentClicked={tickCheckbox}/>}
-                                       onChange={tickCheckbox}
-                                       externalControl={displayWorkflows.includes(workflow)}
+    return <ExternalControlledCheckbox
+        content={<InternalLinkView content={workflow.name} onIconClicked={() =>
+            // Go to workflow def
+            openTaskPrecisely(plugin.app.workspace, workflow.boundTask)}
+                                   onContentClicked={tickCheckbox}/>}
+        onChange={tickCheckbox}
+        externalControl={displayWorkflows.includes(workflow)}
     />
 
 }
@@ -252,30 +252,49 @@ const WorkflowFilterCheckbox = ({workflow, displayWorkflows, setDisplayWorkflows
  * @param taskFirstColumn
  * @constructor
  */
-const OdaTaskSummaryCell = ({oTask, plugin, taskFirstColumn}: {
+const OdaTaskSummaryCell = ({oTask, taskFirstColumn}: {
     oTask: OdaPmTask,
-    plugin: OdaPmToolPlugin,
     taskFirstColumn: I_Renderable
 }) => {
+    const plugin = useContext(PluginContext);
     const workspace = plugin.app.workspace;
-    return <Fragment key={`${oTask.boundTask.path}:${oTask.boundTask.line}`}>
-        <Checkbox
+
+    function tickSummary() {
+        // Automatically add tags when checking in manage page 
+
+        // 	 State: all ticked. Behaviour: untick summary. Outcome: nothing. 
+
+        if (!oTask.allStepsCompleted()) {
+            // k.boundTask.checked = !k.boundTask.checked// No good, this is dataview cache.
+
+            // - State: unticked. Behaviour: tick summary. Outcome: All steps ticked.
+            const nextStatus = TaskStatus_checked;
+            let oriText = oTask.text;
+            for (const step of oTask.type.stepsDef) {
+                if (oTask.currentSteps.includes(step)) {
+                    continue;
+                }
+                oriText = addStepTagToNonTaggedText(oriText, step.tag)
+            }
+            rewriteTask(plugin.app.vault, oTask.boundTask,
+                nextStatus, oriText) // trigger rerender
+        }
+    }
+
+    // Changed to ExternalControlledCheckbox. The checkbox status is determined by whether all steps are completed.
+    return <>
+        <ExternalControlledCheckbox
             content={<InternalLinkView
                 content={plugin.settings.capitalize_table_row_initial ? initialToUpper(taskFirstColumn) : taskFirstColumn}/>}
-            onChange={() => {
-                // k.boundTask.checked = !k.boundTask.checked// No good, this is dataview cache.
-                const nextStatus = oTask.boundTask.checked ? " " : "x";
-                // TODO performace
-                rewriteTask(plugin.app.vault, oTask.boundTask,
-                    nextStatus)
-            }
-            }
+            onChange={tickSummary}
             onLabelClicked={() => {
                 openTaskPrecisely(workspace, oTask.boundTask);
             }}
-            initialState={oTask.boundTask.checked}
+            externalControl={oTask.allStepsCompleted()}
         />
-    </Fragment>;
+    </>;
+
+
 };
 
 function TaskCheckboxTableView({displayWorkflows, tasksWithThisType}: {
@@ -322,7 +341,8 @@ function TaskCheckboxTableView({displayWorkflows, tasksWithThisType}: {
     const taskRows = displayedTasks.map(function (oTask: OdaPmTask) {
         const row = odaTaskToTableRow(displayStepTags, oTask)
         row[0] = (
-            <OdaTaskSummaryCell oTask={oTask} plugin={plugin} taskFirstColumn={row[0]}/>
+            <OdaTaskSummaryCell key={`${oTask.boundTask.path}:${oTask.boundTask.line}`} oTask={oTask}
+                                taskFirstColumn={row[0]}/>
         )
         return row;
     });
@@ -411,15 +431,19 @@ function WorkflowView({workflows, completedCount = 0, totalCount = 0}: {
 }
 
 
-function addStepTagToTaskText(oTask: OdaPmTask, stepTag: string): string {
-    const text = oTask.boundTask.text;
+function addStepTagToNonTaggedText(text: any, stepTag: string) {
     // With the rule that a task cannot cross multiple lines, we can safely assume that the last char is \n if there is a \n.
     const hasTrailingEol = text.indexOf("\n") == text.length - 1
     // We believe dataview gives the correct result. In the latter case there will be no step.tag in the original text if includes is false.
     return `${text.trimEnd()} ${stepTag}` + (hasTrailingEol ? "\n" : "");
 }
 
-function OdaPmTaskCell({oTask, stepTag}: {
+function addStepTagToTaskText(oTask: OdaPmTask, stepTag: string): string {
+    const text = oTask.boundTask.text;
+    return addStepTagToNonTaggedText(text, stepTag);
+}
+
+function OdaPmStepCell({oTask, stepTag}: {
     oTask: OdaPmTask,
     stepTag: string
 }) {
@@ -430,28 +454,43 @@ function OdaPmTaskCell({oTask, stepTag}: {
         return <></>
     // Otherwise, we show a checkbox showing if current task completes this step.
     const includes = oTask.currentSteps.map(k => k.tag).includes(stepTag);
-    return <Checkbox
+
+    // Automatically  complete the parent task when checking in manage page 
+    function tickStep() {
+        // preserve the status, but add or remove the step tag
+        const next_status = !includes;
+        // remove the tag when untick the checkbox, or add the tag when tick the checkbox
+        const next_text = !next_status ?
+            oTask.boundTask.text.replace(stepTag, "") :
+            addStepTagToTaskText(oTask, stepTag)
+
+        // State: all ticked. Behaviour: untick step. Outcome: untick the summary.
+        //  State: unticked. Behaviour: tick step. Outcome: if all steps are ticked, tick the summary.
+        const fromTickedToUnticked = oTask.allStepsCompleted() && !next_status;
+        const nextStatus = fromTickedToUnticked ? TaskStatus_unchecked : (
+                oTask.lackOnlyOneStep(stepTag) ? TaskStatus_checked
+                    : oTask.boundTask.status
+            )
+        ;
+
+        rewriteTask(plugin.app.vault, oTask.boundTask,
+            nextStatus, next_text)
+
+    }
+
+    return <ExternalControlledCheckbox
         key={oTask.text + stepTag}
-        initialState={includes}
-        onChange={() => {
-            // preserve the status, but add or remove the step tag
-            const next_status = !includes;
-
-            const next_text = !next_status ?
-                oTask.boundTask.text.replace(stepTag, "") :
-                addStepTagToTaskText(oTask, stepTag)
-
-            rewriteTask(plugin.app.vault, oTask.boundTask,
-                oTask.boundTask.status, next_text)
-        }}
+        externalControl={includes}
+        onChange={tickStep}
     />
+
 }
 
 
 // For checkbox
 function odaWorkflowToTableCells(displayStepTags: string[], oTask: OdaPmTask) {
     return [...displayStepTags.map((stepTag: string) => {
-        return <OdaPmTaskCell key={stepTag} oTask={oTask} stepTag={stepTag}/>
+        return <OdaPmStepCell key={stepTag} oTask={oTask} stepTag={stepTag}/>
     })]
 }
 

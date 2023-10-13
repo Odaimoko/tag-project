@@ -2,6 +2,8 @@ import {STask} from "obsidian-dataview";
 
 export const Tag_Prefix_Step = "#iPm/step/";
 const Tag_Prefix_Workflow = "#iPm/workflow/";
+export const TaskStatus_checked = "x";
+export const TaskStatus_unchecked = " ";
 
 export const Workflow_Type_Enum_Array = [
     "chain",
@@ -122,6 +124,7 @@ export function getWorkflowNameFromRawText(text: string) {
 export interface I_OdaPmStep {
     tag: string;
     name: string;
+    toObject: () => object
 }
 
 class OdaPmStep implements I_OdaPmStep {
@@ -205,7 +208,7 @@ export class OdaPmTask {
     text: string;
     type: I_OdaPmWorkflow;
     // One for chain. Many for checkbox
-    currentSteps: OdaPmStep[];
+    currentSteps: I_OdaPmStep[];
 
     constructor(type: I_OdaPmWorkflow, task: STask) {
         this.boundTask = task;
@@ -227,6 +230,15 @@ export class OdaPmTask {
             type: this.type,
             currentSteps: this.currentSteps.map(k => k.toObject()),
         }
+    }
+
+    allStepsCompleted(): boolean {
+        return this.currentSteps.length == this.type.stepsDef.length
+    }
+
+    lackOnlyOneStep(stepTag: string): boolean {
+        const hasTag = this.currentSteps.filter(k => k.tag == stepTag).length > 0;
+        return this.currentSteps.length == this.type.stepsDef.length - 1 && !hasTag
     }
 
 }
