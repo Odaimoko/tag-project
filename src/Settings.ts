@@ -1,5 +1,6 @@
 import {App, PluginSettingTab, Setting, ValueComponent} from "obsidian";
 import IPmToolPlugin from "./main";
+import OdaPmToolPlugin from "./main";
 
 type SerializedType =
     string
@@ -60,10 +61,14 @@ export class IPmSettingsTab extends PluginSettingTab {
             vc.setValue(this.plugin.settings[settingName])
                 // @ts-ignore
                 .onChange?.(async (value: T) => {
-                    this.plugin.settings[settingName] = value;
-                    await this.plugin.saveSettings();
+                await IPmSettingsTab.setValueAndSaveImpl(this.plugin, settingName, value)
                 }
             );
+    }
+
+    static async setValueAndSaveImpl<T extends SerializedType>(plugin: OdaPmToolPlugin, settingName: SettingName, value: T) {
+        plugin.settings[settingName] = value;
+        await plugin.saveSettings();
     }
 
 }

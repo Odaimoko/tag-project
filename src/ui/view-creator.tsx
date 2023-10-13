@@ -23,6 +23,7 @@ import {ONotice} from "../utils/o-notice";
 
 import {DataviewAPIReadyEvent, DataviewMetadataChangeEvent} from "../typing/dataview-event";
 import {initialToUpper} from "../utils/format_util";
+import {IPmSettingsTab} from "../Settings";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
 let pmPlugin: OdaPmToolPlugin; // locally global
@@ -151,12 +152,13 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
     const workflows = useMemo(getAllWorkflows, [rerenderState]);
 
     const [currentWorkflow, setCurrentWorkflow] = useState<I_OdaPmWorkflow>(workflows[0]);
-    const [includeCompleted, setIncludeCompleted] = useState(false);
 
     const plugin = useContext(PluginContext);
     // Init here
     pmPlugin = plugin;
 
+    const [includeCompleted, setIncludeCompleted] = useState(plugin.settings.include_completed_tasks as boolean);
+    
     // all tasks that has a workflow
     // Memo to avoid re-compute
     const tasks_with_workflow = useMemo(getAllPmTasks, [rerenderState]);
@@ -273,6 +275,7 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
             <Checkbox text={"Include Completed"} onChanged={
                 (nextChecked) => {
                     setIncludeCompleted(nextChecked)
+                    IPmSettingsTab.setValueAndSaveImpl(plugin, "include_completed_tasks", nextChecked)
                 }
             }
                       initialState={includeCompleted}
