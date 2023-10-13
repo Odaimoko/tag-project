@@ -232,9 +232,9 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
     const taskRows = displayedTasks.map(function (k: OdaPmTask) {
         const row = odaTaskToTableRow(k)
         row[0] = (
-            <>
+            <Fragment key={`${k.boundTask.path}:${k.boundTask.line}`}>
                 <Checkbox
-                    key={k.text}
+                   
                     text={row[0]}
                     onChanged={
                         () => {
@@ -252,7 +252,7 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
                     }
                     initialState={k.boundTask.checked}
                 />
-            </>
+            </Fragment>
         )
         return row;
     });
@@ -276,17 +276,20 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
             }
                       initialState={includeCompleted}
             />
-            <label> Sort </label>
-            <button onClick={
-                () => {
-                    // Loop
-                    setSortCode(nextSortCode)
-                }
-            }
-            >
-                {sortCode === 0 ? "By Appearance" : ascending ? "Ascending" : "Descending"}
-            </button>
+
             <WorkflowView workflow={currentWorkflow} completedCount={completedCount} totalCount={totalCount}/>
+            <div>
+                <label> Sort </label>
+                <button onClick={
+                    () => {
+                        // Loop
+                        setSortCode(nextSortCode)
+                    }
+                }
+                >
+                    {sortCode === 0 ? "By Appearance" : ascending ? "Ascending" : "Descending"}
+                </button>
+            </div>
             <DataTable
                 tableTitle={curWfName}
                 headers={headers}
