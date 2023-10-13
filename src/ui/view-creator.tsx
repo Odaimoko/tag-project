@@ -12,7 +12,7 @@ import {
     Workflow_Type_Enum_Array
 } from "../data-model/workflow_def";
 import {DataArray, getAPI, STask} from "obsidian-dataview";
-import {Workspace} from "obsidian";
+import {getIcon, Workspace} from "obsidian";
 import React, {Fragment, JSX, ReactNode, useContext, useEffect, useMemo, useState} from "react";
 import {I_Renderable} from "./i_Renderable";
 
@@ -28,6 +28,7 @@ import {setSettingsValueAndSave} from "../Settings";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
 let pmPlugin: OdaPmToolPlugin; // locally global
+const taskLinkHtmlString = getIcon("link")?.outerHTML;
 
 function notifyMalformedTask(task: STask) {
     // console.log(pmPlugin && pmPlugin.settings.report_malformed_task)
@@ -207,7 +208,7 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
             {workflows.map((workflow: I_OdaPmWorkflow) => {
                 return (
                     <ExternalControlledCheckbox key={workflow.name}
-                                                content={workflow.name}
+                                                content={<InternalLinkView content={workflow.name}/>}
                                                 onChange={() => {
                                                     // invert the checkbox
                                                     const v = !displayWorkflows.includes(workflow)
@@ -231,12 +232,55 @@ export function ReactManagePage({eventCenter}: { eventCenter?: EventEmitter }) {
     )
 }
 
+// Render an html string as a React component.
+// https://reactjs.org/docs/dom-elements.html#dangerouslysetinnerhtml
+function InternalLinkView({content}: { content: I_Renderable }) {
+    return <span>
+
+        <a className={"cm-underline"}>
+            <HTMLStringComponent htmlString={taskLinkHtmlString}/>
+        </a>
+        <>
+        {content}
+        </>
+    </span>
+
+}
+
+/**
+ * The first column of the table, which is a checkbox representing the task.
+ * @param oTask
+ * @param plugin
+ * @param taskFirstColumn
+ * @constructor
+ */
+const OdaTaskSummaryCell = ({oTask, plugin, taskFirstColumn}: { oTask: OdaPmTask, plugin: OdaPmToolPlugin, taskFirstColumn: I_Renderable }) => {
+    const workspace = plugin.app.workspace;
+    return <Fragment key={`${oTask.boundTask.path}:${oTask.boundTask.line}`}>
+        <Checkbox
+            content={<InternalLinkView
+                content={plugin.settings.capitalize_table_row_initial ? initialToUpper(taskFirstColumn) : taskFirstColumn}/>}
+            onChange={() => {
+                // k.boundTask.checked = !k.boundTask.checked// No good, this is dataview cache.
+                const nextStatus = oTask.boundTask.checked ? " " : "x";
+                // TODO performace
+                rewriteTask(plugin.app.vault, oTask.boundTask,
+                    nextStatus)
+            }
+            }
+            onLabelClicked={() => {
+                openTaskPrecisely(workspace, oTask.boundTask);
+            }}
+            initialState={oTask.boundTask.checked}
+        />
+    </Fragment>;
+};
+
 function TaskCheckboxTableView({displayWorkflows, tasksWithThisType}: {
     displayWorkflows: I_OdaPmWorkflow[],
     tasksWithThisType: DataArray<OdaPmTask>
 }) {
     const plugin = useContext(PluginContext);
-    const workspace = plugin.app.workspace;
     const [searchText, setSearchText] = useState("");
     const [sortCode, setSortCode] = useState(0); // 0 = unsorted, 1 = asc, 2 = desc
     const [includeCompleted, setIncludeCompleted] = useState(plugin.settings.include_completed_tasks as boolean);
@@ -276,24 +320,7 @@ function TaskCheckboxTableView({displayWorkflows, tasksWithThisType}: {
     const taskRows = displayedTasks.map(function (oTask: OdaPmTask) {
         const row = odaTaskToTableRow(displayStepTags, oTask)
         row[0] = (
-            <Fragment key={`${oTask.boundTask.path}:${oTask.boundTask.line}`}>
-                <Checkbox
-                    content={plugin.settings.capitalize_table_row_initial ? initialToUpper(row[0]) : row[0]}
-                    onChange={
-                        () => {
-                            // k.boundTask.checked = !k.boundTask.checked// No good, this is dataview cache.
-                            const nextStatus = oTask.boundTask.checked ? " " : "x";
-                            // TODO performace
-                            rewriteTask(plugin.app.vault, oTask.boundTask,
-                                nextStatus)
-                        }
-                    }
-                    onLabelClicked={() => {
-                        openTaskPrecisely(workspace, oTask.boundTask);
-                    }}
-                    initialState={oTask.boundTask.checked}
-                />
-            </Fragment>
+            <OdaTaskSummaryCell oTask={oTask} plugin={plugin} taskFirstColumn={row[0]}/>
         )
         return row;
     });
@@ -367,7 +394,7 @@ function WorkflowView({workflows, completedCount = 0, totalCount = 0}: {
         else if (completeRatio >= 0.5)
             color = "orange"
     }
-    const labelColorStype = isStringNullOrEmpty(color) ? {} : {color: color};
+    const labelColorStype = isStringNullOrEmpty(color) ? {} : {color: color} as React.CSSProperties;
     return (<>
             <HStack style={{alignItems: "center"}} spacing={10}>
                 <h2>
@@ -499,7 +526,7 @@ const ExternalControlledCheckbox = ({externalControl, onChange, onLabelClicked, 
                                             externalControl: boolean,
                                             onChange: () => void,
                                             onLabelClicked?: () => void,
-                                            content?: string | React.JSX.Element
+                                            content?: I_Renderable
 
                                         }) => {
     // Click the label won't trigger the checkbox change event
@@ -569,6 +596,14 @@ export function HStack(props: StackProps) {
             </Fragment>
         })}
     </div>
+}
+
+function HTMLStringComponent({htmlString, useSpan = true}: { htmlString?: string, useSpan?: boolean }) {
+    if (useSpan)
+        return (
+            <span dangerouslySetInnerHTML={{__html: htmlString ?? ""}}/>
+        );
+    else return <div dangerouslySetInnerHTML={{__html: htmlString ?? ""}}/>
 }
 
 // endregion
