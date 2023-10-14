@@ -1,5 +1,8 @@
 // https://docs.obsidian.md/Plugins/User+interface/Views
-import {ItemView, WorkspaceLeaf} from "obsidian";
+import {
+    ItemView,
+    WorkspaceLeaf
+} from "obsidian";
 import {ReactManagePage} from "./view-creator";
 import {createRoot, Root} from "react-dom/client";
 import {createContext, StrictMode} from "react";
@@ -58,10 +61,10 @@ export class ManagePageView extends ItemView {
 
     private renderPage() {
 
-        // TODOQ Why [1]? What is the first child?
+        //  Why [1]? What is the first child? [0] is title, 1 is content, 2 is input (Why's there an input?)
         const container = this.containerEl.children[1];
-
         container.empty();
+
         // React
         this.root = createRoot(this.containerEl.children[1]); // Override the previous container
         // we call render(), so this is a brand new component tree, no matter it exists or not. States won't be preserved.
@@ -72,6 +75,8 @@ export class ManagePageView extends ItemView {
                 </PluginContext.Provider>
             </StrictMode>,
         );
+        // yes we can render, but the clicking the link won't jump to the note
+        // MarkdownRenderer.render(this.plugin.app, "# F [[PDD]] [[Manage]] Page", this.containerEl, "PDD", null);
     }
 
     async onClose() {

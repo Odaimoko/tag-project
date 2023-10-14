@@ -27,6 +27,7 @@ import {initialToUpper, isStringNullOrEmpty, simpleFilter} from "../utils/format
 import {setSettingsValueAndSave} from "../Settings";
 import {Checkbox, DataTable, ExternalControlledCheckbox, HStack, InternalLinkView} from "./view-template";
 
+
 const dv = getAPI(); // We can use dv just like the examples in the docs
 let pmPlugin: OdaPmToolPlugin; // locally global
 
@@ -39,6 +40,30 @@ function notifyMalformedTask(task: STask) {
 function getTaskMalformedMsg(task: STask) {
     return `Task is not valid for PM.\nYou can disable this popup in settings.\n\nSee Task:\n\t${task.text}`
 }
+
+// region StepTag management
+function addStepTagToNonTaggedText(text: any, stepTag: string) {
+    // With the rule that a task cannot cross multiple lines, we can safely assume that the last char is \n if there is a \n.
+    const hasTrailingEol = text.indexOf("\n") == text.length - 1
+    // We believe dataview gives the correct result. In the latter case there will be no step.tag in the original text if includes is false.
+    return `${text.trimEnd()} ${stepTag}` + (hasTrailingEol ? "\n" : "");
+}
+
+function addStepTagToTaskText(oTask: OdaPmTask, stepTag: string): string {
+    const text = oTask.boundTask.text;
+    return addStepTagToNonTaggedText(text, stepTag);
+}
+
+// TODO wont remove the space before or after the tag
+function removeTagFromTaskText(text: string, stepTag: string) {
+    return text.replace(stepTag, "");
+}
+
+function removeStepTagFromTask(oTask: OdaPmTask, stepTag: string) {
+    return removeTagFromTaskText(oTask.boundTask.text, stepTag);
+}
+
+// endregion
 
 /**
  * Create workflows from one task. Do not process multiple definitions across different tasks.
@@ -272,23 +297,30 @@ const OdaTaskSummaryCell = ({oTask, taskFirstColumn}: {
     function tickSummary() {
         // Automatically add tags when checking in manage page 
 
-        // 	 State: all ticked. Behaviour: untick summary. Outcome: nothing. 
-
+        let nextStatus = TaskStatus_unchecked;
+        let oriText = oTask.text;
         if (!oTask.allStepsCompleted()) {
             // k.boundTask.checked = !k.boundTask.checked// No good, this is dataview cache.
 
             // - State: unticked. Behaviour: tick summary. Outcome: All steps ticked.
-            const nextStatus = TaskStatus_checked;
-            let oriText = oTask.text;
+            nextStatus = TaskStatus_checked;
             for (const step of oTask.type.stepsDef) {
                 if (oTask.currentSteps.includes(step)) {
                     continue;
                 }
                 oriText = addStepTagToNonTaggedText(oriText, step.tag)
             }
-            rewriteTask(plugin.app.vault, oTask.boundTask,
-                nextStatus, oriText) // trigger rerender
+        } else {
+            // 	State: all ticked. Behaviour: untick summary. Outcome: untick all step.
+
+            for (const step of oTask.type.stepsDef) {
+                if (oTask.currentSteps.includes(step)) {
+                    oriText = removeTagFromTaskText(oriText, step.tag)
+                }
+            }
         }
+        rewriteTask(plugin.app.vault, oTask.boundTask,
+            nextStatus, oriText) // trigger rerender
     }
 
     // Changed to ExternalControlledCheckbox. The checkbox status is determined by whether all steps are completed.
@@ -441,18 +473,6 @@ function WorkflowView({workflows, completedCount = 0, totalCount = 0}: {
 }
 
 
-function addStepTagToNonTaggedText(text: any, stepTag: string) {
-    // With the rule that a task cannot cross multiple lines, we can safely assume that the last char is \n if there is a \n.
-    const hasTrailingEol = text.indexOf("\n") == text.length - 1
-    // We believe dataview gives the correct result. In the latter case there will be no step.tag in the original text if includes is false.
-    return `${text.trimEnd()} ${stepTag}` + (hasTrailingEol ? "\n" : "");
-}
-
-function addStepTagToTaskText(oTask: OdaPmTask, stepTag: string): string {
-    const text = oTask.boundTask.text;
-    return addStepTagToNonTaggedText(text, stepTag);
-}
-
 function OdaPmStepCell({oTask, stepTag}: {
     oTask: OdaPmTask,
     stepTag: string
@@ -471,7 +491,7 @@ function OdaPmStepCell({oTask, stepTag}: {
         const next_status = !includes;
         // remove the tag when untick the checkbox, or add the tag when tick the checkbox
         const next_text = !next_status ?
-            oTask.boundTask.text.replace(stepTag, "") :
+            removeStepTagFromTask(oTask, stepTag) :
             addStepTagToTaskText(oTask, stepTag)
 
         // State: all ticked. Behaviour: untick step. Outcome: untick the summary.
