@@ -2,7 +2,7 @@ import {I_Renderable} from "./i_Renderable";
 import React, {Fragment, JSX, ReactNode, useState} from "react";
 import {getIcon} from "obsidian";
 
-interface I_Stylable {
+export interface I_Stylable {
     style?: React.CSSProperties;
 }
 

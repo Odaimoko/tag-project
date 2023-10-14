@@ -35,6 +35,7 @@ import {
     DataTable,
     ExternalControlledCheckbox,
     HStack,
+    I_Stylable,
     InternalLinkView
 } from "./view-template";
 import {appendBoldText} from "./html-template";
@@ -43,6 +44,19 @@ import {appendBoldText} from "./html-template";
 const dv = getAPI(); // We can use dv just like the examples in the docs
 let pmPlugin: OdaPmToolPlugin; // locally global
 
+// dark light compatible
+export const Color_WorkflowChain = "#6289bb"
+export const Color_Workflow_Checkbox = "#5eb95f"
+
+function getColorByWorkflow(type: I_OdaPmWorkflow) {
+    switch (type.type) {
+        case "chain":
+            return Color_WorkflowChain;
+        case "checkbox" :
+            return Color_Workflow_Checkbox;
+    }
+    return "currentColor"
+}
 
 function notifyMalformedTask(task: STask, msgGetter: (task: STask) => string) {
     // console.log(pmPlugin && pmPlugin.settings.report_malformed_task)
@@ -316,10 +330,12 @@ const WorkflowFilterCheckbox = ({workflow, displayWorkflows, setDisplayWorkflows
     // block will start a new line, inline will not, so we use inline-block
     return <span style={{display: "inline-block", margin: 3}}>
         <ExternalControlledCheckbox
-            content={<InternalLinkView content={workflow.name} onIconClicked={() =>
-                // Go to workflow def
-                openTaskPrecisely(plugin.app.workspace, workflow.boundTask)}
-                                       onContentClicked={tickCheckbox}/>}
+            content={<InternalLinkView
+                content={<label style={{color: getColorByWorkflow(workflow)}}>{workflow.name}</label>}
+                onIconClicked={() =>
+                    // Go to workflow def
+                    openTaskPrecisely(plugin.app.workspace, workflow.boundTask)}
+                onContentClicked={tickCheckbox}/>}
             onChange={tickCheckbox}
             externalControl={displayWorkflows.includes(workflow)}
         />
@@ -502,7 +518,7 @@ function TaskCheckboxTableView({displayWorkflows, tasksWithThisType}: {
                         tableTitle={curWfName}
                         headers={headers}
                         rows={taskRows}
-                        thStyle={{position: "sticky", top: -16, background: "lightgray"}}
+                        thStyle={{position: "sticky", top: -16}}
                     /> : <label>No results.</label>
                 )
             }
@@ -544,10 +560,31 @@ function WorkflowView({workflows, completedCount = 0, totalCount = 0}: {
 }
 
 
-function OdaPmStepCell({oTask, stepTag}: {
+function tickStepCheckbox(includes: boolean, oTask: OdaPmTask, stepTag: string, plugin: OdaPmToolPlugin) {
+    // preserve the status, but add or remove the step tag
+    const next_status = !includes;
+    // remove the tag when untick the checkbox, or add the tag when tick the checkbox
+    const next_text = !next_status ?
+        removeStepTagFromTask(oTask, stepTag) :
+        addStepTagToTaskText(oTask, stepTag)
+
+    // State: all ticked. Behaviour: untick step. Outcome: untick the summary.
+    //  State: unticked. Behaviour: tick step. Outcome: if all steps are ticked, tick the summary.
+    const fromTickedToUnticked = oTask.allStepsCompleted() && !next_status;
+    const nextStatus = fromTickedToUnticked ? TaskStatus_unchecked : (
+            oTask.lackOnlyOneStep(stepTag) ? TaskStatus_checked
+                : oTask.boundTask.status
+        )
+    ;
+
+    rewriteTask(plugin.app.vault, oTask.boundTask,
+        nextStatus, next_text)
+}
+
+function OdaPmStepCell({oTask, stepTag, style}: {
     oTask: OdaPmTask,
     stepTag: string
-}) {
+} & I_Stylable) {
     const plugin = useContext(PluginContext);
     // TODO performance
     // If this workflow does not need this step, we show nothing.
@@ -558,31 +595,13 @@ function OdaPmStepCell({oTask, stepTag}: {
 
     // Automatically  complete the parent task when checking in manage page 
     function tickStep() {
-        // preserve the status, but add or remove the step tag
-        const next_status = !includes;
-        // remove the tag when untick the checkbox, or add the tag when tick the checkbox
-        const next_text = !next_status ?
-            removeStepTagFromTask(oTask, stepTag) :
-            addStepTagToTaskText(oTask, stepTag)
-
-        // State: all ticked. Behaviour: untick step. Outcome: untick the summary.
-        //  State: unticked. Behaviour: tick step. Outcome: if all steps are ticked, tick the summary.
-        const fromTickedToUnticked = oTask.allStepsCompleted() && !next_status;
-        const nextStatus = fromTickedToUnticked ? TaskStatus_unchecked : (
-                oTask.lackOnlyOneStep(stepTag) ? TaskStatus_checked
-                    : oTask.boundTask.status
-            )
-        ;
-
-        rewriteTask(plugin.app.vault, oTask.boundTask,
-            nextStatus, next_text)
-
+        tickStepCheckbox(includes, oTask, stepTag, plugin);
     }
 
-    return <ExternalControlledCheckbox
-        key={oTask.text + stepTag}
-        externalControl={includes}
-        onChange={tickStep}
+    return <ExternalControlledCheckbox style={style}
+                                       key={oTask.text + stepTag}
+                                       externalControl={includes}
+                                       onChange={tickStep}
     />
 
 }
