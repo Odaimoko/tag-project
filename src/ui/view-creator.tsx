@@ -207,12 +207,15 @@ export function ReactManagePage({eventCenter}: {
                 <button onClick={() => setDisplayWorkflows([])}>Unselect All
                 </button>
             </HStack>
-            {workflows.map((workflow: I_OdaPmWorkflow) => {
-                return (
-                    <WorkflowFilterCheckbox key={workflow.name} displayWorkflows={displayWorkflows} workflow={workflow}
-                                            setDisplayWorkflows={setDisplayWorkflows}/>
-                )
-            })}
+            <div>
+                {workflows.map((workflow: I_OdaPmWorkflow) => {
+                    return (
+                        <WorkflowFilterCheckbox key={workflow.name} displayWorkflows={displayWorkflows}
+                                                workflow={workflow}
+                                                setDisplayWorkflows={setDisplayWorkflows}/>
+                    )
+                })}
+            </div>
             <WorkflowView workflows={displayWorkflows} completedCount={completedCount} totalCount={totalCount}/>
             <p/>
             <TaskCheckboxTableView displayWorkflows={displayWorkflows} tasksWithThisType={tasksWithThisType}/>
@@ -235,14 +238,18 @@ const WorkflowFilterCheckbox = ({workflow, displayWorkflows, setDisplayWorkflows
         setDisplayWorkflows(newArr)
     }
 
-    return <ExternalControlledCheckbox
-        content={<InternalLinkView content={workflow.name} onIconClicked={() =>
-            // Go to workflow def
-            openTaskPrecisely(plugin.app.workspace, workflow.boundTask)}
-                                   onContentClicked={tickCheckbox}/>}
-        onChange={tickCheckbox}
-        externalControl={displayWorkflows.includes(workflow)}
-    />
+    // inline-block: make this check box a whole element. It won't be split into multiple sub-elements when layout.
+    // block will start a new line, inline will not, so we use inline-block
+    return <span style={{display: "inline-block", margin: 3}}>
+        <ExternalControlledCheckbox
+            content={<InternalLinkView content={workflow.name} onIconClicked={() =>
+                // Go to workflow def
+                openTaskPrecisely(plugin.app.workspace, workflow.boundTask)}
+                                       onContentClicked={tickCheckbox}/>}
+            onChange={tickCheckbox}
+            externalControl={displayWorkflows.includes(workflow)}
+        />
+    </span>
 
 }
 /**

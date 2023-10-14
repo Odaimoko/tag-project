@@ -76,17 +76,18 @@ export const DataTable = ({
  * @param content
  * @constructor
  */
-export const ExternalControlledCheckbox = ({externalControl, onChange, onLabelClicked, content}:
+export const ExternalControlledCheckbox = ({externalControl, onChange, onLabelClicked, content, style}:
                                                {
                                                    externalControl: boolean,
                                                    onChange: () => void,
                                                    onLabelClicked?: () => void,
-                                                   content?: I_Renderable
+                                                   content?: I_Renderable,
+                                                   style?: React.CSSProperties,
 
                                                }) => {
     // Click the label won't trigger the checkbox change event
     return (
-        <Fragment>
+        <span style={style}>
             <input
                 type="checkbox"
                 checked={externalControl}
@@ -95,7 +96,7 @@ export const ExternalControlledCheckbox = ({externalControl, onChange, onLabelCl
             <label onClick={onLabelClicked}>
                 {content}
             </label>
-        </Fragment>
+        </span>
     );
 };
 /**
