@@ -9,7 +9,7 @@ export class ONotice extends Notice {
      */
     constructor(message: string | DocumentFragment, duration?: number) {
         const durInSec = duration ? duration * 1000 : duration;
-        if (message instanceof String)
+        if (typeof message === "string")
             super(`[${PLUGIN_NAME}] ${message}`, durInSec);
         else {
             const doc = message as DocumentFragment;
