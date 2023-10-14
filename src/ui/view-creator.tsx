@@ -26,7 +26,7 @@ import {EventEmitter} from "events";
 import OdaPmToolPlugin from "../main";
 import {notify, ONotice} from "../utils/o-notice";
 
-import {DataviewAPIReadyEvent, DataviewMetadataChangeEvent} from "../typing/dataview-event";
+import {DataviewIndexReadyEvent, DataviewMetadataChangeEvent} from "../typing/dataview-event";
 import {initialToUpper, isStringNullOrEmpty, simpleFilter} from "../utils/format_util";
 import {setSettingsValueAndSave, SortMethod_Appearance, SortMethod_Ascending, totalSortMethods} from "../Settings";
 import {
@@ -127,7 +127,6 @@ function createPmTaskFromTask(taskDefTags: string[], taskDefs: I_OdaPmWorkflow[]
 }
 
 export function getAllWorkflows(): I_OdaPmWorkflow[] {
-
     return dv.pages()["file"]["tasks"].where(function (k: STask) {
             for (const defTag of getDefTags()) {
                 if (k.tags.length === 0) continue;
@@ -166,7 +165,6 @@ function openTaskPrecisely(workspace: Workspace, task: STask) {
 export function ReactManagePage({eventCenter}: {
     eventCenter?: EventEmitter
 }) {
-
     // only for re-render
     const [rerenderState, setRerenderState] = useState(0);
 
@@ -175,14 +173,15 @@ export function ReactManagePage({eventCenter}: {
         setRerenderState((prevState) => prevState + 1)
     }
 
+
     // How to prevent add listener multiple times? use custom emitter instead of obsidian's event emitter
     useEffect(() => {
         eventCenter?.addListener(DataviewMetadataChangeEvent, triggerRerender)
-        eventCenter?.addListener(DataviewAPIReadyEvent, triggerRerender)
+        eventCenter?.addListener(DataviewIndexReadyEvent, triggerRerender)
 
         return () => {
             eventCenter?.removeListener(DataviewMetadataChangeEvent, triggerRerender)
-            eventCenter?.removeListener(DataviewAPIReadyEvent, triggerRerender)
+            eventCenter?.removeListener(DataviewIndexReadyEvent, triggerRerender)
         }
     }, [rerenderState]);
 
@@ -192,16 +191,18 @@ export function ReactManagePage({eventCenter}: {
     // place all hooks before return. React doesn't allow the order to be changed.
     const workflows = useMemo(getAllWorkflows, [rerenderState]);
 
-    // const [currentWorkflow, setCurrentWorkflow] = useState<I_OdaPmWorkflow>(workflows[0]);
-    const [displayWorkflows, setDisplayWorkflows] = useState<I_OdaPmWorkflow[]>(
-        workflows.filter(k => {
-            return plugin.settings.display_workflow_names?.includes(k.name);
-        })
-    );
+    // Use workflow names as filters' state instead. previously we use as state, but it requires dataview to be initialized.
+    // However, this component might render before dataview is ready. The partially ready workflows will be used as the initial value, which is incorrect.
+    // This is to fix: On open Obsidian, the filter may not work.
+    const [displayWorkflowNames, setDisplayWorkflowNames] = useState(plugin.settings.display_workflow_names as string[]);
 
-    function handleSetDisplayWorkflows(newArr: I_OdaPmWorkflow[]) {
-        setSettingsValueAndSave(plugin, "display_workflow_names", newArr.map(k => k.name))
-        setDisplayWorkflows(newArr)
+    const displayWorkflows = workflows.filter(k => {
+        return displayWorkflowNames.includes(k.name);
+    });
+
+    function handleSetDisplayWorkflows(names: string[]) {
+        setSettingsValueAndSave(plugin, "display_workflow_names", [...names]) // TODO mem leak?
+        setDisplayWorkflowNames(names)
     }
 
 
@@ -236,11 +237,6 @@ export function ReactManagePage({eventCenter}: {
     const tasksWithThisType: DataArray<OdaPmTask> = tasks_with_workflow.filter(function (k: OdaPmTask) {
         return displayWorkflows.includes(k.type);
     })
-    const totalCount = tasksWithThisType.length;
-    const completedTasks = tasksWithThisType.filter(function (k: OdaPmTask) {
-        return k.isMdCompleted();
-    });
-    const completedCount = completedTasks.length;
 
     // console.log(`ReactManagePage Render. All tasks: ${tasks_with_workflow.length}. Filtered Tasks: ${tasksWithThisType.length}. Workflow: ${curWfName}. IncludeCompleted: ${includeCompleted}`)
 
@@ -248,7 +244,7 @@ export function ReactManagePage({eventCenter}: {
         <>
             <HStack style={{alignItems: "center"}} spacing={10}>
                 <h2>{workflows.length} Workflow(s)</h2>
-                <button onClick={() => handleSetDisplayWorkflows([...workflows])}>Select All
+                <button onClick={() => handleSetDisplayWorkflows(workflows.map(k => k.name))}>Select All
                 </button>
                 <button onClick={() => handleSetDisplayWorkflows([])}>Unselect All
                 </button>
@@ -256,13 +252,13 @@ export function ReactManagePage({eventCenter}: {
             <div>
                 {workflows.map((workflow: I_OdaPmWorkflow) => {
                     return (
-                        <WorkflowFilterCheckbox key={workflow.name} displayWorkflows={displayWorkflows}
+                        <WorkflowFilterCheckbox key={workflow.name} displayWorkflows={displayWorkflowNames}
                                                 workflow={workflow}
                                                 setDisplayWorkflows={handleSetDisplayWorkflows}/>
                     )
                 })}
             </div>
-            <WorkflowView workflows={displayWorkflows} completedCount={completedCount} totalCount={totalCount}/>
+            <WorkflowOverviewView tasksWithThisType={tasksWithThisType}/>
             <p/>
             <TaskCheckboxTableView displayWorkflows={displayWorkflows} tasksWithThisType={tasksWithThisType}/>
 
@@ -272,15 +268,17 @@ export function ReactManagePage({eventCenter}: {
 
 const WorkflowFilterCheckbox = ({workflow, displayWorkflows, setDisplayWorkflows}: {
     workflow: I_OdaPmWorkflow,
-    displayWorkflows: I_OdaPmWorkflow[],
-    setDisplayWorkflows: React.Dispatch<React.SetStateAction<I_OdaPmWorkflow[]>>
+    displayWorkflows: string[],
+    setDisplayWorkflows: React.Dispatch<React.SetStateAction<string[]>>
 }) => {
     const plugin = useContext(PluginContext);
 
+    const wfName = workflow.name;
+
     function tickCheckbox() {
         // invert the checkbox
-        const v = !displayWorkflows.includes(workflow)
-        const newArr = v ? [...displayWorkflows, workflow] : displayWorkflows.filter(k => k != workflow)
+        const v = !displayWorkflows.includes(wfName)
+        const newArr = v ? [...displayWorkflows, wfName] : displayWorkflows.filter(k => k != wfName)
         setDisplayWorkflows(newArr)
     }
 
@@ -289,13 +287,13 @@ const WorkflowFilterCheckbox = ({workflow, displayWorkflows, setDisplayWorkflows
     return <span style={{display: "inline-block", margin: 3}}>
         <ExternalControlledCheckbox
             content={<InternalLinkView
-                content={<label style={{color: getColorByWorkflow(workflow)}}>{workflow.name}</label>}
+                content={<label style={{color: getColorByWorkflow(workflow)}}>{wfName}</label>}
                 onIconClicked={() =>
                     // Go to workflow def
                     openTaskPrecisely(plugin.app.workspace, workflow.boundTask)}
                 onContentClicked={tickCheckbox}/>}
             onChange={tickCheckbox}
-            externalControl={displayWorkflows.includes(workflow)}
+            externalControl={displayWorkflows.includes(wfName)}
         />
     </span>
 
@@ -505,15 +503,18 @@ function TaskCheckboxTableView({displayWorkflows, tasksWithThisType}: {
 }
 
 //  region Custom View
-function WorkflowView({workflows, completedCount = 0, totalCount = 0}: {
-    workflows: I_OdaPmWorkflow[],
-    completedCount?: number,
-    totalCount?: number
+function WorkflowOverviewView({tasksWithThisType}: {
+    tasksWithThisType: DataArray<OdaPmTask>
 }) {
-    // const wfName = workflow?.name;
+    const totalCount = tasksWithThisType.length;
+    const completedTasks = tasksWithThisType.filter(function (k: OdaPmTask) {
+        return k.isMdCompleted();
+    });
+    const completedCount = completedTasks.length;
     const completeRatio = completedCount / totalCount;
     const ratioString = totalCount === 0 ? "100" : (completeRatio * 100).toFixed(2);
-    if (workflows.length === 0) return <></>
+    if (totalCount === 0)
+        return <></>
 
     let color = null
     if (!isNaN(completeRatio)) {

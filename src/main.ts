@@ -25,6 +25,7 @@ export default class OdaPmToolPlugin extends Plugin {
     }
 
     private async initPlugin() {
+
         await this.initSettings();
 
         // region Ribbon integration

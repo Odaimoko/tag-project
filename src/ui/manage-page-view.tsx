@@ -6,7 +6,7 @@ import {createContext, StrictMode} from "react";
 import {EventEmitter} from "events"
 import OdaPmToolPlugin from "../main";
 
-import {DataviewAPIReadyEvent, DataviewMetadataChangeEvent} from "../typing/dataview-event";
+import {DataviewIndexReadyEvent, DataviewMetadataChangeEvent} from "../typing/dataview-event";
 
 export const ManagePageViewId = "iPm-Tool-ManageView";
 
@@ -50,9 +50,9 @@ export class ManagePageView extends ItemView {
         // Don't use DataviewIndexReadyEvent, because it is fired when the full index is processed.
         // Otherwise, we may get partial data.
         // @ts-ignore
-        this.registerEvent(this.app.metadataCache.on(DataviewAPIReadyEvent, (...args) => {
+        this.registerEvent(this.app.metadataCache.on(DataviewIndexReadyEvent, (...args) => {
             // render only when index is ready
-            this.emitter.emit(DataviewAPIReadyEvent, ...args);
+            this.emitter.emit(DataviewIndexReadyEvent, ...args);
         }));
     }
 
