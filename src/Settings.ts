@@ -11,17 +11,24 @@ type SerializedType =
     | SerializedType[]
     | { [key: string]: SerializedType };
 
+export const totalSortMethods = 3;
+export const SortMethod_Appearance = 0;
+export const SortMethod_Ascending = 1;
+export const SortMethod_Descending = 2;
+
 export interface IPmSettings {
     report_malformed_task: SerializedType;
     capitalize_table_row_initial: SerializedType;
     // personalized settings, not exposed in settings tab
-    include_completed_tasks: SerializedType;
+    show_completed_tasks: SerializedType;
+    table_column_sorting: SerializedType;
 }
 
 export const IPM_DEFAULT_SETTINGS: Partial<IPmSettings> = {
     report_malformed_task: true,
-    include_completed_tasks: true,
+    show_completed_tasks: true,
     capitalize_table_row_initial: true,
+    table_column_sorting: SortMethod_Appearance,
 }
 
 type SettingName = keyof IPmSettings;
@@ -29,6 +36,7 @@ type SettingName = keyof IPmSettings;
 export
 async function setSettingsValueAndSave<T extends SerializedType>(plugin: OdaPmToolPlugin, settingName: SettingName, value: T) {
     plugin.settings[settingName] = value;
+    // console.log(`Saving settings ${settingName} = ${value}...`);
     await plugin.saveSettings();
 }
 

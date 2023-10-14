@@ -26,7 +26,7 @@ import {notify, ONotice} from "../utils/o-notice";
 
 import {DataviewAPIReadyEvent, DataviewMetadataChangeEvent} from "../typing/dataview-event";
 import {initialToUpper, isStringNullOrEmpty, simpleFilter} from "../utils/format_util";
-import {setSettingsValueAndSave} from "../Settings";
+import {setSettingsValueAndSave, SortMethod_Appearance, SortMethod_Ascending, totalSortMethods} from "../Settings";
 import {Checkbox, DataTable, ExternalControlledCheckbox, HStack, InternalLinkView} from "./view-template";
 import {appendBoldText} from "./html-template";
 
@@ -366,23 +366,24 @@ function TaskCheckboxTableView({displayWorkflows, tasksWithThisType}: {
 }) {
     const plugin = useContext(PluginContext);
     const [searchText, setSearchText] = useState("");
-    const [sortCode, setSortCode] = useState(0); // 0 = unsorted, 1 = asc, 2 = desc
-    const [includeCompleted, setIncludeCompleted] = useState(plugin.settings.include_completed_tasks as boolean);
     // sort
-    const totalSortMethods = 3;
+    const [sortCode, setSortCode] = useState(plugin.settings.table_column_sorting as number); // 0 = unsorted, 1 = asc, 2 = desc
     const nextSortCode = (sortCode + 1) % totalSortMethods;
+    // show completed
+    const [showCompleted, setShowCompleted] = useState(plugin.settings.show_completed_tasks as boolean);
+
     const displayedTasks = tasksWithThisType.filter(function (k: OdaPmTask) {
-        return (includeCompleted || !k.isMdCompleted());
+        return (showCompleted || !k.isMdCompleted());
     }).filter(function (k: OdaPmTask) {
         return isStringNullOrEmpty(searchText) ? true : simpleFilter(searchText, k);
     })
         .array();
-    const ascending = sortCode === 1;
-    if (sortCode !== 0) {
+    const ascending = sortCode === SortMethod_Ascending;
+    if (sortCode !== SortMethod_Appearance) {
         displayedTasks.sort(
             function (a: OdaPmTask, b: OdaPmTask) {
                 // Case-insensitive compare string 
-                // a.b = ascending
+                // a-b = ascending
                 if (ascending)
                     return a.summary.localeCompare(b.summary)
                 else return b.summary.localeCompare(a.summary)
@@ -442,19 +443,20 @@ function TaskCheckboxTableView({displayWorkflows, tasksWithThisType}: {
                         () => {
                             // Loop
                             setSortCode(nextSortCode)
+                            setSettingsValueAndSave(plugin, "table_column_sorting", nextSortCode)
                         }
                     }
                     >
-                        {sortCode === 0 ? "By Appearance" : ascending ? "Ascending" : "Descending"}
+                        {sortCode === SortMethod_Appearance ? "By Appearance" : ascending ? "Ascending" : "Descending"}
                     </button>
                 </>
                 <Checkbox content={"Show Completed"} onChange={
                     (nextChecked) => {
-                        setIncludeCompleted(nextChecked)
-                        setSettingsValueAndSave(plugin, "include_completed_tasks", nextChecked)
+                        setShowCompleted(nextChecked)
+                        setSettingsValueAndSave(plugin, "show_completed_tasks", nextChecked)
                     }
                 }
-                          initialState={includeCompleted}
+                          initialState={showCompleted}
                 />
             </HStack>
             <p/>
