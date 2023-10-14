@@ -198,13 +198,24 @@ export function ReactManagePage({eventCenter}: {
         }
     }, [rerenderState]);
 
+    const plugin = useContext(PluginContext);
+    pmPlugin = plugin;
+
     // place all hooks before return. React doesn't allow the order to be changed.
     const workflows = useMemo(getAllWorkflows, [rerenderState]);
 
     // const [currentWorkflow, setCurrentWorkflow] = useState<I_OdaPmWorkflow>(workflows[0]);
-    const [displayWorkflows, setDisplayWorkflows] = useState<I_OdaPmWorkflow[]>([]);
-    const plugin = useContext(PluginContext);
-    pmPlugin = plugin;
+    const [displayWorkflows, setDisplayWorkflows] = useState<I_OdaPmWorkflow[]>(
+        workflows.filter(k => {
+            return plugin.settings.display_workflow_names?.includes(k.name);
+        })
+    );
+
+    function handleSetDisplayWorkflows(newArr: I_OdaPmWorkflow[]) {
+        setSettingsValueAndSave(plugin, "display_workflow_names", newArr.map(k => k.name))
+        setDisplayWorkflows(newArr)
+    }
+
 
     // all tasks that has a workflow
     // Memo to avoid re-compute
@@ -249,9 +260,9 @@ export function ReactManagePage({eventCenter}: {
         <>
             <HStack style={{alignItems: "center"}} spacing={10}>
                 <h2>{workflows.length} Workflow(s)</h2>
-                <button onClick={() => setDisplayWorkflows([...workflows])}>Select All
+                <button onClick={() => handleSetDisplayWorkflows([...workflows])}>Select All
                 </button>
-                <button onClick={() => setDisplayWorkflows([])}>Unselect All
+                <button onClick={() => handleSetDisplayWorkflows([])}>Unselect All
                 </button>
             </HStack>
             <div>
@@ -259,7 +270,7 @@ export function ReactManagePage({eventCenter}: {
                     return (
                         <WorkflowFilterCheckbox key={workflow.name} displayWorkflows={displayWorkflows}
                                                 workflow={workflow}
-                                                setDisplayWorkflows={setDisplayWorkflows}/>
+                                                setDisplayWorkflows={handleSetDisplayWorkflows}/>
                     )
                 })}
             </div>
@@ -497,12 +508,12 @@ function WorkflowView({workflows, completedCount = 0, totalCount = 0}: {
     }
     const labelColorStype = isStringNullOrEmpty(color) ? {} : {color: color} as React.CSSProperties;
     return (<>
-            <HStack style={{alignItems: "center"}} spacing={10}>
-                <h2>
-                    Workflow: {workflows.map(k => `${k.name} (${initialToUpper(k.type)})`).join(", ")}
-                </h2>
-                <></>
-            </HStack>
+            {/*<HStack style={{alignItems: "center"}} spacing={10}>*/}
+            {/*    <h2>*/}
+            {/*        Workflow: {workflows.map(k => `${k.name} (${initialToUpper(k.type)})`).join(", ")}*/}
+            {/*    </h2>*/}
+            {/*    <></>*/}
+            {/*</HStack>*/}
             <label style={labelColorStype}>{completedCount}/{totalCount} tasks
                 completed: {ratioString}%.</label>
         </>
