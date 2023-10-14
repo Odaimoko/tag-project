@@ -28,7 +28,7 @@ export const DataTable = ({
                               headers, rows,
                               onHeaderClicked,
                               tableStyle,
-                              headerStyle,
+                              thStyle,
                               cellStyle,
                           }: {
     tableTitle: string,
@@ -36,7 +36,7 @@ export const DataTable = ({
     rows: I_Renderable[][],
     onHeaderClicked?: (arg0: number) => void,
     tableStyle?: React.CSSProperties,
-    headerStyle?: React.CSSProperties,
+    thStyle?: React.CSSProperties,
     cellStyle?: React.CSSProperties,
 }) => {
 
@@ -45,7 +45,7 @@ export const DataTable = ({
             <thead>
             <tr>
                 {headers.map((header: string, index) => {
-                    return <th style={headerStyle} key={header}>
+                    return <th style={Object.assign({}, thStyle)} key={header}>
                         <div onClick={() => {
                             onHeaderClicked?.(index)
                         }}>{header}</div>

@@ -15,7 +15,7 @@ import {
 } from "../data-model/workflow_def";
 import {DataArray, getAPI, STask} from "obsidian-dataview";
 import {Workspace} from "obsidian";
-import React, {Fragment, useContext, useEffect, useMemo, useState} from "react";
+import React, {useContext, useEffect, useMemo, useState} from "react";
 import {I_Renderable} from "./i_Renderable";
 
 import {rewriteTask} from "../utils/io_util";
@@ -443,11 +443,14 @@ function TaskCheckboxTableView({displayWorkflows, tasksWithThisType}: {
             </HStack>
             <p/>
             {
+                // -16 is the padding of the obsidian leaf view container. The content will overflow the container's box.
+                // sticky header see: https://css-tricks.com/position-sticky-and-table-headers/
                 displayWorkflows.length === 0 ? <label>No Workflow selected.</label> : (
                     taskRows.length > 0 ? <DataTable
                         tableTitle={curWfName}
                         headers={headers}
                         rows={taskRows}
+                        thStyle={{position: "sticky", top: -16, background: "lightgray"}}
                     /> : <label>No results.</label>
                 )
             }
