@@ -9,6 +9,7 @@ import {
     isTaskSingleLine,
     isTaskSummaryValid,
     OdaPmTask,
+    removeWorkflow,
     Tag_Prefix_Step,
     TaskStatus_checked,
     TaskStatus_unchecked,
@@ -58,14 +59,23 @@ function getColorByWorkflow(type: I_OdaPmWorkflow) {
     return "currentColor"
 }
 
-function notifyMalformedTask(task: STask, msgGetter: (task: STask) => string) {
+function notifyMalformedTask(task: STask, reason: string) {
     // console.log(pmPlugin && pmPlugin.settings.report_malformed_task)
     if (pmPlugin && pmPlugin.settings.report_malformed_task)
-        new ONotice(msgGetter(task), 4)
+        new ONotice(`${reason}\nYou can disable this popup in settings.\n\nSee Task in ${task.path}, line ${task.line + 1}:\n\t${task.text}`, 5)
 }
 
-function getTaskMultiLineErrMsg(task: STask) {
-    return `Task cannot have multiple lines.\nYou can disable this popup in settings.\n\nSee Task:\n\t${task.text}`
+function getTaskMultiLineErrMsg() {
+    return `Task cannot have multiple lines.`
+}
+
+
+function notifyTask(oTask: OdaPmTask, reason: string) {
+    const doc = new DocumentFragment();
+    appendBoldText(doc, reason);
+    doc.appendText("\n")
+    doc.appendText(oTask.summary)
+    notify(doc, 4)
 }
 
 
@@ -80,13 +90,15 @@ function createWorkflowsFromTask(task: STask): I_OdaPmWorkflow[] {
         const defTag = getTypeDefTag(wfType);
         if (task.tags.includes(defTag)) {
 
-            const workflow = getOrCreateWorkflow(wfType, getWorkflowNameFromRawText(trimTagsFromTask(task)), task);
+            const wfName = getWorkflowNameFromRawText(trimTagsFromTask(task));
+            const workflow = getOrCreateWorkflow(wfType, wfName, task);
             if (workflow === null) {
-                notifyMalformedTask(task, getTaskMultiLineErrMsg)
+                notifyMalformedTask(task, getTaskMultiLineErrMsg())
                 continue;
             }
             workflow.boundTask = task // Override task
             workflow.type = wfType // override 
+
 
             // The latter found workflow overrides the former one's steps, but not the STask.
             workflow.clearSteps()
@@ -97,6 +109,12 @@ function createWorkflowsFromTask(task: STask): I_OdaPmWorkflow[] {
                 }
                 workflow.addStep(tag)
             }
+            if (workflow.stepsDef.length === 0) {
+                notifyMalformedTask(task, "A workflow must have at least one step.")
+                console.log(`Workflow ${workflow.name} removed.`)
+                removeWorkflow(wfName);
+                continue;
+            }
             workflows.push(workflow)
         }
     }
@@ -105,17 +123,17 @@ function createWorkflowsFromTask(task: STask): I_OdaPmWorkflow[] {
 }
 
 // Create an OdaPmTask from a STask
-function createPmTaskFromTask(taskDefTags: string[], taskDefs: I_OdaPmWorkflow[], task: STask): OdaPmTask | null {
+function createPmTaskFromTask(workflowTags: string[], workflows: I_OdaPmWorkflow[], task: STask): OdaPmTask | null {
     // A task can have only one data-model
-    for (let i = 0; i < taskDefTags.length; i++) {
-        const defTag = taskDefTags[i];
+    for (let i = 0; i < workflowTags.length; i++) {
+        const defTag = workflowTags[i];
         if (task.tags.includes(defTag)) {
-            const workflow = taskDefs[i];
+            const workflow = workflows[i];
             if (!isTaskSingleLine(task)) {
-                notifyMalformedTask(task, getTaskMultiLineErrMsg)
+                notifyMalformedTask(task, getTaskMultiLineErrMsg())
                 continue;
             } else if (!isTaskSummaryValid(task)) {
-                notifyMalformedTask(task, (t) => `Task summary cannot be empty.\nYou can disable this popup in settings.\n\nSee Task:\n\t${t.text}`)
+                notifyMalformedTask(task, `Task summary cannot be empty.`)
                 continue;
             }
             const oTask = factoryTask(task, workflow);
@@ -211,18 +229,18 @@ export function ReactManagePage({eventCenter}: {
     const tasks_with_workflow = useMemo(getAllPmTasks, [rerenderState]);
 
     function getAllPmTasks() {
-        const task_def_tags = workflows.map(function (k: I_OdaPmWorkflow) {
+        const workflowTags = workflows.map(function (k: I_OdaPmWorkflow) {
             return k.tag;
         });
         return dv.pages()["file"]["tasks"].where(function (k: STask) {
-                for (const defTag of task_def_tags) {
+            for (const defTag of workflowTags) {
                     if (k.tags.includes(defTag)) return true;
                 }
                 return false;
             }
         )
             .map((task: STask) => {
-                return createPmTaskFromTask(task_def_tags, workflows, task)
+                return createPmTaskFromTask(workflowTags, workflows, task)
             }).filter(function (k: OdaPmTask | null) {
                 return k !== null;
             })
@@ -260,7 +278,7 @@ export function ReactManagePage({eventCenter}: {
             </div>
             <WorkflowOverviewView tasksWithThisType={tasksWithThisType}/>
             <p/>
-            <TaskCheckboxTableView displayWorkflows={displayWorkflows} tasksWithThisType={tasksWithThisType}/>
+            <TaskTableView displayWorkflows={displayWorkflows} tasksWithThisType={tasksWithThisType}/>
 
         </>
     )
@@ -297,15 +315,6 @@ const WorkflowFilterCheckbox = ({workflow, displayWorkflows, setDisplayWorkflows
         />
     </span>
 
-}
-
-
-function notifyTask(oTask: OdaPmTask, reason: string) {
-    const doc = new DocumentFragment();
-    appendBoldText(doc, reason);
-    doc.appendText("\n")
-    doc.appendText(oTask.summary)
-    notify(doc, 4)
 }
 
 /**
@@ -386,7 +395,7 @@ function rectifyOdaTaskOnMdTaskChanged(oTask: OdaPmTask, plugin: OdaPmToolPlugin
     }
 }
 
-function TaskCheckboxTableView({displayWorkflows, tasksWithThisType}: {
+function TaskTableView({displayWorkflows, tasksWithThisType}: {
     displayWorkflows: I_OdaPmWorkflow[],
     tasksWithThisType: DataArray<OdaPmTask>
 }) {
@@ -424,7 +433,7 @@ function TaskCheckboxTableView({displayWorkflows, tasksWithThisType}: {
         return k.tag;
     })).flatMap(k => k).unique();
 
-    const curWfName = displayWorkflows.map(k => k.name).join(", ")
+    const curWfName = "Tasks";// displayWorkflows.map(k => k.name).join(", ")
     const headers = [curWfName, ...displayStepNames];
 
 
