@@ -69,17 +69,6 @@ export const DataTable = ({
 
     return (
         <table style={tableStyle} key={tableTitle}>
-            <thead>
-            <tr>
-                {headers.map((header: string, index) => {
-                    return <th style={Object.assign({}, thStyle)} key={header}>
-                        <div onClick={() => {
-                            onHeaderClicked?.(index)
-                        }}>{header}</div>
-                    </th>;
-                })}
-            </tr>
-            </thead>
             <tbody>
             {rows.map((items, rowIdx) => (
                 <tr key={rowIdx}>
@@ -92,6 +81,18 @@ export const DataTable = ({
                 </tr>))
             }
             </tbody>
+            {/*Draw header at the end, so it can cover body view. Or else the body content will be rendered above headers. */}
+            <thead>
+            <tr>
+                {headers.map((header: string, index) => {
+                    return <th style={Object.assign({}, thStyle)} key={header}>
+                        <div onClick={() => {
+                            onHeaderClicked?.(index)
+                        }}>{header}</div>
+                    </th>;
+                })}
+            </tr>
+            </thead>
         </table>
     );
 }

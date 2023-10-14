@@ -22,7 +22,7 @@ import React, {useContext, useEffect, useMemo, useState} from "react";
 import {I_Renderable} from "./i_Renderable";
 
 import {rewriteTask} from "../utils/io_util";
-import {PluginContext} from "./manage-page-view";
+import {ContainerContext, PluginContext} from "./manage-page-view";
 import {EventEmitter} from "events";
 import OdaPmToolPlugin from "../main";
 import {notify, ONotice} from "../utils/o-notice";
@@ -448,6 +448,9 @@ function TaskTableView({displayWorkflows, tasksWithThisType}: {
         return row;
     });
 
+    // add background for table header, according to the theme.
+    const container = useContext(ContainerContext)
+    const themedBackground = container.getCssPropertyValue("background-color")
     return (
         <>
             <HStack style={{
@@ -501,7 +504,10 @@ function TaskTableView({displayWorkflows, tasksWithThisType}: {
                         tableTitle={curWfName}
                         headers={headers}
                         rows={taskRows}
-                        thStyle={{position: "sticky", top: -16}}
+                        thStyle={{
+                            backgroundColor: themedBackground,
+                            position: "sticky", top: -16
+                        }}
                     /> : <label>No results.</label>
                 )
             }

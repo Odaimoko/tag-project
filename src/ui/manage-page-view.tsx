@@ -22,7 +22,6 @@ export class ManagePageView extends ItemView {
         this.plugin = plugin;
     }
 
-
     getViewType() {
         return ManagePageViewId;
     }
@@ -61,15 +60,16 @@ export class ManagePageView extends ItemView {
         //  Why [1]? What is the first child? [0] is title, 1 is content, 2 is input (Why's there an input?)
         const container = this.containerEl.children[1];
         container.empty();
-
         // React
         this.root = createRoot(this.containerEl.children[1]); // Override the previous container
         // we call render(), so this is a brand new component tree, no matter it exists or not. States won't be preserved.
         this.root.render(
             <StrictMode>
-                <PluginContext.Provider value={this.plugin}>
-                    <ReactManagePage eventCenter={this.emitter}/>
-                </PluginContext.Provider>
+                <ContainerContext.Provider value={container}>
+                    <PluginContext.Provider value={this.plugin}>
+                        <ReactManagePage eventCenter={this.emitter}/>
+                    </PluginContext.Provider>
+                </ContainerContext.Provider>
             </StrictMode>,
         );
         // yes we can render, but the clicking the link won't jump to the note
@@ -87,5 +87,5 @@ export class ManagePageView extends ItemView {
     }
 }
 
-
+export const ContainerContext = createContext<Element>(undefined as any);
 export const PluginContext = createContext<OdaPmToolPlugin>(undefined as any);
