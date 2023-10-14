@@ -78,6 +78,11 @@ export function getOrCreateWorkflow(type: WorkflowType, name: string | null, tas
     return createWorkflow(task, type, name);
 }
 
+export function removeWorkflow(name: string | null) {
+    if (name)
+        globalOdaPmWorkflowMap.delete(name);
+}
+
 function createWorkflow(task: STask, type: WorkflowType, name: string) {
     // All set.
     const workflow = new OdaPmWorkflow(task, type, name);
