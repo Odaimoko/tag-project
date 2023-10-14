@@ -2,24 +2,51 @@ import {I_Renderable} from "./i_Renderable";
 import React, {Fragment, JSX, ReactNode, useState} from "react";
 import {getIcon} from "obsidian";
 
-const taskLinkHtmlString = getIcon("link")?.outerHTML;
-// Render an html string as a React component.
-// https://reactjs.org/docs/dom-elements.html#dangerouslysetinnerhtml
-export function InternalLinkView({content, onIconClicked, onContentClicked}: {
+interface I_Stylable {
+    style?: React.CSSProperties;
+}
+
+// const taskLinkHtmlString = getIcon("link")?.outerHTML;
+/**
+ * https://lucide.dev/icons/
+ * @param iconName
+ * @constructor
+ */
+export function ObsidianIconView({iconName}: { iconName: string }) {
+    const htmlString = getIcon(iconName)?.outerHTML
+    return <HTMLStringComponent htmlString={htmlString}/>;
+}
+
+/**
+ * Premade Component.
+ * @constructor
+ */
+export function InternalLinkView({content, onIconClicked, onContentClicked, style}: {
     content: I_Renderable,
     onIconClicked?: () => void,
-    onContentClicked?: () => void
-}) {
-    return <span>
+    onContentClicked?: () => void,
+} & I_Stylable) {
+    return <ClickableIconView style={style} content={content} onIconClicked={onIconClicked}
+                              onContentClicked={onContentClicked}
+                              iconName={"link"}
+    />
+}
+
+export function ClickableIconView({content, onIconClicked, onContentClicked, iconName, style}: {
+    content?: I_Renderable,
+    onIconClicked?: () => void,
+    onContentClicked?: () => void,
+    iconName: string
+} & I_Stylable) {
+    return <span style={style}>
 
         <a className={"cm-underline"} onClick={onIconClicked}>
-            <HTMLStringComponent htmlString={taskLinkHtmlString}/>
+           <ObsidianIconView iconName={iconName}/>
         </a>
         <span onClick={onContentClicked}>
         {content}
         </span>
     </span>
-
 }
 
 // We cannot interact in Dataview Table, so we create our own.
@@ -82,9 +109,8 @@ export const ExternalControlledCheckbox = ({externalControl, onChange, onLabelCl
                                                    onChange: () => void,
                                                    onLabelClicked?: () => void,
                                                    content?: I_Renderable,
-                                                   style?: React.CSSProperties,
 
-                                               }) => {
+                                               } & I_Stylable) => {
     // Click the label won't trigger the checkbox change event
     return (
         <span style={style}>
@@ -112,12 +138,13 @@ export const Checkbox = ({
                              onChange,
                              onLabelClicked,
                              initialState = false,
+                             style,
                          }: {
                              content?: string | JSX.Element,
                              onChange?: (nextChecked: boolean) => void,
                              onLabelClicked?: () => void,
                              initialState?: boolean,
-                         }
+                         } & I_Stylable
 ) => {
     const [isChecked, setIsChecked] = useState(initialState);
 
@@ -126,7 +153,7 @@ export const Checkbox = ({
         setIsChecked(nextToggle);
         onChange?.(nextToggle);
     };
-    return <ExternalControlledCheckbox externalControl={isChecked}
+    return <ExternalControlledCheckbox style={style} externalControl={isChecked}
                                        onChange={handleCheckboxChange} onLabelClicked={onLabelClicked}
                                        content={content}/>
 }
@@ -154,6 +181,8 @@ export function HStack(props: StackProps) {
     </div>
 }
 
+// Render an html string as a React component.
+// https://reactjs.org/docs/dom-elements.html#dangerouslysetinnerhtml
 function HTMLStringComponent({htmlString, useSpan = true}: {
     htmlString?: string,
     useSpan?: boolean

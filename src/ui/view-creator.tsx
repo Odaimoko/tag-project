@@ -27,7 +27,14 @@ import {notify, ONotice} from "../utils/o-notice";
 import {DataviewAPIReadyEvent, DataviewMetadataChangeEvent} from "../typing/dataview-event";
 import {initialToUpper, isStringNullOrEmpty, simpleFilter} from "../utils/format_util";
 import {setSettingsValueAndSave, SortMethod_Appearance, SortMethod_Ascending, totalSortMethods} from "../Settings";
-import {Checkbox, DataTable, ExternalControlledCheckbox, HStack, InternalLinkView} from "./view-template";
+import {
+    Checkbox,
+    ClickableIconView,
+    DataTable,
+    ExternalControlledCheckbox,
+    HStack,
+    InternalLinkView
+} from "./view-template";
 import {appendBoldText} from "./html-template";
 
 
@@ -439,8 +446,9 @@ function TaskCheckboxTableView({displayWorkflows, tasksWithThisType}: {
                 justifyContent: "flex-start",
                 alignItems: "center"
             }} spacing={15}>
-                <>
+                <span style={{display: "flex", alignItems: "center"}}>
                     <input
+                        style={{width: "100%"}}
                         type="text" // You can change the "type" attribute for different input types
                         value={searchText}
                         placeholder={"Search task name..."}
@@ -448,8 +456,14 @@ function TaskCheckboxTableView({displayWorkflows, tasksWithThisType}: {
                             setSearchText(evt.target.value)
                         }}
                     />
-                </>
-                <><label> Sort </label>
+                    {/*It seems that the icon's size is 10x10? */}
+                    <ClickableIconView style={{marginLeft: -25, paddingTop: 5}}
+                                       onIconClicked={() => {
+                                           setSearchText("")
+                                       }} iconName={"x-circle"}/>
+                </span>
+                <HStack style={{alignItems: "center"}}>
+                    <label> Sort </label>
                     <button onClick={
                         () => {
                             // Loop
@@ -460,7 +474,7 @@ function TaskCheckboxTableView({displayWorkflows, tasksWithThisType}: {
                     >
                         {sortCode === SortMethod_Appearance ? "By Appearance" : ascending ? "Ascending" : "Descending"}
                     </button>
-                </>
+                </HStack>
                 <Checkbox content={"Show Completed"} onChange={
                     (nextChecked) => {
                         setShowCompleted(nextChecked)
