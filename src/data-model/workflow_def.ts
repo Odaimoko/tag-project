@@ -232,6 +232,10 @@ export class OdaPmTask {
         }
     }
 
+    isMdCompleted() {
+        return this.boundTask.checked;
+    }
+
     allStepsCompleted(): boolean {
         return this.currentSteps.length == this.type.stepsDef.length
     }

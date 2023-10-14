@@ -66,6 +66,25 @@ function removeStepTagFromTask(oTask: OdaPmTask, stepTag: string) {
     return removeTagFromTaskText(oTask.boundTask.text, stepTag);
 }
 
+function removeAllStepTags(oTask: OdaPmTask, oriText: string) {
+    for (const step of oTask.type.stepsDef) {
+        if (oTask.currentSteps.includes(step)) {
+            oriText = removeTagFromTaskText(oriText, step.tag)
+        }
+    }
+    return oriText;
+}
+
+function addAllStepTags(oTask: OdaPmTask, oriText: string) {
+    for (const step of oTask.type.stepsDef) {
+        if (oTask.currentSteps.includes(step)) {
+            continue;
+        }
+        oriText = addStepTagToNonTaggedText(oriText, step.tag)
+    }
+    return oriText;
+}
+
 // endregion
 
 /**
@@ -220,7 +239,7 @@ export function ReactManagePage({eventCenter}: {
     })
     const totalCount = tasksWithThisType.length;
     const completedTasks = tasksWithThisType.filter(function (k: OdaPmTask) {
-        return k.boundTask.checked;
+        return k.isMdCompleted();
     });
     const completedCount = completedTasks.length;
 
@@ -282,9 +301,9 @@ const WorkflowFilterCheckbox = ({workflow, displayWorkflows, setDisplayWorkflows
 }
 
 
-function notifyTaskCompletionWhenAllStepsCompleted(oTask: OdaPmTask) {
+function notifyTask(oTask: OdaPmTask, reason: string) {
     const doc = new DocumentFragment();
-    appendBoldText(doc, `All steps completed: `);
+    appendBoldText(doc, reason);
     doc.appendText("\n")
     doc.appendText(oTask.summary)
 
@@ -304,11 +323,6 @@ const OdaTaskSummaryCell = ({oTask, taskFirstColumn}: {
 }) => {
     const plugin = useContext(PluginContext);
     const workspace = plugin.app.workspace;
-    //  State: summary unticked, all steps are ticked. Outcome: auto tick summary and the original task.
-    if (!oTask.boundTask.checked && oTask.allStepsCompleted()) {
-        rewriteTask(plugin.app.vault, oTask.boundTask, TaskStatus_checked, oTask.boundTask.text)
-        notifyTaskCompletionWhenAllStepsCompleted(oTask)
-    }
 
     function tickSummary() {
         // Automatically add tags when checking in manage page 
@@ -320,20 +334,11 @@ const OdaTaskSummaryCell = ({oTask, taskFirstColumn}: {
 
             // - State: unticked. Behaviour: tick summary. Outcome: All steps ticked.
             nextStatus = TaskStatus_checked;
-            for (const step of oTask.type.stepsDef) {
-                if (oTask.currentSteps.includes(step)) {
-                    continue;
-                }
-                oriText = addStepTagToNonTaggedText(oriText, step.tag)
-            }
+            oriText = addAllStepTags(oTask, oriText);
         } else {
             // 	State: all ticked. Behaviour: untick summary. Outcome: untick all step.
 
-            for (const step of oTask.type.stepsDef) {
-                if (oTask.currentSteps.includes(step)) {
-                    oriText = removeTagFromTaskText(oriText, step.tag)
-                }
-            }
+            oriText = removeAllStepTags(oTask, oriText);
         }
         rewriteTask(plugin.app.vault, oTask.boundTask,
             nextStatus, oriText) // trigger rerender
@@ -367,7 +372,7 @@ function TaskCheckboxTableView({displayWorkflows, tasksWithThisType}: {
     const totalSortMethods = 3;
     const nextSortCode = (sortCode + 1) % totalSortMethods;
     const displayedTasks = tasksWithThisType.filter(function (k: OdaPmTask) {
-        return (includeCompleted || !k.boundTask.checked);
+        return (includeCompleted || !k.isMdCompleted());
     }).filter(function (k: OdaPmTask) {
         return isStringNullOrEmpty(searchText) ? true : simpleFilter(searchText, k);
     })
@@ -398,6 +403,17 @@ function TaskCheckboxTableView({displayWorkflows, tasksWithThisType}: {
 
     const taskRows = displayedTasks.map(function (oTask: OdaPmTask) {
         const row = odaTaskToTableRow(displayStepTags, oTask)
+        //  State: summary unticked, all steps are ticked. Outcome: auto tick summary and the original task.
+        if (!oTask.isMdCompleted() && oTask.allStepsCompleted()) {
+            rewriteTask(plugin.app.vault, oTask.boundTask, TaskStatus_checked, oTask.boundTask.text)
+            notifyTask(oTask, `All steps completed: `)
+        }
+        //State: summary ticked, not all steps are ticked. Outcome: auto add step tags.
+        else if (oTask.isMdCompleted() && !oTask.allStepsCompleted()) {
+            rewriteTask(plugin.app.vault, oTask.boundTask, TaskStatus_checked, addAllStepTags(oTask, oTask.boundTask.text))
+            notifyTask(oTask, `Main task completed: `)
+        }
+
         row[0] = (
             <OdaTaskSummaryCell key={`${oTask.boundTask.path}:${oTask.boundTask.line}`} oTask={oTask}
                                 taskFirstColumn={row[0]}/>
