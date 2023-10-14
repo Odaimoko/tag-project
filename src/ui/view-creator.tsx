@@ -7,7 +7,9 @@ import {
     I_OdaPmStep,
     I_OdaPmWorkflow,
     OdaPmTask,
-    Tag_Prefix_Step, TaskStatus_checked, TaskStatus_unchecked,
+    Tag_Prefix_Step,
+    TaskStatus_checked,
+    TaskStatus_unchecked,
     trimTagsFromTask,
     Workflow_Type_Enum_Array
 } from "../data-model/workflow_def";
@@ -20,12 +22,13 @@ import {rewriteTask} from "../utils/io_util";
 import {PluginContext} from "./manage-page-view";
 import {EventEmitter} from "events";
 import OdaPmToolPlugin from "../main";
-import {ONotice} from "../utils/o-notice";
+import {notify, ONotice} from "../utils/o-notice";
 
 import {DataviewAPIReadyEvent, DataviewMetadataChangeEvent} from "../typing/dataview-event";
 import {initialToUpper, isStringNullOrEmpty, simpleFilter} from "../utils/format_util";
 import {setSettingsValueAndSave} from "../Settings";
 import {Checkbox, DataTable, ExternalControlledCheckbox, HStack, InternalLinkView} from "./view-template";
+import {appendBoldText} from "./html-template";
 
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
@@ -277,6 +280,17 @@ const WorkflowFilterCheckbox = ({workflow, displayWorkflows, setDisplayWorkflows
     </span>
 
 }
+
+
+function notifyTaskCompletionWhenAllStepsCompleted(oTask: OdaPmTask) {
+    const doc = new DocumentFragment();
+    appendBoldText(doc, `All steps completed: `);
+    doc.appendText("\n")
+    doc.appendText(oTask.summary)
+
+    notify(doc, 4)
+}
+
 /**
  * The first column of the table, which is a checkbox representing the task.
  * @param oTask
@@ -291,8 +305,10 @@ const OdaTaskSummaryCell = ({oTask, taskFirstColumn}: {
     const plugin = useContext(PluginContext);
     const workspace = plugin.app.workspace;
     //  State: summary unticked, all steps are ticked. Outcome: auto tick summary and the original task.
-    if (!oTask.boundTask.checked && oTask.allStepsCompleted())
+    if (!oTask.boundTask.checked && oTask.allStepsCompleted()) {
         rewriteTask(plugin.app.vault, oTask.boundTask, TaskStatus_checked, oTask.boundTask.text)
+        notifyTaskCompletionWhenAllStepsCompleted(oTask)
+    }
 
     function tickSummary() {
         // Automatically add tags when checking in manage page 
