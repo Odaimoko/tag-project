@@ -95,6 +95,12 @@ export function isTaskSingleLine(task: STask) {
     return hasTextAfterEol;
 }
 
+export function isTaskSummaryValid(task: STask) {
+    // Empty names for workflow def and tasks are not allowed
+    const summary = trimTagsFromTask(task)
+    return summary && summary.length > 0;
+}
+
 
 export function trimTagsFromTask(task: STask): string {
     // remove all tags from text
@@ -195,8 +201,10 @@ class OdaPmWorkflow implements I_OdaPmWorkflow {
     }
 }
 
+/**
+ * Dont check.
+ */
 export function factoryTask(task: STask, type: I_OdaPmWorkflow) {
-    if (!isTaskSingleLine(task)) return null;
     return new OdaPmTask(type, task)
 }
 

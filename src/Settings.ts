@@ -57,11 +57,11 @@ export class IPmSettingsTab extends PluginSettingTab {
 
         const book = containerEl.createEl("div");
         book.createEl("h1", {text: "iPM: A Project Management Tool"});
-        book.createEl("body", {text: "Odaimoko"});
+        book.createEl("h2", {text: "by Odaimoko"});
 
         new Setting(containerEl)
             .setName('Notice when a task is malformed')
-            .setDesc('A task or workflow definition is malformed if it contains multiple lines. Try adding bland line before or after the task.')
+            .setDesc('A task or workflow definition is malformed if it contains multiple lines, or the text is empty. Try adding blank line before or after the task.')
             .addToggle(this.setValueAndSave("report_malformed_task"));
         new Setting(containerEl)
             .setName('Capitalized the first letter in table row')
@@ -74,7 +74,7 @@ export class IPmSettingsTab extends PluginSettingTab {
             vc.setValue(this.plugin.settings[settingName])
                 // @ts-ignore
                 .onChange?.(async (value: T) => {
-                await setSettingsValueAndSave(this.plugin, settingName, value)
+                    await setSettingsValueAndSave(this.plugin, settingName, value)
                 }
             );
     }

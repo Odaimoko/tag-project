@@ -6,6 +6,8 @@ import {
     getWorkflowNameFromRawText,
     I_OdaPmStep,
     I_OdaPmWorkflow,
+    isTaskSingleLine,
+    isTaskSummaryValid,
     OdaPmTask,
     Tag_Prefix_Step,
     TaskStatus_checked,
@@ -41,14 +43,15 @@ import {appendBoldText} from "./html-template";
 const dv = getAPI(); // We can use dv just like the examples in the docs
 let pmPlugin: OdaPmToolPlugin; // locally global
 
-function notifyMalformedTask(task: STask) {
+
+function notifyMalformedTask(task: STask, msgGetter: (task: STask) => string) {
     // console.log(pmPlugin && pmPlugin.settings.report_malformed_task)
     if (pmPlugin && pmPlugin.settings.report_malformed_task)
-        new ONotice(getTaskMalformedMsg(task))
+        new ONotice(msgGetter(task), 4)
 }
 
-function getTaskMalformedMsg(task: STask) {
-    return `Task is not valid for PM.\nYou can disable this popup in settings.\n\nSee Task:\n\t${task.text}`
+function getTaskMultiLineErrMsg(task: STask) {
+    return `Task cannot have multiple lines.\nYou can disable this popup in settings.\n\nSee Task:\n\t${task.text}`
 }
 
 // region StepTag management
@@ -104,9 +107,10 @@ function createWorkflowsFromTask(task: STask): I_OdaPmWorkflow[] {
     for (const wfType of Workflow_Type_Enum_Array) {
         const defTag = getTypeDefTag(wfType);
         if (task.tags.includes(defTag)) {
+
             const workflow = getOrCreateWorkflow(wfType, getWorkflowNameFromRawText(trimTagsFromTask(task)), task);
             if (workflow === null) {
-                notifyMalformedTask(task)
+                notifyMalformedTask(task, getTaskMultiLineErrMsg)
                 continue;
             }
             workflow.boundTask = task // Override task
@@ -135,10 +139,15 @@ function createPmTaskFromTask(taskDefTags: string[], taskDefs: I_OdaPmWorkflow[]
         const defTag = taskDefTags[i];
         if (task.tags.includes(defTag)) {
             const workflow = taskDefs[i];
-            const oTask = factoryTask(task, workflow);
-            if (oTask === null) {
-                notifyMalformedTask(task)
+            if (!isTaskSingleLine(task)) {
+                notifyMalformedTask(task, getTaskMultiLineErrMsg)
+                continue;
+            } else if (!isTaskSummaryValid(task)) {
+                notifyMalformedTask(task, (t) => `Task summary cannot be empty.\nYou can disable this popup in settings.\n\nSee Task:\n\t${t.text}`)
+                continue;
             }
+            const oTask = factoryTask(task, workflow);
+
             return oTask
         }
     }
