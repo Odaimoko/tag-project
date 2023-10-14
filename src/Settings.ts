@@ -2,6 +2,7 @@ import {App, PluginSettingTab, Setting, ValueComponent} from "obsidian";
 import IPmToolPlugin from "./main";
 import OdaPmToolPlugin from "./main";
 
+
 type SerializedType =
     string
     | number
@@ -37,6 +38,7 @@ type SettingName = keyof IPmSettings;
 
 export
 async function setSettingsValueAndSave<T extends SerializedType>(plugin: OdaPmToolPlugin, settingName: SettingName, value: T) {
+    // @ts-ignore
     plugin.settings[settingName] = value;
     // console.log(`Saving settings ${settingName} = ${value}...`);
     await plugin.saveSettings();

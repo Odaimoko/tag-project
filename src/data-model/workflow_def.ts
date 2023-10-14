@@ -180,7 +180,9 @@ class OdaPmWorkflow implements I_OdaPmWorkflow {
     }
 
     addStep(tag: string) {
-        this.stepsDef.push(getOrCreateStep(tag));
+        const step = getOrCreateStep(tag);
+        if (step === null) return;
+        this.stepsDef.push(step);
     }
 
     includesStep(tag: string): boolean {
@@ -227,7 +229,9 @@ export class OdaPmTask {
         this.currentSteps = [];
         for (const tag of task.tags) {
             if (type.includesStep(tag)) {
-                this.currentSteps.push(getOrCreateStep(tag))
+                const step = getOrCreateStep(tag);
+                if (step !== null)
+                    this.currentSteps.push(step)
             }
         }
     }
