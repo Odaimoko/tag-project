@@ -39,7 +39,8 @@ const globalOdaPmWorkflowMap: Map<string, OdaPmWorkflow> = new Map<string, OdaPm
  * use global Pm Step library instead of creating new instances
  * @param tag
  */
-export function getOrCreateStep(tag: string): OdaPmStep {
+export function getOrCreateStep(tag: string | undefined): OdaPmStep | null {
+    if (!tag) return null;
     if (globalStepMap.has(tag)) {
         return <OdaPmStep>globalStepMap.get(tag);
     }
@@ -244,13 +245,119 @@ export class OdaPmTask {
         return this.boundTask.checked;
     }
 
-    allStepsCompleted(): boolean {
+    stepCompleted(): boolean {
+        switch (this.type.type) {
+            case "chain": {
+                const tagStep = getOrCreateStep(this.type.stepsDef.last()?.tag);
+                if (tagStep === null) return false;
+                return this.currentSteps.includes(tagStep)
+            }
+            case "checkbox":
+                return this.allStepsCompleted()
+        }
+    }
+
+    getLastStep(): I_OdaPmStep | undefined {
+        return this.currentSteps.last();
+    }
+
+    /**
+     *  Users may add step tags in md, we find the furthest step in the chain.
+     */
+    private getFurthestStep() {
+        for (let i = this.type.stepsDef.length - 1; i >= 0; i--) {
+            if (this.currentSteps.includes(this.type.stepsDef[i]))
+                return this.type.stepsDef[i];
+        }
+        return null;
+    }
+
+    private allStepsCompleted(): boolean {
         return this.currentSteps.length == this.type.stepsDef.length
     }
 
-    lackOnlyOneStep(stepTag: string): boolean {
-        const hasTag = this.currentSteps.filter(k => k.tag == stepTag).length > 0;
-        return this.currentSteps.length == this.type.stepsDef.length - 1 && !hasTag
+    lackOnlyOneStep(stepTag: string | undefined): boolean {
+        if (!stepTag) return false;
+        switch (this.type.type) {
+            case "chain":
+                // This is the last step, ofc we lack this.
+                return this.type.stepsDef.last()?.tag === stepTag
+            case "checkbox": {
+                const hasTag = this.currentSteps.filter(k => k.tag == stepTag).length > 0;
+                return this.currentSteps.length == this.type.stepsDef.length - 1 && !hasTag
+            }
+        }
+    }
+
+    addStepTag(stepTag: string): string {
+        const text = this.boundTask.text;
+        return addOneStepTagText(text, stepTag);
+    }
+
+    removeStepTag(stepTag: string) {
+        return removeOneStepTagText(this.boundTask.text, stepTag);
+    }
+
+    removeAllStepTags() {
+        let oriText = this.text;
+        for (const step of this.type.stepsDef) {
+            if (this.currentSteps.includes(step)) {
+                oriText = removeOneStepTagText(oriText, step.tag)
+            }
+        }
+        return oriText;
+    }
+
+    private addAllStepTags(oriText: string) {
+        for (const step of this.type.stepsDef) {
+            if (this.currentSteps.includes(step)) {
+                continue;
+            }
+            oriText = addOneStepTagText(oriText, step.tag)
+        }
+        return oriText;
+    }
+
+    private keepLastStepTag() {
+        const lastStep = this.type.stepsDef.last();
+        return this.keepOneStepTag(lastStep?.tag);
+    }
+
+    completeStepTag() {
+        switch (this.type.type) {
+            case "chain":
+                return this.keepLastStepTag();
+            case "checkbox":
+                return this.addAllStepTags(this.text);
+        }
+    }
+
+    keepOneStepTag(stepTag: string | undefined) {
+        const cleanText = this.removeAllStepTags();
+        if (stepTag === undefined) return cleanText;
+        return addOneStepTagText(cleanText, stepTag)
     }
 
 }
+
+
+// region StepTag Manipulate
+/**
+ * add a tag at the end of the line. the tag will be followed by a space
+ * @param text
+ * @param stepTag
+ */
+function addOneStepTagText(text: string, stepTag: string) {
+    // With the rule that a task cannot cross multiple lines, we can safely assume that the last char is \n if there is a \n.
+    const hasTrailingEol = text.indexOf("\n") == text.length - 1
+    // We believe dataview gives the correct result. In the latter case there will be no step.tag in the original text if includes is false.
+    return `${text.trimEnd()} ${stepTag} ` + (hasTrailingEol ? "\n" : "");
+}
+
+// TODO wont remove the space before or after the tag
+function removeOneStepTagText(text: string, stepTag: string) {
+    return text.replace(stepTag, "");
+}
+
+
+// endregion

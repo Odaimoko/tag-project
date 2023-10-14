@@ -160,7 +160,7 @@ export default class OdaPmToolPlugin extends Plugin {
 
     // endregion
     onunload() {
-        console.log('unloading plugin')
+        // console.log('unloading plugin')
     }
 
     async loadSettings() {

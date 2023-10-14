@@ -1,8 +1,5 @@
 // https://docs.obsidian.md/Plugins/User+interface/Views
-import {
-    ItemView,
-    WorkspaceLeaf
-} from "obsidian";
+import {ItemView, WorkspaceLeaf} from "obsidian";
 import {ReactManagePage} from "./view-creator";
 import {createRoot, Root} from "react-dom/client";
 import {createContext, StrictMode} from "react";
@@ -35,7 +32,7 @@ export class ManagePageView extends ItemView {
     }
 
     async onOpen() {
-        console.log("Manage page view opened.")
+        // console.log("Manage page view opened.")
         this.listenToMetadataChange()
         // When dataview is ready, we render the page directly.
         // If dataview is not ready, we still render the page, but we listen to the event and re-render when it is ready.
