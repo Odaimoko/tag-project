@@ -15,15 +15,13 @@ import {
     Workflow_Type_Enum_Array
 } from "./workflow_def";
 import {EventEmitter} from "events";
-import {DataviewMetadataChangeEvent} from "../typing/dataview-event";
+import {DataviewMetadataChangeEvent, iPm_DbReloaded} from "../typing/dataview-event";
 import {getAPI, STask} from "obsidian-dataview";
 import {ONotice} from "../utils/o-notice";
 import {getSettings} from "../Settings";
 import {GenericProvider} from "../utils/GenericProvider";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
-
-export const iPmEvent_WorkflowsReloaded = "iPm:workflows:reload";
 
 function notifyMalformedTask(task: STask, reason: string) {
     // console.log(pmPlugin && pmPlugin.settings.report_malformed_task)
@@ -99,7 +97,7 @@ function createPmTaskFromTask(workflowTags: string[], workflows: I_OdaPmWorkflow
     return null;
 }
 
-export function getAllWorkflows(): I_OdaPmWorkflow[] {
+function getAllWorkflows(): I_OdaPmWorkflow[] {
     return dv.pages()["file"]["tasks"].where(function (k: STask) {
             for (const defTag of getDefTags()) {
                 if (k.tags.length === 0) continue;
@@ -115,7 +113,7 @@ export function getAllWorkflows(): I_OdaPmWorkflow[] {
         .unique();
 }
 
-export function getAllPmTasks(workflows: I_OdaPmWorkflow[]) {
+function getAllPmTasks(workflows: I_OdaPmWorkflow[]) {
     const workflowTags = workflows.map(function (k: I_OdaPmWorkflow) {
         return k.tag;
     });
@@ -138,6 +136,7 @@ export class OdaPmDb implements I_EvtListener {
     workflows: I_OdaPmWorkflow[];
     emitter: EventEmitter;
     boundReloadWorkflows: () => void;
+    pmTasks: OdaPmTask[]
 
     constructor(emitter: EventEmitter) {
         this.emitter = emitter;
@@ -156,7 +155,26 @@ export class OdaPmDb implements I_EvtListener {
 
     private reloadWorkflows() {
         this.workflows = getAllWorkflows()
-        this.emitter.emit(iPmEvent_WorkflowsReloaded)
+        this.pmTasks = getAllPmTasks(this.workflows)
+        this.emitter.emit(iPm_DbReloaded)
+    }
+
+    getWorkflow(filePath: string, line: number) {
+        for (const wf of this.workflows) {
+            if (wf.boundTask.path === filePath && wf.boundTask.line === line) {
+                return wf;
+            }
+        }
+        return null;
+    }
+
+    getPmTask(filePath: string, line: number) {
+        for (const task of this.pmTasks) {
+            if (task.boundTask.path === filePath && task.boundTask.line === line) {
+                return task;
+            }
+        }
+        return null;
     }
 }
 

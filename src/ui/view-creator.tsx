@@ -7,7 +7,7 @@ import {
 } from "../data-model/workflow_def";
 import {DataArray, STask} from "obsidian-dataview";
 import {Workspace} from "obsidian";
-import React, {useContext, useEffect, useMemo, useState} from "react";
+import React, {useContext, useEffect, useState} from "react";
 import {I_Renderable} from "./i_Renderable";
 
 import {rewriteTask} from "../utils/io_util";
@@ -34,7 +34,8 @@ import {
     InternalLinkView
 } from "./view-template";
 import {appendBoldText} from "./html-template";
-import {getAllPmTasks, iPmEvent_WorkflowsReloaded, OdaPmDbProvider} from "../data-model/odaPmDb";
+import {getAllPmTasks, OdaPmDbProvider} from "../data-model/odaPmDb";
+import {iPm_DbReloaded, iPm_JumpTask, iPm_JumpWorkflow} from "../typing/dataview-event";
 
 
 // dark light compatible
@@ -92,13 +93,25 @@ export function ReactManagePage({eventCenter}: {
         setRerenderState((prevState) => prevState + 1)
     }
 
+    function jumpTask(oTask: OdaPmTask) {
+        jumpWf(oTask.type)
+        // TODO
+    }
+
+    function jumpWf(wf: I_OdaPmWorkflow) {
+        setDisplayWorkflowNames([wf.name])
+    }
 
     // How to prevent add listener multiple times? use custom emitter instead of obsidian's event emitter
     useEffect(() => {
-        eventCenter?.addListener(iPmEvent_WorkflowsReloaded, triggerRerender)
-
+        eventCenter?.addListener(iPm_DbReloaded, triggerRerender)
+        eventCenter?.addListener(iPm_JumpTask, jumpTask)
+        eventCenter?.addListener(iPm_JumpWorkflow, jumpWf)
         return () => {
-            eventCenter?.removeListener(iPmEvent_WorkflowsReloaded, triggerRerender)
+            eventCenter?.removeListener(iPm_DbReloaded, triggerRerender)
+            eventCenter?.removeListener(iPm_JumpTask, jumpTask)
+            eventCenter?.removeListener(iPm_JumpWorkflow, jumpWf)
+
         }
     }, [rerenderState]);
 
@@ -124,7 +137,7 @@ export function ReactManagePage({eventCenter}: {
 
     // all tasks that has a workflow
     // Memo to avoid re-compute
-    const tasks_with_workflow = useMemo(() => getAllPmTasks(workflows), [rerenderState]);
+    const tasks_with_workflow = OdaPmDbProvider.get()?.pmTasks || [];
 
 
     if (workflows.length === 0)
@@ -286,6 +299,19 @@ function TaskTableView({displayWorkflows, tasksWithThisType}: {
     const nextSortCode = (sortCode + 1) % totalSortMethods;
     // show completed
     const [showCompleted, setShowCompleted] = useState(getSettings()?.show_completed_tasks as boolean);
+
+    function jumpTask(oTask: OdaPmTask) {
+        setSearchText(oTask.summary)
+        setShowCompleted(oTask.isMdCompleted())
+    }
+
+    useEffect(() => {
+        const eventCenter = plugin?.getEmitter()
+        eventCenter?.addListener(iPm_JumpTask, jumpTask)
+        return () => {
+            eventCenter?.removeListener(iPm_JumpTask, jumpTask)
+        }
+    });
 
     const displayedTasks = tasksWithThisType.filter(function (k: OdaPmTask) {
         return (showCompleted || !k.isMdCompleted());

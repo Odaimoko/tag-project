@@ -3,7 +3,12 @@ import {ManagePageView, ManagePageViewId} from "./ui/manage-page-view";
 import {ONotice} from "./utils/o-notice";
 import {IPM_DEFAULT_SETTINGS, IPmSettings, IPmSettingsTab, SettingsProvider} from "./Settings";
 
-import {DataviewIndexReadyEvent, DataviewMetadataChangeEvent} from "./typing/dataview-event";
+import {
+    DataviewIndexReadyEvent,
+    DataviewMetadataChangeEvent,
+    iPm_JumpTask,
+    iPm_JumpWorkflow
+} from "./typing/dataview-event";
 import {EventEmitter} from "events";
 import {OdaPmDb, OdaPmDbProvider} from "./data-model/odaPmDb";
 
@@ -48,13 +53,13 @@ export default class OdaPmToolPlugin extends Plugin {
         this.regPluginListener()
 
         // region Ribbon integration
-        // This creates an icon in the left ribbon.
-        const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
-            // Called when the user clicks the icon.
-            new Notice('This is a notice!');
-        });
-        // Perform additional things with the ribbon
-        ribbonIconEl.addClass('my-plugin-ribbon-class');
+        // // This creates an icon in the left ribbon.
+        // const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
+        //     // Called when the user clicks the icon.
+        //     new Notice('This is a notice!');
+        // });
+        // // Perform additional things with the ribbon
+        // ribbonIconEl.addClass('my-plugin-ribbon-class');
         // Oda: This adds a text to the ribbon icon
         // ribbonIconEl.createEl('span', {text: 'Ribbon Text'});
         //endregion
@@ -96,11 +101,39 @@ export default class OdaPmToolPlugin extends Plugin {
             this.app.workspace.on("editor-menu", (menu, editor, view) => {
                 menu.addItem((item) => {
                     item
-                        .setTitle("Print editor path 👈")
+                        .setTitle("Jump To Manage Page")
                         .setIcon("document")
                         .onClick(async () => {
-                            new Notice(view.file.path);
+                            const cursor = editor.getCursor();
+                            const filePath = view.file?.path;
+                            if (!filePath) return; // no file
+
+                            // use line and file as the identifier
+                            const workflow = this.pmDb.getWorkflow(filePath, cursor.line);
+                            if (workflow) {
+                                // console.log(`Is wf: ${workflow.name}`)
+                                this.activateView(ManagePageViewId)
+                                    .then((leaf) => {
+                                        this.emitter.emit(iPm_JumpWorkflow, workflow)
+                                    });
+                                return;
+                            }
+                            const pmTask = this.pmDb.getPmTask(filePath, cursor.line);
+                            if (pmTask) {
+                                this.activateView(ManagePageViewId).then((leaf) => {
+                                    this.emitter.emit(iPm_JumpTask, pmTask)
+                                })
+                                return;
+                            }
+                            new ONotice(`Not a task or workflow.\n${filePath}:${cursor.line}`)
+
+                            // if it's a workflow, open the page and select only the workflow
+                            // if it's a task, open the page, select the workflow, and set searchText to the task summary
+
+                            // console.log(leaf.view)
+                            // console.log(this.pmDb.pmTasks.filter(k => k.summary == "Open a md task in Manage Page"))
                         });
+
                     console.log(editor.getCursor());
                 });
             })
@@ -219,7 +252,7 @@ export default class OdaPmToolPlugin extends Plugin {
         );
 
         this.addRibbonIcon("bell-plus", "Show Pm Window", () => {
-            this.activateView(ManagePageViewId);
+            this.activateView(ManagePageViewId)
         });
 
     }
@@ -243,9 +276,11 @@ export default class OdaPmToolPlugin extends Plugin {
             });
         }
 
+        const leafView = workspace.getLeavesOfType(viewTypeId)[0];
         workspace.revealLeaf(
-            workspace.getLeavesOfType(viewTypeId)[0]
+            leafView
         );
+        return leafView
     }
 
     // endregion
