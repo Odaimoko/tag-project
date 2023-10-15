@@ -120,7 +120,7 @@ export function trimTagsFromTask(task: STask): string {
 
 // https://github.com/blacksmithgu/obsidian-dataview/blob/322217ad563defbc213f6731c9cd5a5f5a7e3638/src/data-import/common.ts#L5
 // Forbid @ since obsidian does not allow it
-const POTENTIAL_TAG_MATCHER = /[^@\s,;.:!?'"`()\[\]{}]+/giu;
+const POTENTIAL_TAG_MATCHER = /[^@\s,;.:!&*?'"`()\[\]{}]+/giu;
 
 /**
  * Only take the first word
