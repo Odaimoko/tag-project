@@ -1,4 +1,4 @@
-import {App, Editor, MarkdownView, Menu, Modal, Notice, Plugin} from 'obsidian';
+import {App, Editor, MarkdownFileInfo, MarkdownView, Menu, Modal, Notice, Plugin} from 'obsidian';
 import {ManagePageView, ManagePageViewId} from "./ui/manage-page-view";
 import {ONotice} from "./utils/o-notice";
 import {IPM_DEFAULT_SETTINGS, IPmSettings, IPmSettingsTab, SettingsProvider} from "./Settings";
@@ -175,6 +175,13 @@ export default class OdaPmToolPlugin extends Plugin {
                 }
             }
         });
+        this.addCommand({
+            id: 'ipm:open-manage-page',
+            name: 'Open Task or Workflow in Manage Page',
+            editorCallback: (editor: Editor, view: MarkdownView) => {
+                this.jumpToTaskOrWorkflow(editor, view);
+            }
+        });
         // endregion
 
         this.registerEvent(
@@ -184,26 +191,7 @@ export default class OdaPmToolPlugin extends Plugin {
                         .setTitle("Jump To Manage Page")
                         .setIcon("document")
                         .onClick(async () => {
-                            const cursor = editor.getCursor();
-                            const filePath = view.file?.path;
-                            if (!filePath) return; // no file
-
-                            // use line and file as the identifier
-                            // if it's a workflow, open the page and select only the workflow
-                            // if it's a task, open the page, select the workflow, and set searchText to the task summary
-
-                            const workflow = this.pmDb.getWorkflow(filePath, cursor.line);
-                            if (workflow) {
-                                this.jumpToWorkflowPage(workflow);
-                                return;
-                            }
-                            const pmTask = this.pmDb.getPmTask(filePath, cursor.line);
-                            if (pmTask) {
-                                this.jumpToTaskPage(pmTask);
-                                return;
-                            }
-                            new ONotice(`Not a task or workflow.\n${filePath}:${cursor.line}`)
-
+                            this.jumpToTaskOrWorkflow(editor, view);
                             // console.log(leaf.view)
                             // console.log(this.pmDb.pmTasks.filter(k => k.summary == "Open a md task in Manage Page"))
                         });
@@ -211,6 +199,34 @@ export default class OdaPmToolPlugin extends Plugin {
                 });
             })
         )
+    }
+
+    /**
+     * View for editor, fileinfo for file navigation.
+     * @param editor
+     * @param view
+     * @private
+     */
+    private jumpToTaskOrWorkflow(editor: Editor, view: MarkdownView | MarkdownFileInfo) {
+        const cursor = editor.getCursor();
+        const filePath = view.file?.path;
+        if (!filePath) return; // no file
+
+        // use line and file as the identifier
+        // if it's a workflow, open the page and select only the workflow
+        // if it's a task, open the page, select the workflow, and set searchText to the task summary
+
+        const workflow = this.pmDb.getWorkflow(filePath, cursor.line);
+        if (workflow) {
+            this.jumpToWorkflowPage(workflow);
+            return;
+        }
+        const pmTask = this.pmDb.getPmTask(filePath, cursor.line);
+        if (pmTask) {
+            this.jumpToTaskPage(pmTask);
+            return;
+        }
+        new ONotice(`Not a task or workflow.\n${filePath}:${cursor.line}`)
     }
 
     private jumpToTaskPage(pmTask: OdaPmTask) {
