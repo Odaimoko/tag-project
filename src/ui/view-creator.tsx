@@ -2,6 +2,7 @@ import {
     I_OdaPmStep,
     I_OdaPmWorkflow,
     OdaPmTask,
+    Tag_Prefix_Tag,
     TaskStatus_checked,
     TaskStatus_unchecked
 } from "../data-model/workflow_def";
@@ -88,7 +89,7 @@ export function ReactManagePage({eventCenter}: {
     const [rerenderState, setRerenderState] = useState(0);
 
     function triggerRerender() {
-        console.log(`ReactManagePage rerender triggered. ${rerenderState + 1}`)
+        // console.log(`ReactManagePage rerender triggered. ${rerenderState + 1}`)
         setRerenderState((prevState) => prevState + 1)
     }
 
@@ -117,43 +118,49 @@ export function ReactManagePage({eventCenter}: {
     const plugin = useContext(PluginContext);
 
     // place all hooks before return. React doesn't allow the order to be changed.
-    const workflows = OdaPmDbProvider.get()?.workflows || [];
+    const db = OdaPmDbProvider.get();
+    const workflows = db?.workflows || [];
 
     // Use workflow names as filters' state instead. previously we use as state, but it requires dataview to be initialized.
     // However, this component might render before dataview is ready. The partially ready workflows will be used as the initial value, which is incorrect.
     // This is to fix: On open Obsidian, the filter may not work.
     const [displayWorkflowNames, setDisplayWorkflowNames] = useState(getSettings()?.display_workflow_names as string[]);
-
-    const displayWorkflows = workflows.filter(k => {
-        return displayWorkflowNames.includes(k.name);
-    });
+    const [displayTags, setDisplayTags] = useState(getSettings()?.display_tags as string[]);
 
     function handleSetDisplayWorkflows(names: string[]) {
         setSettingsValueAndSave(plugin, "display_workflow_names", [...names]) // TODO mem leak?
         setDisplayWorkflowNames(names)
     }
 
+    function handleSetDisplayTags(names: string[]) {
+        setSettingsValueAndSave(plugin, "display_tags", [...names])
+        setDisplayTags(names)
+    }
 
-    // all tasks that has a workflow
-    // Memo to avoid re-compute
-    const tasks_with_workflow = OdaPmDbProvider.get()?.pmTasks || [];
-
-
-    if (workflows.length === 0)
+    if (workflows.length === 0 || db === null)
         return <label>No Workflow defined. TODO #hint_no_work_flow_defined </label>
 
+    const displayWorkflows = workflows.filter(k => {
+        return displayWorkflowNames.includes(k.name);
+    });
 
     // Here we use reference equality to filter tasks. Using reference is prone to bugs since we tend to new a lot in js, but using string id is memory consuming. Trade-off.
-    const tasksWithThisType: DataArray<OdaPmTask> = tasks_with_workflow.filter(function (k: OdaPmTask) {
+    const filteredTasks: DataArray<OdaPmTask> = db.pmTasks.filter(function (k: OdaPmTask) {
         return displayWorkflows.includes(k.type);
     })
+        .filter(function (k: OdaPmTask) {
+            // No tag chosen: show all tasks
+            // Some tags chosen: combination or.
+            return displayTags.length === 0 ? true : k.hasAnyTag(displayTags);
+        })
 
-    // console.log(`ReactManagePage Render. All tasks: ${tasks_with_workflow.length}. Filtered Tasks: ${tasksWithThisType.length}. Workflow: ${curWfName}. IncludeCompleted: ${includeCompleted}`)
+    // console.log(`ReactManagePage Render. All tasks: ${tasks_with_workflow.length}. Filtered Tasks: ${filteredTasks.length}. Workflow: ${curWfName}. IncludeCompleted: ${includeCompleted}`)
 
+    const pmTags = db.pmTags || [];
     return (
         <>
             <HStack style={{alignItems: "center"}} spacing={10}>
-                <h2>{workflows.length} Workflow(s)</h2>
+                <h2>{displayWorkflowNames.length}/{workflows.length} Workflow(s)</h2>
                 <button onClick={() => handleSetDisplayWorkflows(workflows.map(k => k.name))}>Select All
                 </button>
                 <button onClick={() => handleSetDisplayWorkflows([])}>Unselect All
@@ -168,9 +175,28 @@ export function ReactManagePage({eventCenter}: {
                     )
                 })}
             </div>
-            <WorkflowOverviewView tasksWithThisType={tasksWithThisType}/>
+            {pmTags.length > 0 ?
+                <HStack style={{alignItems: "center"}} spacing={10}>
+                    <h3>{displayTags.length}/{pmTags.length} Tags(s)</h3>
+                    <button onClick={() => handleSetDisplayTags([...pmTags])}>Select All
+                    </button>
+                    <button onClick={() => handleSetDisplayTags([])}>Unselect All
+                    </button>
+                </HStack>
+                : null}
+            <div>
+                {pmTags.map((tag: string) => {
+                    return <TagFilterCheckbox key={tag}
+                                              tag={tag} displayed={displayTags}
+                                              setDisplayed={handleSetDisplayTags}/>
+                })
+                }
+            </div>
+
+            <WorkflowOverviewView filteredTasks={filteredTasks}/>
             <p/>
-            <TaskTableView displayWorkflows={displayWorkflows} tasksWithThisType={tasksWithThisType}/>
+            <TaskTableView displayWorkflows={displayWorkflows}
+                           filteredTasks={filteredTasks}/>
 
         </>
     )
@@ -209,6 +235,30 @@ const WorkflowFilterCheckbox = ({workflow, displayWorkflows, setDisplayWorkflows
 
 }
 
+const TagFilterCheckbox = ({tag, displayed, setDisplayed}: {
+    tag: string,
+    displayed: string[],
+    setDisplayed: React.Dispatch<React.SetStateAction<string[]>>
+}) => {
+    function tickCheckbox() {
+        // invert the checkbox
+        const v = !displayed.includes(tag)
+        const newArr = v ? [...displayed, tag] : displayed.filter(k => k != tag)
+        setDisplayed(newArr)
+    }
+
+    // inline-block: make this check box a whole element. It won't be split into multiple sub-elements when layout.
+    // block will start a new line, inline will not, so we use inline-block
+    return <span style={{display: "inline-block", margin: 3}}>
+        <ExternalControlledCheckbox
+            content={tag.replace(Tag_Prefix_Tag, "")}
+            onChange={tickCheckbox}
+            onLabelClicked={tickCheckbox}
+            externalControl={displayed.includes(tag)}
+        />
+    </span>
+
+}
 /**
  * The first column of the table, which is a checkbox representing the task.
  * @param oTask
@@ -287,9 +337,9 @@ function rectifyOdaTaskOnMdTaskChanged(oTask: OdaPmTask, plugin: OdaPmToolPlugin
     }
 }
 
-function TaskTableView({displayWorkflows, tasksWithThisType}: {
+function TaskTableView({displayWorkflows, filteredTasks}: {
     displayWorkflows: I_OdaPmWorkflow[],
-    tasksWithThisType: DataArray<OdaPmTask>
+    filteredTasks: DataArray<OdaPmTask>
 }) {
     const plugin = useContext(PluginContext);
     const [searchText, setSearchText] = useState("");
@@ -323,11 +373,12 @@ function TaskTableView({displayWorkflows, tasksWithThisType}: {
         }
     });
 
-    const displayedTasks = tasksWithThisType.filter(function (k: OdaPmTask) {
-        return (showCompleted || !k.isMdCompleted());
-    }).filter(function (k: OdaPmTask) {
-        return isStringNullOrEmpty(searchText) ? true : simpleFilter(searchText, k);
-    })
+    const displayedTasks = filteredTasks
+        .filter(function (k: OdaPmTask) {
+            return (showCompleted || !k.isMdCompleted());
+        }).filter(function (k: OdaPmTask) {
+            return isStringNullOrEmpty(searchText) ? true : simpleFilter(searchText, k);
+        })
         .array();
     const ascending = sortCode === SortMethod_Ascending;
     if (sortCode !== SortMethod_Appearance) {
@@ -447,11 +498,11 @@ function TaskTableView({displayWorkflows, tasksWithThisType}: {
 }
 
 //  region Custom View
-function WorkflowOverviewView({tasksWithThisType}: {
-    tasksWithThisType: DataArray<OdaPmTask>
+function WorkflowOverviewView({filteredTasks}: {
+    filteredTasks: DataArray<OdaPmTask>
 }) {
-    const totalCount = tasksWithThisType.length;
-    const completedTasks = tasksWithThisType.filter(function (k: OdaPmTask) {
+    const totalCount = filteredTasks.length;
+    const completedTasks = filteredTasks.filter(function (k: OdaPmTask) {
         return k.isMdCompleted();
     });
     const completedCount = completedTasks.length;
@@ -469,12 +520,6 @@ function WorkflowOverviewView({tasksWithThisType}: {
     }
     const labelColorStype = isStringNullOrEmpty(color) ? {} : {color: color} as React.CSSProperties;
     return (<>
-            {/*<HStack style={{alignItems: "center"}} spacing={10}>*/}
-            {/*    <h2>*/}
-            {/*        Workflow: {workflows.map(k => `${k.name} (${initialToUpper(k.type)})`).join(", ")}*/}
-            {/*    </h2>*/}
-            {/*    <></>*/}
-            {/*</HStack>*/}
             <label style={labelColorStype}>{completedCount}/{totalCount} tasks
                 completed: {ratioString}%.</label>
         </>

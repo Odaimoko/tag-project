@@ -11,6 +11,7 @@ import {
     OdaPmTask,
     removeWorkflow,
     Tag_Prefix_Step,
+    Tag_Prefix_Tag,
     trimTagsFromTask,
     Workflow_Type_Enum_Array
 } from "./workflow_def";
@@ -50,11 +51,10 @@ function createWorkflowsFromTask(task: STask): I_OdaPmWorkflow[] {
                 notifyMalformedTask(task, getTaskMultiLineErrMsg())
                 continue;
             }
+            // The latter found workflow overrides the former one.
             workflow.boundTask = task // Override task
             workflow.type = wfType // override 
 
-
-            // The latter found workflow overrides the former one's steps, but not the STask.
             workflow.clearSteps()
             for (const tag of task.tags) {
                 // exclude def tags. we allow both OdaPmWorkflowType on the same task
@@ -134,9 +134,12 @@ function getAllPmTasks(workflows: I_OdaPmWorkflow[]) {
 
 export class OdaPmDb implements I_EvtListener {
     workflows: I_OdaPmWorkflow[];
+    workflowTags: string[];
+    stepTags: string[];
     emitter: EventEmitter;
     boundReloadWorkflows: () => void;
     pmTasks: OdaPmTask[]
+    pmTags: string[];
 
     constructor(emitter: EventEmitter) {
         this.emitter = emitter;
@@ -155,7 +158,23 @@ export class OdaPmDb implements I_EvtListener {
 
     private reloadWorkflows() {
         this.workflows = getAllWorkflows()
+        // TODO performance. linq is easy, but performance is not good.
+        this.workflowTags = this.workflows.map(function (k: I_OdaPmWorkflow) {
+            return k.tag;
+        }).unique();
+        this.stepTags = this.workflows.flatMap(function (k: I_OdaPmWorkflow) {
+            return k.stepsDef.map(m => m.tag);
+        }).unique();
+        
         this.pmTasks = getAllPmTasks(this.workflows)
+
+        // TODO performance. linq is easy, but performance is not good.
+        this.pmTags = this.pmTasks.flatMap(k => {
+            const validPmTag = k.boundTask.tags.filter((m: string) => m.startsWith(Tag_Prefix_Tag));
+            return validPmTag;
+        })
+            .filter(k => !this.workflowTags.includes(k) && !this.stepTags.includes(k))
+            .array().unique()
         this.emitter.emit(iPm_DbReloaded)
     }
 

@@ -2,6 +2,7 @@ import {STask} from "obsidian-dataview";
 
 export const Tag_Prefix_Step = "#iPm/step/";
 const Tag_Prefix_Workflow = "#iPm/workflow/";
+export const Tag_Prefix_Tag = "#iPm/tag/";
 export const TaskStatus_checked = "x";
 export const TaskStatus_unchecked = " ";
 
@@ -347,6 +348,18 @@ export class OdaPmTask {
         return addTagText(cleanText, stepTag)
     }
 
+    /**
+     * Union > 0
+     * @param displayTags
+     */
+    hasAnyTag(displayTags: string[]) {
+        for (const tag of this.boundTask.tags) {
+            if (displayTags.includes(tag)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 
@@ -362,6 +375,7 @@ export function addTagText(text: string, stepTag: string) {
     // We believe dataview gives the correct result. In the latter case there will be no step.tag in the original text if includes is false.
     return `${text.trimEnd()} ${stepTag} ` + (hasTrailingEol ? "\n" : "");
 }
+
 // TODO wont remove the space before or after the tag
 export function removeTagText(text: string, stepTag: string) {
     return text.replace(stepTag, "");

@@ -26,6 +26,7 @@ export interface IPmSettings {
     table_column_sorting: SerializedType;
     table_steps_shown: SerializedType;
     display_workflow_names: SerializedType[],
+    display_tags: SerializedType[],
 }
 
 export const IPM_DEFAULT_SETTINGS: Partial<IPmSettings> = {
@@ -35,6 +36,7 @@ export const IPM_DEFAULT_SETTINGS: Partial<IPmSettings> = {
     table_column_sorting: SortMethod_Appearance,
     table_steps_shown: true,
     display_workflow_names: [] as SerializedType[],
+    display_tags: [] as SerializedType[],
 }
 
 type SettingName = keyof IPmSettings;
