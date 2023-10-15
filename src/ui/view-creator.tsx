@@ -1,22 +1,11 @@
 import {
-    factoryTask,
-    getDefTags,
-    getOrCreateWorkflow,
-    getTypeDefTag,
-    getWorkflowNameFromRawText,
     I_OdaPmStep,
     I_OdaPmWorkflow,
-    isTaskSingleLine,
-    isTaskSummaryValid,
     OdaPmTask,
-    removeWorkflow,
-    Tag_Prefix_Step,
     TaskStatus_checked,
-    TaskStatus_unchecked,
-    trimTagsFromTask,
-    Workflow_Type_Enum_Array
+    TaskStatus_unchecked
 } from "../data-model/workflow_def";
-import {DataArray, getAPI, STask} from "obsidian-dataview";
+import {DataArray, STask} from "obsidian-dataview";
 import {Workspace} from "obsidian";
 import React, {useContext, useEffect, useMemo, useState} from "react";
 import {I_Renderable} from "./i_Renderable";
@@ -25,9 +14,8 @@ import {rewriteTask} from "../utils/io_util";
 import {ContainerContext, PluginContext} from "./manage-page-view";
 import {EventEmitter} from "events";
 import OdaPmToolPlugin from "../main";
-import {notify, ONotice} from "../utils/o-notice";
+import {notify} from "../utils/o-notice";
 
-import {DataviewIndexReadyEvent, DataviewMetadataChangeEvent} from "../typing/dataview-event";
 import {initialToUpper, isStringNullOrEmpty, simpleFilter} from "../utils/format_util";
 import {
     getSettings,
@@ -46,10 +34,8 @@ import {
     InternalLinkView
 } from "./view-template";
 import {appendBoldText} from "./html-template";
+import {getAllPmTasks, iPmEvent_WorkflowsReloaded, OdaPmDbProvider} from "../data-model/odaPmDb";
 
-
-const dv = getAPI(); // We can use dv just like the examples in the docs
-let pmPlugin: OdaPmToolPlugin; // locally global
 
 // dark light compatible
 export const Color_WorkflowChain = "#6289bb"
@@ -65,16 +51,6 @@ function getColorByWorkflow(type: I_OdaPmWorkflow) {
     return "currentColor"
 }
 
-function notifyMalformedTask(task: STask, reason: string) {
-    // console.log(pmPlugin && pmPlugin.settings.report_malformed_task)
-    if (pmPlugin && pmPlugin.settings.report_malformed_task)
-        new ONotice(`${reason}\nYou can disable this popup in settings.\n\nSee Task in ${task.path}, line ${task.line + 1}:\n\t${task.text}`, 5)
-}
-
-function getTaskMultiLineErrMsg() {
-    return `Task cannot have multiple lines.`
-}
-
 
 function notifyTask(oTask: OdaPmTask, reason: string) {
     const doc = new DocumentFragment();
@@ -84,86 +60,6 @@ function notifyTask(oTask: OdaPmTask, reason: string) {
     notify(doc, 4)
 }
 
-
-/**
- * Create workflows from one task. Do not process multiple definitions across different tasks.
- * @param task
- */
-function createWorkflowsFromTask(task: STask): I_OdaPmWorkflow[] {
-    const workflows = []
-    const defTags = getDefTags();
-    for (const wfType of Workflow_Type_Enum_Array) {
-        const defTag = getTypeDefTag(wfType);
-        if (task.tags.includes(defTag)) {
-
-            const wfName = getWorkflowNameFromRawText(trimTagsFromTask(task));
-            const workflow = getOrCreateWorkflow(wfType, wfName, task);
-            if (workflow === null) {
-                notifyMalformedTask(task, getTaskMultiLineErrMsg())
-                continue;
-            }
-            workflow.boundTask = task // Override task
-            workflow.type = wfType // override 
-
-
-            // The latter found workflow overrides the former one's steps, but not the STask.
-            workflow.clearSteps()
-            for (const tag of task.tags) {
-                // exclude def tags. we allow both OdaPmWorkflowType on the same task
-                if (defTags.includes(tag) || !tag.startsWith(Tag_Prefix_Step)) {
-                    continue;
-                }
-                workflow.addStep(tag)
-            }
-            if (workflow.stepsDef.length === 0) {
-                notifyMalformedTask(task, "A workflow must have at least one step.")
-                removeWorkflow(wfName);
-                continue;
-            }
-            workflows.push(workflow)
-        }
-    }
-
-    return workflows;
-}
-
-// Create an OdaPmTask from a STask
-function createPmTaskFromTask(workflowTags: string[], workflows: I_OdaPmWorkflow[], task: STask): OdaPmTask | null {
-    // A task can have only one data-model
-    for (let i = 0; i < workflowTags.length; i++) {
-        const defTag = workflowTags[i];
-        if (task.tags.includes(defTag)) {
-            const workflow = workflows[i];
-            if (!isTaskSingleLine(task)) {
-                notifyMalformedTask(task, getTaskMultiLineErrMsg())
-                continue;
-            } else if (!isTaskSummaryValid(task)) {
-                notifyMalformedTask(task, `Task summary cannot be empty.`)
-                continue;
-            }
-            const oTask = factoryTask(task, workflow);
-
-            return oTask
-        }
-    }
-    return null;
-}
-
-export function getAllWorkflows(): I_OdaPmWorkflow[] {
-    return dv.pages()["file"]["tasks"].where(function (k: STask) {
-            for (const defTag of getDefTags()) {
-                if (k.tags.length === 0) continue;
-                if (k.tags.includes(defTag)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-    )
-        .flatMap((task: STask) => createWorkflowsFromTask(task))
-        .array()
-        .unique();
-}
 
 // if we use workspace.openLinkText, a task without a block id will be opened with its section
 function openTaskPrecisely(workspace: Workspace, task: STask) {
@@ -192,27 +88,24 @@ export function ReactManagePage({eventCenter}: {
     const [rerenderState, setRerenderState] = useState(0);
 
     function triggerRerender() {
-        // console.log(`ReactManagePage rerender triggered. ${rerenderState + 1}`)
+        console.log(`ReactManagePage rerender triggered. ${rerenderState + 1}`)
         setRerenderState((prevState) => prevState + 1)
     }
 
 
     // How to prevent add listener multiple times? use custom emitter instead of obsidian's event emitter
     useEffect(() => {
-        eventCenter?.addListener(DataviewMetadataChangeEvent, triggerRerender)
-        eventCenter?.addListener(DataviewIndexReadyEvent, triggerRerender)
+        eventCenter?.addListener(iPmEvent_WorkflowsReloaded, triggerRerender)
 
         return () => {
-            eventCenter?.removeListener(DataviewMetadataChangeEvent, triggerRerender)
-            eventCenter?.removeListener(DataviewIndexReadyEvent, triggerRerender)
+            eventCenter?.removeListener(iPmEvent_WorkflowsReloaded, triggerRerender)
         }
     }, [rerenderState]);
 
     const plugin = useContext(PluginContext);
-    pmPlugin = plugin;
 
     // place all hooks before return. React doesn't allow the order to be changed.
-    const workflows = useMemo(getAllWorkflows, [rerenderState]);
+    const workflows = OdaPmDbProvider.get()?.workflows || [];
 
     // Use workflow names as filters' state instead. previously we use as state, but it requires dataview to be initialized.
     // However, this component might render before dataview is ready. The partially ready workflows will be used as the initial value, which is incorrect.
@@ -231,26 +124,8 @@ export function ReactManagePage({eventCenter}: {
 
     // all tasks that has a workflow
     // Memo to avoid re-compute
-    const tasks_with_workflow = useMemo(getAllPmTasks, [rerenderState]);
+    const tasks_with_workflow = useMemo(() => getAllPmTasks(workflows), [rerenderState]);
 
-    function getAllPmTasks() {
-        const workflowTags = workflows.map(function (k: I_OdaPmWorkflow) {
-            return k.tag;
-        });
-        return dv.pages()["file"]["tasks"].where(function (k: STask) {
-            for (const defTag of workflowTags) {
-                    if (k.tags.includes(defTag)) return true;
-                }
-                return false;
-            }
-        )
-            .map((task: STask) => {
-                return createPmTaskFromTask(workflowTags, workflows, task)
-            }).filter(function (k: OdaPmTask | null) {
-                return k !== null;
-            })
-            ;
-    }
 
     if (workflows.length === 0)
         return <label>No Workflow defined. TODO #hint_no_work_flow_defined </label>

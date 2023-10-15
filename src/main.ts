@@ -3,15 +3,21 @@ import {ManagePageView, ManagePageViewId} from "./ui/manage-page-view";
 import {ONotice} from "./utils/o-notice";
 import {IPM_DEFAULT_SETTINGS, IPmSettings, IPmSettingsTab, SettingsProvider} from "./Settings";
 
-import {DataviewIndexReadyEvent} from "./typing/dataview-event";
+import {DataviewIndexReadyEvent, DataviewMetadataChangeEvent} from "./typing/dataview-event";
+import {EventEmitter} from "events";
+import {OdaPmDb, OdaPmDbProvider} from "./data-model/odaPmDb";
 
 export const PLUGIN_NAME = 'iPm';
 
 export default class OdaPmToolPlugin extends Plugin {
     settings: IPmSettings;
+    private emitter: EventEmitter;
+    pmDb: OdaPmDb
+    inited: boolean
 
     async onload() {
         await this.initSettings();
+
         if (!this.hasDataviewPlugin()) {
             new ONotice("Dataview plugin is not enabled. Please enable it to use this plugin.");
 
@@ -24,8 +30,22 @@ export default class OdaPmToolPlugin extends Plugin {
         await this.initPlugin();
     }
 
-    private async initPlugin() {
+    onunload() {
+        // console.log('unloading plugin')
+        SettingsProvider.remove();
+        if (this.inited) {
+            OdaPmDbProvider.remove();
+            this.emitter.removeAllListeners()
+        }
+    }
 
+
+    private async initPlugin() {
+        this.emitter = new EventEmitter();
+        this.pmDb = new OdaPmDb(this.emitter);
+        OdaPmDbProvider.add(this.pmDb);
+        // console.log("add OdaPmDbProvider")
+        this.regPluginListener()
 
         // region Ribbon integration
         // This creates an icon in the left ribbon.
@@ -58,11 +78,6 @@ export default class OdaPmToolPlugin extends Plugin {
         this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 
         this.initView();
-        // this.addRibbonIcon("arrow-big-left", "Print leaf types", () => {
-        //     this.app.workspace.iterateAllLeaves((leaf) => {
-        //         console.log(leaf.getViewState().type);
-        //     });
-        // });
 
         this.registerEvent(
             this.app.workspace.on("file-menu", (menu, file) => {
@@ -113,6 +128,7 @@ export default class OdaPmToolPlugin extends Plugin {
 
             menu.showAtMouseEvent(event);
         });
+        this.inited = true;
     }
 
     // region Settings Tab integration
@@ -172,11 +188,34 @@ export default class OdaPmToolPlugin extends Plugin {
         return this.app.plugins.enabledPlugins.has("dataview");
     }
 
+    regPluginListener() {
+        this.listenToMetadataChange();
+        this.pmDb.regListener()
+    }
+
+    // Register event listener will only be cleared in unload, without a way of clearing it manually. 
+    // Thus, we cannot pass registerEvent function directly to a React component. 
+    // Instead, we use a custom event emitter, which allows us to clear the listener with useEffect.
+    listenToMetadataChange() {
+        // @ts-ignore
+        this.registerEvent(this.app.metadataCache.on(DataviewMetadataChangeEvent, (...args) => {
+            this.emitter.emit(DataviewMetadataChangeEvent, ...args);
+        }));
+        // Don't use DataviewIndexReadyEvent, because it is fired when the full index is processed.
+        // Otherwise, we may get partial data.
+        // @ts-ignore
+        this.registerEvent(this.app.metadataCache.on(DataviewIndexReadyEvent, (...args) => {
+            // render only when index is ready
+            this.emitter.emit(DataviewIndexReadyEvent, ...args);
+        }));
+
+    }
+
     // region Example View integration
     private initView() {
         this.registerView(
             ManagePageViewId,
-            (leaf) => new ManagePageView(leaf, this)
+            (leaf) => new ManagePageView(leaf, this,)
         );
 
         this.addRibbonIcon("bell-plus", "Show Pm Window", () => {
@@ -210,11 +249,6 @@ export default class OdaPmToolPlugin extends Plugin {
     }
 
     // endregion
-    onunload() {
-        // console.log('unloading plugin')
-        SettingsProvider.remove();
-    }
-
     async loadSettings() {
         // Shallow copy
         this.settings = Object.assign({}, IPM_DEFAULT_SETTINGS, await this.loadData());
@@ -222,6 +256,10 @@ export default class OdaPmToolPlugin extends Plugin {
 
     async saveSettings() {
         await this.saveData(this.settings);
+    }
+
+    getEmitter() {
+        return this.emitter;
     }
 }
 
