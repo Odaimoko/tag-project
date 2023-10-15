@@ -298,6 +298,7 @@ function TaskTableView({displayWorkflows, tasksWithThisType}: {
     const nextSortCode = (sortCode + 1) % totalSortMethods;
     // show completed
     const [showCompleted, setShowCompleted] = useState(getSettings()?.show_completed_tasks as boolean);
+    const [showSteps, setShowSteps] = useState(getSettings()?.table_steps_shown as boolean);
 
     function jumpTask(oTask: OdaPmTask) {
         setSearchText(oTask.summary)
@@ -350,7 +351,7 @@ function TaskTableView({displayWorkflows, tasksWithThisType}: {
     })).flatMap(k => k).unique();
 
     const curWfName = "Tasks";// displayWorkflows.map(k => k.name).join(", ")
-    const headers = [curWfName, ...displayStepNames];
+    const headers = [curWfName, ...(getSettings()?.table_steps_shown ? displayStepNames : [])];
 
 
     const taskRows = displayedTasks.map(function (oTask: OdaPmTask) {
@@ -373,7 +374,7 @@ function TaskTableView({displayWorkflows, tasksWithThisType}: {
             <HStack style={{
                 justifyContent: "flex-start",
                 alignItems: "center"
-            }} spacing={15}>
+            }} spacing={10}>
                 <span style={{display: "flex", alignItems: "center"}}>
                     <input
                         style={{width: "100%"}}
@@ -403,9 +404,14 @@ function TaskTableView({displayWorkflows, tasksWithThisType}: {
                         {sortCode === SortMethod_Appearance ? "By Appearance" : ascending ? "Ascending" : "Descending"}
                     </button>
                 </HStack>
+            </HStack>
+            <p/>
+            <HStack spacing={10}>
                 <ExternalControlledCheckbox content={"Show Completed"} onChange={handleShowCompletedChange}
-                                            externalControl={showCompleted}
-                />
+                                            externalControl={showCompleted} onLabelClicked={handleShowCompletedChange}/>
+                <ExternalControlledCheckbox content={"Show Steps"} onChange={handleShowStepsChange}
+                                            onLabelClicked={handleShowStepsChange}
+                                            externalControl={showSteps}/>
             </HStack>
             <p/>
             {
@@ -430,6 +436,12 @@ function TaskTableView({displayWorkflows, tasksWithThisType}: {
         const nextChecked = !showCompleted;
         setShowCompleted(nextChecked)
         setSettingsValueAndSave(plugin, "show_completed_tasks", nextChecked)
+    }
+
+    function handleShowStepsChange() {
+        const nextChecked = !showSteps;
+        setShowSteps(nextChecked)
+        setSettingsValueAndSave(plugin, "table_steps_shown", nextChecked)
     }
 
 }
@@ -542,7 +554,7 @@ function odaWorkflowToTableCells(displayStepTags: string[], oTask: OdaPmTask) {
 // region Workflow Ui wrapper
 function odaTaskToTableRow(displayStepTags: string[], oTask: OdaPmTask): I_Renderable[] {
 
-    return [`${oTask.summary}`, ...odaWorkflowToTableCells(displayStepTags, oTask)]
+    return [`${oTask.summary}`, ...(getSettings()?.table_steps_shown ? odaWorkflowToTableCells(displayStepTags, oTask) : [])];
 }
 
 // endregion

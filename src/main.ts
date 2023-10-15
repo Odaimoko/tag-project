@@ -100,7 +100,6 @@ export default class OdaPmToolPlugin extends Plugin {
             })
         );
 
-
         this.addRibbonIcon("dice", "Open menu", (event) => {
             const menu = new Menu();
 
@@ -186,7 +185,7 @@ export default class OdaPmToolPlugin extends Plugin {
         });
         this.addCommand({
             id: 'ipm:add-workflow',
-            name: 'Add workflow to task',
+            name: 'Set workflow to task',
             editorCallback: (editor: Editor, view: MarkdownView) => {
                 this.addWorkflowToMdTask(editor, view);
             }

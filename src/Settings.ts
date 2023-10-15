@@ -24,6 +24,7 @@ export interface IPmSettings {
     // personalized settings, not exposed in settings tab
     show_completed_tasks: SerializedType;
     table_column_sorting: SerializedType;
+    table_steps_shown: SerializedType;
     display_workflow_names: SerializedType[],
 }
 
@@ -32,6 +33,7 @@ export const IPM_DEFAULT_SETTINGS: Partial<IPmSettings> = {
     show_completed_tasks: true,
     capitalize_table_row_initial: true,
     table_column_sorting: SortMethod_Appearance,
+    table_steps_shown: true,
     display_workflow_names: [] as SerializedType[],
 }
 
