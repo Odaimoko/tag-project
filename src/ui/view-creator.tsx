@@ -31,7 +31,8 @@ import {
     ExternalControlledCheckbox,
     HStack,
     I_Stylable,
-    InternalLinkView
+    InternalLinkView,
+    ObsidianIconView
 } from "./view-template";
 import {appendBoldText} from "./html-template";
 import {OdaPmDbProvider} from "../data-model/odaPmDb";
@@ -294,17 +295,22 @@ const OdaTaskSummaryCell = ({oTask, taskFirstColumn}: {
 
     // console.log(`Task: ${oTask.boundTask.text}. Md: ${oTask.isMdCompleted()} ${oTask.stepCompleted()}.`)
     // Changed to ExternalControlledCheckbox. The checkbox status is determined by whether all steps are completed.
-    return <>
+    return <HStack spacing={5}>
+        {getIconByTask(oTask)}
         <ExternalControlledCheckbox
-            content={<InternalLinkView
-                content={getSettings()?.capitalize_table_row_initial ? initialToUpper(taskFirstColumn) : taskFirstColumn}/>}
+            content={<span>
+                
+                <InternalLinkView
+                    content={getSettings()?.capitalize_table_row_initial ? initialToUpper(taskFirstColumn) : taskFirstColumn}/>
+            </span>}
             onChange={tickSummary}
             onLabelClicked={() => {
                 openTaskPrecisely(workspace, oTask.boundTask);
             }}
             externalControl={oTask.stepCompleted()}
         />
-    </>;
+
+    </HStack>;
 
 
 };
@@ -335,6 +341,12 @@ function rectifyOdaTaskOnMdTaskChanged(oTask: OdaPmTask, plugin: OdaPmToolPlugin
             notifyTask(oTask, `Keep the last step: `)
         }
     }
+}
+
+function getIconByTask(oTask: OdaPmTask) {
+    const iconName = oTask.type.type === "chain" ? "footprints" : "check-check"
+    const icon = <ObsidianIconView iconName={iconName}/>;
+    return icon;
 }
 
 function TaskTableView({displayWorkflows, filteredTasks}: {
@@ -402,6 +414,7 @@ function TaskTableView({displayWorkflows, filteredTasks}: {
     })).flatMap(k => k).unique();
 
     const curWfName = "Tasks";// displayWorkflows.map(k => k.name).join(", ")
+    const sumCol = 0;
     const headers = [curWfName, ...(getSettings()?.table_steps_shown ? displayStepNames : [])];
 
 
@@ -409,12 +422,11 @@ function TaskTableView({displayWorkflows, filteredTasks}: {
         const row = odaTaskToTableRow(displayStepTags, oTask)
         // console.log(`${oTask.boundTask.text.split(" ").first()}. Md: ${oTask.isMdCompleted()}. Step: ${oTask.stepCompleted()}.`)
         rectifyOdaTaskOnMdTaskChanged(oTask, plugin);
-
         row[0] = (
             <OdaTaskSummaryCell key={`${oTask.boundTask.path}:${oTask.boundTask.line}`} oTask={oTask}
                                 taskFirstColumn={row[0]}/>
         )
-        return row;
+        return row
     });
 
     // add background for table header, according to the theme.
@@ -440,7 +452,7 @@ function TaskTableView({displayWorkflows, filteredTasks}: {
         const even = row % 2 === 0;
         const cellStyle = even ? stepEvenCellStyle : stepOddCellStyle
         const summaryStyle = even ? summaryEvenCellStyle : summaryOddCellStyle
-        if (column === 0) {
+        if (column === sumCol) {
             return summaryStyle
         } else return cellStyle
     }
@@ -504,8 +516,8 @@ function TaskTableView({displayWorkflows, filteredTasks}: {
                                 backgroundColor: themedBackground,
                                 position: "sticky", top: -16,
                                 padding: 10,
-                                minWidth: (columnIndex === 0 ? minSummaryWidth : "unset"),
-                                maxWidth: (columnIndex === 0 ? maxSummaryWidth : "unset")
+                                minWidth: (columnIndex === sumCol ? minSummaryWidth : "unset"),
+                                maxWidth: (columnIndex === sumCol ? maxSummaryWidth : "unset")
                             };
                             // console.log(`thStyleGetter: ${JSON.stringify(style)}`)
                             return style as React.CSSProperties;
