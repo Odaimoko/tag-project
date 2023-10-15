@@ -141,7 +141,7 @@ export function ReactManagePage({eventCenter}: {
 
     // place all hooks before return. React doesn't allow the order to be changed.
     if (workflows.length === 0 || db === null)
-        return <label>No Workflow defined. TODO #hint_no_work_flow_defined </label>
+        return <EmptyWorkflowView/>
 
     const displayWorkflows = workflows.filter(k => {
         return displayWorkflowNames.includes(k.name);
@@ -217,6 +217,11 @@ export function ReactManagePage({eventCenter}: {
 
         </>
     )
+}
+
+const EmptyWorkflowView = () => {
+    // return <label>No Workflow defined. TODO #hint_no_work_flow_defined </label>
+    return <h1>No Workflow defined, or Dataview is not initialized.</h1>
 }
 
 const WorkflowFilterCheckbox = ({workflow, displayWorkflows, setDisplayWorkflows}: {
