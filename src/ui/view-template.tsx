@@ -193,7 +193,8 @@ interface StackProps {
 }
 
 export function HStack(props: StackProps) {
-    return <div style={Object.assign({}, {display: "flex", flexDirection: "row"}, props.style)}>
+    // style won't override flex and row property of HStack
+    return <div style={Object.assign({}, props.style, {display: "flex", flexDirection: "row"})}>
         {props.children?.map((child: ReactNode, i: number) => {
             return <Fragment key={i}>
                 {i > 0 ? <div style={getSpacingStyle(props.spacing)}/> : null}

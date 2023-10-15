@@ -4,7 +4,9 @@ import {
     OdaPmTask,
     Tag_Prefix_Tag,
     TaskStatus_checked,
-    TaskStatus_unchecked
+    TaskStatus_unchecked,
+    Workflow_Type_Enum_Array,
+    WorkflowType
 } from "../data-model/workflow_def";
 import {DataArray, STask} from "obsidian-dataview";
 import {Workspace} from "obsidian";
@@ -160,13 +162,27 @@ export function ReactManagePage({eventCenter}: {
     const pmTags = db.pmTags || [];
     return (
         <>
-            <HStack style={{alignItems: "center"}} spacing={10}>
+            <span style={{display: "flex"}}>
+                
+            <HStack style={{
+                display: "flex",
+                alignItems: "center"
+            }} spacing={10}>
                 <h2>{displayWorkflowNames.length}/{workflows.length} Workflow(s)</h2>
                 <button onClick={() => handleSetDisplayWorkflows(workflows.map(k => k.name))}>Select All
                 </button>
                 <button onClick={() => handleSetDisplayWorkflows([])}>Unselect All
                 </button>
+                <HStack spacing={10}>
+                    {Workflow_Type_Enum_Array.map((type: WorkflowType) => {
+                        return <HStack spacing={3}>
+                            {getIconViewByWorkflowType(type)}
+                            <label>{initialToUpper(type)}</label>
+                        </HStack>
+                    })}
+                </HStack>
             </HStack>
+            </span>
             <div>
                 {workflows.map((workflow: I_OdaPmWorkflow) => {
                     return (
@@ -348,14 +364,20 @@ function rectifyOdaTaskOnMdTaskChanged(oTask: OdaPmTask, plugin: OdaPmToolPlugin
     }
 }
 
+function getIconNameByWorkflowType(type: WorkflowType) {
+    return type === "chain" ? "footprints" : "check-check"
+}
+
+function getIconViewByWorkflowType(type: WorkflowType) {
+    return <ObsidianIconView iconName={getIconNameByWorkflowType(type)}/>;
+}
+
 function getIconByWorkflow(workflow: I_OdaPmWorkflow) {
-    return <ObsidianIconView iconName={workflow.type === "chain" ? "footprints" : "check-check"}/>;
+    return getIconViewByWorkflowType(workflow.type);
 }
 
 function getIconByTask(oTask: OdaPmTask) {
-    const iconName = oTask.type.type === "chain" ? "footprints" : "check-check"
-    const icon = <ObsidianIconView iconName={iconName}/>;
-    return icon;
+    return getIconByWorkflow(oTask.type)
 }
 
 function TaskTableView({displayWorkflows, filteredTasks}: {
