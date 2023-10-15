@@ -21,6 +21,11 @@ export const SortMethod_Descending = 2;
 export interface IPmSettings {
     report_malformed_task: SerializedType;
     capitalize_table_row_initial: SerializedType;
+    // must be a valid tag prefix
+    // custom_tag_prefix_step: SerializedType;
+    // custom_tag_prefix_workflow: SerializedType;
+    // custom_tag_prefix_tag: SerializedType;
+
     // personalized settings, not exposed in settings tab
     show_completed_tasks: SerializedType;
     table_column_sorting: SerializedType;
@@ -31,8 +36,12 @@ export interface IPmSettings {
 
 export const IPM_DEFAULT_SETTINGS: Partial<IPmSettings> = {
     report_malformed_task: true,
-    show_completed_tasks: true,
     capitalize_table_row_initial: true,
+    // custom_tag_prefix_step: Tag_Prefix_Step,
+    // custom_tag_prefix_workflow: Tag_Prefix_Workflow,
+    // custom_tag_prefix_tag: Tag_Prefix_Tag,
+    // personalized settings, not exposed in settings tab
+    show_completed_tasks: true,
     table_column_sorting: SortMethod_Appearance,
     table_steps_shown: true,
     display_workflow_names: [] as SerializedType[],
@@ -62,10 +71,10 @@ export class IPmSettingsTab extends PluginSettingTab {
 
         containerEl.empty(); // This is settings page, after clicking the tab.
 
-        const book = containerEl.createEl("div");
-        book.createEl("h1", {text: "iPM: A Project Management Tool"});
-        book.createEl("h2", {text: "by Odaimoko"});
-
+        const header = containerEl.createEl("div");
+        header.createEl("h1", {text: "iPM: A Project Management Tool"});
+        header.createEl("h2", {text: "by Odaimoko"});
+        containerEl.createEl("h3", {text: "Plugin Behaviours"});
         new Setting(containerEl)
             .setName('Notice when a task is malformed')
             .setDesc('A task or workflow definition is malformed if it contains multiple lines, or the text is empty. Try adding blank line before or after the task.')
@@ -73,6 +82,8 @@ export class IPmSettingsTab extends PluginSettingTab {
         new Setting(containerEl)
             .setName('Capitalized the first letter in table row')
             .addToggle(this.setValueAndSave("capitalize_table_row_initial"));
+
+
     }
 
     setValueAndSave<T extends SerializedType>(settingName: SettingName) {

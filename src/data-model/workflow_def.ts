@@ -1,7 +1,7 @@
 import {STask} from "obsidian-dataview";
 
 export const Tag_Prefix_Step = "#iPm/step/";
-const Tag_Prefix_Workflow = "#iPm/workflow/";
+export const Tag_Prefix_Workflow = "#iPm/workflow/";
 export const Tag_Prefix_Tag = "#iPm/tag/";
 export const TaskStatus_checked = "x";
 export const TaskStatus_unchecked = " ";

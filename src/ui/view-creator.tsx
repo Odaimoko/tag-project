@@ -34,7 +34,7 @@ import {
     InternalLinkView
 } from "./view-template";
 import {appendBoldText} from "./html-template";
-import {getAllPmTasks, OdaPmDbProvider} from "../data-model/odaPmDb";
+import {OdaPmDbProvider} from "../data-model/odaPmDb";
 import {iPm_DbReloaded, iPm_JumpTask, iPm_JumpWorkflow} from "../typing/dataview-event";
 
 
@@ -442,7 +442,7 @@ function TaskTableView({displayWorkflows, filteredTasks}: {
                                            setSearchText("")
                                        }} iconName={"x-circle"}/>
                 </span>
-                <HStack style={{alignItems: "center"}}>
+                <HStack style={{alignItems: "center"}} spacing={4}>
                     <label> Sort </label>
                     <button onClick={
                         () => {

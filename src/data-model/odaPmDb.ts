@@ -17,7 +17,7 @@ import {
 } from "./workflow_def";
 import {EventEmitter} from "events";
 import {DataviewMetadataChangeEvent, iPm_DbReloaded} from "../typing/dataview-event";
-import {getAPI, STask} from "obsidian-dataview";
+import {DataArray, getAPI, STask} from "obsidian-dataview";
 import {ONotice} from "../utils/o-notice";
 import {getSettings} from "../Settings";
 import {GenericProvider} from "../utils/GenericProvider";
@@ -113,7 +113,7 @@ function getAllWorkflows(): I_OdaPmWorkflow[] {
         .unique();
 }
 
-function getAllPmTasks(workflows: I_OdaPmWorkflow[]) {
+function getAllPmTasks(workflows: I_OdaPmWorkflow[]): DataArray<OdaPmTask> {
     const workflowTags = workflows.map(function (k: I_OdaPmWorkflow) {
         return k.tag;
     });
@@ -167,12 +167,13 @@ export class OdaPmDb implements I_EvtListener {
         this.pmTasks = getAllPmTasks(this.workflows)
 
         // TODO performance. linq is easy, but performance is not good.
-        this.pmTags = this.pmTasks.flatMap(k => {
+        this.pmTags = (this.pmTasks.flatMap(k => {
             const validPmTag = k.boundTask.tags.filter((m: string) => m.startsWith(Tag_Prefix_Tag));
             return validPmTag;
         })
-            .filter(k => !this.workflowTags.includes(k) && !this.stepTags.includes(k))
+            .filter(k => !this.workflowTags.includes(k) && !this.stepTags.includes(k)) as DataArray)
             .array().unique()
+
         this.emitter.emit(iPm_DbReloaded)
     }
 
