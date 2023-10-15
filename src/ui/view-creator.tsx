@@ -423,6 +423,15 @@ function TaskTableView({displayWorkflows, filteredTasks}: {
     // striped rows. center step cell but not summary cell.
     const evenBg: React.CSSProperties = {backgroundColor: "rgba(0,0,0,0.2)"};
     const oddBg: React.CSSProperties = {};
+    const maxSummaryWidth = 500, minSummaryWidth = 300;
+    const summaryCellStyle: React.CSSProperties = {
+        minWidth: minSummaryWidth,
+        maxWidth: maxSummaryWidth,
+        padding: 5, paddingLeft: 10
+    }
+    const summaryEvenCellStyle = {...summaryCellStyle, ...evenBg}
+    const summaryOddCellStyle = {...summaryCellStyle, ...oddBg}
+
     const stepCellStyle: React.CSSProperties = {textAlign: "center"}
     const stepEvenCellStyle = {...stepCellStyle, ...evenBg}
     const stepOddCellStyle = {...stepCellStyle, ...oddBg}
@@ -430,7 +439,7 @@ function TaskTableView({displayWorkflows, filteredTasks}: {
     function taskTableStyleGetter(column: number, row: number): React.CSSProperties {
         const even = row % 2 === 0;
         const cellStyle = even ? stepEvenCellStyle : stepOddCellStyle
-        const summaryStyle = even ? evenBg : oddBg
+        const summaryStyle = even ? summaryEvenCellStyle : summaryOddCellStyle
         if (column === 0) {
             return summaryStyle
         } else return cellStyle
@@ -489,10 +498,17 @@ function TaskTableView({displayWorkflows, filteredTasks}: {
                         tableTitle={curWfName}
                         headers={headers}
                         rows={taskRows}
-                        thStyle={{
-                            backgroundColor: themedBackground,
-                            position: "sticky", top: -16,
-                            padding: 10
+
+                        thStyleGetter={(columnIndex: number): React.CSSProperties => {
+                            const style = {
+                                backgroundColor: themedBackground,
+                                position: "sticky", top: -16,
+                                padding: 10,
+                                minWidth: (columnIndex === 0 ? minSummaryWidth : "unset"),
+                                maxWidth: (columnIndex === 0 ? maxSummaryWidth : "unset")
+                            };
+                            // console.log(`thStyleGetter: ${JSON.stringify(style)}`)
+                            return style as React.CSSProperties;
                         }}
                         // TODO performance, we instantiate a lot of dictionaries here
                         cellStyleGetter={taskTableStyleGetter}

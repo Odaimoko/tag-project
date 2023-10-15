@@ -68,6 +68,7 @@ export const DataTable = ({
                               onHeaderClicked,
                               tableStyle,
                               thStyle,
+                              thStyleGetter,
                               cellStyle,
                               cellStyleGetter,
                           }: {
@@ -77,6 +78,7 @@ export const DataTable = ({
         onHeaderClicked?: (arg0: number) => void,
         tableStyle?: React.CSSProperties,
         thStyle?: React.CSSProperties,
+        thStyleGetter?: (column: number) => React.CSSProperties,
         cellStyle?: React.CSSProperties,
         cellStyleGetter?: (column: number, row: number) => React.CSSProperties
     }) => {
@@ -102,7 +104,8 @@ export const DataTable = ({
                 <thead>
                 <tr>
                     {headers.map((header: string, index) => {
-                        return <th style={Object.assign({}, thStyle)} key={header}>
+                        const headerStyle = thStyleGetter ? thStyleGetter(index) : thStyle;
+                        return <th style={headerStyle} key={header}>
                             <div onClick={() => {
                                 onHeaderClicked?.(index)
                             }}>{header}</div>
