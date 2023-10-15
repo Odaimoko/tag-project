@@ -12,9 +12,9 @@ export interface I_Stylable {
  * @param iconName
  * @constructor
  */
-export function ObsidianIconView({iconName}: { iconName: string }) {
+export function ObsidianIconView({iconName, style}: { iconName: string } & I_Stylable) {
     const htmlString = getIcon(iconName)?.outerHTML
-    return <HTMLStringComponent htmlString={htmlString}/>;
+    return <HTMLStringComponent style={style} htmlString={htmlString}/>;
 }
 
 /**
@@ -205,13 +205,13 @@ export function HStack(props: StackProps) {
 
 // Render an html string as a React component.
 // https://reactjs.org/docs/dom-elements.html#dangerouslysetinnerhtml
-function HTMLStringComponent({htmlString, useSpan = true}: {
+function HTMLStringComponent({htmlString, useSpan = true, style}: {
     htmlString?: string,
     useSpan?: boolean
-}) {
+} & I_Stylable) {
     if (useSpan)
         return (
-            <span dangerouslySetInnerHTML={{__html: htmlString ?? ""}}/>
+            <span style={style} dangerouslySetInnerHTML={{__html: htmlString ?? ""}}/>
         );
-    else return <div dangerouslySetInnerHTML={{__html: htmlString ?? ""}}/>
+    else return <div style={style} dangerouslySetInnerHTML={{__html: htmlString ?? ""}}/>
 }

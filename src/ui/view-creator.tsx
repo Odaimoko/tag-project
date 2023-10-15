@@ -221,14 +221,19 @@ const WorkflowFilterCheckbox = ({workflow, displayWorkflows, setDisplayWorkflows
 
     // inline-block: make this check box a whole element. It won't be split into multiple sub-elements when layout.
     // block will start a new line, inline will not, so we use inline-block
-    return <span style={{display: "inline-block", margin: 3}}>
+    return <span style={{display: "inline-block", marginRight: 15}}>
         <ExternalControlledCheckbox
-            content={<InternalLinkView
-                content={<label style={{color: getColorByWorkflow(workflow)}}>{wfName}</label>}
-                onIconClicked={() =>
-                    // Go to workflow def
-                    openTaskPrecisely(plugin.app.workspace, workflow.boundTask)}
-                onContentClicked={tickCheckbox}/>}
+            content={<>
+                <InternalLinkView
+                    content={<span style={{display: "inline-flex", justifyItems: "center"}}>
+                        {getIconByWorkflow(workflow)}
+                        <label style={{marginLeft: 3}}>{wfName}</label>
+                    </span>}
+                    onIconClicked={() =>
+                        // Go to workflow def
+                        openTaskPrecisely(plugin.app.workspace, workflow.boundTask)}
+                    onContentClicked={tickCheckbox}/>
+            </>}
             onChange={tickCheckbox}
             externalControl={displayWorkflows.includes(wfName)}
         />
@@ -341,6 +346,10 @@ function rectifyOdaTaskOnMdTaskChanged(oTask: OdaPmTask, plugin: OdaPmToolPlugin
             notifyTask(oTask, `Keep the last step: `)
         }
     }
+}
+
+function getIconByWorkflow(workflow: I_OdaPmWorkflow) {
+    return <ObsidianIconView iconName={workflow.type === "chain" ? "footprints" : "check-check"}/>;
 }
 
 function getIconByTask(oTask: OdaPmTask) {
