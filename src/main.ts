@@ -1,17 +1,17 @@
-import {App, Editor, MarkdownView, Modal, Notice, Plugin} from 'obsidian';
+import {App, Editor, MarkdownView, Menu, Modal, Notice, Plugin} from 'obsidian';
 import {ManagePageView, ManagePageViewId} from "./ui/manage-page-view";
 import {ONotice} from "./utils/o-notice";
-import {IPM_DEFAULT_SETTINGS, IPmSettings, IPmSettingsTab} from "./Settings";
+import {IPM_DEFAULT_SETTINGS, IPmSettings, IPmSettingsTab, SettingsProvider} from "./Settings";
 
 import {DataviewIndexReadyEvent} from "./typing/dataview-event";
 
 export const PLUGIN_NAME = 'iPm';
 
-
 export default class OdaPmToolPlugin extends Plugin {
     settings: IPmSettings;
 
     async onload() {
+        await this.initSettings();
         if (!this.hasDataviewPlugin()) {
             new ONotice("Dataview plugin is not enabled. Please enable it to use this plugin.");
 
@@ -26,7 +26,6 @@ export default class OdaPmToolPlugin extends Plugin {
 
     private async initPlugin() {
 
-        await this.initSettings();
 
         // region Ribbon integration
         // This creates an icon in the left ribbon.
@@ -59,10 +58,60 @@ export default class OdaPmToolPlugin extends Plugin {
         this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 
         this.initView();
-        this.addRibbonIcon("arrow-big-left", "Print leaf types", () => {
-            this.app.workspace.iterateAllLeaves((leaf) => {
-                console.log(leaf.getViewState().type);
-            });
+        // this.addRibbonIcon("arrow-big-left", "Print leaf types", () => {
+        //     this.app.workspace.iterateAllLeaves((leaf) => {
+        //         console.log(leaf.getViewState().type);
+        //     });
+        // });
+
+        this.registerEvent(
+            this.app.workspace.on("file-menu", (menu, file) => {
+                menu.addItem((item) => {
+                    item
+                        .setTitle("Print filemenu path 👈")
+                        .setIcon("document")
+                        .onClick(async () => {
+                            new Notice(file.path);
+                        });
+                });
+            })
+        );
+
+        this.registerEvent(
+            this.app.workspace.on("editor-menu", (menu, editor, view) => {
+                menu.addItem((item) => {
+                    item
+                        .setTitle("Print editor path 👈")
+                        .setIcon("document")
+                        .onClick(async () => {
+                            new Notice(view.file.path);
+                        });
+                    console.log(editor.getCursor());
+                });
+            })
+        )
+        this.addRibbonIcon("dice", "Open menu", (event) => {
+            const menu = new Menu();
+
+            menu.addItem((item) =>
+                item
+                    .setTitle("Copy")
+                    .setIcon("documents")
+                    .onClick(() => {
+                        new Notice("Copied");
+                    })
+            );
+
+            menu.addItem((item) =>
+                item
+                    .setTitle("Paste")
+                    .setIcon("paste")
+                    .onClick(() => {
+                        new Notice("Pasted");
+                    })
+            );
+
+            menu.showAtMouseEvent(event);
         });
     }
 
@@ -73,6 +122,7 @@ export default class OdaPmToolPlugin extends Plugin {
         this.addSettingTab(new IPmSettingsTab(
             this.app,
             this));
+        SettingsProvider.add(this.settings); // it's a reference which does not change and will be updated automatically.
     }
 
     // endregion   
@@ -162,6 +212,7 @@ export default class OdaPmToolPlugin extends Plugin {
     // endregion
     onunload() {
         // console.log('unloading plugin')
+        SettingsProvider.remove();
     }
 
     async loadSettings() {

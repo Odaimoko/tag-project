@@ -29,7 +29,13 @@ import {notify, ONotice} from "../utils/o-notice";
 
 import {DataviewIndexReadyEvent, DataviewMetadataChangeEvent} from "../typing/dataview-event";
 import {initialToUpper, isStringNullOrEmpty, simpleFilter} from "../utils/format_util";
-import {setSettingsValueAndSave, SortMethod_Appearance, SortMethod_Ascending, totalSortMethods} from "../Settings";
+import {
+    getSettings,
+    setSettingsValueAndSave,
+    SortMethod_Appearance,
+    SortMethod_Ascending,
+    totalSortMethods
+} from "../Settings";
 import {
     Checkbox,
     ClickableIconView,
@@ -211,7 +217,7 @@ export function ReactManagePage({eventCenter}: {
     // Use workflow names as filters' state instead. previously we use as state, but it requires dataview to be initialized.
     // However, this component might render before dataview is ready. The partially ready workflows will be used as the initial value, which is incorrect.
     // This is to fix: On open Obsidian, the filter may not work.
-    const [displayWorkflowNames, setDisplayWorkflowNames] = useState(plugin.settings.display_workflow_names as string[]);
+    const [displayWorkflowNames, setDisplayWorkflowNames] = useState(getSettings()?.display_workflow_names as string[]);
 
     const displayWorkflows = workflows.filter(k => {
         return displayWorkflowNames.includes(k.name);
@@ -354,7 +360,7 @@ const OdaTaskSummaryCell = ({oTask, taskFirstColumn}: {
     return <>
         <ExternalControlledCheckbox
             content={<InternalLinkView
-                content={plugin.settings.capitalize_table_row_initial ? initialToUpper(taskFirstColumn) : taskFirstColumn}/>}
+                content={getSettings()?.capitalize_table_row_initial ? initialToUpper(taskFirstColumn) : taskFirstColumn}/>}
             onChange={tickSummary}
             onLabelClicked={() => {
                 openTaskPrecisely(workspace, oTask.boundTask);
@@ -401,10 +407,10 @@ function TaskTableView({displayWorkflows, tasksWithThisType}: {
     const plugin = useContext(PluginContext);
     const [searchText, setSearchText] = useState("");
     // sort
-    const [sortCode, setSortCode] = useState(plugin.settings.table_column_sorting as number); // 0 = unsorted, 1 = asc, 2 = desc
+    const [sortCode, setSortCode] = useState(getSettings()?.table_column_sorting as number); // 0 = unsorted, 1 = asc, 2 = desc
     const nextSortCode = (sortCode + 1) % totalSortMethods;
     // show completed
-    const [showCompleted, setShowCompleted] = useState(plugin.settings.show_completed_tasks as boolean);
+    const [showCompleted, setShowCompleted] = useState(getSettings()?.show_completed_tasks as boolean);
 
     const displayedTasks = tasksWithThisType.filter(function (k: OdaPmTask) {
         return (showCompleted || !k.isMdCompleted());

@@ -1,6 +1,7 @@
 import {App, PluginSettingTab, Setting, ValueComponent} from "obsidian";
 import IPmToolPlugin from "./main";
 import OdaPmToolPlugin from "./main";
+import {GenericProvider} from "./utils/GenericProvider";
 
 
 type SerializedType =
@@ -82,4 +83,9 @@ export class IPmSettingsTab extends PluginSettingTab {
     }
 
 
+} // Singleton!
+export const SettingsProvider: GenericProvider<IPmSettings> = new GenericProvider<IPmSettings>();
+
+export function getSettings() {
+    return SettingsProvider.get();
 }
