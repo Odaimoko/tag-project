@@ -2,6 +2,8 @@ import {I_Renderable} from "./i_Renderable";
 import React, {Fragment, JSX, ReactNode, useState} from "react";
 import {getIcon} from "obsidian";
 
+export const CssClass_Link = "cm-underline";
+
 export interface I_Stylable {
     style?: React.CSSProperties;
 }
@@ -40,7 +42,7 @@ export function ClickableIconView({content, onIconClicked, onContentClicked, ico
 } & I_Stylable) {
     return <span style={style}>
 
-        <a className={"cm-underline"} onClick={onIconClicked}>
+        <a className={CssClass_Link} onClick={onIconClicked}>
            <ObsidianIconView iconName={iconName}/>
         </a>
         <span onClick={onContentClicked}>

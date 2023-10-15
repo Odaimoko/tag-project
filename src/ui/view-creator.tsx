@@ -162,27 +162,9 @@ export function ReactManagePage({eventCenter}: {
     const pmTags = db.pmTags || [];
     return (
         <>
-            <span style={{display: "flex"}}>
-                
-            <HStack style={{
-                display: "flex",
-                alignItems: "center"
-            }} spacing={10}>
-                <h2>{displayWorkflowNames.length}/{workflows.length} Workflow(s)</h2>
-                <button onClick={() => handleSetDisplayWorkflows(workflows.map(k => k.name))}>Select All
-                </button>
-                <button onClick={() => handleSetDisplayWorkflows([])}>Unselect All
-                </button>
-                <HStack spacing={10}>
-                    {Workflow_Type_Enum_Array.map((type: WorkflowType) => {
-                        return <HStack spacing={3}>
-                            {getIconViewByWorkflowType(type)}
-                            <label>{initialToUpper(type)}</label>
-                        </HStack>
-                    })}
-                </HStack>
-            </HStack>
-            </span>
+
+            <WorkflowFilterHeading workflows={workflows} displayWorkflowNames={displayWorkflowNames}
+                                   handleSetDisplayWorkflows={handleSetDisplayWorkflows}/>
             <div>
                 {workflows.map((workflow: I_OdaPmWorkflow) => {
                     return (
@@ -222,6 +204,29 @@ export function ReactManagePage({eventCenter}: {
 const EmptyWorkflowView = () => {
     // return <label>No Workflow defined. TODO #hint_no_work_flow_defined </label>
     return <h1>No Workflow defined, or Dataview is not initialized.</h1>
+}
+
+const WorkflowFilterHeading = ({displayWorkflowNames, workflows, handleSetDisplayWorkflows}: { displayWorkflowNames: string[], workflows: I_OdaPmWorkflow[], handleSetDisplayWorkflows: (s: string[]) => void }) => {
+    return <span style={{display: "flex"}}>
+            <HStack style={{
+                display: "flex",
+                alignItems: "center"
+            }} spacing={10}>
+                <h2>{displayWorkflowNames.length}/{workflows.length} Workflow(s)</h2>
+                <button onClick={() => handleSetDisplayWorkflows(workflows.map(k => k.name))}>Select All
+                </button>
+                <button onClick={() => handleSetDisplayWorkflows([])}>Unselect All
+                </button>
+                <HStack spacing={10}>
+                    {Workflow_Type_Enum_Array.map((type: WorkflowType) => {
+                        return <HStack spacing={3}>
+                            {getIconViewByWorkflowType(type)}
+                            <label>{initialToUpper(type)}</label>
+                        </HStack>
+                    })}
+                </HStack>
+            </HStack>
+            </span>
 }
 
 const WorkflowFilterCheckbox = ({workflow, displayWorkflows, setDisplayWorkflows}: {
