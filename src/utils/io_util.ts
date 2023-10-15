@@ -3,7 +3,8 @@ import {STask} from "obsidian-dataview";
 
 // region Copied from dataview
 
-// TODO Do we really need to replace the whole file?
+// Do we really need to replace the whole file?
+// Yes we do, because there's no editor.
 /** Rewrite a task with the given completion status and new text. */
 export async function rewriteTask(vault: Vault, task: STask, desiredStatus: string, desiredText?: string) {
     if (desiredStatus == task.status && (desiredText == undefined || desiredText == task.text)) return;

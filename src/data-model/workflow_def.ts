@@ -300,18 +300,18 @@ export class OdaPmTask {
 
     addStepTag(stepTag: string): string {
         const text = this.boundTask.text;
-        return addOneStepTagText(text, stepTag);
+        return addTagText(text, stepTag);
     }
 
     removeStepTag(stepTag: string) {
-        return removeOneStepTagText(this.boundTask.text, stepTag);
+        return removeTagText(this.boundTask.text, stepTag);
     }
 
     removeAllStepTags() {
         let oriText = this.text;
         for (const step of this.type.stepsDef) {
             if (this.currentSteps.includes(step)) {
-                oriText = removeOneStepTagText(oriText, step.tag)
+                oriText = removeTagText(oriText, step.tag)
             }
         }
         return oriText;
@@ -322,7 +322,7 @@ export class OdaPmTask {
             if (this.currentSteps.includes(step)) {
                 continue;
             }
-            oriText = addOneStepTagText(oriText, step.tag)
+            oriText = addTagText(oriText, step.tag)
         }
         return oriText;
     }
@@ -344,7 +344,7 @@ export class OdaPmTask {
     keepOneStepTag(stepTag: string | undefined) {
         const cleanText = this.removeAllStepTags();
         if (stepTag === undefined) return cleanText;
-        return addOneStepTagText(cleanText, stepTag)
+        return addTagText(cleanText, stepTag)
     }
 
 }
@@ -356,15 +356,14 @@ export class OdaPmTask {
  * @param text
  * @param stepTag
  */
-function addOneStepTagText(text: string, stepTag: string) {
+export function addTagText(text: string, stepTag: string) {
     // With the rule that a task cannot cross multiple lines, we can safely assume that the last char is \n if there is a \n.
     const hasTrailingEol = text.indexOf("\n") == text.length - 1
     // We believe dataview gives the correct result. In the latter case there will be no step.tag in the original text if includes is false.
     return `${text.trimEnd()} ${stepTag} ` + (hasTrailingEol ? "\n" : "");
 }
-
 // TODO wont remove the space before or after the tag
-function removeOneStepTagText(text: string, stepTag: string) {
+export function removeTagText(text: string, stepTag: string) {
     return text.replace(stepTag, "");
 }
 

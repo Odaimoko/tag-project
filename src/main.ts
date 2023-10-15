@@ -11,7 +11,9 @@ import {
 } from "./typing/dataview-event";
 import {EventEmitter} from "events";
 import {OdaPmDb, OdaPmDbProvider} from "./data-model/odaPmDb";
-import {I_OdaPmWorkflow, OdaPmTask} from "./data-model/workflow_def";
+import {addTagText, I_OdaPmWorkflow, OdaPmTask} from "./data-model/workflow_def";
+import {rewriteTask} from "./utils/io_util";
+import {WorkflowSuggestionModal} from "./ui/WorkflowSuggestionModal";
 
 export const PLUGIN_NAME = 'iPm';
 
@@ -182,6 +184,13 @@ export default class OdaPmToolPlugin extends Plugin {
                 this.jumpToTaskOrWorkflow(editor, view);
             }
         });
+        this.addCommand({
+            id: 'ipm:add-workflow',
+            name: 'Add workflow to task',
+            editorCallback: (editor: Editor, view: MarkdownView) => {
+                this.addWorkflowToMdTask(editor, view);
+            }
+        });
         // endregion
 
         this.registerEvent(
@@ -199,6 +208,83 @@ export default class OdaPmToolPlugin extends Plugin {
                 });
             })
         )
+
+        this.registerEvent(
+            this.app.workspace.on("editor-menu", (menu, editor, view) => {
+                menu.addItem((item) => {
+                    item
+                        .setTitle("Add workflow to task")
+                        .setIcon("document")
+                        .onClick(async () => {
+                            this.addWorkflowToMdTask(editor, view);
+
+                        });
+
+                });
+            })
+        )
+
+    }
+
+    private addWorkflowToMdTask(editor: Editor, view: MarkdownView | MarkdownFileInfo) {
+        const cursor = editor.getCursor();
+        const filePath = view.file?.path;
+        if (!filePath) {
+            new ONotice("No markdown file.")
+            return; // no file
+        }
+        // console.log(`line: ${editor.getLine(cursor.line)}`)
+        const pageCache = this.app.metadataCache.getCache(filePath);
+        /* A task object is like this. A list object is similar but without "task" field.
+        {
+            "position": {
+                "start": {
+                    "line": 168,
+                    "col": 0,
+                    "offset": 9076
+                },
+                "end": {
+                    "line": 168,
+                    "col": 92,
+                    "offset": 9168
+                }
+            },
+            "parent": -167,
+            "task": "x"
+        }
+        * */
+        const taskCache = pageCache?.listItems?.find(k => k.position.start.line == cursor.line && k.task);
+        // we only process if it's a md task
+        if (!taskCache) {
+            // console.log(pageCache)
+            // console.log(pageCache?.listItems?.map(k => k.position.start))
+            new ONotice("It's not a markdown task.\nTry remove indentations or texts directly following on the next line (you can use list to describe details).\nOnly the task that is part of a list are recognized (or the task itself is a list itself). ")
+            return;
+        }
+        // console.log(taskCache)
+        const workflow = this.pmDb.getWorkflow(filePath, cursor.line);
+        if (workflow) {
+            new ONotice("This is a workflow definition, not a task.")
+            return; // skip if the task is a workflow def
+        }
+
+        // choose workflow
+        new WorkflowSuggestionModal(this.app, (workflow, evt) => {
+            const pmTask = this.pmDb.getPmTask(filePath, cursor.line);
+            if (!workflow) {
+                return;
+            }
+            if (pmTask) {
+                // replace the existent workflow tag
+                const desiredText = `${pmTask.boundTask.text.replace(pmTask.type.tag, workflow.tag)}`;
+                // console.log(desiredText)
+                rewriteTask(this.app.vault, pmTask.boundTask, pmTask.boundTask.status, desiredText)
+                return;
+            } else {
+                const desiredText = addTagText(editor.getLine(cursor.line), workflow.tag);
+                editor.setLine(cursor.line, desiredText)
+            }
+        }).open();
     }
 
     /**
