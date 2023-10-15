@@ -102,6 +102,7 @@ export const DataTable = ({
  * @param onChange
  * @param onLabelClicked
  * @param content
+ * @param style
  * @constructor
  */
 export const ExternalControlledCheckbox = ({externalControl, onChange, onLabelClicked, content, style}:

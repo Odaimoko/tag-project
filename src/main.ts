@@ -11,6 +11,7 @@ import {
 } from "./typing/dataview-event";
 import {EventEmitter} from "events";
 import {OdaPmDb, OdaPmDbProvider} from "./data-model/odaPmDb";
+import {I_OdaPmWorkflow, OdaPmTask} from "./data-model/workflow_def";
 
 export const PLUGIN_NAME = 'iPm';
 
@@ -97,47 +98,7 @@ export default class OdaPmToolPlugin extends Plugin {
             })
         );
 
-        this.registerEvent(
-            this.app.workspace.on("editor-menu", (menu, editor, view) => {
-                menu.addItem((item) => {
-                    item
-                        .setTitle("Jump To Manage Page")
-                        .setIcon("document")
-                        .onClick(async () => {
-                            const cursor = editor.getCursor();
-                            const filePath = view.file?.path;
-                            if (!filePath) return; // no file
 
-                            // use line and file as the identifier
-                            const workflow = this.pmDb.getWorkflow(filePath, cursor.line);
-                            if (workflow) {
-                                // console.log(`Is wf: ${workflow.name}`)
-                                this.activateView(ManagePageViewId)
-                                    .then((leaf) => {
-                                        this.emitter.emit(iPm_JumpWorkflow, workflow)
-                                    });
-                                return;
-                            }
-                            const pmTask = this.pmDb.getPmTask(filePath, cursor.line);
-                            if (pmTask) {
-                                this.activateView(ManagePageViewId).then((leaf) => {
-                                    this.emitter.emit(iPm_JumpTask, pmTask)
-                                })
-                                return;
-                            }
-                            new ONotice(`Not a task or workflow.\n${filePath}:${cursor.line}`)
-
-                            // if it's a workflow, open the page and select only the workflow
-                            // if it's a task, open the page, select the workflow, and set searchText to the task summary
-
-                            // console.log(leaf.view)
-                            // console.log(this.pmDb.pmTasks.filter(k => k.summary == "Open a md task in Manage Page"))
-                        });
-
-                    console.log(editor.getCursor());
-                });
-            })
-        )
         this.addRibbonIcon("dice", "Open menu", (event) => {
             const menu = new Menu();
 
@@ -215,6 +176,54 @@ export default class OdaPmToolPlugin extends Plugin {
             }
         });
         // endregion
+
+        this.registerEvent(
+            this.app.workspace.on("editor-menu", (menu, editor, view) => {
+                menu.addItem((item) => {
+                    item
+                        .setTitle("Jump To Manage Page")
+                        .setIcon("document")
+                        .onClick(async () => {
+                            const cursor = editor.getCursor();
+                            const filePath = view.file?.path;
+                            if (!filePath) return; // no file
+
+                            // use line and file as the identifier
+                            // if it's a workflow, open the page and select only the workflow
+                            // if it's a task, open the page, select the workflow, and set searchText to the task summary
+
+                            const workflow = this.pmDb.getWorkflow(filePath, cursor.line);
+                            if (workflow) {
+                                this.jumpToWorkflowPage(workflow);
+                                return;
+                            }
+                            const pmTask = this.pmDb.getPmTask(filePath, cursor.line);
+                            if (pmTask) {
+                                this.jumpToTaskPage(pmTask);
+                                return;
+                            }
+                            new ONotice(`Not a task or workflow.\n${filePath}:${cursor.line}`)
+
+                            // console.log(leaf.view)
+                            // console.log(this.pmDb.pmTasks.filter(k => k.summary == "Open a md task in Manage Page"))
+                        });
+
+                });
+            })
+        )
+    }
+
+    private jumpToTaskPage(pmTask: OdaPmTask) {
+        this.activateView(ManagePageViewId).then((leaf) => {
+            this.emitter.emit(iPm_JumpTask, pmTask)
+        })
+    }
+
+    private jumpToWorkflowPage(workflow: I_OdaPmWorkflow) {
+        this.activateView(ManagePageViewId)
+            .then((leaf) => {
+                this.emitter.emit(iPm_JumpWorkflow, workflow)
+            });
     }
 
     hasDataviewPlugin() {

@@ -25,7 +25,6 @@ import {
     totalSortMethods
 } from "../Settings";
 import {
-    Checkbox,
     ClickableIconView,
     DataTable,
     ExternalControlledCheckbox,
@@ -302,14 +301,24 @@ function TaskTableView({displayWorkflows, tasksWithThisType}: {
 
     function jumpTask(oTask: OdaPmTask) {
         setSearchText(oTask.summary)
+        // temporarily set show completed according to the task
         setShowCompleted(oTask.isMdCompleted())
+    }
+
+    function onJumpToWorkflow() {
+        // clear search text 
+        setSearchText("")
+        // restore show completed in settings
+        setShowCompleted(getSettings()?.show_completed_tasks as boolean)
     }
 
     useEffect(() => {
         const eventCenter = plugin?.getEmitter()
         eventCenter?.addListener(iPm_JumpTask, jumpTask)
+        eventCenter?.addListener(iPm_JumpWorkflow, onJumpToWorkflow)
         return () => {
             eventCenter?.removeListener(iPm_JumpTask, jumpTask)
+            eventCenter?.removeListener(iPm_JumpWorkflow, onJumpToWorkflow)
         }
     });
 
@@ -331,6 +340,7 @@ function TaskTableView({displayWorkflows, tasksWithThisType}: {
             }, sortCode
         )
     }
+
     // Union
     const displayStepNames = displayWorkflows.map(wf => wf.stepsDef.map(function (k: I_OdaPmStep) {
         return k.name;
@@ -393,13 +403,8 @@ function TaskTableView({displayWorkflows, tasksWithThisType}: {
                         {sortCode === SortMethod_Appearance ? "By Appearance" : ascending ? "Ascending" : "Descending"}
                     </button>
                 </HStack>
-                <Checkbox content={"Show Completed"} onChange={
-                    (nextChecked) => {
-                        setShowCompleted(nextChecked)
-                        setSettingsValueAndSave(plugin, "show_completed_tasks", nextChecked)
-                    }
-                }
-                          initialState={showCompleted}
+                <ExternalControlledCheckbox content={"Show Completed"} onChange={handleShowCompletedChange}
+                                            externalControl={showCompleted}
                 />
             </HStack>
             <p/>
@@ -420,6 +425,12 @@ function TaskTableView({displayWorkflows, tasksWithThisType}: {
             }
         </>
     )
+
+    function handleShowCompletedChange() {
+        const nextChecked = !showCompleted;
+        setShowCompleted(nextChecked)
+        setSettingsValueAndSave(plugin, "show_completed_tasks", nextChecked)
+    }
 
 }
 
