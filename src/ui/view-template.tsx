@@ -49,7 +49,19 @@ export function ClickableIconView({content, onIconClicked, onContentClicked, ico
     </span>
 }
 
-// We cannot interact in Dataview Table, so we create our own.
+/**
+ *
+ * @param tableTitle
+ * @param headers
+ * @param rows
+ * @param onHeaderClicked
+ * @param tableStyle
+ * @param thStyle
+ * @param cellStyle
+ * @param cellStyleGetter override cellStyle. give more complicated style for table values.
+ * @constructor
+ */
+    // We cannot interact in Dataview Table, so we create our own.
 export const DataTable = ({
                               tableTitle,
                               headers, rows,
@@ -57,45 +69,50 @@ export const DataTable = ({
                               tableStyle,
                               thStyle,
                               cellStyle,
+                              cellStyleGetter,
                           }: {
-    tableTitle: string,
-    headers: I_Renderable[],
-    rows: I_Renderable[][],
-    onHeaderClicked?: (arg0: number) => void,
-    tableStyle?: React.CSSProperties,
-    thStyle?: React.CSSProperties,
-    cellStyle?: React.CSSProperties,
-}) => {
+        tableTitle: string,
+        headers: I_Renderable[],
+        rows: I_Renderable[][],
+        onHeaderClicked?: (arg0: number) => void,
+        tableStyle?: React.CSSProperties,
+        thStyle?: React.CSSProperties,
+        cellStyle?: React.CSSProperties,
+        cellStyleGetter?: (column: number, row: number) => React.CSSProperties
+    }) => {
 
-    return (
-        <table style={tableStyle} key={tableTitle}>
-            <tbody>
-            {rows.map((items, rowIdx) => (
-                <tr key={rowIdx}>
-                    {items.map(
-                        function (k, columnIdx) {
-                            const key = `${tableTitle}_${rowIdx}_${columnIdx}`;
-                            return <td style={cellStyle} key={key}>{k}</td>;
-                        }
-                    )}
-                </tr>))
-            }
-            </tbody>
-            {/*Draw header at the end, so it can cover body view. Or else the body content will be rendered above headers. */}
-            <thead>
-            <tr>
-                {headers.map((header: string, index) => {
-                    return <th style={Object.assign({}, thStyle)} key={header}>
-                        <div onClick={() => {
-                            onHeaderClicked?.(index)
-                        }}>{header}</div>
-                    </th>;
-                })}
-            </tr>
-            </thead>
-        </table>
-    );
-}
+        return (
+            <table style={tableStyle} key={tableTitle}>
+                <tbody>
+                {rows.map((items: I_Renderable[], rowIdx) => (
+                    <tr key={rowIdx}>
+                        {items.map(
+                            function (k: I_Renderable, columnIdx) {
+                                const key = `${tableTitle}_${rowIdx}_${columnIdx}`;
+                                const cStyle = cellStyleGetter ?
+                                    cellStyleGetter(columnIdx, rowIdx) :
+                                    cellStyle;
+                                return <td style={cStyle} key={key}>{k}</td>;
+                            })}
+
+                    </tr>))
+                }
+                </tbody>
+                {/*Draw header at the end, so it can cover body view. Or else the body content will be rendered above headers. */}
+                <thead>
+                <tr>
+                    {headers.map((header: string, index) => {
+                        return <th style={Object.assign({}, thStyle)} key={header}>
+                            <div onClick={() => {
+                                onHeaderClicked?.(index)
+                            }}>{header}</div>
+                        </th>;
+                    })}
+                </tr>
+                </thead>
+            </table>
+        );
+    }
 /**
  * A checkbox that is totally controlled by its parent.
  * @param externalControl

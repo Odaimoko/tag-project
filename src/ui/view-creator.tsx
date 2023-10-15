@@ -420,6 +420,22 @@ function TaskTableView({displayWorkflows, filteredTasks}: {
     // add background for table header, according to the theme.
     const container = useContext(ContainerContext)
     const themedBackground = container.getCssPropertyValue("background-color")
+    // striped rows. center step cell but not summary cell.
+    const evenBg: React.CSSProperties = {backgroundColor: "rgba(0,0,0,0.2)"};
+    const oddBg: React.CSSProperties = {};
+    const stepCellStyle: React.CSSProperties = {textAlign: "center"}
+    const stepEvenCellStyle = {...stepCellStyle, ...evenBg}
+    const stepOddCellStyle = {...stepCellStyle, ...oddBg}
+
+    function taskTableStyleGetter(column: number, row: number): React.CSSProperties {
+        const even = row % 2 === 0;
+        const cellStyle = even ? stepEvenCellStyle : stepOddCellStyle
+        const summaryStyle = even ? evenBg : oddBg
+        if (column === 0) {
+            return summaryStyle
+        } else return cellStyle
+    }
+
     return (
         <>
             <HStack style={{
@@ -475,13 +491,17 @@ function TaskTableView({displayWorkflows, filteredTasks}: {
                         rows={taskRows}
                         thStyle={{
                             backgroundColor: themedBackground,
-                            position: "sticky", top: -16
+                            position: "sticky", top: -16,
+                            padding: 10
                         }}
+                        // TODO performance, we instantiate a lot of dictionaries here
+                        cellStyleGetter={taskTableStyleGetter}
                     /> : <label>No results.</label>
                 )
             }
         </>
     )
+
 
     function handleShowCompletedChange() {
         const nextChecked = !showCompleted;
