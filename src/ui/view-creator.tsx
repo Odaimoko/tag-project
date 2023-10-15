@@ -95,11 +95,11 @@ export function ReactManagePage({eventCenter}: {
 
     function jumpTask(oTask: OdaPmTask) {
         jumpWf(oTask.type)
-        // TODO
     }
 
     function jumpWf(wf: I_OdaPmWorkflow) {
         setDisplayWorkflowNames([wf.name])
+        setDisplayTags([])
     }
 
     // How to prevent add listener multiple times? use custom emitter instead of obsidian's event emitter
@@ -117,13 +117,12 @@ export function ReactManagePage({eventCenter}: {
 
     const plugin = useContext(PluginContext);
 
-    // place all hooks before return. React doesn't allow the order to be changed.
     const db = OdaPmDbProvider.get();
     const workflows = db?.workflows || [];
 
-    // Use workflow names as filters' state instead. previously we use as state, but it requires dataview to be initialized.
+    // Use workflow names as filters' state instead. previously we use workflows themselves as state, but this requires dataview to be initialized.
     // However, this component might render before dataview is ready. The partially ready workflows will be used as the initial value, which is incorrect.
-    // This is to fix: On open Obsidian, the filter may not work.
+    // This is to fix the bug: On open Obsidian, the filter may not work.
     const [displayWorkflowNames, setDisplayWorkflowNames] = useState(getSettings()?.display_workflow_names as string[]);
     const [displayTags, setDisplayTags] = useState(getSettings()?.display_tags as string[]);
 
@@ -137,6 +136,7 @@ export function ReactManagePage({eventCenter}: {
         setDisplayTags(names)
     }
 
+    // place all hooks before return. React doesn't allow the order to be changed.
     if (workflows.length === 0 || db === null)
         return <label>No Workflow defined. TODO #hint_no_work_flow_defined </label>
 

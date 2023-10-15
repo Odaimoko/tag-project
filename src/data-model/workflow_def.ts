@@ -23,7 +23,7 @@ function initDefTags() {
     }
 }
 
-export function getDefTags(): string[] {
+export function getWorkflowTags(): string[] {
     initDefTags();
     return Type_Definition_Tags;
 }

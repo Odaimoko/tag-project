@@ -1,10 +1,10 @@
 import {I_EvtListener} from "../utils/i_EvtListener";
 import {
     factoryTask,
-    getDefTags,
     getOrCreateWorkflow,
     getTypeDefTag,
     getWorkflowNameFromRawText,
+    getWorkflowTags,
     I_OdaPmWorkflow,
     isTaskSingleLine,
     isTaskSummaryValid,
@@ -40,7 +40,7 @@ function getTaskMultiLineErrMsg() {
  */
 function createWorkflowsFromTask(task: STask): I_OdaPmWorkflow[] {
     const workflows = []
-    const defTags = getDefTags();
+    const defTags = getWorkflowTags();
     for (const wfType of Workflow_Type_Enum_Array) {
         const defTag = getTypeDefTag(wfType);
         if (task.tags.includes(defTag)) {
@@ -99,7 +99,7 @@ function createPmTaskFromTask(workflowTags: string[], workflows: I_OdaPmWorkflow
 
 function getAllWorkflows(): I_OdaPmWorkflow[] {
     return dv.pages()["file"]["tasks"].where(function (k: STask) {
-            for (const defTag of getDefTags()) {
+        for (const defTag of getWorkflowTags()) {
                 if (k.tags.length === 0) continue;
                 if (k.tags.includes(defTag)) {
                     return true;
@@ -158,14 +158,12 @@ export class OdaPmDb implements I_EvtListener {
 
     private reloadWorkflows() {
         this.workflows = getAllWorkflows()
+        this.workflowTags = getWorkflowTags()
         // TODO performance. linq is easy, but performance is not good.
-        this.workflowTags = this.workflows.map(function (k: I_OdaPmWorkflow) {
-            return k.tag;
-        }).unique();
         this.stepTags = this.workflows.flatMap(function (k: I_OdaPmWorkflow) {
             return k.stepsDef.map(m => m.tag);
         }).unique();
-        
+
         this.pmTasks = getAllPmTasks(this.workflows)
 
         // TODO performance. linq is easy, but performance is not good.
