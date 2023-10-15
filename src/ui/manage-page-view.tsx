@@ -1,14 +1,16 @@
 // https://docs.obsidian.md/Plugins/User+interface/Views
-import {ItemView, WorkspaceLeaf} from "obsidian";
+import {App, ItemView, Modal, WorkspaceLeaf} from "obsidian";
 import {ReactManagePage} from "./view-creator";
 import {createRoot, Root} from "react-dom/client";
 import {createContext, StrictMode} from "react";
 import OdaPmToolPlugin from "../main";
+import {ClickableIconView, HStack} from "./view-template";
 
 export const ManagePageViewId = "iPm-Tool-ManageView";
 
 export class ManagePageView extends ItemView {
     root: Root | null = null;
+    titleRoot: Root | null = null;
     plugin: OdaPmToolPlugin;
 
     constructor(leaf: WorkspaceLeaf, plugin: OdaPmToolPlugin) {
@@ -42,6 +44,13 @@ export class ManagePageView extends ItemView {
         // we call render(), so this is a brand new component tree, no matter it exists or not. States won't be preserved.
         this.root.render(
             <StrictMode>
+                <div style={{display: "flex", justifyContent: "center", marginBottom: -20}}>
+                    <HStack spacing={10} style={{alignItems: "center"}}>
+                        <h1>{this.getDisplayText()}</h1>
+                        <ClickableIconView onIconClicked={() => new HelpModal(this.app).open()}
+                                           iconName={"help-circle"}/>
+                    </HStack>
+                </div>
                 <ContainerContext.Provider value={container}>
                     <PluginContext.Provider value={this.plugin}>
                         <ReactManagePage eventCenter={this.emitter()}/>
@@ -51,6 +60,10 @@ export class ManagePageView extends ItemView {
         );
         // yes we can render, but the clicking the link won't jump to the note
         // MarkdownRenderer.render(this.plugin.app, "# F [[PDD]] [[Manage]] Page", this.containerEl, "PDD", null);
+        const titleEl = this.containerEl.children[0]
+
+        titleEl.empty()
+
     }
 
     async onClose() {
@@ -61,13 +74,38 @@ export class ManagePageView extends ItemView {
     private unmountReactRoot() {
         this.root?.unmount();
         this.root = null;
+        this.titleRoot?.unmount()
+        this.titleRoot = null
     }
 
     emitter() {
         return this.plugin.getEmitter()
     }
-
 }
+
+class HelpModal extends Modal {
+    root: Root | null = null;
+
+    constructor(app: App) {
+        super(app);
+    }
+
+    onOpen() {
+        const {contentEl} = this;
+        contentEl.empty();
+        // React
+        this.root = createRoot(contentEl); // Override the previous container
+        this.root.render(<StrictMode>
+            WOLOLO
+        </StrictMode>)
+    }
+
+    onClose() {
+        this.root?.unmount();
+        this.root = null;
+    }
+}
+
 
 export const ContainerContext = createContext<Element>(undefined as any);
 export const PluginContext = createContext<OdaPmToolPlugin>(undefined as any);
