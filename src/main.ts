@@ -16,6 +16,7 @@ import {rewriteTask} from "./utils/io_util";
 import {WorkflowSuggestionModal} from "./ui/WorkflowSuggestionModal";
 
 export const PLUGIN_NAME = 'iPm';
+export const CmdPal_SetWorkflowToTask = 'Set workflow to task';
 
 export default class OdaPmToolPlugin extends Plugin {
     settings: IPmSettings;
@@ -170,14 +171,21 @@ export default class OdaPmToolPlugin extends Plugin {
         });
         this.addCommand({
             id: 'ipm:open-manage-page',
-            name: 'Open Task or Workflow in Manage Page',
+            name: 'Select Task or Workflow in Manage Page',
+            editorCallback: (editor: Editor, view: MarkdownView) => {
+                this.activateManagePageView()
+            }
+        });
+        this.addCommand({
+            id: 'ipm:select-task-manage-page',
+            name: 'Select Task or Workflow in Manage Page',
             editorCallback: (editor: Editor, view: MarkdownView) => {
                 this.jumpToTaskOrWorkflow(editor, view);
             }
         });
         this.addCommand({
             id: 'ipm:add-workflow',
-            name: 'Set workflow to task',
+            name: CmdPal_SetWorkflowToTask,
             editorCallback: (editor: Editor, view: MarkdownView) => {
                 this.addWorkflowToMdTask(editor, view);
             }
@@ -204,7 +212,7 @@ export default class OdaPmToolPlugin extends Plugin {
             this.app.workspace.on("editor-menu", (menu, editor, view) => {
                 menu.addItem((item) => {
                     item
-                        .setTitle("Add workflow to task")
+                        .setTitle(CmdPal_SetWorkflowToTask)
                         .setIcon("document")
                         .onClick(async () => {
                             this.addWorkflowToMdTask(editor, view);
@@ -307,13 +315,13 @@ export default class OdaPmToolPlugin extends Plugin {
     }
 
     private jumpToTaskPage(pmTask: OdaPmTask) {
-        this.activateView(ManagePageViewId).then((leaf) => {
+        this.activateManagePageView().then((leaf) => {
             this.emitter.emit(iPm_JumpTask, pmTask)
         })
     }
 
     private jumpToWorkflowPage(workflow: I_OdaPmWorkflow) {
-        this.activateView(ManagePageViewId)
+        this.activateManagePageView()
             .then((leaf) => {
                 this.emitter.emit(iPm_JumpWorkflow, workflow)
             });
@@ -354,9 +362,12 @@ export default class OdaPmToolPlugin extends Plugin {
         );
 
         this.addRibbonIcon("bell-plus", "Show Pm Window", () => {
-            this.activateView(ManagePageViewId)
+            this.activateManagePageView()
         });
+    }
 
+    async activateManagePageView() {
+        return this.activateView(ManagePageViewId)
     }
 
     // Supports only one leaf.

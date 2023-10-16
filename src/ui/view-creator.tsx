@@ -206,6 +206,25 @@ const EmptyWorkflowView = () => {
     return <h1>No Workflow defined, or Dataview is not initialized.</h1>
 }
 
+export function WorkflowTypeLegend({type, style}: { type: WorkflowType } & I_Stylable) {
+    return <span style={style}>
+        <HStack spacing={3}>
+        {getIconViewByWorkflowType(type)}
+            <label>{initialToUpper(type)}</label>
+    </HStack>
+    </span>;
+}
+
+export function WorkflowTypeLegendView() {
+    return <HStack spacing={10}>
+        {Workflow_Type_Enum_Array.map((type: WorkflowType) => {
+            return <WorkflowTypeLegend key={type}
+                                       type={type}/>
+
+        })}
+    </HStack>;
+}
+
 const WorkflowFilterHeading = ({displayWorkflowNames, workflows, handleSetDisplayWorkflows}: { displayWorkflowNames: string[], workflows: I_OdaPmWorkflow[], handleSetDisplayWorkflows: (s: string[]) => void }) => {
     return <span style={{display: "flex"}}>
             <HStack style={{
@@ -217,14 +236,7 @@ const WorkflowFilterHeading = ({displayWorkflowNames, workflows, handleSetDispla
                 </button>
                 <button onClick={() => handleSetDisplayWorkflows([])}>Unselect All
                 </button>
-                <HStack spacing={10}>
-                    {Workflow_Type_Enum_Array.map((type: WorkflowType) => {
-                        return <HStack spacing={3}>
-                            {getIconViewByWorkflowType(type)}
-                            <label>{initialToUpper(type)}</label>
-                        </HStack>
-                    })}
-                </HStack>
+<WorkflowTypeLegendView/>
             </HStack>
             </span>
 }

@@ -1,10 +1,11 @@
 // https://docs.obsidian.md/Plugins/User+interface/Views
-import {App, ItemView, Modal, WorkspaceLeaf} from "obsidian";
+import {ItemView, WorkspaceLeaf} from "obsidian";
 import {ReactManagePage} from "./view-creator";
 import {createRoot, Root} from "react-dom/client";
 import {createContext, StrictMode} from "react";
 import OdaPmToolPlugin from "../main";
 import {ClickableIconView, HStack} from "./view-template";
+import {HelpModal, PmHelpView} from "./help-modal";
 
 export const ManagePageViewId = "iPm-Tool-ManageView";
 
@@ -44,6 +45,7 @@ export class ManagePageView extends ItemView {
         // we call render(), so this is a brand new component tree, no matter it exists or not. States won't be preserved.
         this.root.render(
             <StrictMode>
+                <PmHelpView/>
                 <div style={{display: "flex", justifyContent: "center", marginBottom: -20}}>
                     <HStack spacing={10} style={{alignItems: "center"}}>
                         <h1>{this.getDisplayText()}</h1>
@@ -80,29 +82,6 @@ export class ManagePageView extends ItemView {
 
     emitter() {
         return this.plugin.getEmitter()
-    }
-}
-
-class HelpModal extends Modal {
-    root: Root | null = null;
-
-    constructor(app: App) {
-        super(app);
-    }
-
-    onOpen() {
-        const {contentEl} = this;
-        contentEl.empty();
-        // React
-        this.root = createRoot(contentEl); // Override the previous container
-        this.root.render(<StrictMode>
-            WOLOLO
-        </StrictMode>)
-    }
-
-    onClose() {
-        this.root?.unmount();
-        this.root = null;
     }
 }
 
