@@ -1,7 +1,7 @@
 import {App, Editor, MarkdownFileInfo, MarkdownView, Modal, Notice, Plugin} from 'obsidian';
 import {Icon_ManagePage, ManagePageView, ManagePageViewId} from "./ui/manage-page-view";
 import {ONotice} from "./utils/o-notice";
-import {IPM_DEFAULT_SETTINGS, IPmSettings, IPmSettingsTab, SettingsProvider} from "./Settings";
+import {SettingsProvider, TPM_DEFAULT_SETTINGS, TPMSettings, TPMSettingsTab} from "./Settings";
 
 import {
     DataviewIndexReadyEvent,
@@ -20,7 +20,7 @@ export const PLUGIN_NAME = 'Tag Project';
 export const CmdPal_SetWorkflowToTask = 'Set workflow';
 export const CmdPal_JumpToManagePage = "To Manage Page";
 export default class OdaPmToolPlugin extends Plugin {
-    settings: IPmSettings;
+    settings: TPMSettings;
     private emitter: EventEmitter;
     pmDb: OdaPmDb
     inited: boolean
@@ -97,7 +97,7 @@ export default class OdaPmToolPlugin extends Plugin {
     private async initSettings() {
         await this.loadSettings();
         // This adds a settings tab so the user can configure various aspects of the plugin
-        this.addSettingTab(new IPmSettingsTab(
+        this.addSettingTab(new TPMSettingsTab(
             this.app,
             this));
         SettingsProvider.add(this.settings); // it's a reference which does not change and will be updated automatically.
@@ -136,21 +136,21 @@ export default class OdaPmToolPlugin extends Plugin {
             }
         });
         this.addCommand({
-            id: 'ipm:open-manage-page',
+            id: 'tpm:open-manage-page',
             name: 'Open Manage Page',
             editorCallback: (editor: Editor, view: MarkdownView) => {
                 this.activateManagePageView()
             }
         });
         this.addCommand({
-            id: 'ipm:select-task-manage-page',
+            id: 'tpm:jump-manage-page',
             name: CmdPal_JumpToManagePage,
             editorCallback: (editor: Editor, view: MarkdownView) => {
                 this.jumpToTaskOrWorkflow(editor, view);
             }
         });
         this.addCommand({
-            id: 'ipm:add-workflow',
+            id: 'tpm:set-workflow',
             name: CmdPal_SetWorkflowToTask,
             editorCallback: (editor: Editor, view: MarkdownView) => {
                 this.addWorkflowToMdTask(editor, view);
@@ -374,7 +374,7 @@ export default class OdaPmToolPlugin extends Plugin {
     // endregion
     async loadSettings() {
         // Shallow copy
-        this.settings = Object.assign({}, IPM_DEFAULT_SETTINGS, await this.loadData());
+        this.settings = Object.assign({}, TPM_DEFAULT_SETTINGS, await this.loadData());
     }
 
     async saveSettings() {

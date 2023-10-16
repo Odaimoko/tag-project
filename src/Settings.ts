@@ -1,5 +1,5 @@
 import {App, PluginSettingTab, Setting, ValueComponent} from "obsidian";
-import IPmToolPlugin from "./main";
+import TPMPlugin from "./main";
 import OdaPmToolPlugin from "./main";
 import {GenericProvider} from "./utils/GenericProvider";
 
@@ -27,7 +27,7 @@ export function getNextFilterMethod(method: number) {
     return (method + 1) % totalFilterMethods;
 }
 
-export interface IPmSettings {
+export interface TPMSettings {
     report_malformed_task: SerializedType;
     capitalize_table_row_initial: SerializedType;
     // must be a valid tag prefix
@@ -44,7 +44,7 @@ export interface IPmSettings {
     manage_page_excluded_tags: SerializedType[],
 }
 
-export const IPM_DEFAULT_SETTINGS: Partial<IPmSettings> = {
+export const TPM_DEFAULT_SETTINGS: Partial<TPMSettings> = {
     report_malformed_task: true,
     capitalize_table_row_initial: true,
     // custom_tag_prefix_step: Tag_Prefix_Step,
@@ -59,7 +59,7 @@ export const IPM_DEFAULT_SETTINGS: Partial<IPmSettings> = {
     manage_page_excluded_tags: [] as SerializedType[],
 }
 
-type SettingName = keyof IPmSettings;
+type SettingName = keyof TPMSettings;
 
 export
 async function setSettingsValueAndSave<T extends SerializedType>(plugin: OdaPmToolPlugin, settingName: SettingName, value: T) {
@@ -69,10 +69,10 @@ async function setSettingsValueAndSave<T extends SerializedType>(plugin: OdaPmTo
     await plugin.saveSettings();
 }
 
-export class IPmSettingsTab extends PluginSettingTab {
-    plugin: IPmToolPlugin;
+export class TPMSettingsTab extends PluginSettingTab {
+    plugin: TPMPlugin;
 
-    constructor(app: App, plugin: IPmToolPlugin) {
+    constructor(app: App, plugin: TPMPlugin) {
         super(app, plugin);
         this.plugin = plugin;
     }
@@ -83,7 +83,7 @@ export class IPmSettingsTab extends PluginSettingTab {
         containerEl.empty(); // This is settings page, after clicking the tab.
 
         const header = containerEl.createEl("div");
-        header.createEl("h1", {text: "iPM: A Project Management Tool"});
+        header.createEl("h1", {text: this.plugin.manifest.name});
         header.createEl("h2", {text: "by Odaimoko"});
         containerEl.createEl("h3", {text: "Plugin Behaviours"});
         new Setting(containerEl)
@@ -110,7 +110,7 @@ export class IPmSettingsTab extends PluginSettingTab {
 
 
 } // Singleton!
-export const SettingsProvider: GenericProvider<IPmSettings> = new GenericProvider<IPmSettings>();
+export const SettingsProvider: GenericProvider<TPMSettings> = new GenericProvider<TPMSettings>();
 
 export function getSettings() {
     return SettingsProvider.get();
