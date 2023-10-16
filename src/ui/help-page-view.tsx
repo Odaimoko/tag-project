@@ -6,6 +6,7 @@ import {DataTable} from "./view-template";
 import OdaPmToolPlugin, {CmdPal_JumpToManagePage, CmdPal_SetWorkflowToTask} from "../main";
 
 export const PmHelpPageViewId = "iPm-Tool-HelpView";
+export const Desc_ManagePage = "Manage Page";
 
 export class PmHelpPageView extends ItemView {
     root: Root | null = null;
@@ -90,13 +91,14 @@ export const PmHelpContentView = () => {
         <h1>iPm Help Page</h1>
         <ExampleManagePage></ExampleManagePage>
 
-        {/*<BasicTutorial/>*/}
+        <BasicTutorial/>
 
         <AdvancedRules/>
     </>
 }
 const BasicTutorial = () => {
     return <>
+        <h1>iPm</h1>
         <h2>Workflow Types</h2>
         A task can be categorized in one of the following two workflows
         <DataTable tableTitle={"Workflow types"} headers={["Type", "Description"]} rows={
@@ -164,8 +166,8 @@ const BasicTutorial = () => {
         <TaggedTaskView content={"Write preface"} tags={["iPm/workflow/write_scripts"]}/>
 
         <div>
-            This makes the task an <i>iPm-managed task</i>, and it will show up in the iPm manage page.
-            You can use the ribbon icon on the leftmost bar, or use the command palette to open the manage page.
+            This makes the task a <i>managed task</i>, and it will show up in the iPm {Desc_ManagePage}.
+            You can use the ribbon icon on the leftmost bar, or use the command palette to open {Desc_ManagePage}.
         </div>
         <div>
             If you set the workflow for the very first time, it's tag is not available for auto-completion.
@@ -191,36 +193,38 @@ const BasicTutorial = () => {
         Since the step tag is already defined, they can be auto completed.
         <p>
             The rules of adding step for each workflow are different. See <LinkView
-            text={"Tasks In Manage Page"}/> section for more
+            text={`Tasks In ${Desc_ManagePage}`}/> section for more
             details.
         </p>
         <label>
-            In Manage Page, ticking or unticking a checkbox will add or remove the corresponding tag in the markdown
+            In {Desc_ManagePage}, ticking or unticking a checkbox will add or remove the corresponding tag in the
+            markdown
             automatically.
         </label>
-        <h2>Use tags to add well, tags</h2>
+
+        <h2>Use tags to add, well, tags</h2>
         Sometimes you want to give a task some property, but you don't want to make it a workflow step. For example, you
-        want to mark the task that is abandoned, or this task is a high priority task.
-        You can use managed tags to do that.
+        want to mark the task that is abandoned, or this task has high priority.
+        You can use <i>managed tags</i> to do that.
         <p/>
         The managed tags have the prefix <HashTagView tagWithoutHash={"iPm/tag/"}/> so it would not be confused with
         normal tags.
         For example, a managed tag <HashTagView tagWithoutHash={"iPm/tag/abandoned"}/>.
-        Managed tags will show in the manage page as filters.
+        Managed tags will show in {Desc_ManagePage} as filters. You can set a tag be included or excluded.
         <p>
-            If you want to define a workflow without any steps, well, it should not be called a workflow. The built-in
+            If you want to define a workflow without any steps, it should not be called a workflow. The built-in
             tag should suffice. You can always place a dummy step tag in the workflow definition, though.
         </p>
-        <h2>Open Manage Page</h2>
-        You can open Manage Page directly using the ribbon icon on the leftmost bar, or use the command palette to open
-        the manage page.
+
+        <h2>Open {Desc_ManagePage}</h2>
+        You can open {Desc_ManagePage} directly using the ribbon icon on the leftmost bar, or use the command palette.
         <p>Apart from this, when your cursor is focusing on a managed task or workflow, you can do the following things
             with context menu or command palette called <i>{CmdPal_JumpToManagePage}</i>:</p>
         <ul>
-            <li>If the cursor is at a workflow, you can open Manage Page with only this workflow filtered.
+            <li>If the cursor is at a workflow, you can open {Desc_ManagePage} with only this workflow filtered.
             </li>
             <li>
-                If the cursor is at a managed task, you can open Manage Page with only this task shown.
+                If the cursor is at a managed task, you can open {Desc_ManagePage} with only this task shown.
             </li>
         </ul>
     </>
@@ -232,25 +236,35 @@ const AdvancedRules = () => {
     const stepStateStyle = {fontWeight: "bold"};
 
     return <>
-        <h1>Task Rules</h1>
-        <h2>Naming (WIP)</h2>
-        You need to put your cursor at a valid task to make it work. A valid task is a task
+        <h1>User Manual</h1>
+        <h2>Rules for workflows and tasks</h2>
+        A workflow definition or a managed task has to obey the following rules.
         <ul>
             <li>
-                has only one line. This means a task should not have trailing texts in the next line.
+                A workflow name should be a valid obsidian tag name, since it will be a part of another tag.
+            </li>
+            <li> A workflow must has at least one step</li>
+            <li>Empty names are not allowed for either workflows or tasks.</li>
+            <li>
+                If multiple workflows have the same name, the latter one will override the previous one.
+            </li>
+            <li>
+                Tasks can have the same name.
+            </li>
+            <li>If a task has multiple workflows, only the first workflow is recognized.</li>
+
+            <li> The task should occupy only one line. This means a task should not have trailing texts in the next
+                line, or having indentation after a non-list item.
             </li>
         </ul>
-        No special characters for workflow name, because it has to be a part of a tag.
-        See <a className="internal-link">Naming rules</a> section for more details. (Cannot jump, sorry)
-        <h2>Task assigning (WIP</h2>
-        <ul>
-            <li>A task with multiple workflows: only recognize the first workflow.</li>
-        </ul>
-        <h2>Tasks In Manage Page (WIP)</h2>
+
+        You need to put your cursor at a valid task to for the command <i>{CmdPal_JumpToManagePage}</i> work.
+
+        <h2>Task Completion</h2>
         In Obsidian, you may have various symbol to put into the checkbox, such as <InlineCodeView text={"*, /, -, x"}/>,
         etc.
         Any status will be recognized as completion in iPm.
-        The behaviour in Manage Page for each workflow is different. We call the task in the markdown page as <i>main
+        The behaviour in {Desc_ManagePage} for each workflow is different. We call the task in the markdown page as <i>main
         task</i>, and the steps defined in the workflow as <i>steps</i>.
         <p>
             <b>Checkbox workflow</b>: When all the steps defined are completed.
@@ -258,7 +272,7 @@ const AdvancedRules = () => {
         <ul>
             <li>
                 <div style={stepStateStyle}>Main Task: Unticked. Steps: Partially or fully unticked.</div>
-                Ticking the main task in Manage Page causes all the steps to be
+                Ticking the main task in {Desc_ManagePage} causes all the steps to be
                 ticked, and tags will be automatically added to markdown.
             </li>
             <li>
@@ -268,20 +282,20 @@ const AdvancedRules = () => {
             </li>
             <li>
                 <div style={stepStateStyle}>Main Task: Unticked. Steps: Fully ticked.</div>
-                Opening Manage Page will tick the main task. This happens if you untick the main task in markdown.
+                Opening {Desc_ManagePage} will tick the main task. This happens if you untick the main task in markdown.
             </li>
             <li>
                 <div style={stepStateStyle}>Main Task: Ticked. Steps: Partially or fully unticked.</div>
-                Opening Manage Page will tick all the steps. This happens if you tick the main task in markdown.
+                Opening {Desc_ManagePage} will tick all the steps. This happens if you tick the main task in markdown.
             </li>
             <li>
                 <div style={stepStateStyle}>Main Task: Ticked. Steps: Fully ticked.</div>
-                Unticking the main task in Manage Page will cause all the steps to
+                Unticking the main task in {Desc_ManagePage} will cause all the steps to
                 be unticked.
             </li>
             <li>
                 <div style={stepStateStyle}>Main Task: Ticked. Steps: Fully ticked.</div>
-                Unticking any step in Manage Page will cause the main task to be
+                Unticking any step in {Desc_ManagePage} will cause the main task to be
                 unticked.
             </li>
         </ul>
@@ -291,7 +305,7 @@ const AdvancedRules = () => {
         <ul>
             <li>
                 <div style={stepStateStyle}>Main Task: Unticked. Steps: Any step but the last ticked.</div>
-                Ticking the main task in Manage Page causes all but the steps to be
+                Ticking the main task in {Desc_ManagePage} causes all but the steps to be
                 unticked, and the last one ticked. Tags will be automatically added or removed in markdown.
             </li>
             <li>
@@ -301,26 +315,26 @@ const AdvancedRules = () => {
             </li>
             <li>
                 <div style={stepStateStyle}>Main Task: Unticked. Steps: Last step ticked.</div>
-                Opening Manage Page will tick the main task. This happens if you untick the main task in markdown.
+                Opening {Desc_ManagePage} will tick the main task. This happens if you untick the main task in markdown.
             </li>
             <li>
                 <div style={stepStateStyle}>Main Task: Ticked. Steps: Any step but the last ticked.</div>
-                Opening Manage Page will untick all but the last step. This happens if you tick the main task in
+                Opening {Desc_ManagePage} will untick all but the last step. This happens if you tick the main task in
                 markdown.
             </li>
             <li>
                 <div style={stepStateStyle}>Main Task: Ticked. Steps: Last step ticked.</div>
-                Unticking the main task in Manage Page will cause all the steps to
+                Unticking the main task in {Desc_ManagePage} will cause all the steps to
                 be unticked.
             </li>
             <li>
                 <div style={stepStateStyle}>Main Task: Ticked. Steps: Last step ticked.</div>
-                Ticking any unticked step in Manage Page will cause the main task to be
+                Ticking any unticked step in {Desc_ManagePage} will cause the main task to be
                 unticked.
             </li>
             <li>
                 <div style={stepStateStyle}>Main Task: Ticked or Unticked. Steps: Multiple steps ticked.</div>
-                Opening Manage Page will keep only the last tag in markdown. This happens if you add a step tag in
+                Opening {Desc_ManagePage} will keep only the last tag in markdown. This happens if you add a step tag in
                 markdown but do not remove the others. This means adding a step tag overrides the previous step no
                 matter the relationship in the chain between the step tags.
 
@@ -330,7 +344,7 @@ const AdvancedRules = () => {
 }
 
 const ExampleManagePage = () => {
-    return <label>TODO Example Manage Page</label>
+    return <label>TODO Example {Desc_ManagePage}</label>
 }
 const LinkView = ({
                       text, onClick
