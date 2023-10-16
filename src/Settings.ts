@@ -18,6 +18,15 @@ export const SortMethod_Appearance = 0;
 export const SortMethod_Ascending = 1;
 export const SortMethod_Descending = 2;
 
+export const totalFilterMethods = 3;
+export const FilterMethod_NotFiltering = 0;
+export const FilterMethod_Included = 1;
+export const FilterMethod_Excluded = 2;
+
+export function getNextFilterMethod(method: number) {
+    return (method + 1) % totalFilterMethods;
+}
+
 export interface IPmSettings {
     report_malformed_task: SerializedType;
     capitalize_table_row_initial: SerializedType;
@@ -31,7 +40,8 @@ export interface IPmSettings {
     table_column_sorting: SerializedType;
     table_steps_shown: SerializedType;
     display_workflow_names: SerializedType[],
-    display_tags: SerializedType[],
+    manage_page_display_tags: SerializedType[],
+    manage_page_excluded_tags: SerializedType[],
 }
 
 export const IPM_DEFAULT_SETTINGS: Partial<IPmSettings> = {
@@ -45,7 +55,8 @@ export const IPM_DEFAULT_SETTINGS: Partial<IPmSettings> = {
     table_column_sorting: SortMethod_Appearance,
     table_steps_shown: true,
     display_workflow_names: [] as SerializedType[],
-    display_tags: [] as SerializedType[],
+    manage_page_display_tags: [] as SerializedType[],
+    manage_page_excluded_tags: [] as SerializedType[],
 }
 
 type SettingName = keyof IPmSettings;

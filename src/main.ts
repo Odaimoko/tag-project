@@ -17,8 +17,8 @@ import {WorkflowSuggestionModal} from "./ui/WorkflowSuggestionModal";
 import {PmHelpPageView, PmHelpPageViewId} from "./ui/help-page-view";
 
 export const PLUGIN_NAME = 'iPm';
-export const CmdPal_SetWorkflowToTask = 'Set workflow to task';
-export const CmdPal_JumpToManagePage = "Jump To Manage Page";
+export const CmdPal_SetWorkflowToTask = 'Set workflow';
+export const CmdPal_JumpToManagePage = "To Manage Page";
 export default class OdaPmToolPlugin extends Plugin {
     settings: IPmSettings;
     private emitter: EventEmitter;

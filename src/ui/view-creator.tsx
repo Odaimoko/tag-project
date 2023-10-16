@@ -21,6 +21,10 @@ import {notify} from "../utils/o-notice";
 
 import {initialToUpper, isStringNullOrEmpty, simpleFilter} from "../utils/format_util";
 import {
+    FilterMethod_Excluded,
+    FilterMethod_Included,
+    FilterMethod_NotFiltering,
+    getNextFilterMethod,
     getSettings,
     setSettingsValueAndSave,
     SortMethod_Appearance,
@@ -127,7 +131,8 @@ export function ReactManagePage({eventCenter}: {
     // However, this component might render before dataview is ready. The partially ready workflows will be used as the initial value, which is incorrect.
     // This is to fix the bug: On open Obsidian, the filter may not work.
     const [displayWorkflowNames, setDisplayWorkflowNames] = useState(getSettings()?.display_workflow_names as string[]);
-    const [displayTags, setDisplayTags] = useState(getSettings()?.display_tags as string[]);
+    const [displayTags, setDisplayTags] = useState(getSettings()?.manage_page_display_tags as string[]);
+    const [excludedTags, setExcludedTags] = useState(getSettings()?.manage_page_excluded_tags as string[]);
 
     function handleSetDisplayWorkflows(names: string[]) {
         setSettingsValueAndSave(plugin, "display_workflow_names", [...names]) // TODO mem leak?
@@ -135,9 +140,15 @@ export function ReactManagePage({eventCenter}: {
     }
 
     function handleSetDisplayTags(names: string[]) {
-        setSettingsValueAndSave(plugin, "display_tags", [...names])
+        setSettingsValueAndSave(plugin, "manage_page_display_tags", [...names])
         setDisplayTags(names)
     }
+
+    function handleSetExcludedTags(names: string[]) {
+        setSettingsValueAndSave(plugin, "manage_page_excluded_tags", [...names])
+        setExcludedTags(names)
+    }
+
 
     // place all hooks before return. React doesn't allow the order to be changed.
     if (workflows.length === 0 || db === null)
@@ -155,7 +166,11 @@ export function ReactManagePage({eventCenter}: {
             // No tag chosen: show all tasks
             // Some tags chosen: combination or.
             return displayTags.length === 0 ? true : k.hasAnyTag(displayTags);
-        })
+        }).filter(function (k: OdaPmTask) {
+            // No tag chosen: show all tasks
+            // Some tags chosen: combination or.
+            return excludedTags.length === 0 ? true : !k.hasAnyTag(excludedTags);
+        });
 
     // console.log(`ReactManagePage Render. All tasks: ${tasks_with_workflow.length}. Filtered Tasks: ${filteredTasks.length}. Workflow: ${curWfName}. IncludeCompleted: ${includeCompleted}`)
 
@@ -177,17 +192,30 @@ export function ReactManagePage({eventCenter}: {
             {pmTags.length > 0 ?
                 <HStack style={{alignItems: "center"}} spacing={10}>
                     <h3>{displayTags.length}/{pmTags.length} Tags(s)</h3>
-                    <button onClick={() => handleSetDisplayTags([...pmTags])}>Select All
+                    <button onClick={() => {
+                        handleSetDisplayTags([...pmTags]);
+                        handleSetExcludedTags([])
+                    }}>Include All
                     </button>
-                    <button onClick={() => handleSetDisplayTags([])}>Unselect All
+                    <button onClick={() => {
+                        handleSetDisplayTags([]);
+                        handleSetExcludedTags([...pmTags])
+                    }}>Exclude All
+                    </button>
+                    <button onClick={() => {
+                        handleSetDisplayTags([]);
+                        handleSetExcludedTags([])
+                    }}>Clear
                     </button>
                 </HStack>
                 : null}
             <div>
                 {pmTags.map((tag: string) => {
-                    return <TagFilterCheckbox key={tag}
+                    return <TagFilterCheckbox key={tag} excludeTags={excludedTags}
                                               tag={tag} displayed={displayTags}
-                                              setDisplayed={handleSetDisplayTags}/>
+                                              setDisplayed={handleSetDisplayTags}
+                                              setExcludedTags={handleSetExcludedTags}
+                    />
                 })
                 }
             </div>
@@ -279,26 +307,42 @@ const WorkflowFilterCheckbox = ({workflow, displayWorkflows, setDisplayWorkflows
 
 }
 
-const TagFilterCheckbox = ({tag, displayed, setDisplayed}: {
+const TagFilterCheckbox = ({tag, displayed, setDisplayed, excludeTags, setExcludedTags}: {
     tag: string,
     displayed: string[],
-    setDisplayed: React.Dispatch<React.SetStateAction<string[]>>
+    excludeTags: string[],
+    setDisplayed: React.Dispatch<React.SetStateAction<string[]>>,
+    setExcludedTags: React.Dispatch<React.SetStateAction<string[]>>
 }) => {
+    const tagIncludedIcon = "check"
+    const tagExcludedIcon = "x"
+    const noTagIcon = "scan"
+
+    // Remove display from excluded and vice versa
     function tickCheckbox() {
         // invert the checkbox
-        const v = !displayed.includes(tag)
-        const newArr = v ? [...displayed, tag] : displayed.filter(k => k != tag)
+        const excluded = excludeTags.includes(tag)
+        const included = displayed.includes(tag);
+        const curMethod = included ? FilterMethod_Included : (
+            excluded ? FilterMethod_Excluded : FilterMethod_NotFiltering
+        );
+        const nextMethod = getNextFilterMethod(curMethod);
+        const newArr = nextMethod == FilterMethod_Included ? [...displayed, tag] : displayed.filter(k => k != tag)
         setDisplayed(newArr)
+        setExcludedTags((
+            nextMethod == FilterMethod_Excluded ? [...excludeTags, tag] : excludeTags.filter(k => k != tag))
+        )
     }
 
     // inline-block: make this check box a whole element. It won't be split into multiple sub-elements when layout.
     // block will start a new line, inline will not, so we use inline-block
     return <span style={{display: "inline-block", margin: 3}}>
-        <ExternalControlledCheckbox
-            content={tag.replace(Tag_Prefix_Tag, "")}
-            onChange={tickCheckbox}
-            onLabelClicked={tickCheckbox}
-            externalControl={displayed.includes(tag)}
+        <ClickableIconView iconName={displayed.includes(tag) ? tagIncludedIcon : (
+            excludeTags.includes(tag) ? tagExcludedIcon : noTagIcon
+        )}
+                           content={tag.replace(Tag_Prefix_Tag, "")}
+                           onIconClicked={tickCheckbox}
+                           onContentClicked={tickCheckbox}
         />
     </span>
 
