@@ -2,9 +2,15 @@ import {App, ItemView, Modal, WorkspaceLeaf} from "obsidian";
 import {createRoot, Root} from "react-dom/client";
 import React, {StrictMode, useState} from "react";
 import {WorkflowTypeLegend} from "./view-creator";
-import {DataTable, HStack} from "./view-template";
-import OdaPmToolPlugin, {CmdPal_JumpToManagePage, CmdPal_SetWorkflowToTask, PLUGIN_NAME} from "../main";
+import {DataTable, HStack, ObsidianIconView} from "./view-template";
+import OdaPmToolPlugin, {
+    CmdPal_JumpToManagePage,
+    CmdPal_OpenManagePage,
+    CmdPal_SetWorkflowToTask,
+    PLUGIN_NAME
+} from "../main";
 import {Tag_Prefix_Step, Tag_Prefix_Tag, Tag_Prefix_TaskType, Tag_Prefix_Workflow} from "../data-model/workflow_def";
+import {Icon_ManagePage} from "./manage-page-view";
 
 export const PmHelpPageViewId = "tpm-help-view";
 export const Desc_ManagePage = "Manage Page";
@@ -88,14 +94,15 @@ export class PmHelpModal extends Modal {
     }
 }
 
+const centerChildrenVertStyle = {display: "flex", justifyContent: "center"}
 const HelpViewTabsNames = ["Tutorial", "User manual", "Example"]
 export const PmHelpContentView = () => {
     const [tab, setTab] = useState(HelpViewTabsNames[0]);
     return <div>
-        <div style={{display: "flex", justifyContent: "center"}}>
+        <div style={centerChildrenVertStyle}>
             <h1 style={{}}>{PLUGIN_NAME}: Help Page</h1>
         </div>
-        <div style={{display: "flex", justifyContent: "center"}}>
+        <div style={centerChildrenVertStyle}>
             <HStack spacing={30}>
                 {HelpViewTabsNames.map((name, index) => {
                     return <button key={name} onClick={() => setTab(name)}>{name}</button>
@@ -113,32 +120,35 @@ const BasicTutorial = () => {
     return <>
         <h1>Tutorial</h1>
         <h2>Workflow Types</h2>
-        <p>A task can be categorized in one of the following two workflows</p>
-        <DataTable tableTitle={"Workflow types"} headers={["Type", "Description"]} rows={
-            [[<WorkflowTypeLegend type={"chain"}/>, <>
-                <div>A workflow chain, where the latter steps depend on the previous step.
-                </div>
-                <div>Only when the last step is
-                    completed, we deem the main task completed.
-                </div>
-            </>
-            ],
-                [<WorkflowTypeLegend type={"checkbox"}/>,
-                    <>
-                        <div>A checkbox task, where all steps are independent.</div>
-                        <div>When all the steps are done, the main task is recognized
-                            completed, whatever the order is.
-                        </div>
-                    </>]]
-        }
-                   tableStyle={{borderCollapse: "collapse",}}
-                   thStyle={{border: "solid", borderWidth: 1}}
-                   cellStyle={{padding: 10, border: "solid", borderWidth: 1}}
-        />
+        <p>A task consists of multiple steps. It can be categorized into two workflows according to the the
+            relationships between steps.</p>
+        <div style={centerChildrenVertStyle}>
+            <DataTable tableTitle={"Workflow types"} headers={["Type", "Description"]} rows={
+                [[<WorkflowTypeLegend type={"chain"}/>, <>
+                    <div>A chain workflow, where the latter steps depend on the previous one.
+                    </div>
+                    <div> The main task is completed only when the last step is completed.
+                    </div>
+                </>
+                ],
+                    [<WorkflowTypeLegend type={"checkbox"}/>,
+                        <>
+                            <div>A checkbox workflow, where all steps are independent.</div>
+                            <div>The main task is completed when all the steps are done, whatever the order is.
+                            </div>
+                        </>]]
+            }
+                       tableStyle={{borderCollapse: "collapse",}}
+                       thStyle={{border: "solid", borderWidth: 1}}
+                       cellStyle={{padding: 10, border: "solid", borderWidth: 1}}
+            />
+
+        </div>
         <h2>Use tags to define workflows</h2>
         <div>
-            A chain workflow is defined by a task marked with a tag <HashTagView
-            tagWithoutHash={`${Tag_Prefix_Workflow}chain`}/>.
+            A <b>chain</b> workflow is defined by a task marked with the tag <HashTagView
+            tagWithoutHash={`${Tag_Prefix_Workflow}chain`}/>. The steps in the workflow is defined by tags with
+            prefix <HashTagView tagWithoutHash={Tag_Prefix_Step}/>.
             The order of the
             steps determines the dependency chain.
         </div>
@@ -152,18 +162,19 @@ const BasicTutorial = () => {
 
         <p/>
         <div>
-            A checkbox workflow is defined by a task marked with a tag <HashTagView
+            A <b>checkbox</b> workflow is defined by a task marked with a tag <HashTagView
             tagWithoutHash={`${Tag_Prefix_Workflow}checkbox`}/>. The order of
             the steps does not matter.
         </div>
 
         <TaggedTaskView content={"card_design"} tags={[
-            `${Tag_Prefix_Workflow}checkbox`, `${Tag_Prefix_Step}add_data`, `${Tag_Prefix_Step}effect`, `${Tag_Prefix_Step}art`
+            `${Tag_Prefix_Workflow}checkbox`, `${Tag_Prefix_Step}data`, `${Tag_Prefix_Step}effect`, `${Tag_Prefix_Step}art`
         ]}/>
         <div>
             This defines a checkbox workflow named <i>card_design</i>, used when you want to design a new card for your
             trading card game.
-            You need to add the data to the card database, design the effect, and draw the art. You can add the card
+            You need to add the data to the card database, design the effects, and draw some images. You can add the
+            card
             data before drawing the art, and vice versa.
         </div>
         <p/>
@@ -180,19 +191,20 @@ const BasicTutorial = () => {
         </div>
         <TaggedTaskView content={"Write preface"} tags={[`${Tag_Prefix_TaskType}write_scripts`]}/>
 
-        <div>
+        <p>
             This makes the task a <i>managed task</i>, and it will show up in {Desc_ManagePage}.
-            You can use the ribbon icon on the leftmost bar, or use the command palette to open {Desc_ManagePage}.
-        </div>
+            You can use the ribbon icon on the leftmost bar (<ObsidianIconView iconName={Icon_ManagePage}/>), or use the
+            command palette (<i>{CmdPal_OpenManagePage}</i>) to open it.
+        </p>
         <div>
             If you set the workflow for the very first time, it's tag is not available for auto-completion.
-            Instead of manually inputting the tag, you can also use context menu or command palette
+            Instead of manually typing the tag, you can also use context menu or command palette
             (<i>{CmdPal_SetWorkflowToTask}</i>) to do it. With a hotkey bound, this is as fast as auto-completion.
         </div>
-        <div>After that you can use auto-completion.
+        <p>After typing the first workflow tag, you can use auto-completion.
             But using the command palette is preferred, since it can replace an existing workflow tag with the new one.
             You don't have to remove the older one yourself.
-        </div>
+        </p>
         <p>
             You can choose whichever way is more convenient for you. Markdown is a
             text file after all.
@@ -206,38 +218,44 @@ const BasicTutorial = () => {
         revise phase. So we mark it as:
         <TaggedTaskView content={"Write preface"}
                         tags={[`${Tag_Prefix_TaskType}write_scripts`, `${Tag_Prefix_Step}write`]}/>
-        Since the step tag is already defined, they can be auto completed.
-        <p>
-            The rules of adding step for each workflow are different. See <LinkView
-            text={`Tasks In ${Desc_ManagePage}`}/> section for more
-            details.
+        <p>Since the step tag is already defined, they can be auto completed.
+            Note that adding the step tag means we have done the step. It is more natural for me and the meaning stays
+            the same with checkbox workflow. If you want to make a step representing the work you are doing, you can add
+            a <b><i>done</i></b> step at the end of each chain workflow.
         </p>
-        <label>
+
+        <p>
             In {Desc_ManagePage}, ticking or unticking a checkbox will add or remove the corresponding tag in the
             markdown
             automatically.
-        </label>
+            See <i>{`Tasks Completion`}</i> section under <i>{HelpViewTabsNames[1]}</i> tab for more
+            details.
+        </p>
 
         <h2>Use tags to add, well, tags</h2>
-        Sometimes you want to give a task some property, but you don't want to make it a workflow step. For example, you
-        want to mark the task that is abandoned, or this task has high priority, or you want to group tasks into
+        Sometimes you want to give a task a property, but you don't want to make it a workflow step. For example, you
+        want to mark the task abandoned, or this task has high priority, or you want to group tasks into
         different projects.
         You can use <i>managed tags</i> to do that.
         <p/>
         The managed tags have the prefix <HashTagView tagWithoutHash={Tag_Prefix_Tag}/> so it would not be confused with
-        normal tags.
-        For example, a managed tag <HashTagView tagWithoutHash={`${Tag_Prefix_Tag}abandoned`}/>.
-        Managed tags will show in {Desc_ManagePage} as filters, while normal tags won't. You can set a tag be included
-        or excluded in {Desc_ManagePage}.
+        normal tags, such as <HashTagView tagWithoutHash={`${Tag_Prefix_Tag}abandoned`}/>.
+        <TaggedTaskView content={"card: warlock, fire magic"}
+                        tags={[`${Tag_Prefix_TaskType}card_design`, `${Tag_Prefix_TaskType}abandoned`]}/>
+        <p>
+            Managed tags will show in {Desc_ManagePage} as filters, while normal tags won't. You can set a tag be
+            included
+            or excluded in the search on {Desc_ManagePage}.</p>
         <p>
             If you want to define a workflow without any steps, it should not be called a workflow. The built-in
-            tag should suffice. You can always place a dummy step tag in the workflow definition, though.
+            tag should suffice. If you want to manage that task in {PLUGIN_NAME}, you can always place a dummy step tag
+            in the workflow definition.
         </p>
 
         <h2>Open {Desc_ManagePage}</h2>
         You can open {Desc_ManagePage} directly using the ribbon icon on the leftmost bar, or use the command palette.
         <p>Apart from this, when your cursor is focusing on a managed task or workflow, you can do the following things
-            with context menu or command palette called <i>{CmdPal_JumpToManagePage}</i>:</p>
+            with context menu or command palette (<i>{CmdPal_JumpToManagePage}</i>):</p>
         <ul>
             <li>If the cursor is at a workflow, you can open {Desc_ManagePage} with only this workflow filtered.
             </li>
