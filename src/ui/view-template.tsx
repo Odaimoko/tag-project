@@ -208,7 +208,7 @@ export function HStack(props: StackProps) {
 
 // Render an html string as a React component.
 // https://reactjs.org/docs/dom-elements.html#dangerouslysetinnerhtml
-function HTMLStringComponent({htmlString, useSpan = true, style}: {
+export function HTMLStringComponent({htmlString, useSpan = true, style}: {
     htmlString?: string,
     useSpan?: boolean
 } & I_Stylable) {

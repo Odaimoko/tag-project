@@ -1,6 +1,6 @@
 import {App, ItemView, Modal, WorkspaceLeaf} from "obsidian";
 import {createRoot, Root} from "react-dom/client";
-import React, {StrictMode, useState} from "react";
+import React, {JSX, StrictMode, useState} from "react";
 import {WorkflowTypeLegend} from "./view-creator";
 import {DataTable, HStack, ObsidianIconView} from "./view-template";
 import OdaPmToolPlugin, {
@@ -11,6 +11,7 @@ import OdaPmToolPlugin, {
 } from "../main";
 import {Tag_Prefix_Step, Tag_Prefix_Tag, Tag_Prefix_TaskType, Tag_Prefix_Workflow} from "../data-model/workflow_def";
 import {Icon_ManagePage} from "./manage-page-view";
+import {getTemplateHtml, ManagePageForTemplate, templateMd} from "./tpm-template-md";
 
 export const PmHelpPageViewId = "tpm-help-view";
 export const Desc_ManagePage = "Manage Page";
@@ -49,11 +50,7 @@ export class PmHelpPageView extends ItemView {
 
         // React
         this.root = createRoot(this.containerEl.children[1]); // Override the previous container
-        this.root.render(
-            <StrictMode>
-                <PmHelpContentView/>
-            </StrictMode>,
-        );
+        this.root.render(<CommonHelpViewInModalAndLeaf app={this.app} container={contentEl}/>);
     }
 
     async onClose() {
@@ -83,9 +80,7 @@ export class PmHelpModal extends Modal {
         contentEl.empty();
         // React
         this.root = createRoot(contentEl); // Override the previous container
-        this.root.render(<StrictMode>
-            <PmHelpContentView/>
-        </StrictMode>)
+        this.root.render(<CommonHelpViewInModalAndLeaf app={this.app} container={contentEl}/>)
     }
 
     onClose() {
@@ -96,26 +91,33 @@ export class PmHelpModal extends Modal {
 
 const centerChildrenVertStyle = {display: "flex", justifyContent: "center"}
 const HelpViewTabsNames = ["Tutorial", "User manual", "Example"]
-export const PmHelpContentView = () => {
+const CommonHelpViewInModalAndLeaf = ({app, container}: {
+    app: App,
+    container: HTMLElement
+}) => {
     const [tab, setTab] = useState(HelpViewTabsNames[0]);
-    return <div>
-        <div style={centerChildrenVertStyle}>
-            <h1 style={{}}>{PLUGIN_NAME}: Help Page</h1>
+    const exContainer = container.createEl("div")
+    return <StrictMode>
+        <div>
+            <div style={centerChildrenVertStyle}>
+                <h1 style={{}}>{PLUGIN_NAME}: Help Page</h1>
+            </div>
+            <div style={centerChildrenVertStyle}>
+                <HStack spacing={30}>
+                    {HelpViewTabsNames.map((name, index) => {
+                        return <button key={name} onClick={() => setTab(name)}>{name}</button>
+                    })}
+                </HStack>
+            </div>
+            {
+                tab === HelpViewTabsNames[0] ? <BasicTutorial/> :
+                    tab === HelpViewTabsNames[1] ? <UserManual/> :
+                        tab === HelpViewTabsNames[2] ? <ExampleManagePage app={app} container={exContainer}/> : <></>
+            }
         </div>
-        <div style={centerChildrenVertStyle}>
-            <HStack spacing={30}>
-                {HelpViewTabsNames.map((name, index) => {
-                    return <button key={name} onClick={() => setTab(name)}>{name}</button>
-                })}
-            </HStack>
-        </div>
-        {
-            tab === HelpViewTabsNames[0] ? <BasicTutorial/> :
-                tab === HelpViewTabsNames[1] ? <UserManual/> :
-                    tab === HelpViewTabsNames[2] ? <ExampleManagePage/> : <></>
-        }
-    </div>
+    </StrictMode>
 }
+
 const BasicTutorial = () => {
     return <>
         <h1>Tutorial</h1>
@@ -265,7 +267,9 @@ const BasicTutorial = () => {
         </ul>
     </>
 }
-const InlineCodeView = ({text}: { text: string }) => {
+const InlineCodeView = ({text}: {
+    text: string
+}) => {
     return <label className="cm-inline-code" spellCheck="false">{text}</label>
 }
 const UserManual = () => {
@@ -378,9 +382,35 @@ const UserManual = () => {
         </ul>
     </>
 }
+const templateTargetFilePath = " TagProject_Template.md";
 
-const ExampleManagePage = () => {
-    return <label>TODO Example {Desc_ManagePage}</label>
+const ExampleManagePage = ({app, container}: {
+    app: App,
+    container: HTMLElement
+}) => {
+    const [templateView, setTemplateView] = useState<JSX.Element>(undefined);
+    container.empty()
+    if (!templateView)
+        getTemplateHtml(app, container).then((v) => {
+            setTemplateView(v)
+        })
+    return <>
+        <p style={centerChildrenVertStyle}>
+            This is a template for {PLUGIN_NAME}. You can use it as a starting point.
+        </p>
+        <p style={centerChildrenVertStyle}>
+            <button onClick={() => {
+                if (templateView) {
+                    // fs.writeFileSync("TagProject_Template.md", templateMd)
+                    app.vault.adapter.write(templateTargetFilePath, templateMd)
+                }
+            }}>Write template to <i>{templateTargetFilePath}</i>
+            </button>
+        </p>
+        {templateView}
+        <p/>
+        <ManagePageForTemplate/>
+    </>
 }
 const LinkView = ({text, onClick}: { text: string, onClick?: () => void }) => {
     return <a className="internal-link" onClick={onClick}>{text}</a>

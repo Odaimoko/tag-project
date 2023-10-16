@@ -14,11 +14,12 @@ import {OdaPmDb, OdaPmDbProvider} from "./data-model/odaPmDb";
 import {addTagText, I_OdaPmWorkflow, OdaPmTask} from "./data-model/workflow_def";
 import {rewriteTask} from "./utils/io_util";
 import {WorkflowSuggestionModal} from "./ui/WorkflowSuggestionModal";
-import {Icon_HelpPage, PmHelpPageView, PmHelpPageViewId} from "./ui/help-page-view";
+import {Desc_ManagePage, Icon_HelpPage, PmHelpPageView, PmHelpPageViewId} from "./ui/help-page-view";
 
 export const PLUGIN_NAME = 'Tag Project';
+export const CmdPal_OpenManagePage = `Open ${Desc_ManagePage}`;
 export const CmdPal_SetWorkflowToTask = 'Set workflow';
-export const CmdPal_JumpToManagePage = "To Manage Page";
+export const CmdPal_JumpToManagePage = `To ${Desc_ManagePage}`;
 export default class OdaPmToolPlugin extends Plugin {
     settings: TPMSettings;
     private emitter: EventEmitter;
@@ -137,7 +138,7 @@ export default class OdaPmToolPlugin extends Plugin {
         });
         this.addCommand({
             id: 'tpm:open-manage-page',
-            name: 'Open Manage Page',
+            name: CmdPal_OpenManagePage,
             editorCallback: (editor: Editor, view: MarkdownView) => {
                 this.activateManagePageView()
             }
