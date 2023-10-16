@@ -2,9 +2,9 @@
 import {ItemView, WorkspaceLeaf} from "obsidian";
 import {ReactManagePage} from "./view-creator";
 import {createRoot, Root} from "react-dom/client";
-import {createContext, StrictMode} from "react";
+import {createContext} from "react";
 import OdaPmToolPlugin, {PLUGIN_NAME} from "../main";
-import {ClickableIconView, HStack} from "./view-template";
+import {ClickableIconView, HStack, StrictModeWrapper} from "./view-template";
 import {PmHelpModal} from "./help-page-view";
 
 export const Icon_ManagePage = "book-open-check";
@@ -51,7 +51,7 @@ export class ManagePageView extends ItemView {
         this.root = createRoot(this.containerEl.children[1]); // Override the previous container
         // we call render(), so this is a brand new component tree, no matter it exists or not. States won't be preserved.
         this.root.render(
-            <StrictMode>
+            <StrictModeWrapper>
                 <div style={{display: "flex", justifyContent: "center", marginBottom: -20}}>
                     <HStack spacing={10} style={{alignItems: "center"}}>
                         <h1>{this.getDisplayText()}</h1>
@@ -64,7 +64,7 @@ export class ManagePageView extends ItemView {
                         <ReactManagePage eventCenter={this.emitter()}/>
                     </PluginContext.Provider>
                 </ContainerContext.Provider>
-            </StrictMode>,
+            </StrictModeWrapper>,
         );
         // yes we can render, but the clicking the link won't jump to the note
         // MarkdownRenderer.render(this.plugin.app, "# F [[PDD]] [[Manage]] Page", this.containerEl, "PDD", null);

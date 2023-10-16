@@ -1,8 +1,8 @@
 import {App, ItemView, Modal, WorkspaceLeaf} from "obsidian";
 import {createRoot, Root} from "react-dom/client";
-import React, {JSX, StrictMode, useState} from "react";
+import React, {JSX, useState} from "react";
 import {WorkflowTypeLegend} from "./view-creator";
-import {DataTable, HStack, ObsidianIconView} from "./view-template";
+import {DataTable, HStack, ObsidianIconView, StrictModeWrapper} from "./view-template";
 import OdaPmToolPlugin, {
     CmdPal_JumpToManagePage,
     CmdPal_OpenManagePage,
@@ -93,11 +93,11 @@ const centerChildrenVertStyle = {display: "flex", justifyContent: "center"}
 const HelpViewTabsNames = ["Tutorial", "User manual", "Template"]
 const CommonHelpViewInModalAndLeaf = ({app, container}: {
     app: App,
-    container: HTMLElement
+    container: Element
 }) => {
     const [tab, setTab] = useState(HelpViewTabsNames[0]);
     const exContainer = container.createEl("div")
-    return <StrictMode>
+    return <StrictModeWrapper>
         <div>
             <div style={centerChildrenVertStyle}>
                 <h1 style={{}}>{PLUGIN_NAME}: Help Page</h1>
@@ -115,7 +115,7 @@ const CommonHelpViewInModalAndLeaf = ({app, container}: {
                         tab === HelpViewTabsNames[2] ? <ExampleManagePage app={app} container={exContainer}/> : <></>
             }
         </div>
-    </StrictMode>
+    </StrictModeWrapper>
 }
 
 const BasicTutorial = () => {
@@ -386,9 +386,9 @@ const templateTargetFilePath = " TagProject_Template.md";
 
 const ExampleManagePage = ({app, container}: {
     app: App,
-    container: HTMLElement
+    container: Element
 }) => {
-    const [templateView, setTemplateView] = useState<JSX.Element>(undefined);
+    const [templateView, setTemplateView] = useState<JSX.Element>();
     container.empty()
     if (!templateView)
         getTemplateHtml(app, container).then((v) => {

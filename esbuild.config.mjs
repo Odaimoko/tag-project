@@ -1,6 +1,7 @@
 import esbuild from "esbuild";
 import process from "process";
 import builtins from "builtin-modules";
+import {replace} from "esbuild-plugin-replace";
 
 const banner =
 `/*
@@ -15,6 +16,11 @@ const context = await esbuild.context({
 	banner: {
 		js: banner,
 	},
+	plugins: [
+		replace({
+			"process.env.NODE_ENV": JSON.stringify(prod ? "production" : "development"),
+		})
+	],
 	entryPoints: ["src/main.ts"],
 	bundle: true,
 	external: [

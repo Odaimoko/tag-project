@@ -1,6 +1,8 @@
 import {I_Renderable} from "./i_Renderable";
-import React, {Fragment, JSX, ReactNode, useState} from "react";
+import React, {Fragment, JSX, ReactNode, StrictMode, useState} from "react";
 import {getIcon} from "obsidian";
+
+import {isProduction} from "../utils/env-util";
 
 export const CssClass_Link = "cm-underline";
 
@@ -217,4 +219,10 @@ export function HTMLStringComponent({htmlString, useSpan = true, style}: {
             <span style={style} dangerouslySetInnerHTML={{__html: htmlString ?? ""}}/>
         );
     else return <div style={style} dangerouslySetInnerHTML={{__html: htmlString ?? ""}}/>
+}
+
+export function StrictModeWrapper({children}: { children: ReactNode }) {
+    if (isProduction())
+        return <>{children}</>
+    else return <StrictMode>{children}</StrictMode>
 }

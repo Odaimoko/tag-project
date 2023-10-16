@@ -48,8 +48,8 @@ export const ManagePageForTemplate = () => {
     </div>
 }
 
-export async function getTemplateHtml(app: App, el: HTMLElement) {
+export async function getTemplateHtml(app: App, el: Element) {
     const compo = new Component()
-    await MarkdownRenderer.render(app, templateMd, el, "", compo);
+    await MarkdownRenderer.render(app, templateMd, el as HTMLElement, "", compo);
     return <div style={pageStyle}><HTMLStringComponent htmlString={el.outerHTML}/></div>
 }

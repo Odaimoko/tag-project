@@ -94,6 +94,7 @@ function openTaskPrecisely(workspace: Workspace, task: STask) {
 export function ReactManagePage({eventCenter}: {
     eventCenter?: EventEmitter
 }) {
+    console.log("ReactManagePage rendered.")
     // only for re-render
     const [rerenderState, setRerenderState] = useState(0);
 
