@@ -1,8 +1,8 @@
 import {App, ItemView, Modal, WorkspaceLeaf} from "obsidian";
 import {createRoot, Root} from "react-dom/client";
-import React, {StrictMode} from "react";
+import React, {StrictMode, useState} from "react";
 import {WorkflowTypeLegend} from "./view-creator";
-import {DataTable} from "./view-template";
+import {DataTable, HStack} from "./view-template";
 import OdaPmToolPlugin, {CmdPal_JumpToManagePage, CmdPal_SetWorkflowToTask, PLUGIN_NAME} from "../main";
 import {Tag_Prefix_Step, Tag_Prefix_Tag, Tag_Prefix_TaskType, Tag_Prefix_Workflow} from "../data-model/workflow_def";
 
@@ -38,8 +38,9 @@ export class PmHelpPageView extends ItemView {
 
     private renderPage() {
 
-        const container = this.containerEl.children[1];
-        container.empty();
+        const contentEl = this.containerEl.children[1];
+        contentEl.empty();
+
         // React
         this.root = createRoot(this.containerEl.children[1]); // Override the previous container
         this.root.render(
@@ -47,7 +48,6 @@ export class PmHelpPageView extends ItemView {
                 <PmHelpContentView/>
             </StrictMode>,
         );
-
     }
 
     async onClose() {
@@ -88,21 +88,32 @@ export class PmHelpModal extends Modal {
     }
 }
 
+const HelpViewTabsNames = ["Tutorial", "User manual", "Example"]
 export const PmHelpContentView = () => {
-    return <>
-        <h1>{PLUGIN_NAME}: Help Page</h1>
-        <ExampleManagePage></ExampleManagePage>
-
-        <BasicTutorial/>
-
-        <AdvancedRules/>
-    </>
+    const [tab, setTab] = useState(HelpViewTabsNames[0]);
+    return <div>
+        <div style={{display: "flex", justifyContent: "center"}}>
+            <h1 style={{}}>{PLUGIN_NAME}: Help Page</h1>
+        </div>
+        <div style={{display: "flex", justifyContent: "center"}}>
+            <HStack spacing={30}>
+                {HelpViewTabsNames.map((name, index) => {
+                    return <button key={name} onClick={() => setTab(name)}>{name}</button>
+                })}
+            </HStack>
+        </div>
+        {
+            tab === HelpViewTabsNames[0] ? <BasicTutorial/> :
+                tab === HelpViewTabsNames[1] ? <UserManual/> :
+                    tab === HelpViewTabsNames[2] ? <ExampleManagePage/> : <></>
+        }
+    </div>
 }
 const BasicTutorial = () => {
     return <>
-        <h1>{PLUGIN_NAME}</h1>
+        <h1>Tutorial</h1>
         <h2>Workflow Types</h2>
-        A task can be categorized in one of the following two workflows
+        <p>A task can be categorized in one of the following two workflows</p>
         <DataTable tableTitle={"Workflow types"} headers={["Type", "Description"]} rows={
             [[<WorkflowTypeLegend type={"chain"}/>, <>
                 <div>A workflow chain, where the latter steps depend on the previous step.
@@ -239,7 +250,7 @@ const BasicTutorial = () => {
 const InlineCodeView = ({text}: { text: string }) => {
     return <label className="cm-inline-code" spellCheck="false">{text}</label>
 }
-const AdvancedRules = () => {
+const UserManual = () => {
     const stepStateStyle = {fontWeight: "bold"};
 
     return <>
@@ -353,16 +364,10 @@ const AdvancedRules = () => {
 const ExampleManagePage = () => {
     return <label>TODO Example {Desc_ManagePage}</label>
 }
-const LinkView = ({
-                      text, onClick
-                  }: {
-    text: string, onClick?: () => void
-}) => {
+const LinkView = ({text, onClick}: { text: string, onClick?: () => void }) => {
     return <a className="internal-link" onClick={onClick}>{text}</a>
 }
-const TaggedTaskView = ({content, tags}: {
-    content: string, tags: string[]
-}) => {
+const TaggedTaskView = ({content, tags}: { content: string, tags: string[] }) => {
     const checkBoxExampleStyle = {marginTop: 10, marginBottom: 10,}
 
     return <div style={checkBoxExampleStyle}>
