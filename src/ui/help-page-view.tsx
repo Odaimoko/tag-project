@@ -8,6 +8,7 @@ import {Tag_Prefix_Step, Tag_Prefix_Tag, Tag_Prefix_TaskType, Tag_Prefix_Workflo
 
 export const PmHelpPageViewId = "tpm-help-view";
 export const Desc_ManagePage = "Manage Page";
+export const Icon_HelpPage = "info";
 
 export class PmHelpPageView extends ItemView {
     root: Root | null = null;
@@ -23,11 +24,11 @@ export class PmHelpPageView extends ItemView {
     }
 
     getDisplayText() {
-        return "iPM Help Page";
+        return `${PLUGIN_NAME} Help Page`;
     }
 
     getIcon(): string {
-        return "info";
+        return Icon_HelpPage;
     }
 
     async onOpen() {

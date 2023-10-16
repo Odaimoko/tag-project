@@ -3,11 +3,13 @@ import {ItemView, WorkspaceLeaf} from "obsidian";
 import {ReactManagePage} from "./view-creator";
 import {createRoot, Root} from "react-dom/client";
 import {createContext, StrictMode} from "react";
-import OdaPmToolPlugin from "../main";
+import OdaPmToolPlugin, {PLUGIN_NAME} from "../main";
 import {ClickableIconView, HStack} from "./view-template";
 import {PmHelpModal} from "./help-page-view";
 
-export const ManagePageViewId = "tpm-tool-manage-page";
+export const Icon_ManagePage = "book-open-check";
+
+export const ManagePageViewId = "tpm-manage-page";
 
 export class ManagePageView extends ItemView {
     root: Root | null = null;
@@ -24,11 +26,11 @@ export class ManagePageView extends ItemView {
     }
 
     getDisplayText() {
-        return "iPM Manage Page";
+        return `${PLUGIN_NAME} Manage Page`;
     }
 
     getIcon(): string {
-        return "book-open-check";
+        return Icon_ManagePage;
 
     }
 

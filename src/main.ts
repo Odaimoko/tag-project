@@ -1,5 +1,5 @@
 import {App, Editor, MarkdownFileInfo, MarkdownView, Modal, Notice, Plugin} from 'obsidian';
-import {ManagePageView, ManagePageViewId} from "./ui/manage-page-view";
+import {Icon_ManagePage, ManagePageView, ManagePageViewId} from "./ui/manage-page-view";
 import {ONotice} from "./utils/o-notice";
 import {IPM_DEFAULT_SETTINGS, IPmSettings, IPmSettingsTab, SettingsProvider} from "./Settings";
 
@@ -14,7 +14,7 @@ import {OdaPmDb, OdaPmDbProvider} from "./data-model/odaPmDb";
 import {addTagText, I_OdaPmWorkflow, OdaPmTask} from "./data-model/workflow_def";
 import {rewriteTask} from "./utils/io_util";
 import {WorkflowSuggestionModal} from "./ui/WorkflowSuggestionModal";
-import {PmHelpPageView, PmHelpPageViewId} from "./ui/help-page-view";
+import {Icon_HelpPage, PmHelpPageView, PmHelpPageViewId} from "./ui/help-page-view";
 
 export const PLUGIN_NAME = 'Tag Project';
 export const CmdPal_SetWorkflowToTask = 'Set workflow';
@@ -332,10 +332,10 @@ export default class OdaPmToolPlugin extends Plugin {
             (leaf) => new PmHelpPageView(leaf, this,)
         );
 
-        this.addRibbonIcon("dice", `${PLUGIN_NAME} Help Page`, (event) => {
+        this.addRibbonIcon(Icon_HelpPage, `${PLUGIN_NAME} Help Page`, (event) => {
             this.activateView(PmHelpPageViewId)
         });
-        this.addRibbonIcon("bell-plus", `${PLUGIN_NAME} Manage Page`, () => {
+        this.addRibbonIcon(Icon_ManagePage, `${PLUGIN_NAME} Manage Page`, () => {
             this.activateManagePageView()
         });
     }
@@ -349,7 +349,7 @@ export default class OdaPmToolPlugin extends Plugin {
 
         // Remove existing views.
         const workspace = this.app.workspace;
-        const leaves = workspace.getLeavesOfType(ManagePageViewId);
+        const leaves = workspace.getLeavesOfType(viewTypeId);
         // Close all but one view.
         while (leaves.length > 1) {
             leaves[0].detach()
@@ -362,6 +362,7 @@ export default class OdaPmToolPlugin extends Plugin {
                 active: false,
             });
         }
+        console.log(viewTypeId)
 
         const leafView = workspace.getLeavesOfType(viewTypeId)[0];
         workspace.revealLeaf(
