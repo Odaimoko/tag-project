@@ -49,6 +49,8 @@ import {iPm_DbReloaded, iPm_JumpTask, iPm_JumpWorkflow} from "../typing/dataview
 export const Color_WorkflowChain = "#6289bb"
 export const Color_Workflow_Checkbox = "#5eb95f"
 
+const iconViewAsAWholeStyle = {display: "inline-flex", justifyItems: "center"};
+
 function getColorByWorkflow(type: I_OdaPmWorkflow) {
     switch (type.type) {
         case "chain":
@@ -291,7 +293,7 @@ const WorkflowFilterCheckbox = ({workflow, displayWorkflows, setDisplayWorkflows
         <ExternalControlledCheckbox
             content={<>
                 <InternalLinkView
-                    content={<span style={{display: "inline-flex", justifyItems: "center"}}>
+                    content={<span style={iconViewAsAWholeStyle}>
                         {getIconByWorkflow(workflow)}
                         <label style={{marginLeft: 3}}>{wfName}</label>
                     </span>}
@@ -337,10 +339,10 @@ const TagFilterCheckbox = ({tag, displayed, setDisplayed, excludeTags, setExclud
     // inline-block: make this check box a whole element. It won't be split into multiple sub-elements when layout.
     // block will start a new line, inline will not, so we use inline-block
     return <span style={{display: "inline-block", margin: 3}}>
-        <ClickableIconView iconName={displayed.includes(tag) ? tagIncludedIcon : (
+        <ClickableIconView style={iconViewAsAWholeStyle} iconName={displayed.includes(tag) ? tagIncludedIcon : (
             excludeTags.includes(tag) ? tagExcludedIcon : noTagIcon
         )}
-                           content={tag.replace(Tag_Prefix_Tag, "")}
+                           content={<label style={{marginLeft: 5}}>{tag.replace(Tag_Prefix_Tag, "")}</label>}
                            onIconClicked={tickCheckbox}
                            onContentClicked={tickCheckbox}
         />
