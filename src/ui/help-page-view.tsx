@@ -86,68 +86,13 @@ export class PmHelpModal extends Modal {
 }
 
 export const PmHelpContentView = () => {
-    const stepStateStyle = {fontWeight: "bold"};
     return <>
         <h1>iPm Help Page</h1>
         <ExampleManagePage></ExampleManagePage>
 
-        <BasicTutorial/>
+        {/*<BasicTutorial/>*/}
 
-        <h1>Task Rules</h1>
-        <h2>Naming (WIP)</h2>
-        You need to put your cursor at a valid task to make it work. A valid task is a task
-        <ul>
-            <li>
-                has only one line. This means a task should not have trailing texts in the next line.
-            </li>
-        </ul>
-        No special characters for workflow name, because it has to be a part of a tag.
-        See <a className="internal-link">Naming rules</a> section for more details. (Cannot jump, sorry)
-        <h2>Task assigning (WIP</h2>
-        <ul>
-            <li>A task with multiple workflows: only recognize the first workflow.</li>
-        </ul>
-        <h2>Tasks In Manage Page (WIP)</h2>
-        In Obsidian, you may have various symbol to put into the checkbox, such as <InlineCodeView text={"*, /, -, x"}/>,
-        etc.
-        Any status will be recognized as completion in iPm.
-        The behaviour in Manage Page for each workflow is different. We call the task in the markdown page as <i>main
-        task</i>, and the steps defined in the workflow as <i>steps</i>.
-        <p>
-            <b>Chain workflow</b>: When the last step defined is completed.
-
-        </p>
-        <b>Checkbox workflow</b>: When all the steps defined are completed.
-        <ul>
-            <li>
-                <div style={stepStateStyle}>Main Task: Unticked. Steps: Partially or fully unticked.</div>
-                Ticking the main task in Manage Page causes all the steps to be
-                ticked, and tags will be automatically added to markdown.
-            </li>
-            <li>
-                <div style={stepStateStyle}>Main Task: Unticked. Steps: Partially or fully unticked.</div>
-                Ticking any step will add the according tag to
-                markdown, and if all the steps are ticked, the main task will be ticked.
-            </li>
-            <li>
-                <div style={stepStateStyle}>Main Task: Unticked. Steps: Fully ticked.</div>
-                Opening Manage Page will tick the main task. This happens if you untick the main task in markdown.
-            </li>
-            <li>
-                <div style={stepStateStyle}>Main Task: Ticked. Steps: Partially or fully unticked.</div>
-                Opening Manage Page will tick all the steps. This happens if you tick the main task in markdown.
-            </li>
-            <li>
-                <div style={stepStateStyle}>Main Task: Ticked. Steps: Fully ticked.</div>
-                Unticking the main task in Manage Page will cause all the steps to
-                be unticked.
-            </li>
-            <li>
-                <div style={stepStateStyle}>Main Task: Ticked. Steps: Fully ticked.</div>
-                Unticking any step in Manage Page will cause the main task to be
-                unticked.
-            </li>
-        </ul>
+        <AdvancedRules/>
     </>
 }
 const BasicTutorial = () => {
@@ -281,15 +226,124 @@ const BasicTutorial = () => {
 const InlineCodeView = ({text}: { text: string }) => {
     return <label className="cm-inline-code" spellCheck="false">{text}</label>
 }
+const AdvancedRules = () => {
+    const stepStateStyle = {fontWeight: "bold"};
 
+    return <>
+        <h1>Task Rules</h1>
+        <h2>Naming (WIP)</h2>
+        You need to put your cursor at a valid task to make it work. A valid task is a task
+        <ul>
+            <li>
+                has only one line. This means a task should not have trailing texts in the next line.
+            </li>
+        </ul>
+        No special characters for workflow name, because it has to be a part of a tag.
+        See <a className="internal-link">Naming rules</a> section for more details. (Cannot jump, sorry)
+        <h2>Task assigning (WIP</h2>
+        <ul>
+            <li>A task with multiple workflows: only recognize the first workflow.</li>
+        </ul>
+        <h2>Tasks In Manage Page (WIP)</h2>
+        In Obsidian, you may have various symbol to put into the checkbox, such as <InlineCodeView text={"*, /, -, x"}/>,
+        etc.
+        Any status will be recognized as completion in iPm.
+        The behaviour in Manage Page for each workflow is different. We call the task in the markdown page as <i>main
+        task</i>, and the steps defined in the workflow as <i>steps</i>.
+        <p>
+            <b>Checkbox workflow</b>: When all the steps defined are completed.
+        </p>
+        <ul>
+            <li>
+                <div style={stepStateStyle}>Main Task: Unticked. Steps: Partially or fully unticked.</div>
+                Ticking the main task in Manage Page causes all the steps to be
+                ticked, and tags will be automatically added to markdown.
+            </li>
+            <li>
+                <div style={stepStateStyle}>Main Task: Unticked. Steps: Partially or fully unticked.</div>
+                Ticking any step will add the according tag to
+                markdown, and if all the steps are ticked, the main task will be ticked.
+            </li>
+            <li>
+                <div style={stepStateStyle}>Main Task: Unticked. Steps: Fully ticked.</div>
+                Opening Manage Page will tick the main task. This happens if you untick the main task in markdown.
+            </li>
+            <li>
+                <div style={stepStateStyle}>Main Task: Ticked. Steps: Partially or fully unticked.</div>
+                Opening Manage Page will tick all the steps. This happens if you tick the main task in markdown.
+            </li>
+            <li>
+                <div style={stepStateStyle}>Main Task: Ticked. Steps: Fully ticked.</div>
+                Unticking the main task in Manage Page will cause all the steps to
+                be unticked.
+            </li>
+            <li>
+                <div style={stepStateStyle}>Main Task: Ticked. Steps: Fully ticked.</div>
+                Unticking any step in Manage Page will cause the main task to be
+                unticked.
+            </li>
+        </ul>
+
+        <b>Chain workflow</b>: When the last step defined is completed.
+
+        <ul>
+            <li>
+                <div style={stepStateStyle}>Main Task: Unticked. Steps: Any step but the last ticked.</div>
+                Ticking the main task in Manage Page causes all but the steps to be
+                unticked, and the last one ticked. Tags will be automatically added or removed in markdown.
+            </li>
+            <li>
+                <div style={stepStateStyle}>Main Task: Unticked. Steps: Partially or fully unticked.</div>
+                Ticking any step removes other steps and keeps only the ticked one. If the last is ticked, the main task
+                will be ticked.
+            </li>
+            <li>
+                <div style={stepStateStyle}>Main Task: Unticked. Steps: Last step ticked.</div>
+                Opening Manage Page will tick the main task. This happens if you untick the main task in markdown.
+            </li>
+            <li>
+                <div style={stepStateStyle}>Main Task: Ticked. Steps: Any step but the last ticked.</div>
+                Opening Manage Page will untick all but the last step. This happens if you tick the main task in
+                markdown.
+            </li>
+            <li>
+                <div style={stepStateStyle}>Main Task: Ticked. Steps: Last step ticked.</div>
+                Unticking the main task in Manage Page will cause all the steps to
+                be unticked.
+            </li>
+            <li>
+                <div style={stepStateStyle}>Main Task: Ticked. Steps: Last step ticked.</div>
+                Ticking any unticked step in Manage Page will cause the main task to be
+                unticked.
+            </li>
+            <li>
+                <div style={stepStateStyle}>Main Task: Ticked or Unticked. Steps: Multiple steps ticked.</div>
+                Opening Manage Page will keep only the last tag in markdown. This happens if you add a step tag in
+                markdown but do not remove the others. This means adding a step tag overrides the previous step no
+                matter the relationship in the chain between the step tags.
+
+            </li>
+        </ul>
+    </>
+}
 
 const ExampleManagePage = () => {
     return <label>TODO Example Manage Page</label>
 }
-const LinkView = ({text, onClick}: { text: string, onClick?: () => void }) => {
+const LinkView = ({
+                      text, onClick
+                  }: {
+    text: string, onClick?: () => void
+}) => {
     return <a className="internal-link" onClick={onClick}>{text}</a>
 }
-const TaggedTaskView = ({content, tags}: { content: string, tags: string[] }) => {
+const TaggedTaskView = ({
+                            content, tags
+                        }: {
+    content: string, tags
+        :
+        string[]
+}) => {
     const checkBoxExampleStyle = {marginTop: 10, marginBottom: 10,}
     return <div style={checkBoxExampleStyle}>
         <input type={"checkbox"}/>
@@ -299,7 +353,11 @@ const TaggedTaskView = ({content, tags}: { content: string, tags: string[] }) =>
         }
     </div>
 }
-const HashTagView = ({tagWithoutHash}: { tagWithoutHash: string }) => {
+const HashTagView = ({
+                         tagWithoutHash
+                     }: {
+    tagWithoutHash: string
+}) => {
     return <>
             <span
                 className="cm-formatting cm-formatting-hashtag cm-hashtag cm-hashtag-begin cm-list-1 cm-meta">#</span>
