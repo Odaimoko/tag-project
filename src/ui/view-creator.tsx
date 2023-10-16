@@ -468,7 +468,9 @@ function TaskTableView({displayWorkflows, filteredTasks}: {
 
     const curWfName = "Tasks";// displayWorkflows.map(k => k.name).join(", ")
     const sumCol = 0;
-    const headers = [curWfName, ...(getSettings()?.table_steps_shown ? displayStepNames : [])];
+    const headers = [curWfName, ...(getSettings()?.table_steps_shown ? displayStepNames.map(
+        (k) => `${k} (${displayedTasks.filter((m: OdaPmTask) => m.hasStepName(k)).length})`
+    ) : [])];
 
 
     const taskRows = displayedTasks.map(function (oTask: OdaPmTask) {

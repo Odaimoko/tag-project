@@ -299,6 +299,11 @@ export class OdaPmTask {
         }
     }
 
+    hasStepName(stepName: string) {
+        // TODO Performance
+        return this.currentSteps.filter(k => k.name == stepName).length > 0;
+    }
+
     addStepTag(stepTag: string): string {
         const text = this.boundTask.text;
         return addTagText(text, stepTag);
