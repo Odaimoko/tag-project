@@ -90,7 +90,7 @@ export class PmHelpModal extends Modal {
 }
 
 const centerChildrenVertStyle = {display: "flex", justifyContent: "center"}
-const HelpViewTabsNames = ["Tutorial", "User manual", "Example"]
+const HelpViewTabsNames = ["Tutorial", "User manual", "Template"]
 const CommonHelpViewInModalAndLeaf = ({app, container}: {
     app: App,
     container: HTMLElement
