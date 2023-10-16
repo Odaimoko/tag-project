@@ -122,7 +122,8 @@ const BasicTutorial = () => {
         />
         <h2>Use tags to define workflows</h2>
         <div>
-            A chain workflow is marked by a tag <HashTagView tagWithoutHash={"iPm/workflow/chain"}/>. The order of the
+            A chain workflow is defined by a task marked with a tag <HashTagView tagWithoutHash={"iPm/workflow/chain"}/>.
+            The order of the
             steps determines the dependency chain.
         </div>
         <TaggedTaskView content={"write_scripts"}
@@ -135,7 +136,8 @@ const BasicTutorial = () => {
 
         <p/>
         <div>
-            A checkbox workflow is marked by a tag <HashTagView tagWithoutHash={"iPm/workflow/checkbox"}/>. The order of
+            A checkbox workflow is defined by a task marked with a tag <HashTagView
+            tagWithoutHash={"iPm/workflow/checkbox"}/>. The order of
             the steps does not matter.
         </div>
 
