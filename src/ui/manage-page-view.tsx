@@ -27,6 +27,11 @@ export class ManagePageView extends ItemView {
         return "iPM Manage Page";
     }
 
+    getIcon(): string {
+        return "book-open-check";
+
+    }
+
     async onOpen() {
         // console.log("Manage page view opened.")
         // When dataview is ready, we render the page directly.

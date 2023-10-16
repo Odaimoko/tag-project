@@ -1,11 +1,68 @@
-import {App, Modal} from "obsidian";
+import {App, ItemView, Modal, WorkspaceLeaf} from "obsidian";
 import {createRoot, Root} from "react-dom/client";
 import React, {StrictMode} from "react";
 import {WorkflowTypeLegend} from "./view-creator";
 import {DataTable} from "./view-template";
-import {CmdPal_SetWorkflowToTask} from "../main";
+import OdaPmToolPlugin, {CmdPal_SetWorkflowToTask} from "../main";
 
-export class HelpModal extends Modal {
+export const PmHelpPageViewId = "iPm-Tool-HelpView";
+
+export class PmHelpPageView extends ItemView {
+    root: Root | null = null;
+    plugin: OdaPmToolPlugin;
+
+    constructor(leaf: WorkspaceLeaf, plugin: OdaPmToolPlugin) {
+        super(leaf);
+        this.plugin = plugin;
+    }
+
+    getViewType() {
+        return PmHelpPageViewId;
+    }
+
+    getDisplayText() {
+        return "iPM Help Page";
+    }
+
+    getIcon(): string {
+        return "info";
+    }
+
+    async onOpen() {
+        this.renderPage();
+    }
+
+
+    private renderPage() {
+
+        const container = this.containerEl.children[1];
+        container.empty();
+        // React
+        this.root = createRoot(this.containerEl.children[1]); // Override the previous container
+        this.root.render(
+            <StrictMode>
+                <PmHelpContentView/>
+            </StrictMode>,
+        );
+
+    }
+
+    async onClose() {
+        this.unmountReactRoot();
+    }
+
+
+    private unmountReactRoot() {
+        this.root?.unmount();
+        this.root = null;
+    }
+
+    emitter() {
+        return this.plugin.getEmitter()
+    }
+}
+
+export class PmHelpModal extends Modal {
     root: Root | null = null;
 
     constructor(app: App) {
@@ -18,7 +75,7 @@ export class HelpModal extends Modal {
         // React
         this.root = createRoot(contentEl); // Override the previous container
         this.root.render(<StrictMode>
-            <PmHelpView/>
+            <PmHelpContentView/>
         </StrictMode>)
     }
 
@@ -28,7 +85,8 @@ export class HelpModal extends Modal {
     }
 }
 
-export const PmHelpView = () => {
+export const PmHelpContentView = () => {
+    const stepStateStyle = {fontWeight: "bold"};
     return <>
         <h1>iPm Help Page</h1>
         <ExampleManagePage></ExampleManagePage>
