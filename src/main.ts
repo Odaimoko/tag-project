@@ -6,8 +6,8 @@ import {IPM_DEFAULT_SETTINGS, IPmSettings, IPmSettingsTab, SettingsProvider} fro
 import {
     DataviewIndexReadyEvent,
     DataviewMetadataChangeEvent,
-    iPm_JumpTask,
-    iPm_JumpWorkflow
+    Evt_JumpTask,
+    Evt_JumpWorkflow
 } from "./typing/dataview-event";
 import {EventEmitter} from "events";
 import {OdaPmDb, OdaPmDbProvider} from "./data-model/odaPmDb";
@@ -16,7 +16,7 @@ import {rewriteTask} from "./utils/io_util";
 import {WorkflowSuggestionModal} from "./ui/WorkflowSuggestionModal";
 import {PmHelpPageView, PmHelpPageViewId} from "./ui/help-page-view";
 
-export const PLUGIN_NAME = 'iPm';
+export const PLUGIN_NAME = 'Tag Project';
 export const CmdPal_SetWorkflowToTask = 'Set workflow';
 export const CmdPal_JumpToManagePage = "To Manage Page";
 export default class OdaPmToolPlugin extends Plugin {
@@ -90,9 +90,6 @@ export default class OdaPmToolPlugin extends Plugin {
             })
         );
 
-        this.addRibbonIcon("dice", "iPm Help Page", (event) => {
-            this.activateView(PmHelpPageViewId)
-        });
         this.inited = true;
     }
 
@@ -285,14 +282,14 @@ export default class OdaPmToolPlugin extends Plugin {
 
     private jumpToTaskPage(pmTask: OdaPmTask) {
         this.activateManagePageView().then((leaf) => {
-            this.emitter.emit(iPm_JumpTask, pmTask)
+            this.emitter.emit(Evt_JumpTask, pmTask)
         })
     }
 
     private jumpToWorkflowPage(workflow: I_OdaPmWorkflow) {
         this.activateManagePageView()
             .then((leaf) => {
-                this.emitter.emit(iPm_JumpWorkflow, workflow)
+                this.emitter.emit(Evt_JumpWorkflow, workflow)
             });
     }
 
@@ -335,7 +332,10 @@ export default class OdaPmToolPlugin extends Plugin {
             (leaf) => new PmHelpPageView(leaf, this,)
         );
 
-        this.addRibbonIcon("bell-plus", "iPm Manage Page", () => {
+        this.addRibbonIcon("dice", `${PLUGIN_NAME} Help Page`, (event) => {
+            this.activateView(PmHelpPageViewId)
+        });
+        this.addRibbonIcon("bell-plus", `${PLUGIN_NAME} Manage Page`, () => {
             this.activateManagePageView()
         });
     }

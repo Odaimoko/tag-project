@@ -7,6 +7,6 @@ export type DataViewEvents =
     | typeof DataviewAPIReadyEvent;
 
 
-export const iPm_JumpWorkflow = "iPm:jump-workflow";
-export const iPm_JumpTask = "iPm:jump-task";
-export const iPm_DbReloaded = "iPm:db-reloaded";
+export const Evt_JumpWorkflow = "tpm:jump-workflow";
+export const Evt_JumpTask = "tpm:jump-task";
+export const Evt_DbReloaded = "tpm:db-reloaded";

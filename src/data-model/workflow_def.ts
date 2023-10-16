@@ -1,11 +1,11 @@
 import {STask} from "obsidian-dataview";
 
-export const Tag_Prefix_Step = "#iPm/step/";
-export const Tag_Prefix_Workflow = "#iPm/workflow_type/";
-export const Tag_Prefix_Tag = "#iPm/tag/";
+export const Tag_Prefix_Step = "#tpm/step/";
+export const Tag_Prefix_Workflow = "#tpm/workflow_type/";
+export const Tag_Prefix_Tag = "#tpm/tag/";
 export const TaskStatus_checked = "x";
 export const TaskStatus_unchecked = " ";
-export const Tag_Prefix_TaskType = "#iPm/workflow/";
+export const Tag_Prefix_TaskType = "#tpm/workflow/";
 
 export const Workflow_Type_Enum_Array = [
     "chain",

@@ -7,7 +7,7 @@ import OdaPmToolPlugin from "../main";
 import {ClickableIconView, HStack} from "./view-template";
 import {PmHelpModal} from "./help-page-view";
 
-export const ManagePageViewId = "iPm-Tool-ManageView";
+export const ManagePageViewId = "tpm-tool-manage-page";
 
 export class ManagePageView extends ItemView {
     root: Root | null = null;

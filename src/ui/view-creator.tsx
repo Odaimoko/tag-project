@@ -42,7 +42,7 @@ import {
 } from "./view-template";
 import {appendBoldText} from "./html-template";
 import {OdaPmDbProvider} from "../data-model/odaPmDb";
-import {iPm_DbReloaded, iPm_JumpTask, iPm_JumpWorkflow} from "../typing/dataview-event";
+import {Evt_DbReloaded, Evt_JumpTask, Evt_JumpWorkflow} from "../typing/dataview-event";
 
 
 // dark light compatible
@@ -113,13 +113,13 @@ export function ReactManagePage({eventCenter}: {
 
     // How to prevent add listener multiple times? use custom emitter instead of obsidian's event emitter
     useEffect(() => {
-        eventCenter?.addListener(iPm_DbReloaded, triggerRerender)
-        eventCenter?.addListener(iPm_JumpTask, jumpTask)
-        eventCenter?.addListener(iPm_JumpWorkflow, jumpWf)
+        eventCenter?.addListener(Evt_DbReloaded, triggerRerender)
+        eventCenter?.addListener(Evt_JumpTask, jumpTask)
+        eventCenter?.addListener(Evt_JumpWorkflow, jumpWf)
         return () => {
-            eventCenter?.removeListener(iPm_DbReloaded, triggerRerender)
-            eventCenter?.removeListener(iPm_JumpTask, jumpTask)
-            eventCenter?.removeListener(iPm_JumpWorkflow, jumpWf)
+            eventCenter?.removeListener(Evt_DbReloaded, triggerRerender)
+            eventCenter?.removeListener(Evt_JumpTask, jumpTask)
+            eventCenter?.removeListener(Evt_JumpWorkflow, jumpWf)
 
         }
     }, [rerenderState]);
@@ -478,11 +478,11 @@ function TaskTableView({displayWorkflows, filteredTasks}: {
 
     useEffect(() => {
         const eventCenter = plugin?.getEmitter()
-        eventCenter?.addListener(iPm_JumpTask, jumpTask)
-        eventCenter?.addListener(iPm_JumpWorkflow, onJumpToWorkflow)
+        eventCenter?.addListener(Evt_JumpTask, jumpTask)
+        eventCenter?.addListener(Evt_JumpWorkflow, onJumpToWorkflow)
         return () => {
-            eventCenter?.removeListener(iPm_JumpTask, jumpTask)
-            eventCenter?.removeListener(iPm_JumpWorkflow, onJumpToWorkflow)
+            eventCenter?.removeListener(Evt_JumpTask, jumpTask)
+            eventCenter?.removeListener(Evt_JumpWorkflow, onJumpToWorkflow)
         }
     });
 

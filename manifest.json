@@ -1,11 +1,11 @@
 {
-	"id": "com.odaimoko.i-pm",
-	"name": "iPm",
+	"id": "tag-project.odaimoko",
+	"name": "Tag Project",
 	"version": "0.0.1",
 	"minAppVersion": "0.15.0",
-	"description": "A project management tool for Obsidian. Write progress everywhere, manage in one page.",
+	"description": "Tag Project, manage projects with tags. Write everywhere, with centric management.",
 	"author": "Odaimoko",
-	"authorUrl": "github.com/Odaimoko",
+	"authorUrl": "https://github.com/Odaimoko",
 	"fundingUrl": "https://www.buymeacoffee.com/odaimoko",
-	"isDesktopOnly": false
+	"isDesktopOnly": true
 }

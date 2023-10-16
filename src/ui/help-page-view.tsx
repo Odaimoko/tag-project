@@ -3,10 +3,10 @@ import {createRoot, Root} from "react-dom/client";
 import React, {StrictMode} from "react";
 import {WorkflowTypeLegend} from "./view-creator";
 import {DataTable} from "./view-template";
-import OdaPmToolPlugin, {CmdPal_JumpToManagePage, CmdPal_SetWorkflowToTask} from "../main";
+import OdaPmToolPlugin, {CmdPal_JumpToManagePage, CmdPal_SetWorkflowToTask, PLUGIN_NAME} from "../main";
 import {Tag_Prefix_Step, Tag_Prefix_Tag, Tag_Prefix_TaskType, Tag_Prefix_Workflow} from "../data-model/workflow_def";
 
-export const PmHelpPageViewId = "iPm-Tool-HelpView";
+export const PmHelpPageViewId = "tpm-help-view";
 export const Desc_ManagePage = "Manage Page";
 
 export class PmHelpPageView extends ItemView {
@@ -89,7 +89,7 @@ export class PmHelpModal extends Modal {
 
 export const PmHelpContentView = () => {
     return <>
-        <h1>iPm Help Page</h1>
+        <h1>{PLUGIN_NAME}: Help Page</h1>
         <ExampleManagePage></ExampleManagePage>
 
         <BasicTutorial/>
@@ -99,7 +99,7 @@ export const PmHelpContentView = () => {
 }
 const BasicTutorial = () => {
     return <>
-        <h1>iPm</h1>
+        <h1>{PLUGIN_NAME}</h1>
         <h2>Workflow Types</h2>
         A task can be categorized in one of the following two workflows
         <DataTable tableTitle={"Workflow types"} headers={["Type", "Description"]} rows={
@@ -146,7 +146,7 @@ const BasicTutorial = () => {
         </div>
 
         <TaggedTaskView content={"card_design"} tags={[
-            `${Tag_Prefix_Workflow}checkbox`, `${Tag_Prefix_Step}add_data`, `${Tag_Prefix_Step}effect`, "iPm/step/art"
+            `${Tag_Prefix_Workflow}checkbox`, `${Tag_Prefix_Step}add_data`, `${Tag_Prefix_Step}effect`, `${Tag_Prefix_Step}art`
         ]}/>
         <div>
             This defines a checkbox workflow named <i>card_design</i>, used when you want to design a new card for your
@@ -208,13 +208,15 @@ const BasicTutorial = () => {
 
         <h2>Use tags to add, well, tags</h2>
         Sometimes you want to give a task some property, but you don't want to make it a workflow step. For example, you
-        want to mark the task that is abandoned, or this task has high priority.
+        want to mark the task that is abandoned, or this task has high priority, or you want to group tasks into
+        different projects.
         You can use <i>managed tags</i> to do that.
         <p/>
         The managed tags have the prefix <HashTagView tagWithoutHash={Tag_Prefix_Tag}/> so it would not be confused with
         normal tags.
         For example, a managed tag <HashTagView tagWithoutHash={`${Tag_Prefix_Tag}abandoned`}/>.
-        Managed tags will show in {Desc_ManagePage} as filters. You can set a tag be included or excluded.
+        Managed tags will show in {Desc_ManagePage} as filters, while normal tags won't. You can set a tag be included
+        or excluded in {Desc_ManagePage}.
         <p>
             If you want to define a workflow without any steps, it should not be called a workflow. The built-in
             tag should suffice. You can always place a dummy step tag in the workflow definition, though.
@@ -267,7 +269,7 @@ const AdvancedRules = () => {
         <h2>Task Completion</h2>
         In Obsidian, you may have various symbol to put into the checkbox, such as <InlineCodeView text={"*, /, -, x"}/>,
         etc.
-        Any status will be recognized as completion in iPm.
+        Any status will be recognized as completion in {PLUGIN_NAME}.
         The behaviour in {Desc_ManagePage} for each workflow is different. We call the task in the markdown page as <i>main
         task</i>, and the steps defined in the workflow as <i>steps</i>.
         <p>

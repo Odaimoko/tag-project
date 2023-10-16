@@ -16,7 +16,7 @@ import {
     Workflow_Type_Enum_Array
 } from "./workflow_def";
 import {EventEmitter} from "events";
-import {DataviewMetadataChangeEvent, iPm_DbReloaded} from "../typing/dataview-event";
+import {DataviewMetadataChangeEvent, Evt_DbReloaded} from "../typing/dataview-event";
 import {DataArray, getAPI, STask} from "obsidian-dataview";
 import {ONotice} from "../utils/o-notice";
 import {getSettings} from "../Settings";
@@ -174,7 +174,7 @@ export class OdaPmDb implements I_EvtListener {
             .filter(k => !this.workflowTags.includes(k) && !this.stepTags.includes(k)) as DataArray)
             .array().unique()
 
-        this.emitter.emit(iPm_DbReloaded)
+        this.emitter.emit(Evt_DbReloaded)
     }
 
     getWorkflow(filePath: string, line: number) {
