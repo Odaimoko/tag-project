@@ -4,6 +4,7 @@ import React, {StrictMode} from "react";
 import {WorkflowTypeLegend} from "./view-creator";
 import {DataTable} from "./view-template";
 import OdaPmToolPlugin, {CmdPal_JumpToManagePage, CmdPal_SetWorkflowToTask} from "../main";
+import {Tag_Prefix_Step, Tag_Prefix_Tag, Tag_Prefix_TaskType, Tag_Prefix_Workflow} from "../data-model/workflow_def";
 
 export const PmHelpPageViewId = "iPm-Tool-HelpView";
 export const Desc_ManagePage = "Manage Page";
@@ -124,12 +125,13 @@ const BasicTutorial = () => {
         />
         <h2>Use tags to define workflows</h2>
         <div>
-            A chain workflow is defined by a task marked with a tag <HashTagView tagWithoutHash={"iPm/workflow/chain"}/>.
+            A chain workflow is defined by a task marked with a tag <HashTagView
+            tagWithoutHash={`${Tag_Prefix_Workflow}chain`}/>.
             The order of the
             steps determines the dependency chain.
         </div>
         <TaggedTaskView content={"write_scripts"}
-                        tags={["iPm/workflow/chain", "iPm/step/write", "iPm/step/revise", "iPm/step/export"]}/>
+                        tags={[`${Tag_Prefix_Workflow}chain`, `${Tag_Prefix_Step}write`, `${Tag_Prefix_Step}revise`, `${Tag_Prefix_Step}export`]}/>
 
         <div>
             This defines a chain workflow named <i>write_scripts</i>, where the task is to write scripts, revise, and
@@ -139,12 +141,12 @@ const BasicTutorial = () => {
         <p/>
         <div>
             A checkbox workflow is defined by a task marked with a tag <HashTagView
-            tagWithoutHash={"iPm/workflow/checkbox"}/>. The order of
+            tagWithoutHash={`${Tag_Prefix_Workflow}checkbox`}/>. The order of
             the steps does not matter.
         </div>
 
         <TaggedTaskView content={"card_design"} tags={[
-            "iPm/workflow/checkbox", "iPm/step/add_data", "iPm/step/effect", "iPm/step/art"
+            `${Tag_Prefix_Workflow}checkbox`, `${Tag_Prefix_Step}add_data`, `${Tag_Prefix_Step}effect`, "iPm/step/art"
         ]}/>
         <div>
             This defines a checkbox workflow named <i>card_design</i>, used when you want to design a new card for your
@@ -159,14 +161,15 @@ const BasicTutorial = () => {
         <TaggedTaskView content={"Write preface"} tags={[]}/>
 
         <div>
-            Once workflows are defined, use <HashTagView tagWithoutHash={"iPm/step/[work_flow_name]"}/> to mark the next
+            Once workflows are defined, use <HashTagView tagWithoutHash={`${Tag_Prefix_Step}[work_flow_name]`}/> to mark
+            the next
             step, without the square brackets. For example, if we want to mark a task as <i>write_scripts</i>, we can
             mark it as
         </div>
-        <TaggedTaskView content={"Write preface"} tags={["iPm/workflow/write_scripts"]}/>
+        <TaggedTaskView content={"Write preface"} tags={[`${Tag_Prefix_TaskType}write_scripts`]}/>
 
         <div>
-            This makes the task a <i>managed task</i>, and it will show up in the iPm {Desc_ManagePage}.
+            This makes the task a <i>managed task</i>, and it will show up in {Desc_ManagePage}.
             You can use the ribbon icon on the leftmost bar, or use the command palette to open {Desc_ManagePage}.
         </div>
         <div>
@@ -183,13 +186,14 @@ const BasicTutorial = () => {
             text file after all.
         </p>
         Here are more examples of the <i>card_design</i> task.
-        <TaggedTaskView content={"card: warlock, normal attack"} tags={["iPm/workflow/card_design"]}/>
-        <TaggedTaskView content={"card: warlock, fire magic"} tags={["iPm/workflow/card_design"]}/>
+        <TaggedTaskView content={"card: warlock, normal attack"} tags={[`${Tag_Prefix_TaskType}card_design`]}/>
+        <TaggedTaskView content={"card: warlock, fire magic"} tags={[`${Tag_Prefix_TaskType}card_design`]}/>
 
         <h2>Use tags to add steps</h2>
         Remember we define some steps for each workflow. Now we finish the writing work for preface. It goes to the
         revise phase. So we mark it as:
-        <TaggedTaskView content={"Write preface"} tags={["iPm/workflow/write_scripts", "iPm/step/write"]}/>
+        <TaggedTaskView content={"Write preface"}
+                        tags={[`${Tag_Prefix_TaskType}write_scripts`, `${Tag_Prefix_Step}write`]}/>
         Since the step tag is already defined, they can be auto completed.
         <p>
             The rules of adding step for each workflow are different. See <LinkView
@@ -207,9 +211,9 @@ const BasicTutorial = () => {
         want to mark the task that is abandoned, or this task has high priority.
         You can use <i>managed tags</i> to do that.
         <p/>
-        The managed tags have the prefix <HashTagView tagWithoutHash={"iPm/tag/"}/> so it would not be confused with
+        The managed tags have the prefix <HashTagView tagWithoutHash={Tag_Prefix_Tag}/> so it would not be confused with
         normal tags.
-        For example, a managed tag <HashTagView tagWithoutHash={"iPm/tag/abandoned"}/>.
+        For example, a managed tag <HashTagView tagWithoutHash={`${Tag_Prefix_Tag}abandoned`}/>.
         Managed tags will show in {Desc_ManagePage} as filters. You can set a tag be included or excluded.
         <p>
             If you want to define a workflow without any steps, it should not be called a workflow. The built-in
@@ -353,14 +357,11 @@ const LinkView = ({
 }) => {
     return <a className="internal-link" onClick={onClick}>{text}</a>
 }
-const TaggedTaskView = ({
-                            content, tags
-                        }: {
-    content: string, tags
-        :
-        string[]
+const TaggedTaskView = ({content, tags}: {
+    content: string, tags: string[]
 }) => {
     const checkBoxExampleStyle = {marginTop: 10, marginBottom: 10,}
+
     return <div style={checkBoxExampleStyle}>
         <input type={"checkbox"}/>
         <label>{content} </label>
@@ -369,11 +370,8 @@ const TaggedTaskView = ({
         }
     </div>
 }
-const HashTagView = ({
-                         tagWithoutHash
-                     }: {
-    tagWithoutHash: string
-}) => {
+const HashTagView = ({tagWithoutHash}: { tagWithoutHash: string }) => {
+    tagWithoutHash = tagWithoutHash.startsWith("#") ? tagWithoutHash.substring(1) : tagWithoutHash
     return <>
             <span
                 className="cm-formatting cm-formatting-hashtag cm-hashtag cm-hashtag-begin cm-list-1 cm-meta">#</span>
