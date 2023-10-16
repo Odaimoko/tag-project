@@ -151,6 +151,8 @@ export function ReactManagePage({eventCenter}: {
         setExcludedTags(names)
     }
 
+    const rectifiedDisplayTags = displayTags.filter(k => db?.pmTags.contains(k))
+    const rectifiedExcludedTags = excludedTags.filter(k => db?.pmTags.contains(k))
 
     // place all hooks before return. React doesn't allow the order to be changed.
     if (workflows.length === 0 || db === null)
@@ -167,11 +169,11 @@ export function ReactManagePage({eventCenter}: {
         .filter(function (k: OdaPmTask) {
             // No tag chosen: show all tasks
             // Some tags chosen: combination or.
-            return displayTags.length === 0 ? true : k.hasAnyTag(displayTags);
+            return rectifiedDisplayTags.length === 0 ? true : k.hasAnyTag(rectifiedDisplayTags);
         }).filter(function (k: OdaPmTask) {
             // No tag chosen: show all tasks
             // Some tags chosen: combination or.
-            return excludedTags.length === 0 ? true : !k.hasAnyTag(excludedTags);
+            return rectifiedExcludedTags.length === 0 ? true : !k.hasAnyTag(rectifiedExcludedTags);
         });
 
     // console.log(`ReactManagePage Render. All tasks: ${tasks_with_workflow.length}. Filtered Tasks: ${filteredTasks.length}. Workflow: ${curWfName}. IncludeCompleted: ${includeCompleted}`)
@@ -193,7 +195,7 @@ export function ReactManagePage({eventCenter}: {
             </div>
             {pmTags.length > 0 ?
                 <HStack style={{alignItems: "center"}} spacing={10}>
-                    <h3>{displayTags.length}/{pmTags.length} Tags(s)</h3>
+                    <h3>{rectifiedDisplayTags.length}/{pmTags.length} Tags(s)</h3>
                     <button onClick={() => {
                         handleSetDisplayTags([...pmTags]);
                         handleSetExcludedTags([])
@@ -213,8 +215,8 @@ export function ReactManagePage({eventCenter}: {
                 : null}
             <div>
                 {pmTags.map((tag: string) => {
-                    return <TagFilterCheckbox key={tag} excludeTags={excludedTags}
-                                              tag={tag} displayed={displayTags}
+                    return <TagFilterCheckbox key={tag} excludeTags={rectifiedExcludedTags}
+                                              tag={tag} displayed={rectifiedDisplayTags}
                                               setDisplayed={handleSetDisplayTags}
                                               setExcludedTags={handleSetExcludedTags}
                     />
