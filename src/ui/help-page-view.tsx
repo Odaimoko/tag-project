@@ -3,7 +3,7 @@ import {createRoot, Root} from "react-dom/client";
 import React, {StrictMode} from "react";
 import {WorkflowTypeLegend} from "./view-creator";
 import {DataTable} from "./view-template";
-import OdaPmToolPlugin, {CmdPal_SetWorkflowToTask} from "../main";
+import OdaPmToolPlugin, {CmdPal_JumpToManagePage, CmdPal_SetWorkflowToTask} from "../main";
 
 export const PmHelpPageViewId = "iPm-Tool-HelpView";
 
@@ -90,6 +90,68 @@ export const PmHelpContentView = () => {
     return <>
         <h1>iPm Help Page</h1>
         <ExampleManagePage></ExampleManagePage>
+
+        <BasicTutorial/>
+
+        <h1>Task Rules</h1>
+        <h2>Naming (WIP)</h2>
+        You need to put your cursor at a valid task to make it work. A valid task is a task
+        <ul>
+            <li>
+                has only one line. This means a task should not have trailing texts in the next line.
+            </li>
+        </ul>
+        No special characters for workflow name, because it has to be a part of a tag.
+        See <a className="internal-link">Naming rules</a> section for more details. (Cannot jump, sorry)
+        <h2>Task assigning (WIP</h2>
+        <ul>
+            <li>A task with multiple workflows: only recognize the first workflow.</li>
+        </ul>
+        <h2>Tasks In Manage Page (WIP)</h2>
+        In Obsidian, you may have various symbol to put into the checkbox, such as <InlineCodeView text={"*, /, -, x"}/>,
+        etc.
+        Any status will be recognized as completion in iPm.
+        The behaviour in Manage Page for each workflow is different. We call the task in the markdown page as <i>main
+        task</i>, and the steps defined in the workflow as <i>steps</i>.
+        <p>
+            <b>Chain workflow</b>: When the last step defined is completed.
+
+        </p>
+        <b>Checkbox workflow</b>: When all the steps defined are completed.
+        <ul>
+            <li>
+                <div style={stepStateStyle}>Main Task: Unticked. Steps: Partially or fully unticked.</div>
+                Ticking the main task in Manage Page causes all the steps to be
+                ticked, and tags will be automatically added to markdown.
+            </li>
+            <li>
+                <div style={stepStateStyle}>Main Task: Unticked. Steps: Partially or fully unticked.</div>
+                Ticking any step will add the according tag to
+                markdown, and if all the steps are ticked, the main task will be ticked.
+            </li>
+            <li>
+                <div style={stepStateStyle}>Main Task: Unticked. Steps: Fully ticked.</div>
+                Opening Manage Page will tick the main task. This happens if you untick the main task in markdown.
+            </li>
+            <li>
+                <div style={stepStateStyle}>Main Task: Ticked. Steps: Partially or fully unticked.</div>
+                Opening Manage Page will tick all the steps. This happens if you tick the main task in markdown.
+            </li>
+            <li>
+                <div style={stepStateStyle}>Main Task: Ticked. Steps: Fully ticked.</div>
+                Unticking the main task in Manage Page will cause all the steps to
+                be unticked.
+            </li>
+            <li>
+                <div style={stepStateStyle}>Main Task: Ticked. Steps: Fully ticked.</div>
+                Unticking any step in Manage Page will cause the main task to be
+                unticked.
+            </li>
+        </ul>
+    </>
+}
+const BasicTutorial = () => {
+    return <>
         <h2>Workflow Types</h2>
         A task can be categorized in one of the following two workflows
         <DataTable tableTitle={"Workflow types"} headers={["Type", "Description"]} rows={
@@ -155,8 +217,8 @@ export const PmHelpContentView = () => {
         <TaggedTaskView content={"Write preface"} tags={["iPm/workflow/write_scripts"]}/>
 
         <div>
-            This makes the task an <i>iPm-managed task</i>, and it will show up in the iPm manage page. You can use the
-            ribbon icon on the leftmost, or use the command palette to open the manage page.
+            This makes the task an <i>iPm-managed task</i>, and it will show up in the iPm manage page.
+            You can use the ribbon icon on the leftmost bar, or use the command palette to open the manage page.
         </div>
         <div>
             If you set the workflow for the very first time, it's tag is not available for auto-completion.
@@ -165,7 +227,7 @@ export const PmHelpContentView = () => {
         </div>
         <div>After that you can use auto-completion.
             But using the command palette is preferred, since it can replace an existing workflow tag with the new one.
-            You don't have to do it yourself.
+            You don't have to remove the older one yourself.
         </div>
         <p>
             You can choose whichever way is more convenient for you. Markdown is a
@@ -174,6 +236,7 @@ export const PmHelpContentView = () => {
         Here are more examples of the <i>card_design</i> task.
         <TaggedTaskView content={"card: warlock, normal attack"} tags={["iPm/workflow/card_design"]}/>
         <TaggedTaskView content={"card: warlock, fire magic"} tags={["iPm/workflow/card_design"]}/>
+
         <h2>Use tags to add steps</h2>
         Remember we define some steps for each workflow. Now we finish the writing work for preface. It goes to the
         revise phase. So we mark it as:
@@ -181,9 +244,13 @@ export const PmHelpContentView = () => {
         Since the step tag is already defined, they can be auto completed.
         <p>
             The rules of adding step for each workflow are different. See <LinkView
-            text={"Task completion rule"}/> section for more
+            text={"Tasks In Manage Page"}/> section for more
             details.
         </p>
+        <label>
+            In Manage Page, ticking or unticking a checkbox will add or remove the corresponding tag in the markdown
+            automatically.
+        </label>
         <h2>Use tags to add well, tags</h2>
         Sometimes you want to give a task some property, but you don't want to make it a workflow step. For example, you
         want to mark the task that is abandoned, or this task is a high priority task.
@@ -197,16 +264,24 @@ export const PmHelpContentView = () => {
             If you want to define a workflow without any steps, well, it should not be called a workflow. The built-in
             tag should suffice. You can always place a dummy step tag in the workflow definition, though.
         </p>
-
-        <h1>Task Rules</h1>
-        <h2>Naming rules (WIP)</h2>
-        You need to put your cursor at a valid task to make it work.
-        No special characters for workflow name, because it has to be a part of a tag.
-        See <a className="internal-link">Naming rules</a> section for more details. (Cannot jump, sorry)
-        <h2>Task completion rule (WIP)</h2>
-        Any status will be recognized as checked.
+        <h2>Open Manage Page</h2>
+        You can open Manage Page directly using the ribbon icon on the leftmost bar, or use the command palette to open
+        the manage page.
+        <p>Apart from this, when your cursor is focusing on a managed task or workflow, you can do the following things
+            with context menu or command palette called <i>{CmdPal_JumpToManagePage}</i>:</p>
+        <ul>
+            <li>If the cursor is at a workflow, you can open Manage Page with only this workflow filtered.
+            </li>
+            <li>
+                If the cursor is at a managed task, you can open Manage Page with only this task shown.
+            </li>
+        </ul>
     </>
 }
+const InlineCodeView = ({text}: { text: string }) => {
+    return <label className="cm-inline-code" spellCheck="false">{text}</label>
+}
+
 
 const ExampleManagePage = () => {
     return <label>TODO Example Manage Page</label>

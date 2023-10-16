@@ -5,7 +5,7 @@ import {createRoot, Root} from "react-dom/client";
 import {createContext, StrictMode} from "react";
 import OdaPmToolPlugin from "../main";
 import {ClickableIconView, HStack} from "./view-template";
-import {HelpModal, PmHelpView} from "./help-modal";
+import {PmHelpModal} from "./help-page-view";
 
 export const ManagePageViewId = "iPm-Tool-ManageView";
 
@@ -50,11 +50,10 @@ export class ManagePageView extends ItemView {
         // we call render(), so this is a brand new component tree, no matter it exists or not. States won't be preserved.
         this.root.render(
             <StrictMode>
-                <PmHelpView/>
                 <div style={{display: "flex", justifyContent: "center", marginBottom: -20}}>
                     <HStack spacing={10} style={{alignItems: "center"}}>
                         <h1>{this.getDisplayText()}</h1>
-                        <ClickableIconView onIconClicked={() => new HelpModal(this.app).open()}
+                        <ClickableIconView onIconClicked={() => new PmHelpModal(this.app).open()}
                                            iconName={"help-circle"}/>
                     </HStack>
                 </div>

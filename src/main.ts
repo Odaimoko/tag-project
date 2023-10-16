@@ -1,4 +1,4 @@
-import {App, Editor, MarkdownFileInfo, MarkdownView, Menu, Modal, Notice, Plugin} from 'obsidian';
+import {App, Editor, MarkdownFileInfo, MarkdownView, Modal, Notice, Plugin} from 'obsidian';
 import {ManagePageView, ManagePageViewId} from "./ui/manage-page-view";
 import {ONotice} from "./utils/o-notice";
 import {IPM_DEFAULT_SETTINGS, IPmSettings, IPmSettingsTab, SettingsProvider} from "./Settings";
@@ -14,10 +14,11 @@ import {OdaPmDb, OdaPmDbProvider} from "./data-model/odaPmDb";
 import {addTagText, I_OdaPmWorkflow, OdaPmTask} from "./data-model/workflow_def";
 import {rewriteTask} from "./utils/io_util";
 import {WorkflowSuggestionModal} from "./ui/WorkflowSuggestionModal";
+import {PmHelpPageView, PmHelpPageViewId} from "./ui/help-page-view";
 
 export const PLUGIN_NAME = 'iPm';
 export const CmdPal_SetWorkflowToTask = 'Set workflow to task';
-
+export const CmdPal_JumpToManagePage = "Jump To Manage Page";
 export default class OdaPmToolPlugin extends Plugin {
     settings: IPmSettings;
     private emitter: EventEmitter;
@@ -56,18 +57,6 @@ export default class OdaPmToolPlugin extends Plugin {
         // console.log("add OdaPmDbProvider")
         this.regPluginListener()
 
-        // region Ribbon integration
-        // // This creates an icon in the left ribbon.
-        // const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
-        //     // Called when the user clicks the icon.
-        //     new Notice('This is a notice!');
-        // });
-        // // Perform additional things with the ribbon
-        // ribbonIconEl.addClass('my-plugin-ribbon-class');
-        // Oda: This adds a text to the ribbon icon
-        // ribbonIconEl.createEl('span', {text: 'Ribbon Text'});
-        //endregion
-
 
         // region Status Bar integration
         // This adds a status bar item to the bottom of the app. Does not work on mobile apps.
@@ -101,28 +90,8 @@ export default class OdaPmToolPlugin extends Plugin {
             })
         );
 
-        this.addRibbonIcon("dice", "Open menu", (event) => {
-            const menu = new Menu();
-
-            menu.addItem((item) =>
-                item
-                    .setTitle("Copy")
-                    .setIcon("documents")
-                    .onClick(() => {
-                        new Notice("Copied");
-                    })
-            );
-
-            menu.addItem((item) =>
-                item
-                    .setTitle("Paste")
-                    .setIcon("paste")
-                    .onClick(() => {
-                        new Notice("Pasted");
-                    })
-            );
-
-            menu.showAtMouseEvent(event);
+        this.addRibbonIcon("dice", "iPm Help Page", (event) => {
+            this.activateView(PmHelpPageViewId)
         });
         this.inited = true;
     }
@@ -171,14 +140,14 @@ export default class OdaPmToolPlugin extends Plugin {
         });
         this.addCommand({
             id: 'ipm:open-manage-page',
-            name: 'Select Task or Workflow in Manage Page',
+            name: 'Open Manage Page',
             editorCallback: (editor: Editor, view: MarkdownView) => {
                 this.activateManagePageView()
             }
         });
         this.addCommand({
             id: 'ipm:select-task-manage-page',
-            name: 'Select Task or Workflow in Manage Page',
+            name: CmdPal_JumpToManagePage,
             editorCallback: (editor: Editor, view: MarkdownView) => {
                 this.jumpToTaskOrWorkflow(editor, view);
             }
@@ -196,7 +165,7 @@ export default class OdaPmToolPlugin extends Plugin {
             this.app.workspace.on("editor-menu", (menu, editor, view) => {
                 menu.addItem((item) => {
                     item
-                        .setTitle("Jump To Manage Page")
+                        .setTitle(CmdPal_JumpToManagePage)
                         .setIcon("document")
                         .onClick(async () => {
                             this.jumpToTaskOrWorkflow(editor, view);
@@ -361,7 +330,12 @@ export default class OdaPmToolPlugin extends Plugin {
             (leaf) => new ManagePageView(leaf, this,)
         );
 
-        this.addRibbonIcon("bell-plus", "Show Pm Window", () => {
+        this.registerView(
+            PmHelpPageViewId,
+            (leaf) => new PmHelpPageView(leaf, this,)
+        );
+
+        this.addRibbonIcon("bell-plus", "iPm Manage Page", () => {
             this.activateManagePageView()
         });
     }
