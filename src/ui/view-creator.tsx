@@ -43,6 +43,7 @@ import {
 import {appendBoldText} from "./html-template";
 import {OdaPmDbProvider} from "../data-model/odaPmDb";
 import {Evt_DbReloaded, Evt_JumpTask, Evt_JumpWorkflow} from "../typing/dataview-event";
+import {devLog} from "../utils/env-util";
 
 
 // dark light compatible
@@ -94,7 +95,7 @@ function openTaskPrecisely(workspace: Workspace, task: STask) {
 export function ReactManagePage({eventCenter}: {
     eventCenter?: EventEmitter
 }) {
-    console.log("ReactManagePage rendered.")
+    devLog("ReactManagePage rendered.")
     // only for re-render
     const [rerenderState, setRerenderState] = useState(0);
 
@@ -258,7 +259,11 @@ export function WorkflowTypeLegendView() {
     </HStack>;
 }
 
-const WorkflowFilterHeading = ({displayWorkflowNames, workflows, handleSetDisplayWorkflows}: { displayWorkflowNames: string[], workflows: I_OdaPmWorkflow[], handleSetDisplayWorkflows: (s: string[]) => void }) => {
+const WorkflowFilterHeading = ({displayWorkflowNames, workflows, handleSetDisplayWorkflows}: {
+    displayWorkflowNames: string[],
+    workflows: I_OdaPmWorkflow[],
+    handleSetDisplayWorkflows: (s: string[]) => void
+}) => {
     return <span style={{display: "flex"}}>
             <HStack style={{
                 display: "flex",
