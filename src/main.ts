@@ -1,4 +1,4 @@
-import {App, Editor, MarkdownFileInfo, MarkdownView, Modal, Notice, Plugin} from 'obsidian';
+import {Editor, MarkdownFileInfo, MarkdownView, Notice, Plugin} from 'obsidian';
 import {Icon_ManagePage, ManagePageView, ManagePageViewId} from "./ui/manage-page-view";
 import {ONotice} from "./utils/o-notice";
 import {SettingsProvider, TPM_DEFAULT_SETTINGS, TPMSettings, TPMSettingsTab} from "./Settings";
@@ -58,12 +58,6 @@ export default class OdaPmToolPlugin extends Plugin {
         // console.log("add OdaPmDbProvider")
         this.regPluginListener()
 
-
-        // region Status Bar integration
-        // This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-        const statusBarItemEl = this.addStatusBarItem();
-        statusBarItemEl.setText('Status Bar Text');
-        // endregion
         this.initCommands();
 
 
@@ -109,33 +103,26 @@ export default class OdaPmToolPlugin extends Plugin {
     private initCommands() {
         // region Command Palette integration
         // This adds a simple command that can be triggered anywhere
-        this.addCommand({
-            id: 'open-sample-modal-simple',
-            name: 'Open sample modal (simple)',
-            callback: () => {
-                new SampleModal(this.app).open();
-            }
-        });
 
-        // This adds a complex command that can check whether the current state of the app allows execution of the command
-        this.addCommand({
-            id: 'open-sample-modal-complex',
-            name: 'Open sample modal (complex)',
-            checkCallback: (checking: boolean) => {
-                // Conditions to check
-                const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-                if (markdownView) {
-                    // If checking is true, we're simply "checking" if the command can be run.
-                    // If checking is false, then we want to actually perform the operation.
-                    if (!checking) {
-                        new SampleModal(this.app).open();
-                    }
-
-                    // This command will only show up in Command Palette when the check function returns true
-                    return true;
-                }
-            }
-        });
+        // // This adds a complex command that can check whether the current state of the app allows execution of the command
+        // this.addCommand({
+        //     id: 'open-sample-modal-complex',
+        //     name: 'Open sample modal (complex)',
+        //     checkCallback: (checking: boolean) => {
+        //         // Conditions to check
+        //         const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+        //         if (markdownView) {
+        //             // If checking is true, we're simply "checking" if the command can be run.
+        //             // If checking is false, then we want to actually perform the operation.
+        //             if (!checking) {
+        //                 new SampleModal(this.app).open();
+        //             }
+        //
+        //             // This command will only show up in Command Palette when the check function returns true
+        //             return true;
+        //         }
+        //     }
+        // });
         this.addCommand({
             id: 'tpm:open-manage-page',
             name: CmdPal_OpenManagePage,
@@ -386,20 +373,3 @@ export default class OdaPmToolPlugin extends Plugin {
         return this.emitter;
     }
 }
-
-class SampleModal extends Modal {
-    constructor(app: App) {
-        super(app);
-    }
-
-    onOpen() {
-        const {contentEl} = this;
-        contentEl.setText('Woah!');
-    }
-
-    onClose() {
-        const {contentEl} = this;
-        contentEl.empty();
-    }
-}
-
