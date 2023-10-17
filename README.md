@@ -8,7 +8,7 @@ projects and track progress anywhere in your [Obsidian](https://obsidian.md/) va
 
 
 
-<p align="center"><a href="/docs/tutorial-short.md">Tutorial (Short)</a> | <a href="/docs/tutorial-long.md">Tutorial (Long)</a> | <a href="/docs/user_manual.md">User Manual</a> | <a href="/docs/template.md">Template</a></p>
+<p align="center"><a href="http://htmlpreview.github.io/?https://github.com/Odaimoko/tag-project/blob/master/docs/tutorial-short.md">Tutorial (Short)</a> | <a href="http://htmlpreview.github.io/?https://github.com/Odaimoko/tag-project/blob/master/docs/tutorial-long.md">Tutorial (Long)</a> | <a href="/docs/user_manual.md">User Manual</a> | <a href="http://htmlpreview.github.io/?https://github.com/Odaimoko/tag-project/blob/master/docs/template.md">Template</a></p>
 
 The tutorials and template are also available in the plugin's Help Page, directly accessible in Obsidian.
 Github will not render these pages correctly. Please visit Help Page in Obsidian for readability.
