@@ -114,12 +114,14 @@ const CommonHelpViewInModalAndLeaf = ({plugin, container}: {
                         })}
                     </HStack>
                 </div>
-                {
-                    tab === HelpViewTabsNames[0] ? <BasicTutorial/> :
-                        tab === HelpViewTabsNames[1] ? <UserManual/> :
-                            tab === HelpViewTabsNames[2] ?
-                                <ExampleManagePage app={plugin.app} container={exContainer}/> : <></>
-                }
+                <div>
+                    {
+                        tab === HelpViewTabsNames[0] ? <BasicTutorial/> :
+                            tab === HelpViewTabsNames[1] ? <UserManual/> :
+                                tab === HelpViewTabsNames[2] ?
+                                    <ExampleManagePage app={plugin.app} container={exContainer}/> : <></>
+                    }
+                </div>
             </div>
         </PluginContext.Provider>
     </StrictModeWrapper>
@@ -482,6 +484,9 @@ const ExampleManagePage = ({app, container}: {
     return <>
         <p style={centerChildrenVertStyle}>
             This is a template for {PLUGIN_NAME}. You can use it as a starting point.
+        </p>
+        <p style={centerChildrenVertStyle}>
+            This can be created with one click in the plugin.
         </p>
         <p style={centerChildrenVertStyle}>
             <button onClick={() => {
