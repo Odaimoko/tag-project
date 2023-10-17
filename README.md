@@ -11,6 +11,8 @@ projects and track progress anywhere in your [Obsidian](https://obsidian.md/) va
 
 The tutorials and template are also available in the plugin's Help Page, directly accessible in Obsidian.
 
+Github will not render these pages correctly. Please visit Help Page in Obsidian for readability.
+
 ## An example of Manage Page
 
 ![Alt text](docs/manage-page-example.png)
@@ -70,4 +72,4 @@ Here's a screenshot of the tasks I created with *Tag Project* when developing it
 
 # License
 
-MIT.
+[MIT](LICENSE)
