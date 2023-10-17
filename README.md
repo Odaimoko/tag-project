@@ -7,15 +7,17 @@ projects and track progress anywhere in your [Obsidian](https://obsidian.md/) va
 *Tag Project* is developed with *Tag Project*!
 
 
+
 <p align="center"><a href="/docs/tutorial-short.md">Tutorial (Short)</a> | <a href="/docs/tutorial-long.md">Tutorial (Long)</a> | <a href="/docs/user_manual.md">User Manual</a> | <a href="/docs/template.md">Template</a></p>
 
 The tutorials and template are also available in the plugin's Help Page, directly accessible in Obsidian.
-
 Github will not render these pages correctly. Please visit Help Page in Obsidian for readability.
 
 ## An example of Manage Page
 
 ![Alt text](docs/manage-page-example.png)
+
+
 
 ## Introduction (WIP)
 
@@ -70,6 +72,13 @@ Here's a screenshot of the tasks I created with *Tag Project* when developing it
 
 ![Tag Project Development](docs/image.png)
 
+
+
 # License
 
 [MIT](LICENSE)
+
+# Contact/Sponsor
+
+[![Twitter/X](https://img.shields.io/badge/TianFF14-white?logo=twitter)](https://twitter.com/TianFF14)
+[![Buy me a coffee](https://img.shields.io/badge/-buy_me_a%C2%A0coffee-white?logo=buy-me-a-coffee)](https://www.buymeacoffee.com/odaimoko)
