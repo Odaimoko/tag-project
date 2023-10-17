@@ -82,4 +82,4 @@ Here's a screenshot of the tasks I created with *Tag Project* when developing it
 # Contact/Sponsor
 
 [![Twitter/X](https://img.shields.io/badge/TianFF14-white?logo=twitter)](https://twitter.com/TianFF14)
-[![Buy me a coffee](https://img.shields.io/badge/-buy_me_a%C2%A0coffee-white?logo=buy-me-a-coffee)](https://www.buymeacoffee.com/odaimoko)
+[![Buy me a coffee](https://img.shields.io/badge/-buy_me_a%C2%A0coffee-white?logo=kofi)](https://ko-fi.com/odaimoko)
