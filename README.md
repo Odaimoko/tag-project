@@ -17,13 +17,13 @@ Github will not render these pages correctly. Please visit Help Page in Obsidian
 
 ![Alt text](docs/manage-page-example.png)
 
-## Introduction
+## Introduction (WIP)
 
-### Installation
+<!-- ### Installation
 
 1. In Obsidian, open Settings > Community plugins > Browse.
 1. Search for "Tag Project" by Odaimoko.
-1. Select Install.
+1. Select Install. -->
 
 ## In the Future
 
