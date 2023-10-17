@@ -55,7 +55,7 @@ export class ManagePageView extends ItemView {
                 <div style={{display: "flex", justifyContent: "center", marginBottom: -20}}>
                     <HStack spacing={10} style={{alignItems: "center"}}>
                         <h1>{this.getDisplayText()}</h1>
-                        <ClickableIconView onIconClicked={() => new PmHelpModal(this.app).open()}
+                        <ClickableIconView onIconClicked={() => new PmHelpModal(this.plugin).open()}
                                            iconName={"help-circle"}/>
                     </HStack>
                 </div>

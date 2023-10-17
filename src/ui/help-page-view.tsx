@@ -1,8 +1,8 @@
 import {App, ItemView, Modal, WorkspaceLeaf} from "obsidian";
 import {createRoot, Root} from "react-dom/client";
-import React, {JSX, useState} from "react";
+import React, {JSX, useContext, useState} from "react";
 import {WorkflowTypeLegend} from "./view-creator";
-import {DataTable, HStack, ObsidianIconView, StrictModeWrapper} from "./view-template";
+import {DataTable, HStack, I_Stylable, ObsidianIconView, StrictModeWrapper} from "./view-template";
 import OdaPmToolPlugin, {
     CmdPal_JumpToManagePage,
     CmdPal_OpenManagePage,
@@ -10,8 +10,10 @@ import OdaPmToolPlugin, {
     PLUGIN_NAME
 } from "../main";
 import {Tag_Prefix_Step, Tag_Prefix_Tag, Tag_Prefix_TaskType, Tag_Prefix_Workflow} from "../data-model/workflow_def";
-import {Icon_ManagePage} from "./manage-page-view";
+import {Icon_ManagePage, PluginContext} from "./manage-page-view";
 import {getTemplateHtml, ManagePageForTemplate, templateMd} from "./tpm-template-md";
+import {I_Renderable} from "./i_Renderable";
+import {setSettingsValueAndSave} from "../Settings";
 
 export const PmHelpPageViewId = "tpm-help-view";
 export const Desc_ManagePage = "Manage Page";
@@ -50,7 +52,7 @@ export class PmHelpPageView extends ItemView {
 
         // React
         this.root = createRoot(this.containerEl.children[1]); // Override the previous container
-        this.root.render(<CommonHelpViewInModalAndLeaf app={this.app} container={contentEl}/>);
+        this.root.render(<CommonHelpViewInModalAndLeaf plugin={this.plugin} container={contentEl}/>);
     }
 
     async onClose() {
@@ -70,9 +72,11 @@ export class PmHelpPageView extends ItemView {
 
 export class PmHelpModal extends Modal {
     root: Root | null = null;
+    plugin: OdaPmToolPlugin;
 
-    constructor(app: App) {
-        super(app);
+    constructor(plugin: OdaPmToolPlugin) {
+        super(plugin.app);
+        this.plugin = plugin;
     }
 
     onOpen() {
@@ -80,7 +84,7 @@ export class PmHelpModal extends Modal {
         contentEl.empty();
         // React
         this.root = createRoot(contentEl); // Override the previous container
-        this.root.render(<CommonHelpViewInModalAndLeaf app={this.app} container={contentEl}/>)
+        this.root.render(<CommonHelpViewInModalAndLeaf plugin={this.plugin} container={contentEl}/>)
     }
 
     onClose() {
@@ -91,38 +95,56 @@ export class PmHelpModal extends Modal {
 
 const centerChildrenVertStyle = {display: "flex", justifyContent: "center"}
 const HelpViewTabsNames = ["Tutorial", "User manual", "Template"]
-const CommonHelpViewInModalAndLeaf = ({app, container}: {
-    app: App,
+const CommonHelpViewInModalAndLeaf = ({plugin, container}: {
+    plugin: OdaPmToolPlugin,
     container: Element
 }) => {
     const [tab, setTab] = useState(HelpViewTabsNames[0]);
     const exContainer = container.createEl("div")
     return <StrictModeWrapper>
-        <div>
-            <div style={centerChildrenVertStyle}>
-                <h1 style={{}}>{PLUGIN_NAME}: Help Page</h1>
+        <PluginContext.Provider value={plugin}>
+            <div>
+                <div style={centerChildrenVertStyle}>
+                    <h1 style={{}}>{PLUGIN_NAME}: Help Page</h1>
+                </div>
+                <div style={centerChildrenVertStyle}>
+                    <HStack spacing={30}>
+                        {HelpViewTabsNames.map((name, index) => {
+                            return <button key={name} onClick={() => setTab(name)}>{name}</button>
+                        })}
+                    </HStack>
+                </div>
+                {
+                    tab === HelpViewTabsNames[0] ? <BasicTutorial/> :
+                        tab === HelpViewTabsNames[1] ? <UserManual/> :
+                            tab === HelpViewTabsNames[2] ?
+                                <ExampleManagePage app={plugin.app} container={exContainer}/> : <></>
+                }
             </div>
-            <div style={centerChildrenVertStyle}>
-                <HStack spacing={30}>
-                    {HelpViewTabsNames.map((name, index) => {
-                        return <button key={name} onClick={() => setTab(name)}>{name}</button>
-                    })}
-                </HStack>
-            </div>
-            {
-                tab === HelpViewTabsNames[0] ? <BasicTutorial/> :
-                    tab === HelpViewTabsNames[1] ? <UserManual/> :
-                        tab === HelpViewTabsNames[2] ? <ExampleManagePage app={app} container={exContainer}/> : <></>
-            }
-        </div>
+        </PluginContext.Provider>
     </StrictModeWrapper>
 }
 
 const BasicTutorial = () => {
+    const plugin = useContext(PluginContext);
+    const [isTlDr, setIsTlDr] = useState(plugin.settings.help_page_tutorial_tldr as boolean);
+    // hidden when tldr mode is on.
+    const blockTldrOmitStyle: React.CSSProperties = {display: isTlDr ? "none" : "block"} //  visibility:"hidden" will still take space. So we use display instead
+    const blockTldrOShowStyle: React.CSSProperties = {display: isTlDr ? "block" : "none"}
+    const inlineTldrOmitStyle: React.CSSProperties = {display: isTlDr ? "none" : "inline"}
+
     return <>
-        <h1>Tutorial</h1>
+        <HStack style={{alignItems: "center"}} spacing={10}>
+            <h1>Tutorial</h1>
+            <ExternalToggleView externalControl={isTlDr} onChange={() => {
+                const nextValue = !isTlDr;
+                setIsTlDr(nextValue)
+                setSettingsValueAndSave(plugin, "help_page_tutorial_tldr", nextValue)
+            }} content={<label style={{padding: 5}}>{"TL;DR - Use when you understand the concepts"}</label>}/>
+        </HStack>
         <h2>Workflow Types</h2>
-        <p>A task consists of multiple steps. It can be categorized into two workflows according to the the
+        <p style={blockTldrOmitStyle}>A task consists of multiple steps. It can be categorized into two workflows
+            according to the the
             relationships between steps.</p>
         <div style={centerChildrenVertStyle}>
             <DataTable tableTitle={"Workflow types"} headers={["Type", "Description"]} rows={
@@ -148,31 +170,30 @@ const BasicTutorial = () => {
         </div>
         <h2>Use tags to define workflows</h2>
         <div>
-            A <b>chain</b> workflow is defined by a task marked with the tag <HashTagView
-            tagWithoutHash={`${Tag_Prefix_Workflow}chain`}/>. The steps in the workflow is defined by tags with
+            A <b>chain</b> workflow is defined by a task marked with <HashTagView
+            tagWithoutHash={`${Tag_Prefix_Workflow}chain`}/>.<span style={inlineTldrOmitStyle}> The steps in the workflow is defined by tags with
             prefix <HashTagView tagWithoutHash={Tag_Prefix_Step}/>.
             The order of the
-            steps determines the dependency chain.
+            steps determines the dependency chain.</span>
         </div>
         <TaggedTaskView content={"write_scripts"}
                         tags={[`${Tag_Prefix_Workflow}chain`, `${Tag_Prefix_Step}write`, `${Tag_Prefix_Step}revise`, `${Tag_Prefix_Step}export`]}/>
 
-        <div>
+        <p style={blockTldrOmitStyle}>
             This defines a chain workflow named <i>write_scripts</i>, where the task is to write scripts, revise, and
             export it to somewhere. You cannot revise before writing, and you cannot export before revising.
-        </div>
+        </p>
 
-        <p/>
-        <div>
-            A <b>checkbox</b> workflow is defined by a task marked with a tag <HashTagView
-            tagWithoutHash={`${Tag_Prefix_Workflow}checkbox`}/>. The order of
-            the steps does not matter.
-        </div>
+        <p>
+            A <b>checkbox</b> workflow is defined by a task marked with <HashTagView
+            tagWithoutHash={`${Tag_Prefix_Workflow}checkbox`}/>.<span style={inlineTldrOmitStyle}> The order of
+            the steps does not matter.</span>
+        </p>
 
         <TaggedTaskView content={"card_design"} tags={[
             `${Tag_Prefix_Workflow}checkbox`, `${Tag_Prefix_Step}data`, `${Tag_Prefix_Step}effect`, `${Tag_Prefix_Step}art`
         ]}/>
-        <div>
+        <div style={blockTldrOmitStyle}>
             This defines a checkbox workflow named <i>card_design</i>, used when you want to design a new card for your
             trading card game.
             You need to add the data to the card database, design the effects, and draw some images. You can add the
@@ -181,11 +202,13 @@ const BasicTutorial = () => {
         </div>
         <p/>
         <h2>Use tags to define tasks</h2>
-        <label>Suppose we have a task to write the preface of the game. We may have a task like this.</label>
-
-        <TaggedTaskView content={"Write preface"} tags={[]}/>
-
-        <div>
+        <label style={blockTldrOmitStyle}>Suppose we have a task to write the preface of the game. We may have a task
+            like
+            this.</label>
+        <div style={blockTldrOmitStyle}>
+            <TaggedTaskView content={"Write preface"} tags={[]}/>
+        </div>
+        <div style={blockTldrOmitStyle}>
             Once workflows are defined, use <HashTagView tagWithoutHash={`${Tag_Prefix_Step}[work_flow_name]`}/> to mark
             the next
             step, without the square brackets. For example, if we want to mark a task as <i>write_scripts</i>, we can
@@ -193,78 +216,140 @@ const BasicTutorial = () => {
         </div>
         <TaggedTaskView content={"Write preface"} tags={[`${Tag_Prefix_TaskType}write_scripts`]}/>
 
-        <p>
+        <p style={blockTldrOmitStyle}>
             This makes the task a <i>managed task</i>, and it will show up in {Desc_ManagePage}.
             You can use the ribbon icon on the leftmost bar (<ObsidianIconView iconName={Icon_ManagePage}/>), or use the
             command palette (<i>{CmdPal_OpenManagePage}</i>) to open it.
         </p>
-        <div>
-            If you set the workflow for the very first time, it's tag is not available for auto-completion.
-            Instead of manually typing the tag, you can also use context menu or command palette
+        <p style={blockTldrOmitStyle}>
+            If you set the workflow for the very first time, it's tag is not available for auto-completion. Instead of
+            manually typing the workflow tag, you can also use context menu or command palette
             (<i>{CmdPal_SetWorkflowToTask}</i>) to do it. With a hotkey bound, this is as fast as auto-completion.
+        </p>
+        <div style={blockTldrOShowStyle}>
+            Add a workflow tag to a task via:
+            <ul>
+                <li>
+                    (Preferred) context menu or command palette
+                    (<i>{CmdPal_SetWorkflowToTask}</i>)
+                </li>
+                <li>
+                    Manually typing the workflow tag
+                </li>
+            </ul>
+
         </div>
-        <p>After typing the first workflow tag, you can use auto-completion.
+        <p style={blockTldrOmitStyle}>After typing the first workflow tag, you can use auto-completion.
             But using the command palette is preferred, since it can replace an existing workflow tag with the new one.
             You don't have to remove the older one yourself.
         </p>
-        <p>
+        <p style={blockTldrOmitStyle}>
             You can choose whichever way is more convenient for you. Markdown is a
             text file after all.
         </p>
-        Here are more examples of the <i>card_design</i> task.
+        <p style={blockTldrOmitStyle}>
+            Here are more examples of the <i>card_design</i> task.
+        </p>
         <TaggedTaskView content={"card: warlock, normal attack"} tags={[`${Tag_Prefix_TaskType}card_design`]}/>
         <TaggedTaskView content={"card: warlock, fire magic"} tags={[`${Tag_Prefix_TaskType}card_design`]}/>
 
         <h2>Use tags to add steps</h2>
-        Remember we define some steps for each workflow. Now we finish the writing work for preface. It goes to the
-        revise phase. So we mark it as:
+        <div style={blockTldrOmitStyle}>
+            Remember we define some steps for each workflow. Now we finish the writing work for preface. It goes to the
+            revise phase. So we mark it as:
+        </div>
         <TaggedTaskView content={"Write preface"}
                         tags={[`${Tag_Prefix_TaskType}write_scripts`, `${Tag_Prefix_Step}write`]}/>
-        <p>Since the step tag is already defined, they can be auto completed.
-            Note that adding the step tag means we have done the step. It is more natural for me and the meaning stays
+        <p style={blockTldrOmitStyle}>Since the step tag is already defined, they can be auto completed.
+            Note that adding a step tag represents we have done the step. It is more natural for me and the meaning
+            stays
             the same with checkbox workflow. If you want to make a step representing the work you are doing, you can add
             a <b><i>done</i></b> step at the end of each chain workflow.
         </p>
 
         <p>
-            In {Desc_ManagePage}, ticking or unticking a checkbox will add or remove the corresponding tag in the
-            markdown
+            In {Desc_ManagePage}, ticking or unticking a checkbox will add or remove the corresponding tag in markdown
             automatically.
-            See <i>{`Tasks Completion`}</i> section under <i>{HelpViewTabsNames[1]}</i> tab for more
-            details.
+            <span
+                style={inlineTldrOmitStyle}> See <i>{`Tasks Completion`}</i> section under <i>{HelpViewTabsNames[1]}</i> tab for more
+            details.</span>
         </p>
 
         <h2>Use tags to add, well, tags</h2>
-        Sometimes you want to give a task a property, but you don't want to make it a workflow step. For example, you
-        want to mark the task abandoned, or this task has high priority, or you want to group tasks into
-        different projects.
-        You can use <i>managed tags</i> to do that.
-        <p/>
-        The managed tags have the prefix <HashTagView tagWithoutHash={Tag_Prefix_Tag}/> so it would not be confused with
-        normal tags, such as <HashTagView tagWithoutHash={`${Tag_Prefix_Tag}abandoned`}/>.
+        <p style={blockTldrOmitStyle}>
+            Sometimes you want to give a task a property, but you don't want to make it a workflow step. For example,
+            you
+            want to mark the task abandoned, or this task has high priority, or you want to group tasks into
+            different projects.
+            You can use <i>managed tags</i> to do that.
+        </p>
+        <p style={blockTldrOmitStyle}>
+            The managed tags have the prefix <HashTagView tagWithoutHash={Tag_Prefix_Tag}/> so it would not be confused
+            with
+            normal tags, such as <HashTagView tagWithoutHash={`${Tag_Prefix_Tag}abandoned`}/>.
+        </p>
+        <p style={blockTldrOShowStyle}>
+            The managed tags have the prefix <HashTagView tagWithoutHash={Tag_Prefix_Tag}/>, such as <HashTagView
+            tagWithoutHash={`${Tag_Prefix_Tag}abandoned`}/>.
+        </p>
         <TaggedTaskView content={"card: warlock, fire magic"}
                         tags={[`${Tag_Prefix_TaskType}card_design`, `${Tag_Prefix_TaskType}abandoned`]}/>
-        <p>
+        <p style={blockTldrOmitStyle}>
             Managed tags will show in {Desc_ManagePage} as filters, while normal tags won't. You can set a tag be
             included
             or excluded in the search on {Desc_ManagePage}.</p>
-        <p>
+        <p style={blockTldrOmitStyle}>
             If you want to define a workflow without any steps, it should not be called a workflow. The built-in
             tag should suffice. If you want to manage that task in {PLUGIN_NAME}, you can always place a dummy step tag
             in the workflow definition.
         </p>
 
         <h2>Open {Desc_ManagePage}</h2>
-        You can open {Desc_ManagePage} directly using the ribbon icon on the leftmost bar, or use the command palette.
-        <p>Apart from this, when your cursor is focusing on a managed task or workflow, you can do the following things
-            with context menu or command palette (<i>{CmdPal_JumpToManagePage}</i>):</p>
-        <ul>
-            <li>If the cursor is at a workflow, you can open {Desc_ManagePage} with only this workflow filtered.
-            </li>
-            <li>
-                If the cursor is at a managed task, you can open {Desc_ManagePage} with only this task shown.
-            </li>
-        </ul>
+        <p style={blockTldrOmitStyle}>
+            You can open {Desc_ManagePage} directly using the ribbon icon (<ObsidianIconView
+            iconName={Icon_ManagePage}/>) on the leftmost bar, or use the command palette
+            (<i>{CmdPal_OpenManagePage}</i>).
+        </p>
+        <p style={blockTldrOShowStyle}>
+            Open {Desc_ManagePage} via
+            <ul>
+                <li>
+                    the ribbon icon (<ObsidianIconView iconName={Icon_ManagePage}/>) on the leftmost bar,
+                </li>
+                <li>
+                    the command (<i>{CmdPal_OpenManagePage}</i>).
+
+                </li>
+            </ul>
+
+        </p>
+        <p style={blockTldrOmitStyle}>Apart from this, when your cursor is focusing on a managed task or workflow, you
+            can do the following things
+            with context menu or command palette (<i>{CmdPal_JumpToManagePage}</i>):
+            <ul>
+                <li>If the cursor is at a workflow, you can open {Desc_ManagePage} with only this workflow filtered.
+                </li>
+                <li>
+                    If the cursor is at a managed task, you can open {Desc_ManagePage} with only this task shown.
+                </li>
+            </ul>
+        </p>
+        <p style={blockTldrOShowStyle}>
+            Jump to workflow or task:
+            <ul>
+                <li>
+                    when the cursor is at a workflow or a managed task
+                </li>
+                <li>
+                    with context menu or command palette (<i>{CmdPal_JumpToManagePage}</i>)
+                </li>
+            </ul>
+        </p>
+        <h2>A {Desc_ManagePage} Example</h2>
+        <p>
+            You can find the source markdown in the <i>{HelpViewTabsNames[2]}</i> tab.
+        </p>
+        <ManagePageForTemplate/>
     </>
 }
 const InlineCodeView = ({text}: {
@@ -382,7 +467,7 @@ const UserManual = () => {
         </ul>
     </>
 }
-const templateTargetFilePath = " TagProject_Template.md";
+const templateTargetFilePath = "TagProject_Template.md";
 
 const ExampleManagePage = ({app, container}: {
     app: App,
@@ -404,18 +489,29 @@ const ExampleManagePage = ({app, container}: {
                     // fs.writeFileSync("TagProject_Template.md", templateMd)
                     app.vault.adapter.write(templateTargetFilePath, templateMd)
                 }
-            }}>Write template to <i>{templateTargetFilePath}</i>
+            }}>Create this template at <label style={{padding: 3, fontStyle: "italic"}}>{templateTargetFilePath}</label>
             </button>
         </p>
-        {templateView}
-        <p/>
+        <p>
+            A {Desc_ManagePage} showcase
+        </p>
         <ManagePageForTemplate/>
+        <p>
+            The source markdown
+        </p>
+        {templateView}
     </>
 }
-const LinkView = ({text, onClick}: { text: string, onClick?: () => void }) => {
+const LinkView = ({text, onClick}: {
+    text: string,
+    onClick?: () => void
+}) => {
     return <a className="internal-link" onClick={onClick}>{text}</a>
 }
-const TaggedTaskView = ({content, tags}: { content: string, tags: string[] }) => {
+const TaggedTaskView = ({content, tags}: {
+    content: string,
+    tags: string[]
+}) => {
     const checkBoxExampleStyle = {marginTop: 10, marginBottom: 10,}
 
     return <div style={checkBoxExampleStyle}>
@@ -426,7 +522,9 @@ const TaggedTaskView = ({content, tags}: { content: string, tags: string[] }) =>
         }
     </div>
 }
-const HashTagView = ({tagWithoutHash}: { tagWithoutHash: string }) => {
+const HashTagView = ({tagWithoutHash}: {
+    tagWithoutHash: string
+}) => {
     tagWithoutHash = tagWithoutHash.startsWith("#") ? tagWithoutHash.substring(1) : tagWithoutHash
     return <>
             <span
@@ -434,5 +532,37 @@ const HashTagView = ({tagWithoutHash}: { tagWithoutHash: string }) => {
         <span
             className="cm-hashtag cm-hashtag-end cm-list-1 cm-meta ">{tagWithoutHash}</span>
         <label> </label>
+    </>
+}
+const ToggleView = ({
+                        content, onChange, onLabelClicked, initialState = false, style,
+                    }: {
+    content?: string | JSX.Element,
+    onChange?: (nextChecked: boolean) => void,
+    onLabelClicked?: () => void,
+    initialState?: boolean,
+} & I_Stylable) => {
+    const [isChecked, setIsChecked] = useState(initialState);
+    const handleCheckboxChange = () => {
+        const nextToggle = !isChecked;
+        setIsChecked(nextToggle);
+        onChange?.(nextToggle);
+    };
+    return <ExternalToggleView externalControl={isChecked} content={content} onChange={handleCheckboxChange}
+                               onLabelClicked={onLabelClicked} style={style}
+    />
+}
+const ExternalToggleView = ({externalControl, onChange, onLabelClicked, content, style}:
+                                {
+                                    externalControl: boolean,
+                                    onChange: () => void,
+                                    onLabelClicked?: () => void,
+                                    content?: I_Renderable,
+
+                                } & I_Stylable) => {
+    const className = externalControl ? "checkbox-container  is-enabled" : "checkbox-container";
+    return <><span style={style} className={className} onClick={onChange}><input type="checkbox"/>
+    </span><span
+        onClick={onLabelClicked}>{content}</span>
     </>
 }
