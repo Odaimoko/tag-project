@@ -21,15 +21,14 @@ jobs:
         run: |
           npm install
           npm run build
-
       - name: Create release
+        permissions: write-all
         env:
-          permissions: write-all
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           tag="${GITHUB_REF#refs/tags/}"
-
           gh release create "$tag" \
             --title="$tag" \
+            --generate-notes \
             --draft \
             main.js manifest.json styles.css
