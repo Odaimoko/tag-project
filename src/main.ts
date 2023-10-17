@@ -139,7 +139,7 @@ export default class OdaPmToolPlugin extends Plugin {
         this.addCommand({
             id: 'tpm:open-manage-page',
             name: CmdPal_OpenManagePage,
-            editorCallback: (editor: Editor, view: MarkdownView) => {
+            callback: () => {
                 this.activateManagePageView()
             }
         });
