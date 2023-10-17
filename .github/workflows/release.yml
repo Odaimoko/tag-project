@@ -24,6 +24,7 @@ jobs:
 
       - name: Create release
         env:
+          permissions: write-all
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           tag="${GITHUB_REF#refs/tags/}"
