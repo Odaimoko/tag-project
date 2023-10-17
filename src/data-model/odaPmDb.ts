@@ -14,7 +14,7 @@ import {
     Tag_Prefix_Tag,
     trimTagsFromTask,
     Workflow_Type_Enum_Array
-} from "./workflow_def";
+} from "./workflow-def";
 import {EventEmitter} from "events";
 import {DataviewMetadataChangeEvent, Evt_DbReloaded} from "../typing/dataview-event";
 import {DataArray, getAPI, STask} from "obsidian-dataview";

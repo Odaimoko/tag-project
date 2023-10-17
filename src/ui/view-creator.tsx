@@ -7,19 +7,19 @@ import {
     TaskStatus_unchecked,
     Workflow_Type_Enum_Array,
     WorkflowType
-} from "../data-model/workflow_def";
+} from "../data-model/workflow-def";
 import {DataArray, STask} from "obsidian-dataview";
 import {Workspace} from "obsidian";
 import React, {useContext, useEffect, useState} from "react";
-import {I_Renderable} from "./i_Renderable";
+import {IRenderable} from "./i-renderable";
 
-import {rewriteTask} from "../utils/io_util";
+import {rewriteTask} from "../utils/io-util";
 import {ContainerContext, PluginContext} from "./manage-page-view";
 import {EventEmitter} from "events";
 import OdaPmToolPlugin from "../main";
 import {notify} from "../utils/o-notice";
 
-import {initialToUpper, isStringNullOrEmpty, simpleFilter} from "../utils/format_util";
+import {initialToUpper, isStringNullOrEmpty, simpleFilter} from "../utils/format-util";
 import {
     FilterMethod_Excluded,
     FilterMethod_Included,
@@ -361,7 +361,7 @@ const TagFilterCheckbox = ({tag, displayed, setDisplayed, excludeTags, setExclud
  */
 const OdaTaskSummaryCell = ({oTask, taskFirstColumn}: {
     oTask: OdaPmTask,
-    taskFirstColumn: I_Renderable
+    taskFirstColumn: IRenderable
 }) => {
     const plugin = useContext(PluginContext);
     const workspace = plugin.app.workspace;
@@ -751,7 +751,7 @@ function odaWorkflowToTableCells(displayStepTags: string[], oTask: OdaPmTask) {
 
 // For checkbox  
 // region Workflow Ui wrapper
-function odaTaskToTableRow(displayStepTags: string[], oTask: OdaPmTask): I_Renderable[] {
+function odaTaskToTableRow(displayStepTags: string[], oTask: OdaPmTask): IRenderable[] {
 
     return [`${oTask.summary}`, ...(getSettings()?.table_steps_shown ? odaWorkflowToTableCells(displayStepTags, oTask) : [])];
 }

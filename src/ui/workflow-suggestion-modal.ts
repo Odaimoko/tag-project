@@ -1,5 +1,5 @@
 import {App, FuzzySuggestModal} from "obsidian";
-import {I_OdaPmWorkflow} from "../data-model/workflow_def";
+import {I_OdaPmWorkflow} from "../data-model/workflow-def";
 import {OdaPmDbProvider} from "../data-model/odaPmDb";
 
 export class WorkflowSuggestionModal extends FuzzySuggestModal<I_OdaPmWorkflow> {

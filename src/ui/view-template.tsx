@@ -1,4 +1,4 @@
-import {I_Renderable} from "./i_Renderable";
+import {IRenderable} from "./i-renderable";
 import React, {Fragment, JSX, ReactNode, StrictMode, useState} from "react";
 import {getIcon} from "obsidian";
 
@@ -26,7 +26,7 @@ export function ObsidianIconView({iconName, style}: { iconName: string } & I_Sty
  * @constructor
  */
 export function InternalLinkView({content, onIconClicked, onContentClicked, style}: {
-    content: I_Renderable,
+    content: IRenderable,
     onIconClicked?: () => void,
     onContentClicked?: () => void,
 } & I_Stylable) {
@@ -37,7 +37,7 @@ export function InternalLinkView({content, onIconClicked, onContentClicked, styl
 }
 
 export function ClickableIconView({content, onIconClicked, onContentClicked, iconName, style}: {
-    content?: I_Renderable,
+    content?: IRenderable,
     onIconClicked?: () => void,
     onContentClicked?: () => void,
     iconName: string
@@ -77,8 +77,8 @@ export const DataTable = ({
                               cellStyleGetter,
                           }: {
         tableTitle: string,
-        headers: I_Renderable[],
-        rows: I_Renderable[][],
+        headers: IRenderable[],
+        rows: IRenderable[][],
         onHeaderClicked?: (arg0: number) => void,
         tableStyle?: React.CSSProperties,
         thStyle?: React.CSSProperties,
@@ -90,10 +90,10 @@ export const DataTable = ({
         return (
             <table style={tableStyle} key={tableTitle}>
                 <tbody>
-                {rows.map((items: I_Renderable[], rowIdx) => (
+                {rows.map((items: IRenderable[], rowIdx) => (
                     <tr key={rowIdx}>
                         {items.map(
-                            function (k: I_Renderable, columnIdx) {
+                            function (k: IRenderable, columnIdx) {
                                 const key = `${tableTitle}_${rowIdx}_${columnIdx}`;
                                 const cStyle = cellStyleGetter ?
                                     cellStyleGetter(columnIdx, rowIdx) :
@@ -134,7 +134,7 @@ export const ExternalControlledCheckbox = ({externalControl, onChange, onLabelCl
                                                    externalControl: boolean,
                                                    onChange: () => void,
                                                    onLabelClicked?: () => void,
-                                                   content?: I_Renderable,
+                                                   content?: IRenderable,
 
                                                } & I_Stylable) => {
     // Click the label won't trigger the checkbox change event

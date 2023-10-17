@@ -84,12 +84,12 @@ export class TPMSettingsTab extends PluginSettingTab {
 
         containerEl.empty(); // This is settings page, after clicking the tab.
 
-        const header = containerEl.createEl("div");
-        header.createEl("h1", {text: this.plugin.manifest.name});
-        header.createEl("h2", {text: "by Odaimoko"});
-        containerEl.createEl("h3", {text: "Plugin Behaviours"});
+        // const header = containerEl.createEl("div");
+        // header.createEl("h1", {text: this.plugin.manifest.name});
+        // header.createEl("h2", {text: "by Odaimoko"});
+        // containerEl.createEl("h3", {text: "Plugin Behaviours"});
         new Setting(containerEl)
-            .setName('Notice when a task is malformed')
+            .setName('Notify when a task is malformed')
             .setDesc('A task or workflow definition is malformed if it contains multiple lines, or the text is empty. Try adding blank line before or after the task.')
             .addToggle(this.setValueAndSave("report_malformed_task"));
         new Setting(containerEl)

@@ -11,9 +11,9 @@ import {
 } from "./typing/dataview-event";
 import {EventEmitter} from "events";
 import {OdaPmDb, OdaPmDbProvider} from "./data-model/odaPmDb";
-import {addTagText, I_OdaPmWorkflow, OdaPmTask} from "./data-model/workflow_def";
-import {rewriteTask} from "./utils/io_util";
-import {WorkflowSuggestionModal} from "./ui/WorkflowSuggestionModal";
+import {addTagText, I_OdaPmWorkflow, OdaPmTask} from "./data-model/workflow-def";
+import {rewriteTask} from "./utils/io-util";
+import {WorkflowSuggestionModal} from "./ui/workflow-suggestion-modal";
 import {Desc_ManagePage, Icon_HelpPage, PmHelpPageView, PmHelpPageViewId} from "./ui/help-page-view";
 
 export const PLUGIN_NAME = 'Tag Project';

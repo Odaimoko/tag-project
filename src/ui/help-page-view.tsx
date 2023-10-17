@@ -9,10 +9,10 @@ import OdaPmToolPlugin, {
     CmdPal_SetWorkflowToTask,
     PLUGIN_NAME
 } from "../main";
-import {Tag_Prefix_Step, Tag_Prefix_Tag, Tag_Prefix_TaskType, Tag_Prefix_Workflow} from "../data-model/workflow_def";
+import {Tag_Prefix_Step, Tag_Prefix_Tag, Tag_Prefix_TaskType, Tag_Prefix_Workflow} from "../data-model/workflow-def";
 import {Icon_ManagePage, PluginContext} from "./manage-page-view";
 import {getTemplateHtml, ManagePageForTemplate, templateMd} from "./tpm-template-md";
-import {I_Renderable} from "./i_Renderable";
+import {IRenderable} from "./i-renderable";
 import {setSettingsValueAndSave} from "../Settings";
 
 export const PmHelpPageViewId = "tpm-help-view";
@@ -562,7 +562,7 @@ const ExternalToggleView = ({externalControl, onChange, onLabelClicked, content,
                                     externalControl: boolean,
                                     onChange: () => void,
                                     onLabelClicked?: () => void,
-                                    content?: I_Renderable,
+                                    content?: IRenderable,
 
                                 } & I_Stylable) => {
     const className = externalControl ? "checkbox-container  is-enabled" : "checkbox-container";

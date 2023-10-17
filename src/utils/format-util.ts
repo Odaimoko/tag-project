@@ -1,4 +1,4 @@
-import {OdaPmTask} from "../data-model/workflow_def";
+import {OdaPmTask} from "../data-model/workflow-def";
 
 export function initialToUpper(word: string) {
     if (!word) return word;
