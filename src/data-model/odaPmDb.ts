@@ -17,7 +17,7 @@ import {
 } from "./workflow-def";
 import {EventEmitter} from "events";
 import {DataviewMetadataChangeEvent, Evt_DbReloaded} from "../typing/dataview-event";
-import {DataArray, getAPI, STask} from "obsidian-dataview";
+import {getAPI, STask} from "obsidian-dataview";
 import {ONotice} from "../utils/o-notice";
 import {getSettings} from "../Settings";
 import {GenericProvider} from "../utils/GenericProvider";
@@ -113,7 +113,7 @@ function getAllWorkflows(): I_OdaPmWorkflow[] {
         .unique();
 }
 
-function getAllPmTasks(workflows: I_OdaPmWorkflow[]): DataArray<OdaPmTask> {
+function getAllPmTasks(workflows: I_OdaPmWorkflow[]) {
     const workflowTags = workflows.map(function (k: I_OdaPmWorkflow) {
         return k.tag;
     });
@@ -128,7 +128,7 @@ function getAllPmTasks(workflows: I_OdaPmWorkflow[]): DataArray<OdaPmTask> {
             return createPmTaskFromTask(workflowTags, workflows, task)
         }).filter(function (k: OdaPmTask | null) {
             return k !== null;
-        })
+        }).array()
         ;
 }
 
@@ -171,8 +171,8 @@ export class OdaPmDb implements I_EvtListener {
             const validPmTag = k.boundTask.tags.filter((m: string) => m.startsWith(Tag_Prefix_Tag));
             return validPmTag;
         })
-            .filter(k => !this.workflowTags.includes(k) && !this.stepTags.includes(k)) as DataArray)
-            .array().unique()
+            .filter(k => !this.workflowTags.includes(k) && !this.stepTags.includes(k)))
+            .unique()
 
         this.emitter.emit(Evt_DbReloaded)
     }
@@ -193,6 +193,22 @@ export class OdaPmDb implements I_EvtListener {
             }
         }
         return null;
+    }
+
+
+    getFilteredTasks(displayWorkflows: I_OdaPmWorkflow[], rectifiedDisplayTags: string[], rectifiedExcludedTags: string[]): OdaPmTask[] {
+        return this.pmTasks.filter(function (k: OdaPmTask) {
+            return displayWorkflows.includes(k.type);
+        })
+            .filter(function (k: OdaPmTask) {
+                // No tag chosen: show all tasks
+                // Some tags chosen: combination or.
+                return rectifiedDisplayTags.length === 0 ? true : k.hasAnyTag(rectifiedDisplayTags);
+            }).filter(function (k: OdaPmTask) {
+                // No tag chosen: show all tasks
+                // Some tags chosen: combination or.
+                return rectifiedExcludedTags.length === 0 ? true : !k.hasAnyTag(rectifiedExcludedTags);
+            });
     }
 }
 

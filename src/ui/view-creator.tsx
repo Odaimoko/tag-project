@@ -91,7 +91,6 @@ function openTaskPrecisely(workspace: Workspace, task: STask) {
     );
 }
 
-
 export function ReactManagePage({eventCenter}: {
     eventCenter?: EventEmitter
 }) {
@@ -139,7 +138,7 @@ export function ReactManagePage({eventCenter}: {
     const [excludedTags, setExcludedTags] = useState(getSettings()?.manage_page_excluded_tags as string[]);
 
     function handleSetDisplayWorkflows(names: string[]) {
-        setSettingsValueAndSave(plugin, "display_workflow_names", [...names]) // TODO mem leak?
+        setSettingsValueAndSave(plugin, "display_workflow_names", [...names])
         setDisplayWorkflowNames(names)
     }
 
@@ -164,19 +163,7 @@ export function ReactManagePage({eventCenter}: {
         return displayWorkflowNames.includes(k.name);
     });
 
-    // Here we use reference equality to filter tasks. Using reference is prone to bugs since we tend to new a lot in js, but using string id is memory consuming. Trade-off.
-    const filteredTasks: DataArray<OdaPmTask> = db.pmTasks.filter(function (k: OdaPmTask) {
-        return displayWorkflows.includes(k.type);
-    })
-        .filter(function (k: OdaPmTask) {
-            // No tag chosen: show all tasks
-            // Some tags chosen: combination or.
-            return rectifiedDisplayTags.length === 0 ? true : k.hasAnyTag(rectifiedDisplayTags);
-        }).filter(function (k: OdaPmTask) {
-            // No tag chosen: show all tasks
-            // Some tags chosen: combination or.
-            return rectifiedExcludedTags.length === 0 ? true : !k.hasAnyTag(rectifiedExcludedTags);
-        });
+    const filteredTasks = db.getFilteredTasks(displayWorkflows, rectifiedDisplayTags, rectifiedExcludedTags);
 
     // console.log(`ReactManagePage Render. All tasks: ${tasks_with_workflow.length}. Filtered Tasks: ${filteredTasks.length}. Workflow: ${curWfName}. IncludeCompleted: ${includeCompleted}`)
 
@@ -457,7 +444,7 @@ function getIconByTask(oTask: OdaPmTask) {
 
 function TaskTableView({displayWorkflows, filteredTasks}: {
     displayWorkflows: I_OdaPmWorkflow[],
-    filteredTasks: DataArray<OdaPmTask>
+    filteredTasks: OdaPmTask[]
 }) {
     const plugin = useContext(PluginContext);
     const [searchText, setSearchText] = useState("");
@@ -468,7 +455,7 @@ function TaskTableView({displayWorkflows, filteredTasks}: {
     const [showCompleted, setShowCompleted] = useState(getSettings()?.show_completed_tasks as boolean);
     const [showSteps, setShowSteps] = useState(getSettings()?.table_steps_shown as boolean);
 
-    function jumpTask(oTask: OdaPmTask) {
+    function onJumpToTask(oTask: OdaPmTask) {
         setSearchText(oTask.summary)
         // temporarily set show completed according to the task
         setShowCompleted(oTask.isMdCompleted())
@@ -483,10 +470,10 @@ function TaskTableView({displayWorkflows, filteredTasks}: {
 
     useEffect(() => {
         const eventCenter = plugin?.getEmitter()
-        eventCenter?.addListener(Evt_JumpTask, jumpTask)
+        eventCenter?.addListener(Evt_JumpTask, onJumpToTask)
         eventCenter?.addListener(Evt_JumpWorkflow, onJumpToWorkflow)
         return () => {
-            eventCenter?.removeListener(Evt_JumpTask, jumpTask)
+            eventCenter?.removeListener(Evt_JumpTask, onJumpToTask)
             eventCenter?.removeListener(Evt_JumpWorkflow, onJumpToWorkflow)
         }
     });
@@ -497,7 +484,7 @@ function TaskTableView({displayWorkflows, filteredTasks}: {
         }).filter(function (k: OdaPmTask) {
             return isStringNullOrEmpty(searchText) ? true : simpleFilter(searchText, k);
         })
-        .array();
+
     const ascending = sortCode === SortMethod_Ascending;
     if (sortCode !== SortMethod_Appearance) {
         displayedTasks.sort(
@@ -507,7 +494,7 @@ function TaskTableView({displayWorkflows, filteredTasks}: {
                 if (ascending)
                     return a.summary.localeCompare(b.summary)
                 else return b.summary.localeCompare(a.summary)
-            }, sortCode
+            }
         )
     }
 
