@@ -1,4 +1,4 @@
-import {Editor, MarkdownFileInfo, MarkdownView, Notice, Plugin} from 'obsidian';
+import {Editor, MarkdownFileInfo, MarkdownView, Plugin} from 'obsidian';
 import {Icon_ManagePage, ManagePageView, ManagePageViewId} from "./ui/manage-page-view";
 import {ONotice} from "./utils/o-notice";
 import {SettingsProvider, TPM_DEFAULT_SETTINGS, TPMSettings, TPMSettingsTab} from "./Settings";
@@ -61,29 +61,29 @@ export default class OdaPmToolPlugin extends Plugin {
         this.initCommands();
 
 
-        // If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-        // Using this function will automatically remove the event listener when this plugin is disabled.
-        this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-            // console.log('click', evt);
-        });
+        // // If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
+        // // Using this function will automatically remove the event listener when this plugin is disabled.
+        // this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
+        //     // console.log('click', evt);
+        // });
 
-        // When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-        this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+        // // When registering intervals, this function will automatically clear the interval when the plugin is disabled.
+        // this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 
         this.initView();
 
-        this.registerEvent(
-            this.app.workspace.on("file-menu", (menu, file) => {
-                menu.addItem((item) => {
-                    item
-                        .setTitle("Print filemenu path 👈")
-                        .setIcon("document")
-                        .onClick(async () => {
-                            new Notice(file.path);
-                        });
-                });
-            })
-        );
+        // this.registerEvent(
+        //     this.app.workspace.on("file-menu", (menu, file) => {
+        //         menu.addItem((item) => {
+        //             item
+        //                 .setTitle("Print filemenu path 👈")
+        //                 .setIcon("document")
+        //                 .onClick(async () => {
+        //                     new Notice(file.path);
+        //                 });
+        //         });
+        //     })
+        // );
 
         this.inited = true;
     }
