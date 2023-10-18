@@ -151,7 +151,7 @@ export default class OdaPmToolPlugin extends Plugin {
                 menu.addItem((item) => {
                     item
                         .setTitle(CmdPal_JumpToManagePage)
-                        .setIcon("document")
+                        .setIcon(Icon_ManagePage)
                         .onClick(async () => {
                             this.jumpToTaskOrWorkflow(editor, view);
                             // console.log(leaf.view)
@@ -167,7 +167,7 @@ export default class OdaPmToolPlugin extends Plugin {
                 menu.addItem((item) => {
                     item
                         .setTitle(CmdPal_SetWorkflowToTask)
-                        .setIcon("document")
+                        .setIcon(Icon_ManagePage)
                         .onClick(async () => {
                             this.addWorkflowToMdTask(editor, view);
 
