@@ -30,6 +30,7 @@ Github will not render these pages correctly. Please visit Help Page in Obsidian
 
 ## In the Future
 
+- Better render in Manage Page table row
 - Task linking to each other (jira)?
 - Date and time track?
 - Multiple workflows for one task?
