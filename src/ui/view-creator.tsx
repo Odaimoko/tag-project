@@ -236,7 +236,6 @@ export function ReactManagePage({eventCenter}: {
 }
 
 const EmptyWorkflowView = () => {
-    // return <label>No Workflow defined. TODO #hint_no_work_flow_defined </label>
     return <h1>No Workflow defined, or Dataview is not initialized.</h1>
 }
 

@@ -15,6 +15,7 @@ import {addTagText, I_OdaPmWorkflow, OdaPmTask} from "./data-model/workflow-def"
 import {rewriteTask} from "./utils/io-util";
 import {WorkflowSuggestionModal} from "./ui/workflow-suggestion-modal";
 import {Desc_ManagePage, Icon_HelpPage, PmHelpPageView, PmHelpPageViewId} from "./ui/help-page-view";
+import {devLog} from "./utils/env-util";
 
 export const PLUGIN_NAME = 'Tag Project';
 export const CmdPal_OpenManagePage = `Open ${Desc_ManagePage}`;
@@ -61,29 +62,8 @@ export default class OdaPmToolPlugin extends Plugin {
         this.initCommands();
 
 
-        // // If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-        // // Using this function will automatically remove the event listener when this plugin is disabled.
-        // this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-        //     // console.log('click', evt);
-        // });
-
-        // // When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-        // this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
-
         this.initView();
 
-        // this.registerEvent(
-        //     this.app.workspace.on("file-menu", (menu, file) => {
-        //         menu.addItem((item) => {
-        //             item
-        //                 .setTitle("Print filemenu path 👈")
-        //                 .setIcon("document")
-        //                 .onClick(async () => {
-        //                     new Notice(file.path);
-        //                 });
-        //         });
-        //     })
-        // );
 
         this.inited = true;
     }
@@ -102,27 +82,7 @@ export default class OdaPmToolPlugin extends Plugin {
 
     private initCommands() {
         // region Command Palette integration
-        // This adds a simple command that can be triggered anywhere
 
-        // // This adds a complex command that can check whether the current state of the app allows execution of the command
-        // this.addCommand({
-        //     id: 'open-sample-modal-complex',
-        //     name: 'Open sample modal (complex)',
-        //     checkCallback: (checking: boolean) => {
-        //         // Conditions to check
-        //         const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-        //         if (markdownView) {
-        //             // If checking is true, we're simply "checking" if the command can be run.
-        //             // If checking is false, then we want to actually perform the operation.
-        //             if (!checking) {
-        //                 new SampleModal(this.app).open();
-        //             }
-        //
-        //             // This command will only show up in Command Palette when the check function returns true
-        //             return true;
-        //         }
-        //     }
-        // });
         this.addCommand({
             id: 'tpm:open-manage-page',
             name: CmdPal_OpenManagePage,
@@ -350,7 +310,7 @@ export default class OdaPmToolPlugin extends Plugin {
                 active: false,
             });
         }
-        console.log(viewTypeId)
+        devLog(viewTypeId)
 
         const leafView = workspace.getLeavesOfType(viewTypeId)[0];
         workspace.revealLeaf(
