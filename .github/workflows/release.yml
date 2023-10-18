@@ -22,7 +22,6 @@ jobs:
           npm install
           npm run build
       - name: Create release
-        permissions: write-all
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
