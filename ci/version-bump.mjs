@@ -1,5 +1,4 @@
 import {readFileSync, writeFileSync} from "fs";
-import {exec} from "child_process";
 
 // This is the version defined in package.json
 const targetVersion = process.env.npm_package_version;
@@ -14,9 +13,4 @@ writeFileSync("manifest.json", JSON.stringify(manifest, null, "\t"));
 let versions = JSON.parse(readFileSync("versions.json", "utf8"));
 versions[targetVersion] = minAppVersion;
 writeFileSync("versions.json", JSON.stringify(versions, null, "\t"));
-
-exec("git add manifest.json package.json versions.json")
-exec(`git commit -m "Bump version to ${targetVersion}"`)
-exec("git push")
-exec(`git tag -a v${targetVersion} -m "Bump version tag to ${targetVersion}"`)
-exec("git push --tags")
+writeFileSync("current-version.txt", targetVersion);
