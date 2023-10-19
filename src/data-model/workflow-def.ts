@@ -109,11 +109,13 @@ export function isTaskSummaryValid(task: STask) {
     return summary && summary.length > 0;
 }
 
-
 export function trimTagsFromTask(task: STask): string {
     // remove all tags from text
     let text: string = task.text;
-    for (const tag of task.tags) {
+    // dataview's tag matching may contain false positive. for example [[#Render]] will be recognized as a tag
+    const tags = task.text.match(POTENTIAL_FULLTAG_MATCHER)
+    if (!tags) return text.trim();
+    for (const tag of tags) {
         text = text.replace(tag, "")
     }
     return text.trim()
@@ -121,8 +123,10 @@ export function trimTagsFromTask(task: STask): string {
 
 // https://github.com/blacksmithgu/obsidian-dataview/blob/322217ad563defbc213f6731c9cd5a5f5a7e3638/src/data-import/common.ts#L5
 // Forbid @ since obsidian does not allow it
-const POTENTIAL_TAG_MATCHER = /[^@\s,;.:!&*?'"`()\[\]{}]+/giu;
 
+const POTENTIAL_TAG_MATCHER = /[^@\s,;.:!&*?'"`()\[\]{}]+/giu;
+// With hashtag and spaces before
+const POTENTIAL_FULLTAG_MATCHER = /\s+#[^@\s,;.:!&*?'"`()\[\]{}]+/giu;
 /**
  * Only take the first word
  * @param text workflow name without tags

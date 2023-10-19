@@ -9,8 +9,8 @@ import {
     WorkflowType
 } from "../data-model/workflow-def";
 import {DataArray, STask} from "obsidian-dataview";
-import {Workspace} from "obsidian";
-import React, {useContext, useEffect, useState} from "react";
+import {MarkdownRenderer, Workspace} from "obsidian";
+import React, {ReactElement, useContext, useEffect, useState} from "react";
 import {IRenderable} from "./i-renderable";
 
 import {rewriteTask} from "../utils/io-util";
@@ -36,6 +36,7 @@ import {
     DataTable,
     ExternalControlledCheckbox,
     HStack,
+    HTMLStringComponent,
     I_Stylable,
     InternalLinkView,
     ObsidianIconView
@@ -356,6 +357,7 @@ const OdaTaskSummaryCell = ({oTask, taskFirstColumn}: {
 }) => {
     const plugin = useContext(PluginContext);
     const workspace = plugin.app.workspace;
+    const [summaryView, setSummaryView] = useState<ReactElement>();
 
     function tickSummary() {
         // Automatically add tags when checking in manage page 
@@ -376,15 +378,26 @@ const OdaTaskSummaryCell = ({oTask, taskFirstColumn}: {
             nextStatus, oriText) // trigger rerender
     }
 
-    // console.log(`Task: ${oTask.boundTask.text}. Md: ${oTask.isMdCompleted()} ${oTask.stepCompleted()}.`)
-    // Changed to ExternalControlledCheckbox. The checkbox status is determined by whether all steps are completed.
+    useEffect(() => {
+        // console.log(`Task: ${oTask.boundTask.text}. Md: ${oTask.isMdCompleted()} ${oTask.stepCompleted()}.`)
+        // Changed to ExternalControlledCheckbox. The checkbox status is determined by whether all steps are completed.
+        const summaryMd = getSettings()?.capitalize_table_row_initial ?
+            initialToUpper(taskFirstColumn) :
+            taskFirstColumn;
+        const container = createEl("span"); // TODO performance, each summary cell has one virtual container.
+
+        // @ts-ignore
+        MarkdownRenderer.render(plugin.app, summaryMd, container, oTask.boundTask.path, plugin).then(() => {
+            // container.children[0] is a <p>, so we only use its innerHTML
+            setSummaryView(<HTMLStringComponent htmlString={container.children[0].innerHTML}/>);
+        })
+    }, []);
+
     return <HStack spacing={5}>
         {getIconByTask(oTask)}
         <ExternalControlledCheckbox
             content={<span>
-                
-                <InternalLinkView
-                    content={getSettings()?.capitalize_table_row_initial ? initialToUpper(taskFirstColumn) : taskFirstColumn}/>
+                <InternalLinkView content={summaryView}/>
             </span>}
             onChange={tickSummary}
             onLabelClicked={() => {
