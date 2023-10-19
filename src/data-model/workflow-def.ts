@@ -109,11 +109,16 @@ export function isTaskSummaryValid(task: STask) {
     return summary && summary.length > 0;
 }
 
+export function matchTags(text: string) {
+    const tags = text.match(POTENTIAL_FULLTAG_MATCHER)
+    return tags;
+}
+
 export function trimTagsFromTask(task: STask): string {
     // remove all tags from text
     let text: string = task.text;
     // dataview's tag matching may contain false positive. for example [[#Render]] will be recognized as a tag
-    const tags = task.text.match(POTENTIAL_FULLTAG_MATCHER)
+    const tags = matchTags(task.text);
     if (!tags) return text.trim();
     for (const tag of tags) {
         text = text.replace(tag, "")
@@ -127,6 +132,7 @@ export function trimTagsFromTask(task: STask): string {
 const POTENTIAL_TAG_MATCHER = /[^@\s,;.:!&*?'"`()\[\]{}]+/giu;
 // With hashtag and spaces before
 const POTENTIAL_FULLTAG_MATCHER = /\s+#[^@\s,;.:!&*?'"`()\[\]{}]+/giu;
+
 /**
  * Only take the first word
  * @param text workflow name without tags
