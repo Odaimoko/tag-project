@@ -3,6 +3,7 @@ import React, {Fragment, JSX, ReactNode, StrictMode, useState} from "react";
 import {getIcon} from "obsidian";
 
 import {isProduction} from "../utils/env-util";
+import parse from 'html-react-parser';
 
 export const CssClass_Link = "cm-underline";
 
@@ -216,9 +217,13 @@ export function HTMLStringComponent({htmlString, useSpan = true, style}: {
 } & I_Stylable) {
     if (useSpan)
         return (
-            <span style={style} dangerouslySetInnerHTML={{__html: htmlString ?? ""}}/>
+            <span style={style}>
+                {parse(htmlString ?? "")}
+            </span>
         );
-    else return <div style={style} dangerouslySetInnerHTML={{__html: htmlString ?? ""}}/>
+    else return <div style={style}>
+        {parse(htmlString ?? "")}
+    </div>
 }
 
 export function StrictModeWrapper({children}: { children: ReactNode }) {

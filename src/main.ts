@@ -14,13 +14,13 @@ import {OdaPmDb, OdaPmDbProvider} from "./data-model/odaPmDb";
 import {addTagText, I_OdaPmWorkflow, OdaPmTask} from "./data-model/workflow-def";
 import {rewriteTask} from "./utils/io-util";
 import {WorkflowSuggestionModal} from "./ui/workflow-suggestion-modal";
-import {Desc_ManagePage, Icon_HelpPage, PmHelpPageView, PmHelpPageViewId} from "./ui/help-page-view";
+import {Icon_HelpPage, PmHelpPageView, PmHelpPageViewId} from "./ui/help-page-view";
 import {devLog} from "./utils/env-util";
 
 export const PLUGIN_NAME = 'Tag Project';
-export const CmdPal_OpenManagePage = `Open ${Desc_ManagePage}`;
+export const CmdPal_OpenManagePage = `Open Manage Page`; // `Open ${Desc_ManagePage}`
 export const CmdPal_SetWorkflowToTask = 'Set workflow';
-export const CmdPal_JumpToManagePage = `To ${Desc_ManagePage}`;
+export const CmdPal_JumpToManagePage = `Jump To Manage Page`;
 export default class OdaPmToolPlugin extends Plugin {
     settings: TPMSettings;
     private emitter: EventEmitter;
@@ -84,21 +84,21 @@ export default class OdaPmToolPlugin extends Plugin {
         // region Command Palette integration
 
         this.addCommand({
-            id: 'tpm:open-manage-page',
+            id: 'open-manage-page',
             name: CmdPal_OpenManagePage,
             callback: () => {
                 this.activateManagePageView()
             }
         });
         this.addCommand({
-            id: 'tpm:jump-manage-page',
+            id: 'jump-manage-page',
             name: CmdPal_JumpToManagePage,
             editorCallback: (editor: Editor, view: MarkdownView) => {
                 this.jumpToTaskOrWorkflow(editor, view);
             }
         });
         this.addCommand({
-            id: 'tpm:set-workflow',
+            id: 'set-workflow',
             name: CmdPal_SetWorkflowToTask,
             editorCallback: (editor: Editor, view: MarkdownView) => {
                 this.addWorkflowToMdTask(editor, view);
