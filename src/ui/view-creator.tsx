@@ -35,7 +35,6 @@ import {
     ClickableIconView,
     DataTable,
     ExternalControlledCheckbox,
-    HStack,
     HTMLStringComponent,
     I_Stylable,
     InternalLinkView,
@@ -45,6 +44,7 @@ import {appendBoldText} from "./html-template";
 import {OdaPmDbProvider} from "../data-model/odaPmDb";
 import {Evt_DbReloaded, Evt_JumpTask, Evt_JumpWorkflow} from "../typing/dataview-event";
 import {devLog} from "../utils/env-util";
+import {HStack} from "./h-stack";
 
 
 // dark light compatible

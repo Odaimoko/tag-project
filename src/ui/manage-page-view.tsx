@@ -4,8 +4,9 @@ import {ReactManagePage} from "./view-creator";
 import {createRoot, Root} from "react-dom/client";
 import {createContext} from "react";
 import OdaPmToolPlugin, {PLUGIN_NAME} from "../main";
-import {ClickableIconView, HStack, StrictModeWrapper} from "./view-template";
+import {ClickableIconView, StrictModeWrapper} from "./view-template";
 import {PmHelpModal} from "./help-page-view";
+import {HStack} from "./h-stack";
 
 export const Icon_ManagePage = "book-open-check";
 
