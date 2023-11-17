@@ -18,23 +18,11 @@ Github will not render these pages correctly. Please visit Help Page in Obsidian
 
 ![Alt text](docs/manage-page-example.png)
 
-
-
-## Introduction (WIP)
-
-<!-- ### Installation
+## Installation
 
 1. In Obsidian, open Settings > Community plugins > Browse.
 1. Search for "Tag Project" by Odaimoko.
-1. Select Install. -->
-
-Obsidian has not approved this plugin yet. If you want to try it out, please
-
-1. Download `main.js` and `manifest.json` manually in
-   the [latest release](https://github.com/Odaimoko/tag-project/releases/) page.
-2. Make a directory under your Obsidian vault's `.obsidian`. Name it `tag-project`.
-3. Move the files mentioned in step 1 to `YOUR_VAULT/.obsidian/tag-project`
-4. Reload Obsidian App.
+1. Select Install.
 
 ## In the Future
 
