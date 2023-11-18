@@ -17,10 +17,12 @@ import {
 } from "./workflow-def";
 import {EventEmitter} from "events";
 import {DataviewMetadataChangeEvent, Evt_DbReloaded} from "../typing/dataview-event";
-import {getAPI, STask} from "obsidian-dataview";
+import {getAPI, SMarkdownPage, STask} from "obsidian-dataview";
 import {ONotice} from "../utils/o-notice";
 import {getSettings} from "../Settings";
 import {GenericProvider} from "../utils/GenericProvider";
+import {OdaPmProject} from "./OdaPmProject";
+import {devAssert} from "../utils/env-util";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
 
@@ -97,6 +99,10 @@ function createPmTaskFromTask(workflowTags: string[], workflows: I_OdaPmWorkflow
     return null;
 }
 
+function createProjectFromFrontmatter(page: SMarkdownPage): OdaPmProject | null {
+    return OdaPmProject.createProjectFromFrontmatter(page);
+}
+
 function getAllWorkflows(): I_OdaPmWorkflow[] {
     return dv.pages()["file"]["tasks"].where(function (k: STask) {
         for (const defTag of getWorkflowTags()) {
@@ -132,6 +138,35 @@ function getAllPmTasks(workflows: I_OdaPmWorkflow[]) {
         ;
 }
 
+function getAllProjects(): OdaPmProject[] {
+    const projects: OdaPmProject[] = [
+        OdaPmProject.createUnclassifiedProject()
+    ]
+    const pages = dv.pages()["file"].array();
+    // File defs
+
+    for (const pg of pages) {
+        const project = createProjectFromFrontmatter(pg);
+        if (project)
+            projects.push(project);
+    }
+    // TODO make runtime assertion easy to write
+    const length = projects.filter(k =>
+        k.name.startsWith("UT_020_1_")
+    ).length;
+    const correct = 4;
+    devAssert(length == correct, `${correct} projects should be defined by front matters, whose name starts with 'UT_020_1_'.\nActual: ${length}`);
+
+
+    // Task def
+    // return dv.pages()["file"]["tasks"].where(function (k: STask) {
+    //         return k.tags.includes("#tpm/project/");
+    //     }
+    // )
+
+    return projects
+}
+
 export class OdaPmDb implements I_EvtListener {
     workflows: I_OdaPmWorkflow[];
     workflowTags: string[];
@@ -140,6 +175,7 @@ export class OdaPmDb implements I_EvtListener {
     boundReloadWorkflows: () => void;
     pmTasks: OdaPmTask[]
     pmTags: string[];
+    pmProjects: OdaPmProject[]
 
     constructor(emitter: EventEmitter) {
         this.emitter = emitter;
@@ -173,6 +209,8 @@ export class OdaPmDb implements I_EvtListener {
         })
             .filter(k => !this.workflowTags.includes(k) && !this.stepTags.includes(k)))
             .unique()
+
+        this.pmProjects = getAllProjects()
 
         this.emitter.emit(Evt_DbReloaded)
     }

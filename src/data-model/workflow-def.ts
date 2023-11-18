@@ -1,4 +1,5 @@
 import {STask} from "obsidian-dataview";
+import {OdaPmProject} from "./OdaPmProject";
 
 export const Tag_Prefix_Step = "#tpm/step/";
 export const Tag_Prefix_Workflow = "#tpm/workflow_type/";
@@ -35,7 +36,8 @@ export function getTypeDefTag(type: WorkflowType): string {
 }
 
 const globalStepMap: Map<string, OdaPmStep> = new Map<string, OdaPmStep>();
-const globalOdaPmWorkflowMap: Map<string, OdaPmWorkflow> = new Map<string, OdaPmWorkflow>();
+const globalWorkflowMap: Map<string, OdaPmWorkflow> = new Map<string, OdaPmWorkflow>();
+const globalProjectMap: Map<string, OdaPmProject> = new Map<string, OdaPmProject>();
 
 /**
  * use global Pm Step library instead of creating new instances
@@ -53,7 +55,7 @@ export function getOrCreateStep(tag: string | undefined): OdaPmStep | null {
 
 export const clearWorkflowCache = () => {
     console.log("Clear Workflow Cache")
-    globalOdaPmWorkflowMap.clear();
+    globalWorkflowMap.clear();
 }
 
 /**
@@ -68,9 +70,9 @@ export const clearWorkflowCache = () => {
 export function getOrCreateWorkflow(type: WorkflowType, name: string | null, task: STask = null): OdaPmWorkflow | null {
     if (name === null) return null;
 
-    if (globalOdaPmWorkflowMap.has(name)) {
+    if (globalWorkflowMap.has(name)) {
         // console.log(`Return Existing Workflow ${name}`)
-        return <OdaPmWorkflow>globalOdaPmWorkflowMap.get(name);
+        return <OdaPmWorkflow>globalWorkflowMap.get(name);
     }
     if (!isTaskSingleLine(task)) {
         return null;
@@ -82,14 +84,14 @@ export function getOrCreateWorkflow(type: WorkflowType, name: string | null, tas
 
 export function removeWorkflow(name: string | null) {
     if (name)
-        globalOdaPmWorkflowMap.delete(name);
+        globalWorkflowMap.delete(name);
 }
 
 function createWorkflow(task: STask, type: WorkflowType, name: string) {
     // All set.
     const workflow = new OdaPmWorkflow(task, type, name);
     // console.log(`Create New Workflow ${name}`)
-    globalOdaPmWorkflowMap.set(name, workflow);
+    globalWorkflowMap.set(name, workflow);
     return workflow;
 }
 
@@ -399,3 +401,5 @@ export function removeTagText(text: string, stepTag: string) {
 
 
 // endregion
+
+
