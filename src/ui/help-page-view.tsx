@@ -315,39 +315,40 @@ const BasicTutorial = () => {
         </p>
         <p style={blockTldrOShowStyle}>
             Open {Desc_ManagePage} via
-            <ul>
-                <li>
-                    the ribbon icon (<ObsidianIconView iconName={Icon_ManagePage}/>) on the leftmost bar,
-                </li>
-                <li>
-                    the command (<i>{CmdPal_OpenManagePage}</i>).
-
-                </li>
-            </ul>
 
         </p>
+        <ul style={blockTldrOShowStyle}>
+            <li>
+                the ribbon icon (<ObsidianIconView iconName={Icon_ManagePage}/>) on the leftmost bar,
+            </li>
+            <li>
+                the command (<i>{CmdPal_OpenManagePage}</i>).
+
+            </li>
+        </ul>
         <p style={blockTldrOmitStyle}>Apart from this, when your cursor is focusing on a managed task or workflow, you
             can do the following things
-            with context menu or command palette (<i>{CmdPal_JumpToManagePage}</i>):
-            <ul>
-                <li>If the cursor is at a workflow, you can open {Desc_ManagePage} with only this workflow filtered.
-                </li>
-                <li>
-                    If the cursor is at a managed task, you can open {Desc_ManagePage} with only this task shown.
-                </li>
-            </ul>
         </p>
+        with context menu or command palette (<i>{CmdPal_JumpToManagePage}</i>):
+        <ul style={blockTldrOmitStyle}>
+            <li>If the cursor is at a workflow, you can open {Desc_ManagePage} with only this workflow filtered.
+            </li>
+            <li>
+                If the cursor is at a managed task, you can open {Desc_ManagePage} with only this task shown.
+            </li>
+        </ul>
         <p style={blockTldrOShowStyle}>
             Jump to workflow or task:
-            <ul>
-                <li>
-                    when the cursor is at a workflow or a managed task
-                </li>
-                <li>
-                    with context menu or command palette (<i>{CmdPal_JumpToManagePage}</i>)
-                </li>
-            </ul>
         </p>
+        <ul style={blockTldrOShowStyle}>
+            <li>
+                when the cursor is at a workflow or a managed task
+            </li>
+            <li>
+                with context menu or command palette (<i>{CmdPal_JumpToManagePage}</i>)
+            </li>
+        </ul>
+        
         <h2>A {Desc_ManagePage} Example</h2>
         <p>
             You can find the source markdown in the <i>{HelpViewTabsNames[2]}</i> tab.
