@@ -22,6 +22,7 @@ import {ONotice} from "../utils/o-notice";
 import {getSettings} from "../Settings";
 import {GenericProvider} from "../utils/GenericProvider";
 import {globalProjectMap, OdaPmProject, Tag_Prefix_Project} from "./OdaPmProject";
+import {assertOnDbRefreshed} from "../utils/env-util";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
 
@@ -136,7 +137,13 @@ function getAllPmTasks(workflows: I_OdaPmWorkflow[]) {
         ;
 }
 
-function getAllProjects(pmTasks: OdaPmTask[]): OdaPmProject[] {
+/**
+ * Pass 1: create projects from frontmatter and tasks.
+ * Pass 2: link tasks/Wf to projects.
+ * @param pmTasks
+ * @param pmWorkflows
+ */
+function getAllProjectsAndLinkTasks(pmTasks: OdaPmTask[], pmWorkflows: I_OdaPmWorkflow[]): OdaPmProject[] {
     globalProjectMap.clear()
 
     const projects: OdaPmProject[] = [
@@ -194,24 +201,38 @@ export class OdaPmDb implements I_EvtListener {
     private reloadWorkflows() {
         this.workflows = getAllWorkflows()
         this.workflowTags = getWorkflowTags()
-        // TODO performance. linq is easy, but performance is not good.
-        this.stepTags = this.workflows.flatMap(function (k: I_OdaPmWorkflow) {
-            return k.stepsDef.map(m => m.tag);
-        }).unique();
+        this.stepTags = this.initStepTags(this.workflows);
 
         this.pmTasks = getAllPmTasks(this.workflows)
 
+        this.pmTags = this.initManagedTags(this.pmTasks)
+
+        this.pmProjects = getAllProjectsAndLinkTasks(this.pmTasks, this.workflows)
+
+        this.emitter.emit(Evt_DbReloaded)
+        assertOnDbRefreshed(this);
+    }
+
+    /**
+     * Pass parameters to indicate dependency relationship.
+     * @param workflows
+     * @private
+     */
+    private initStepTags(workflows: I_OdaPmWorkflow[]) {
         // TODO performance. linq is easy, but performance is not good.
-        this.pmTags = (this.pmTasks.flatMap(k => {
+        return workflows.flatMap(function (k: I_OdaPmWorkflow) {
+            return k.stepsDef.map(m => m.tag);
+        }).unique();
+    }
+
+    private initManagedTags(pmTasks: OdaPmTask[]) {
+        // TODO performance. linq is easy, but performance is not good.
+        return (pmTasks.flatMap(k => {
             const validPmTag = k.boundTask.tags.filter((m: string) => m.startsWith(Tag_Prefix_Tag));
             return validPmTag;
         })
             .filter(k => !this.workflowTags.includes(k) && !this.stepTags.includes(k)))
-            .unique()
-
-        this.pmProjects = getAllProjects(this.pmTasks)
-
-        this.emitter.emit(Evt_DbReloaded)
+            .unique();
     }
 
     getWorkflow(filePath: string, line: number) {
