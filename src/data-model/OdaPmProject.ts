@@ -1,19 +1,25 @@
 import {SMarkdownPage} from "obsidian-dataview";
 import {devLog} from "../utils/env-util";
 import {I_OdaPmWorkflow, OdaPmTask} from "./workflow-def";
+import {BaseDatabaseObject} from "./BaseDatabaseObject";
 
 const Frontmatter_FolderProject = "tpm_projectroot";
 const Frontmatter_FileProject = "tpm_project";
 export const ProjectName_Unclassified = "Unclassified";
 export const Tag_Prefix_Project = "#tpm/project/";
-
 const Project_Def_Enum_Array = [
     "folder", // Project_FolderProject_Frontmatter
     "file", // Project_FileProject_Frontmatter
     "tag_override", // task or wf override
     "system"//unclassified
 ]
+let currentMaxProjectId = 0;
 export const globalProjectMap: Map<string, OdaPmProject> = new Map<string, OdaPmProject>();
+
+export function clearGlobalProjectMap() {
+    globalProjectMap.clear();
+    currentMaxProjectId = 0;
+}
 
 function getProjectByName(name: string): OdaPmProject | null {
     if (globalProjectMap.has(name)) {
@@ -22,9 +28,10 @@ function getProjectByName(name: string): OdaPmProject | null {
     return null;
 }
 
+export
 type ProjectDefinedType = typeof Project_Def_Enum_Array[number]
 
-export class OdaPmProject {
+export class OdaPmProject extends BaseDatabaseObject {
     name: string;
     definedTypes: ProjectDefinedType[];
     pages: SMarkdownPage[];
@@ -32,6 +39,7 @@ export class OdaPmProject {
     pmTasks: OdaPmTask[];
 
     constructor() {
+        super();
         this.definedTypes = []
         this.pages = []
         this.workflows = []
@@ -106,9 +114,18 @@ export class OdaPmProject {
         return project;
     }
 
+    private static createProject(name: string) {
+        const p = new OdaPmProject();
+        p.name = name;
+        p.internalKey = ++currentMaxProjectId;
+        return p;
+    }
+
     private static getOrCreateProject(name: string) {
-        const project = globalProjectMap.has(name) ? globalProjectMap.get(name) as OdaPmProject : new OdaPmProject();
-        project.name = name;
+        const project = globalProjectMap.has(name) ?
+            globalProjectMap.get(name) as OdaPmProject
+            : this.createProject(name);
+
         return project;
     }
 

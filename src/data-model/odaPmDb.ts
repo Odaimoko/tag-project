@@ -21,7 +21,7 @@ import {getAPI, STask} from "obsidian-dataview";
 import {ONotice} from "../utils/o-notice";
 import {getSettings} from "../Settings";
 import {GenericProvider} from "../utils/GenericProvider";
-import {globalProjectMap, OdaPmProject, Tag_Prefix_Project} from "./OdaPmProject";
+import {clearGlobalProjectMap, OdaPmProject, Tag_Prefix_Project} from "./OdaPmProject";
 import {assertOnDbRefreshed} from "../utils/env-util";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
@@ -144,7 +144,7 @@ function getAllPmTasks(workflows: I_OdaPmWorkflow[]) {
  * @param pmWorkflows
  */
 function getAllProjectsAndLinkTasks(pmTasks: OdaPmTask[], pmWorkflows: I_OdaPmWorkflow[]): OdaPmProject[] {
-    globalProjectMap.clear()
+    clearGlobalProjectMap();
 
     const projects: OdaPmProject[] = [
         OdaPmProject.createUnclassifiedProject()
