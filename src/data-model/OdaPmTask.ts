@@ -161,6 +161,11 @@ export class OdaPmTask extends BaseDatabaseObject {
     // isInProject(project: OdaPmProject) {
     //     return this.projects.includes(project)
     // }
+    addProject(project: OdaPmProject) {
+        if (!this.projects.includes(project)) {
+            this.projects.push(project);
+        }
+    }
 
     isInProject(name: string) {
         // TODO performance

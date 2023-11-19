@@ -19,9 +19,10 @@ import {ONotice} from "../utils/o-notice";
 import {getSettings} from "../Settings";
 import {GenericProvider} from "../utils/GenericProvider";
 import {clearGlobalProjectMap, OdaPmProject, Tag_Prefix_Project} from "./OdaPmProject";
-import {assertOnDbRefreshed} from "../utils/env-util";
+import {assertOnDbRefreshed, devLog} from "../utils/env-util";
 import {OdaPmTask} from "./OdaPmTask";
 import {getOrCreateWorkflow, removeWorkflow} from "./OdaPmWorkflow";
+import {OdaProjectTree} from "./OdaProjectTree";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
 
@@ -158,15 +159,24 @@ function getAllProjectsAndLinkTasks(pmTasks: OdaPmTask[], pmWorkflows: I_OdaPmWo
     }
 
     // Task def
-    for (const k of pmTasks) {
-
-        for (const taskTag of k.boundTask.tags) {
+    for (const pmTask of pmTasks) {
+        for (const taskTag of pmTask.boundTask.tags) {
             if (taskTag.startsWith(Tag_Prefix_Project)) {
                 const project = OdaPmProject.createProjectFromTaskTag(taskTag);
-                if (project)
+                if (project) {
                     projects.push(project);
+                }
             }
         }
+    }
+    const projectTree: OdaProjectTree = OdaProjectTree.buildProjectShadowTree();
+    for (const pmTask of pmTasks) {
+        const linkingProject: OdaPmProject = projectTree.getProjectByPmTask(pmTask);
+        linkingProject.linkTask(pmTask);
+    }
+    for (const pmWorkflow of pmWorkflows) {
+        const linkingProject: OdaPmProject = projectTree.getProjectByPmWorkflow(pmWorkflow);
+        linkingProject.linkWorkflow(pmWorkflow);
     }
 
     return projects;
@@ -210,7 +220,7 @@ export class OdaPmDb implements I_EvtListener {
 
         this.emitter.emit(Evt_DbReloaded)
         assertOnDbRefreshed(this);
-        console.log("Database Reloaded.")
+        devLog("Database Reloaded.")
     }
 
     /**

@@ -40,6 +40,12 @@ export class OdaPmProject extends BaseDatabaseObject {
         this.pmTasks = []
     }
 
+
+    hasDefinedType(type: ProjectDefinedType) {
+        return this.definedTypes.includes(type);
+    }
+
+// region Factory
     private addDefinedType(type: ProjectDefinedType) {
         if (!this.hasDefinedType(type)) {
             this.definedTypes.push(type);
@@ -50,10 +56,6 @@ export class OdaPmProject extends BaseDatabaseObject {
         if (!this.pages.includes(page)) {
             this.pages.push(page);
         }
-    }
-
-    hasDefinedType(type: ProjectDefinedType) {
-        return this.definedTypes.includes(type);
     }
 
     /**
@@ -123,4 +125,19 @@ export class OdaPmProject extends BaseDatabaseObject {
         return project;
     }
 
+// endregion
+
+// region Link Task and Workflow
+    linkTask(pmTask: OdaPmTask) {
+        if (!this.pmTasks.includes(pmTask)) {
+            this.pmTasks.push(pmTask);
+        }
+
+    }
+
+    linkWorkflow(pmWorkflow: I_OdaPmWorkflow) {
+        throw new Error("Not implemented");
+    }
+
+// endregion
 }
