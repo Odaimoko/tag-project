@@ -22,7 +22,6 @@ import {ONotice} from "../utils/o-notice";
 import {getSettings} from "../Settings";
 import {GenericProvider} from "../utils/GenericProvider";
 import {OdaPmProject} from "./OdaPmProject";
-import {devAssert} from "../utils/env-util";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
 
@@ -150,13 +149,6 @@ function getAllProjects(): OdaPmProject[] {
         if (project)
             projects.push(project);
     }
-    // TODO make runtime assertion easy to write
-    const length = projects.filter(k =>
-        k.name.startsWith("UT_020_1_")
-    ).length;
-    const correct = 4;
-    devAssert(length == correct, `${correct} projects should be defined by front matters, whose name starts with 'UT_020_1_'.\nActual: ${length}`);
-
 
     // Task def
     // return dv.pages()["file"]["tasks"].where(function (k: STask) {

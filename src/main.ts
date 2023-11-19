@@ -15,7 +15,7 @@ import {addTagText, I_OdaPmWorkflow, OdaPmTask} from "./data-model/workflow-def"
 import {rewriteTask} from "./utils/io-util";
 import {WorkflowSuggestionModal} from "./ui/workflow-suggestion-modal";
 import {Icon_HelpPage, PmHelpPageView, PmHelpPageViewId} from "./ui/help-page-view";
-import {devLog} from "./utils/env-util";
+import {assertOnPluginInit, devLog} from "./utils/env-util";
 
 export const PLUGIN_NAME = 'Tag Project';
 export const CmdPal_OpenManagePage = `Open Manage Page`; // `Open ${Desc_ManagePage}`
@@ -64,8 +64,9 @@ export default class OdaPmToolPlugin extends Plugin {
 
         this.initView();
 
-
         this.inited = true;
+        // TODO Decouple
+        assertOnPluginInit(this);
     }
 
     // region Settings Tab integration
