@@ -1,9 +1,10 @@
 import {SMarkdownPage} from "obsidian-dataview";
 import {devLog} from "../utils/env-util";
+import {I_OdaPmWorkflow, OdaPmTask} from "./workflow-def";
 
 const Frontmatter_FolderProject = "tpm_projectroot";
 const Frontmatter_FileProject = "tpm_project";
-const ProjectName_Unclassified = "Unclassified";
+export const ProjectName_Unclassified = "Unclassified";
 export const Tag_Prefix_Project = "#tpm/project/";
 
 const Project_Def_Enum_Array = [
@@ -27,10 +28,14 @@ export class OdaPmProject {
     name: string;
     definedTypes: ProjectDefinedType[];
     pages: SMarkdownPage[];
+    workflows: I_OdaPmWorkflow[];
+    pmTasks: OdaPmTask[];
 
     constructor() {
         this.definedTypes = []
         this.pages = []
+        this.workflows = []
+        this.pmTasks = []
     }
 
     private addDefinedType(type: ProjectDefinedType) {
@@ -79,33 +84,31 @@ export class OdaPmProject {
             return null;
         }
 
-        if (globalProjectMap.has(name)) {
-            const existingProject = globalProjectMap.get(name) as OdaPmProject;
-            existingProject.addDefinedType(definedType);
-            existingProject.addPage(page);
-            devLog(`Project ${name} already exists. Adding page ${page.path}.`)
-            return existingProject;
-        }
-        const project = new OdaPmProject()
+        const project = this.getOrCreateProject(name)
         project.addDefinedType(definedType);
         project.addPage(page);
-        project.name = name;
         globalProjectMap.set(name, project);
         devLog(`Project ${name} created. Adding page ${page.path}.`)
         return project;
     }
 
     public static createProjectFromTaskTag(tag: string) {
-        const project = new OdaPmProject()
-        project.name = tag.replace(Tag_Prefix_Project, "");
+        const name = tag.replace(Tag_Prefix_Project, "");
+
+        const project = this.getOrCreateProject(name)
         project.addDefinedType('tag_override');
         return project;
     }
 
     public static createUnclassifiedProject() {
-        const project = new OdaPmProject()
-        project.name = ProjectName_Unclassified;
+        const project = this.getOrCreateProject(ProjectName_Unclassified)
         project.addDefinedType("system")
+        return project;
+    }
+
+    private static getOrCreateProject(name: string) {
+        const project = globalProjectMap.has(name) ? globalProjectMap.get(name) as OdaPmProject : new OdaPmProject();
+        project.name = name;
         return project;
     }
 

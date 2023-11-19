@@ -185,8 +185,8 @@ export class OdaPmDb implements I_EvtListener {
 
     constructor(emitter: EventEmitter) {
         this.emitter = emitter;
-        this.boundReloadWorkflows = this.reloadWorkflows.bind(this)
-        this.reloadWorkflows()
+        this.boundReloadWorkflows = this.reloadDb.bind(this)
+        this.reloadDb()
     }
 
     // bind: https://fettblog.eu/this-in-javascript-and-typescript/
@@ -198,7 +198,7 @@ export class OdaPmDb implements I_EvtListener {
         this.emitter.off(DataviewMetadataChangeEvent, this.boundReloadWorkflows)
     }
 
-    private reloadWorkflows() {
+    private reloadDb() {
         this.workflows = getAllWorkflows()
         this.workflowTags = getWorkflowTags()
         this.stepTags = this.initStepTags(this.workflows);
@@ -211,6 +211,7 @@ export class OdaPmDb implements I_EvtListener {
 
         this.emitter.emit(Evt_DbReloaded)
         assertOnDbRefreshed(this);
+        console.log("Database Reloaded.")
     }
 
     /**
