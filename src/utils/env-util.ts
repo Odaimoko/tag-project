@@ -102,5 +102,26 @@ export async function assertOnDbRefreshed(pmDb: OdaPmDb) {
     if (ut_020_2_3_wf) {
         expect(ut_020_2_3_wf.isInProject("UT_020_2_Project_Layer_1_file_definition"));
     }
+
+
+    const ut_020_2_4_tasks = pmDb.pmTasks.filter(k => {
+        return k.summary.startsWith("UT_020_2_4")
+    })
+    expect(ut_020_2_4_tasks, `PmTask with prefix 'UT_020_2_4' not matched`).to.have.lengthOf(1);
+    const ut_020_2_4_task = ut_020_2_4_tasks.first();
+    if (ut_020_2_4_task) {
+        expect(ut_020_2_4_task.isInProject("UT_020_2_Project_Layer_1_task_definition"));
+    }
+
+    const ut_020_2_4_workflows = pmDb.workflows.filter(k => {
+        return k.name.startsWith("UT_020_2_4")
+    });
+    expect(ut_020_2_4_workflows, `Workflow with prefix 'UT_020_2_4' not matched`).to.have.lengthOf(1);
+    const ut_020_2_4_wf = ut_020_2_4_workflows.first();
+    if (ut_020_2_4_wf) {
+        expect(ut_020_2_4_wf.isInProject("UT_020_2_Project_Layer_1_task_definition"));
+    }
+    
+    
     devLog("Assert end: on db refreshed...")
 }
