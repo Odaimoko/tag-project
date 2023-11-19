@@ -1,5 +1,4 @@
 import {STask} from "obsidian-dataview";
-import {OdaPmProject} from "./OdaPmProject";
 
 export const Tag_Prefix_Step = "#tpm/step/";
 export const Tag_Prefix_Workflow = "#tpm/workflow_type/";
@@ -37,7 +36,6 @@ export function getTypeDefTag(type: WorkflowType): string {
 
 const globalStepMap: Map<string, OdaPmStep> = new Map<string, OdaPmStep>();
 const globalWorkflowMap: Map<string, OdaPmWorkflow> = new Map<string, OdaPmWorkflow>();
-const globalProjectMap: Map<string, OdaPmProject> = new Map<string, OdaPmProject>();
 
 /**
  * use global Pm Step library instead of creating new instances

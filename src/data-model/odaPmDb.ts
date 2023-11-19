@@ -17,11 +17,11 @@ import {
 } from "./workflow-def";
 import {EventEmitter} from "events";
 import {DataviewMetadataChangeEvent, Evt_DbReloaded} from "../typing/dataview-event";
-import {getAPI, SMarkdownPage, STask} from "obsidian-dataview";
+import {getAPI, STask} from "obsidian-dataview";
 import {ONotice} from "../utils/o-notice";
 import {getSettings} from "../Settings";
 import {GenericProvider} from "../utils/GenericProvider";
-import {OdaPmProject} from "./OdaPmProject";
+import {globalProjectMap, OdaPmProject, Tag_Prefix_Project} from "./OdaPmProject";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
 
@@ -98,12 +98,10 @@ function createPmTaskFromTask(workflowTags: string[], workflows: I_OdaPmWorkflow
     return null;
 }
 
-function createProjectFromFrontmatter(page: SMarkdownPage): OdaPmProject | null {
-    return OdaPmProject.createProjectFromFrontmatter(page);
-}
 
 function getAllWorkflows(): I_OdaPmWorkflow[] {
-    return dv.pages()["file"]["tasks"].where(function (k: STask) {
+    const allTasks = dv.pages()["file"]["tasks"];
+    return allTasks.where(function (k: STask) {
         for (const defTag of getWorkflowTags()) {
                 if (k.tags.length === 0) continue;
                 if (k.tags.includes(defTag)) {
@@ -122,7 +120,8 @@ function getAllPmTasks(workflows: I_OdaPmWorkflow[]) {
     const workflowTags = workflows.map(function (k: I_OdaPmWorkflow) {
         return k.tag;
     });
-    return dv.pages()["file"]["tasks"].where(function (k: STask) {
+    const allTasks = dv.pages()["file"]["tasks"];
+    return allTasks.where(function (k: STask) {
             for (const defTag of workflowTags) {
                 if (k.tags.includes(defTag)) return true;
             }
@@ -137,26 +136,34 @@ function getAllPmTasks(workflows: I_OdaPmWorkflow[]) {
         ;
 }
 
-function getAllProjects(): OdaPmProject[] {
+function getAllProjects(pmTasks: OdaPmTask[]): OdaPmProject[] {
+    globalProjectMap.clear()
+
     const projects: OdaPmProject[] = [
         OdaPmProject.createUnclassifiedProject()
     ]
-    const pages = dv.pages()["file"].array();
+    const pages = dv.pages()["file"];
     // File defs
 
     for (const pg of pages) {
-        const project = createProjectFromFrontmatter(pg);
+        const project = OdaPmProject.createProjectFromFrontmatter(pg);
         if (project)
             projects.push(project);
     }
 
     // Task def
-    // return dv.pages()["file"]["tasks"].where(function (k: STask) {
-    //         return k.tags.includes("#tpm/project/");
-    //     }
-    // )
+    for (const k of pmTasks) {
 
-    return projects
+        for (const taskTag of k.boundTask.tags) {
+            if (taskTag.startsWith(Tag_Prefix_Project)) {
+                const project = OdaPmProject.createProjectFromTaskTag(taskTag);
+                if (project)
+                    projects.push(project);
+            }
+        }
+    }
+
+    return projects;
 }
 
 export class OdaPmDb implements I_EvtListener {
@@ -202,7 +209,7 @@ export class OdaPmDb implements I_EvtListener {
             .filter(k => !this.workflowTags.includes(k) && !this.stepTags.includes(k)))
             .unique()
 
-        this.pmProjects = getAllProjects()
+        this.pmProjects = getAllProjects(this.pmTasks)
 
         this.emitter.emit(Evt_DbReloaded)
     }
