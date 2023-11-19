@@ -163,6 +163,7 @@ export class OdaPmTask extends BaseDatabaseObject {
     // }
 
     isInProject(name: string) {
+        // TODO performance
         return this.projects.filter(k => k.name === name).length > 0;
     }
 

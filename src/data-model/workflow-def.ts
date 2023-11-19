@@ -93,6 +93,7 @@ export interface I_OdaPmWorkflow {
     clearSteps: () => void
     addStep: (tag: string) => void
     includesStep: (tag: string) => boolean
+    isInProject: (name: string) => boolean;
 }
 
 /**

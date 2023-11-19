@@ -40,7 +40,7 @@ function getTaskMultiLineErrMsg() {
  * @param task
  */
 function createWorkflowsFromTask(task: STask): I_OdaPmWorkflow[] {
-    const workflows = []
+    const workflows: I_OdaPmWorkflow[] = []
     const defTags = getWorkflowTypeTags();
     for (const wfType of Workflow_Type_Enum_Array) {
         const defTag = getWorkflowTypeTag(wfType);

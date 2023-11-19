@@ -1,6 +1,7 @@
 import {STask} from "obsidian-dataview";
 import {I_OdaPmStep, I_OdaPmWorkflow, isTaskSingleLine, Tag_Prefix_TaskType, WorkflowType} from "./workflow-def";
 import {getOrCreateStep} from "./OdaPmStep";
+import {OdaPmProject} from "./OdaPmProject";
 
 class OdaPmWorkflow implements I_OdaPmWorkflow {
     boundTask: STask;
@@ -8,6 +9,8 @@ class OdaPmWorkflow implements I_OdaPmWorkflow {
     type: WorkflowType;
     name: string;
     tag: string;
+    // 0.2.0
+    projects: OdaPmProject[];
 
     constructor(task: STask, type: WorkflowType, name: string) {
         this.boundTask = task;
@@ -15,6 +18,7 @@ class OdaPmWorkflow implements I_OdaPmWorkflow {
         this.stepsDef = [];
         this.name = name;
         this.tag = Tag_Prefix_TaskType + name;
+        this.projects = [];
     }
 
     addStep(tag: string) {
@@ -39,6 +43,11 @@ class OdaPmWorkflow implements I_OdaPmWorkflow {
 
     clearSteps(): void {
         this.stepsDef = []
+    }
+
+    isInProject(name: string): boolean {
+        // TODO performance
+        return this.projects.map(k => k.name).includes(name);
     }
 }
 

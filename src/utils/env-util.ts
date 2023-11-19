@@ -38,10 +38,10 @@ function expect_project(prj: OdaPmProject | undefined, projectName: string, defi
 export async function assertOnDbRefreshed(pmDb: OdaPmDb) {
     devLog("Assert start: on db refreshed...")
     const projects = pmDb.pmProjects;
-    
+
     const projectIds = projects.map(k => k.internalKey).unique();
     expect(projectIds, `Project ids are not unique.`).to.have.lengthOf(projects.length);
-    
+
     const ut_projects = projects.filter(k =>
         k.name.startsWith("UT_020_1_") && (k.hasDefinedType("file") || k.hasDefinedType("folder"))
     );
@@ -65,6 +65,25 @@ export async function assertOnDbRefreshed(pmDb: OdaPmDb) {
     }); // The workflow starting with UT_020_2_1 is in Unclassified project.
     expect(ut_020_2_1_projects_wf, `Workflow with prefix 'UT_020_2_1' not matched`).to.have.lengthOf(1);
     expect_project(ut_020_2_1_projects_wf.first(), ProjectName_Unclassified, "tag_override");
+
+    const ut_020_2_2_tasks = pmDb.pmTasks.filter(k => {
+        return k.summary.startsWith("UT_020_2_2")
+    })
+    expect(ut_020_2_2_tasks, `PmTask with prefix 'UT_020_2_2' not matched`).to.have.lengthOf(1);
+    const ut_020_2_2_task = ut_020_2_2_tasks.first();
+    if (ut_020_2_2_task) {
+        expect(ut_020_2_2_task.isInProject("UT_020_2_Project_Layer_1_folder_definition"));
+    }
+
+    const ut_020_2_2_workflows = pmDb.workflows.filter(k => {
+        return k.name.startsWith("UT_020_2_2")
+    });
+    expect(ut_020_2_2_workflows, `Workflow with prefix 'UT_020_2_2' not matched`).to.have.lengthOf(1);
+    const ut_020_2_2_wf = ut_020_2_2_workflows.first();
+    if (ut_020_2_2_wf) {
+        expect(ut_020_2_2_wf.isInProject("UT_020_2_Project_Layer_1_folder_definition"));
+    }
+
 
     devLog("Assert end: on db refreshed...")
 }

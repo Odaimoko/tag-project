@@ -1,7 +1,8 @@
 import {SMarkdownPage} from "obsidian-dataview";
 import {devLog} from "../utils/env-util";
-import {I_OdaPmWorkflow, OdaPmTask} from "./workflow-def";
+import {I_OdaPmWorkflow} from "./workflow-def";
 import {BaseDatabaseObject} from "./BaseDatabaseObject";
+import {OdaPmTask} from "./OdaPmTask";
 
 const Frontmatter_FolderProject = "tpm_projectroot";
 const Frontmatter_FileProject = "tpm_project";
@@ -19,13 +20,6 @@ export const globalProjectMap: Map<string, OdaPmProject> = new Map<string, OdaPm
 export function clearGlobalProjectMap() {
     globalProjectMap.clear();
     currentMaxProjectId = 0;
-}
-
-function getProjectByName(name: string): OdaPmProject | null {
-    if (globalProjectMap.has(name)) {
-        return globalProjectMap.get(name) as OdaPmProject;
-    }
-    return null;
 }
 
 export
