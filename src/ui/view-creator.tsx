@@ -1,7 +1,6 @@
 import {
     I_OdaPmStep,
     I_OdaPmWorkflow,
-    OdaPmTask,
     Tag_Prefix_Tag,
     TaskStatus_checked,
     TaskStatus_unchecked,
@@ -45,6 +44,7 @@ import {OdaPmDbProvider} from "../data-model/odaPmDb";
 import {Evt_DbReloaded, Evt_JumpTask, Evt_JumpWorkflow} from "../typing/dataview-event";
 import {devLog} from "../utils/env-util";
 import {HStack} from "./h-stack";
+import {OdaPmTask} from "../data-model/OdaPmTask";
 
 
 // dark light compatible

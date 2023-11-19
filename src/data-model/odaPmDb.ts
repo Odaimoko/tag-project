@@ -1,15 +1,12 @@
 import {I_EvtListener} from "../utils/i_EvtListener";
 import {
     factoryTask,
-    getOrCreateWorkflow,
-    getTypeDefTag,
     getWorkflowNameFromRawText,
-    getWorkflowTags,
+    getWorkflowTypeTag,
+    getWorkflowTypeTags,
     I_OdaPmWorkflow,
     isTaskSingleLine,
     isTaskSummaryValid,
-    OdaPmTask,
-    removeWorkflow,
     Tag_Prefix_Step,
     Tag_Prefix_Tag,
     trimTagsFromTask,
@@ -23,6 +20,8 @@ import {getSettings} from "../Settings";
 import {GenericProvider} from "../utils/GenericProvider";
 import {clearGlobalProjectMap, OdaPmProject, Tag_Prefix_Project} from "./OdaPmProject";
 import {assertOnDbRefreshed} from "../utils/env-util";
+import {OdaPmTask} from "./OdaPmTask";
+import {getOrCreateWorkflow, removeWorkflow} from "./OdaPmWorkflow";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
 
@@ -42,9 +41,9 @@ function getTaskMultiLineErrMsg() {
  */
 function createWorkflowsFromTask(task: STask): I_OdaPmWorkflow[] {
     const workflows = []
-    const defTags = getWorkflowTags();
+    const defTags = getWorkflowTypeTags();
     for (const wfType of Workflow_Type_Enum_Array) {
-        const defTag = getTypeDefTag(wfType);
+        const defTag = getWorkflowTypeTag(wfType);
         if (task.tags.includes(defTag)) {
 
             const wfName = getWorkflowNameFromRawText(trimTagsFromTask(task));
@@ -103,7 +102,7 @@ function createPmTaskFromTask(workflowTags: string[], workflows: I_OdaPmWorkflow
 function getAllWorkflows(): I_OdaPmWorkflow[] {
     const allTasks = dv.pages()["file"]["tasks"];
     return allTasks.where(function (k: STask) {
-        for (const defTag of getWorkflowTags()) {
+        for (const defTag of getWorkflowTypeTags()) {
                 if (k.tags.length === 0) continue;
                 if (k.tags.includes(defTag)) {
                     return true;
@@ -200,7 +199,7 @@ export class OdaPmDb implements I_EvtListener {
 
     private reloadDb() {
         this.workflows = getAllWorkflows()
-        this.workflowTags = getWorkflowTags()
+        this.workflowTags = getWorkflowTypeTags()
         this.stepTags = this.initStepTags(this.workflows);
 
         this.pmTasks = getAllPmTasks(this.workflows)
