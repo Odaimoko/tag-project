@@ -59,7 +59,9 @@ export function ReactManagePage({eventCenter}: {
     // Use workflow names as filters' state instead. previously we use workflows themselves as state, but this requires dataview to be initialized.
     // However, this component might render before dataview is ready. The partially ready workflows will be used as the initial value, which is incorrect.
     // This is to fix the bug: On open Obsidian, the filter may not work.
-    const [displayWorkflowNames, setDisplayWorkflowNames] = useState(getSettings()?.display_workflow_names as string[]);
+
+    // Load from settings. settingsDisplayWorkflowNames is not directly used. It is also filtered against projects.
+    const [settingsDisplayWorkflowNames, setDisplayWorkflowNames] = useState(getSettings()?.display_workflow_names as string[]);
     const [displayTags, setDisplayTags] = useState(getSettings()?.manage_page_display_tags as string[]);
     const [excludedTags, setExcludedTags] = useState(getSettings()?.manage_page_excluded_tags as string[]);
     const [displayProjectNames, setDisplayProjectNames] = useState(initDisplayProjectNames);
@@ -107,7 +109,9 @@ export function ReactManagePage({eventCenter}: {
     // Filter
     // Show only this project's workflows
     workflows = workflows.filter(k => isInAnyProject(displayProjectNames, k));
-
+    
+    // settingsDisplayWorkflowNames may contain workflows from other projects. We filter them out.
+    const displayWorkflowNames = settingsDisplayWorkflowNames.filter(k => workflows.some(wf => wf.name === k));
     const displayWorkflows = workflows.filter(k => {
         return displayWorkflowNames.includes(k.name);
     });
