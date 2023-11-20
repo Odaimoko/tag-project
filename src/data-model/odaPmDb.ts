@@ -18,7 +18,7 @@ import {getAPI, STask} from "obsidian-dataview";
 import {ONotice} from "../utils/o-notice";
 import {getSettings} from "../Settings";
 import {GenericProvider} from "../utils/GenericProvider";
-import {clearGlobalProjectMap, OdaPmProject, Tag_Prefix_Project} from "./OdaPmProject";
+import {clearGlobalProjectMap, OdaPmProject} from "./OdaPmProject";
 import {assertOnDbRefreshed, devLog} from "../utils/env-util";
 import {OdaPmTask} from "./OdaPmTask";
 import {getOrCreateWorkflow, removeWorkflow} from "./OdaPmWorkflow";
@@ -204,6 +204,7 @@ export class OdaPmDb implements I_EvtListener {
         this.emitter.off(DataviewMetadataChangeEvent, this.boundReloadWorkflows)
     }
 
+// region Init
     private reloadDb() {
         this.workflows = getAllWorkflows()
         this.workflowTags = getWorkflowTypeTags()
@@ -215,10 +216,12 @@ export class OdaPmDb implements I_EvtListener {
 
         this.pmProjects = getAllProjectsAndLinkTasks(this.pmTasks)
 
+        this.linkProject(this.pmProjects, this.pmTasks, this.workflows);
         this.emitter.emit(Evt_DbReloaded)
         assertOnDbRefreshed(this);
         devLog("Database Reloaded.")
     }
+
 
     /**
      * Pass parameters to indicate dependency relationship.
@@ -241,6 +244,22 @@ export class OdaPmDb implements I_EvtListener {
             .filter(k => !this.workflowTags.includes(k) && !this.stepTags.includes(k)))
             .unique();
     }
+
+
+    private linkProject(projects: OdaPmProject[], pmTasks: OdaPmTask[], workflows: I_OdaPmWorkflow[]) {
+        const projectTree: OdaProjectTree = OdaProjectTree.buildProjectShadowTree(projects);
+
+        for (const pmTask of pmTasks) {
+            const linkingProject: OdaPmProject = projectTree.getProjectByPmTask(pmTask);
+            linkingProject.linkTask(pmTask);
+        }
+        for (const pmWorkflow of workflows) {
+            const linkingProject: OdaPmProject = projectTree.getProjectByPmWorkflow(pmWorkflow);
+            linkingProject.linkWorkflow(pmWorkflow);
+        }
+    }
+
+// endregion
 
     getWorkflow(filePath: string, line: number) {
         for (const wf of this.workflows) {

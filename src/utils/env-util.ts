@@ -129,12 +129,18 @@ async function testTaskProjectLink(pmDb: OdaPmDb) {
 
     function expectTaskInProject(taskName: string, projectName: string) {
         expectTaskAbstract(pmDb, taskName, (task) => {
-            expect(task.isInProject(projectName), `Task ${taskName} not in project ${projectName}. ${JSON.stringify(task.getProjectNames())}`).true;
+            expect(task.isInProject(projectName), `Task ${taskName} not in project ${projectName}. Task Path: ${task.getProjectPath()}. Task Project: ${JSON.stringify(task.getProjectNames())}`).true;
         })
     }
 
     expectTaskInProject("UT_020_3_2_Unclassified", ProjectName_Unclassified);
-    expectTaskInProject("UT_020_3_2_Prj4", "UT_040_3_2_Prj4");
+    expectTaskInProject("UT_020_3_2_Prj4", "UT_020_3_Prj4");
+    expectTaskInProject("UT_020_3_2_file1_Prj1", "UT_020_3_Prj1")
+    expectTaskInProject("UT_020_3_2_file2_Prj2", "UT_020_3_Prj2")
+    expectTaskInProject("UT_020_3_2_file3_Prj1", "UT_020_3_Prj1")
+    expectTaskInProject("UT_020_3_2_file3_Prj3", "UT_020_3_Prj3")
+    expectTaskInProject("UT_020_3_2_file4_Prj3", "UT_020_3_Prj3")
+    devLog("Test PASSED: Task Project Link.")
 }
 
 async function testGetTaskProjectPath(pmDb: OdaPmDb) {
@@ -152,9 +158,10 @@ async function testGetTaskProjectPath(pmDb: OdaPmDb) {
     expectTaskPath("UT_020_3_2_file3_Prj1", "/UT_020_3 project Folder/UT_020_3 file3 Prj1.md")
     expectTaskPath("UT_020_3_2_file3_Prj3", "/UT_020_3 project Folder/UT_020_3 file3 Prj1.md:UT_020_3_Prj3")
     expectTaskPath("UT_020_3_2_file4_Prj3", "/UT_020_3 project Folder/UT_020_3 file4 Prj3.md")
+    devLog("Test PASSED: Get Task Project Path.")
 }
 
-function test_UT_020_3(pmDb: OdaPmDb) {
+async function test_UT_020_3(pmDb: OdaPmDb) {
     // UT_020_3
     // Sanity check
     const ut_020_3_tasks = pmDb.pmTasks.filter(k => {
@@ -162,7 +169,7 @@ function test_UT_020_3(pmDb: OdaPmDb) {
     });
     expect(ut_020_3_tasks, `PmTask with prefix 'UT_020_3' not matched`).to.have.lengthOf(7);
     testGetTaskProjectPath(pmDb);
-    // testTaskProjectLink(pmDb);
+    testTaskProjectLink(pmDb);
 }
 
 // make this async so the failing tests won't block the plugin and database initialization process.

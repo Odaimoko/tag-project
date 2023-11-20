@@ -1,10 +1,11 @@
 import {SMarkdownPage} from "obsidian-dataview";
 import {devLog} from "../utils/env-util";
-import {I_OdaPmWorkflow} from "./workflow-def";
+import {getProjectNameFromTag, I_OdaPmWorkflow} from "./workflow-def";
 import {BaseDatabaseObject} from "./BaseDatabaseObject";
 import {OdaPmTask} from "./OdaPmTask";
+import * as path from "path";
 
-const Frontmatter_FolderProject = "tpm_projectroot";
+const Frontmatter_FolderProject = "tpm_project_root";
 const Frontmatter_FileProject = "tpm_project";
 export const ProjectName_Unclassified = "Unclassified";
 export const Tag_Prefix_Project = "#tpm/project/";
@@ -62,7 +63,7 @@ export class OdaPmProject extends BaseDatabaseObject {
 
     private addDefPath(obsidianPath: string) {
         // Obsidian path is relative. Add '/' before path to form a tree
-        obsidianPath = "/" + obsidianPath;
+        obsidianPath = (obsidianPath.startsWith("/") ? "" : "/") + obsidianPath; // prevent doubling leading '/'
         this.defPaths.push(obsidianPath);
     }
 
@@ -144,16 +145,20 @@ export class OdaPmProject extends BaseDatabaseObject {
 
 // endregion
 
+
 // region Link Task and Workflow
     linkTask(pmTask: OdaPmTask) {
         if (!this.pmTasks.includes(pmTask)) {
             this.pmTasks.push(pmTask);
         }
-
+        pmTask.addProject(this);
     }
 
     linkWorkflow(pmWorkflow: I_OdaPmWorkflow) {
-        throw new Error("Not implemented");
+        if (!this.workflows.includes(pmWorkflow)) {
+            this.workflows.push(pmWorkflow);
+        }
+        pmWorkflow.addProject(this);
     }
 
 // endregion

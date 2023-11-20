@@ -19,15 +19,24 @@ export function getProjectByTaskPath<T>(projectDict: Record<string, T>, taskPath
 }
 
 export class OdaProjectTree {
-    static buildProjectShadowTree(): OdaProjectTree | null {
-        return null;
+    // Path to Project
+    projectDict: Record<string, OdaPmProject> = {};
+
+    static buildProjectShadowTree(projects: OdaPmProject[]): OdaProjectTree {
+        const tree = new OdaProjectTree();
+        for (const project of projects) {
+            for (const path of project.defPaths) {
+                tree.projectDict[path] = project
+            }
+        }
+        return tree;
     }
 
-    getProjectByPmTask(pmTask: OdaPmTask): OdaPmProject | null {
-        return null;
+    getProjectByPmTask(pmTask: OdaPmTask): OdaPmProject {
+        return getProjectByTaskPath(this.projectDict, pmTask.getProjectPath());
     }
 
-    getProjectByPmWorkflow(pmWorkflow: I_OdaPmWorkflow): OdaPmProject | null {
-        return null;
+    getProjectByPmWorkflow(pmWorkflow: I_OdaPmWorkflow): OdaPmProject {
+        return getProjectByTaskPath(this.projectDict, pmWorkflow.getProjectPath());
     }
 }

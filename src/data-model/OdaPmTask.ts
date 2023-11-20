@@ -1,10 +1,19 @@
 import {STask} from "obsidian-dataview";
 import {OdaPmProject} from "./OdaPmProject";
-import {addTagText, I_OdaPmStep, I_OdaPmWorkflow, removeTagText, trimTagsFromTask} from "./workflow-def";
+import {
+    addTagText,
+    getProjectPathFromSTask,
+    getProjectTagFromSTask,
+    I_OdaPmProjectTask,
+    I_OdaPmStep,
+    I_OdaPmWorkflow,
+    removeTagText,
+    trimTagsFromTask
+} from "./workflow-def";
 import {BaseDatabaseObject} from "./BaseDatabaseObject";
 import {getOrCreateStep} from "./OdaPmStep";
 
-export class OdaPmTask extends BaseDatabaseObject {
+export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmProjectTask {
     boundTask: STask;
     // without any step and typeDef tags
     summary: string;
@@ -158,10 +167,13 @@ export class OdaPmTask extends BaseDatabaseObject {
     }
 
     // region Project
-    // isInProject(project: OdaPmProject) {
-    //     return this.projects.includes(project)
-    // }
+
+    getProjectTag(): string | null {
+        return getProjectTagFromSTask(this.boundTask);
+    }
+
     addProject(project: OdaPmProject) {
+        // TODO performance
         if (!this.projects.includes(project)) {
             this.projects.push(project);
         }

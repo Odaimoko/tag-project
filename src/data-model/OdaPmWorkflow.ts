@@ -1,5 +1,12 @@
 import {STask} from "obsidian-dataview";
-import {I_OdaPmStep, I_OdaPmWorkflow, isTaskSingleLine, Tag_Prefix_TaskType, WorkflowType} from "./workflow-def";
+import {
+    getProjectPathFromSTask,
+    I_OdaPmStep,
+    I_OdaPmWorkflow,
+    isTaskSingleLine,
+    Tag_Prefix_TaskType,
+    WorkflowType
+} from "./workflow-def";
 import {getOrCreateStep} from "./OdaPmStep";
 import {OdaPmProject} from "./OdaPmProject";
 
@@ -44,6 +51,14 @@ class OdaPmWorkflow implements I_OdaPmWorkflow {
     clearSteps(): void {
         this.stepsDef = []
     }
+
+    addProject(project: OdaPmProject) {
+        // TODO Performance
+        if (!this.isInProject(project.name)) {
+            this.projects.push(project);
+        }
+    }
+
 
     isInProject(name: string): boolean {
         // TODO performance
