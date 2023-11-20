@@ -10,8 +10,10 @@ import {OdaPmTask} from "../../data-model/OdaPmTask";
 import {TaskTableView} from "./task-table-view";
 import {FilterHeadHStack, WorkflowFilter} from "./workflow-filter";
 import {TagFilter} from "./tag-filter";
-import {OdaPmProject, ProjectName_Unclassified} from "../../data-model/OdaPmProject";
+import {OdaPmProject} from "../../data-model/OdaPmProject";
 
+const ProjectFilterName_All = "All Projects";
+const ProjectFilterOptionValue_All = "###ALL###";
 
 export function ReactManagePage({eventCenter}: {
     eventCenter?: EventEmitter
@@ -64,12 +66,12 @@ export function ReactManagePage({eventCenter}: {
     const [settingsDisplayWorkflowNames, setDisplayWorkflowNames] = useState(getSettings()?.display_workflow_names as string[]);
     const [displayTags, setDisplayTags] = useState(getSettings()?.manage_page_display_tags as string[]);
     const [excludedTags, setExcludedTags] = useState(getSettings()?.manage_page_excluded_tags as string[]);
-    const [displayProjectNames, setDisplayProjectNames] = useState(initDisplayProjectNames);
+    const [displayProjectOptionValues, setDisplayProjectOptionValues] = useState(initDisplayProjectOptionValues);
 
-    function initDisplayProjectNames() {
+    function initDisplayProjectOptionValues() {
         const settingsValue = getSettings()?.manage_page_display_projects as string[];
         if (settingsValue.length === 0) {
-            settingsValue.push(ProjectName_Unclassified);
+            settingsValue.push(ProjectFilterOptionValue_All);
         }
         return settingsValue;
     }
@@ -91,7 +93,7 @@ export function ReactManagePage({eventCenter}: {
 
     function handleSetDisplayProjects(names: string[]) {
         setSettingsValueAndSave(plugin, "manage_page_display_projects", [...names])
-        setDisplayProjectNames(names)
+        setDisplayProjectOptionValues(names)
     }
 
     const rectifiedDisplayTags = displayTags.filter(k => db?.pmTags.contains(k))
@@ -101,15 +103,18 @@ export function ReactManagePage({eventCenter}: {
     if (workflows.length === 0 || db === null)
         return <EmptyWorkflowView/>
 
-    function isInAnyProject(projects: string[], projectTask: I_OdaPmProjectTask) {
-        const b = projects.some(k => projectTask.isInProject(k));
+    function isInAnyProject(projectNames: string[], projectTask: I_OdaPmProjectTask) {
+
+        if (projectNames.length === 0) return true;
+        if (projectNames.includes(ProjectFilterOptionValue_All)) return true;
+        const b = projectNames.some(k => projectTask.isInProject(k));
         return b;
     }
 
     // Filter
     // Show only this project's workflows
-    workflows = workflows.filter(k => isInAnyProject(displayProjectNames, k));
-    
+    workflows = workflows.filter(k => isInAnyProject(displayProjectOptionValues, k));
+
     // settingsDisplayWorkflowNames may contain workflows from other projects. We filter them out.
     const displayWorkflowNames = settingsDisplayWorkflowNames.filter(k => workflows.some(wf => wf.name === k));
     const displayWorkflows = workflows.filter(k => {
@@ -117,7 +122,7 @@ export function ReactManagePage({eventCenter}: {
     });
 
     let filteredTasks = db.getFilteredTasks(displayWorkflows, rectifiedDisplayTags, rectifiedExcludedTags);
-    filteredTasks = filteredTasks.filter(k => isInAnyProject(displayProjectNames, k))
+    filteredTasks = filteredTasks.filter(k => isInAnyProject(displayProjectOptionValues, k))
     // console.log(`ReactManagePage Render. All tasks: ${tasks_with_workflow.length}. Filtered Tasks: ${filteredTasks.length}. Workflow: ${curWfName}. IncludeCompleted: ${includeCompleted}`)
 
     let pmTags = db.pmTags || [];
@@ -133,7 +138,7 @@ export function ReactManagePage({eventCenter}: {
     return (
         <>
             <p/>
-            <ProjectFilter projects={projects} displayNames={displayProjectNames}
+            <ProjectFilter projects={projects} displayNames={displayProjectOptionValues}
                            handleSetDisplayNames={handleSetDisplayProjects}
             />
             <WorkflowFilter workflows={workflows} displayNames={displayWorkflowNames}
@@ -167,6 +172,15 @@ function ProjectFilter(props: {
         display: "flex",
         justifyContent: "center"
     };
+    const projectsAndAll = [
+        {
+            name: ProjectFilterName_All,
+            optionValue: ProjectFilterOptionValue_All
+        }, ...props.projects
+    ]
+    // If optionValue is not defined, use name as optionValue
+    type ProjectOptionValue = typeof projectsAndAll[number];
+
     return <div>
         <div style={centerStyle}>
             <FilterHeadHStack>
@@ -175,9 +189,11 @@ function ProjectFilter(props: {
                 <select style={{fontSize: "medium"}} value={props.displayNames.first()} onChange={(event) => {
                     props.handleSetDisplayNames([event.target.value])
                 }}>
-                    {props.projects.map((project: OdaPmProject) => {
+                    {projectsAndAll.map((project: ProjectOptionValue) => {
                         return (
-                            <option key={project.name} value={project.name}>{project.name}</option>
+                            <option key={project.name} value={
+                                Object.keys(project).includes("optionValue") ? project['optionValue'] : project.name
+                            }>{project.name}</option>
                         )
                     })}
                 </select>
