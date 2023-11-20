@@ -1,6 +1,7 @@
 import {STask} from "obsidian-dataview";
 import {OdaPmTask} from "./OdaPmTask";
 import {OdaPmProject, Tag_Prefix_Project} from "./OdaPmProject";
+import {I_Nameable} from "./I_Nameable";
 
 export const Tag_Prefix_Step = "#tpm/step/";
 export const Tag_Prefix_Workflow = "#tpm/workflow_type/";
@@ -97,7 +98,7 @@ export interface I_OdaPmStep {
 }
 
 
-export interface I_OdaPmWorkflow extends I_OdaPmProjectTask {
+export interface I_OdaPmWorkflow extends I_OdaPmProjectTask, I_Nameable {
     boundTask: STask;
     name: string;
     stepsDef: I_OdaPmStep[];

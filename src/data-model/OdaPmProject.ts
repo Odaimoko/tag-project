@@ -4,6 +4,7 @@ import {getProjectNameFromTag, I_OdaPmWorkflow} from "./workflow-def";
 import {BaseDatabaseObject} from "./BaseDatabaseObject";
 import {OdaPmTask} from "./OdaPmTask";
 import * as path from "path";
+import {I_Nameable} from "./I_Nameable";
 
 const Frontmatter_FolderProject = "tpm_project_root";
 const Frontmatter_FileProject = "tpm_project";
@@ -26,7 +27,7 @@ export function clearGlobalProjectMap() {
 export
 type ProjectDefinedType = typeof Project_Def_Enum_Array[number]
 
-export class OdaPmProject extends BaseDatabaseObject {
+export class OdaPmProject extends BaseDatabaseObject implements I_Nameable {
     name: string;
     definedTypes: ProjectDefinedType[];
     pages: SMarkdownPage[];
