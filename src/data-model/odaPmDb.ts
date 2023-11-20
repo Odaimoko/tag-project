@@ -141,42 +141,39 @@ function getAllPmTasks(workflows: I_OdaPmWorkflow[]) {
  * Pass 1: create projects from frontmatter and tasks.
  * Pass 2: link tasks/Wf to projects.
  * @param pmTasks
- * @param pmWorkflows
  */
-function getAllProjectsAndLinkTasks(pmTasks: OdaPmTask[], pmWorkflows: I_OdaPmWorkflow[]): OdaPmProject[] {
+function getAllProjectsAndLinkTasks(pmTasks: OdaPmTask[]): OdaPmProject[] {
     clearGlobalProjectMap();
 
     const projects: OdaPmProject[] = [
         OdaPmProject.createUnclassifiedProject()
     ]
+
+    function addProject(project: OdaPmProject) {
+        if (!projects.includes(project)) {
+            projects.push(project);
+        }
+    }
+
     const pages = dv.pages()["file"];
     // File defs
 
     for (const pg of pages) {
         const project = OdaPmProject.createProjectFromFrontmatter(pg);
-        if (project)
-            projects.push(project);
-    }
-
-    // Task def
-    for (const pmTask of pmTasks) {
-        for (const taskTag of pmTask.boundTask.tags) {
-            if (taskTag.startsWith(Tag_Prefix_Project)) {
-                const project = OdaPmProject.createProjectFromTaskTag(taskTag);
-                if (project) {
-                    projects.push(project);
-                }
-            }
+        if (project) {
+            addProject(project);
         }
     }
-    const projectTree: OdaProjectTree = OdaProjectTree.buildProjectShadowTree();
+    
+    // Task def
     for (const pmTask of pmTasks) {
-        const linkingProject: OdaPmProject = projectTree.getProjectByPmTask(pmTask);
-        linkingProject.linkTask(pmTask);
-    }
-    for (const pmWorkflow of pmWorkflows) {
-        const linkingProject: OdaPmProject = projectTree.getProjectByPmWorkflow(pmWorkflow);
-        linkingProject.linkWorkflow(pmWorkflow);
+        const taskTag = pmTask.getProjectTag();
+        if (taskTag) {
+            const project = OdaPmProject.createProjectFromTaskTag(pmTask, taskTag);
+            if (project) {
+                addProject(project);
+            }
+        }
     }
 
     return projects;
@@ -216,7 +213,7 @@ export class OdaPmDb implements I_EvtListener {
 
         this.pmTags = this.initManagedTags(this.pmTasks)
 
-        this.pmProjects = getAllProjectsAndLinkTasks(this.pmTasks, this.workflows)
+        this.pmProjects = getAllProjectsAndLinkTasks(this.pmTasks)
 
         this.emitter.emit(Evt_DbReloaded)
         assertOnDbRefreshed(this);
