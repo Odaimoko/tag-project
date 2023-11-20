@@ -15,25 +15,25 @@ export function TagFilter({
                               pmTags,
                               rectifiedExcludedTags,
                               rectifiedDisplayTags,
-                              handleSetDisplayTags,
-                              handleSetExcludedTags
+                              handleSetDisplayNames,
+                              handleSetExcludedNames
                           }: {
     pmTags: string[],
     rectifiedExcludedTags: string[],
     rectifiedDisplayTags: string[],
-    handleSetDisplayTags: (names: string[]) => void,
-    handleSetExcludedTags: (names: string[]) => void
+    handleSetDisplayNames: (names: string[]) => void,
+    handleSetExcludedNames: (names: string[]) => void
 }) {
     return <div>
         <TagFilterHeader rectifiedDisplayTags={rectifiedDisplayTags} pmTags={pmTags}
-                         handleSetDisplayTags={handleSetDisplayTags} handleSetExcludedTags={handleSetExcludedTags}/>
+                         handleSetDisplayTags={handleSetDisplayNames} handleSetExcludedTags={handleSetExcludedNames}/>
 
         <TagFilterCheckboxes
             pmTags={pmTags}
             rectifiedExcludedTags={rectifiedExcludedTags}
             rectifiedDisplayTags={rectifiedDisplayTags}
-            handleSetDisplayTags={handleSetDisplayTags}
-            handleSetExcludedTags={handleSetExcludedTags}
+            handleSetDisplayTags={handleSetDisplayNames}
+            handleSetExcludedTags={handleSetExcludedNames}
         />
 
     </div>

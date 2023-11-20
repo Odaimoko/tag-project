@@ -95,15 +95,14 @@ export function ReactManagePage({eventCenter}: {
     const pmTags = db.pmTags || [];
     return (
         <>
-
-            <WorkflowFilter workflows={workflows} displayWorkflowNames={displayWorkflowNames}
-                            handleSetDisplayWorkflows={handleSetDisplayWorkflows}/>
+            <WorkflowFilter workflows={workflows} displayNames={displayWorkflowNames}
+                            handleSetDisplayNames={handleSetDisplayWorkflows}/>
             <TagFilter
                 pmTags={pmTags}
                 rectifiedExcludedTags={rectifiedExcludedTags}
                 rectifiedDisplayTags={rectifiedDisplayTags}
-                handleSetDisplayTags={handleSetDisplayTags}
-                handleSetExcludedTags={handleSetExcludedTags}
+                handleSetDisplayNames={handleSetDisplayTags}
+                handleSetExcludedNames={handleSetExcludedTags}
             />
             <p/>
             <TaskTableView displayWorkflows={displayWorkflows}

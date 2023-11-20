@@ -41,27 +41,27 @@ export function WorkflowTypeLegendView() {
 
 // endregion
 // region Workflow Filter
-export const WorkflowFilter = ({workflows, displayWorkflowNames, handleSetDisplayWorkflows}: {
+export const WorkflowFilter = ({workflows, displayNames, handleSetDisplayNames}: {
     workflows: I_OdaPmWorkflow[],
-    displayWorkflowNames: string[],
-    handleSetDisplayWorkflows: (names: string[]) => void
+    displayNames: string[],
+    handleSetDisplayNames: (names: string[]) => void
 }) => <div>
 
-    <WorkflowFilterHeading workflows={workflows} displayWorkflowNames={displayWorkflowNames}
-                           handleSetDisplayWorkflows={handleSetDisplayWorkflows}/>
-    <WorkflowCheckboxes workflows={workflows} displayWorkflowNames={displayWorkflowNames}
-                        handleSetDisplayWorkflows={handleSetDisplayWorkflows}/>
+    <WorkflowFilterHeading workflows={workflows} displayNames={displayNames}
+                           handleSetDisplayNames={handleSetDisplayNames}/>
+    <WorkflowCheckboxes workflows={workflows} displayWorkflowNames={displayNames}
+                        handleSetDisplayWorkflows={handleSetDisplayNames}/>
 </div>
-const WorkflowFilterHeading = ({displayWorkflowNames, workflows, handleSetDisplayWorkflows}: {
-    displayWorkflowNames: string[],
+const WorkflowFilterHeading = ({displayNames, workflows, handleSetDisplayNames}: {
+    displayNames: string[],
     workflows: I_OdaPmWorkflow[],
-    handleSetDisplayWorkflows: (s: string[]) => void
+    handleSetDisplayNames: (s: string[]) => void
 }) => {
     return <FilterHeadHStack>
-        <h2>{displayWorkflowNames.length}/{workflows.length} Workflow(s)</h2>
-        <button onClick={() => handleSetDisplayWorkflows(workflows.map(k => k.name))}>Select All
+        <h2>{displayNames.length}/{workflows.length} Workflow(s)</h2>
+        <button onClick={() => handleSetDisplayNames(workflows.map(k => k.name))}>Select All
         </button>
-        <button onClick={() => handleSetDisplayWorkflows([])}>Unselect All
+        <button onClick={() => handleSetDisplayNames([])}>Unselect All
         </button>
         <WorkflowTypeLegendView/>
     </FilterHeadHStack>
