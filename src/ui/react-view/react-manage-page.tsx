@@ -1,4 +1,4 @@
-import {I_OdaPmWorkflow} from "../../data-model/workflow-def";
+import {I_OdaPmProjectTask, I_OdaPmWorkflow} from "../../data-model/workflow-def";
 import React, {useContext, useEffect, useState} from "react";
 import {PluginContext} from "../manage-page-view";
 import {EventEmitter} from "events";
@@ -11,9 +11,6 @@ import {TaskTableView} from "./task-table-view";
 import {FilterHeadHStack, WorkflowFilter} from "./workflow-filter";
 import {TagFilter} from "./tag-filter";
 import {OdaPmProject, ProjectName_Unclassified} from "../../data-model/OdaPmProject";
-import {NameableFilterHeading} from "./nameable-filter-heading";
-import {I_Nameable} from "../../data-model/I_Nameable";
-import {HStack} from "./view-template/h-stack";
 
 
 export function ReactManagePage({eventCenter}: {
@@ -57,7 +54,7 @@ export function ReactManagePage({eventCenter}: {
     const plugin = useContext(PluginContext);
 
     const db = OdaPmDbProvider.get();
-    const workflows = db?.workflows || [];
+    let workflows = db?.workflows || [];
     const projects = db?.pmProjects || [];
     // Use workflow names as filters' state instead. previously we use workflows themselves as state, but this requires dataview to be initialized.
     // However, this component might render before dataview is ready. The partially ready workflows will be used as the initial value, which is incorrect.
@@ -102,18 +99,21 @@ export function ReactManagePage({eventCenter}: {
     if (workflows.length === 0 || db === null)
         return <EmptyWorkflowView/>
 
+    function isInAnyProject(projects: string[], projectTask: I_OdaPmProjectTask) {
+        const b = projects.some(k => projectTask.isInProject(k));
+        return b;
+    }
+
     // Filter
-    const displayProjects = projects.filter(k => {
-        return displayProjectNames.includes(k.name);
-    });
-    devLog(displayProjects);
+    // Show only this project's workflows
+    workflows = workflows.filter(k => isInAnyProject(displayProjectNames, k));
 
     const displayWorkflows = workflows.filter(k => {
         return displayWorkflowNames.includes(k.name);
     });
 
-    const filteredTasks = db.getFilteredTasks(displayWorkflows, rectifiedDisplayTags, rectifiedExcludedTags);
-
+    let filteredTasks = db.getFilteredTasks(displayWorkflows, rectifiedDisplayTags, rectifiedExcludedTags);
+    filteredTasks = filteredTasks.filter(k => isInAnyProject(displayProjectNames, k))
     // console.log(`ReactManagePage Render. All tasks: ${tasks_with_workflow.length}. Filtered Tasks: ${filteredTasks.length}. Workflow: ${curWfName}. IncludeCompleted: ${includeCompleted}`)
 
     const pmTags = db.pmTags || [];
@@ -151,23 +151,32 @@ function ProjectFilter(props: {
     handleSetDisplayNames: (names: string[]) => void,
     displayNames: string[]
 }) {
-    return <div style={{
-        display: "flex",
-        justifyContent: "center"
-    }}>
-        <FilterHeadHStack>
-            <h2>Project</h2>
+    return <div>
+        <div style={{
+            display: "flex",
+            justifyContent: "center"
+        }}>
+            <FilterHeadHStack>
+                <h2>Project</h2>
 
-            <select style={{fontSize: "medium"}} value={props.displayNames.first()} onChange={(event) => {
-                props.handleSetDisplayNames([event.target.value])
-            }}>
-                {props.projects.map((project: OdaPmProject) => {
-                    return (
-                        <option key={project.name} value={project.name}>{project.name}</option>
-                    )
-                })}
-            </select>
-        </FilterHeadHStack>
+                <select style={{fontSize: "medium"}} value={props.displayNames.first()} onChange={(event) => {
+                    props.handleSetDisplayNames([event.target.value])
+                }}>
+                    {props.projects.map((project: OdaPmProject) => {
+                        return (
+                            <option key={project.name} value={project.name}>{project.name}</option>
+                        )
+                    })}
+                </select>
+            </FilterHeadHStack>
+
+        </div>
+        <label style={{
+            display: "flex",
+            justifyContent: "center"
+        }}>
+            Only shows workflows, tags and tasks in this project.
+        </label>
     </div>
 }
 

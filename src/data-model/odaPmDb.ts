@@ -245,7 +245,9 @@ export class OdaPmDb implements I_EvtListener {
             .unique();
     }
 
-
+    /**
+     * After this step, every task or workflow will link to exactly one project.
+     */
     private linkProject(projects: OdaPmProject[], pmTasks: OdaPmTask[], workflows: I_OdaPmWorkflow[]) {
         const projectTree: OdaProjectTree = OdaProjectTree.buildProjectShadowTree(projects);
 
