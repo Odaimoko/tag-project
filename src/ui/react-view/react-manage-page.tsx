@@ -1,9 +1,7 @@
-import {I_OdaPmWorkflow, Tag_Prefix_Tag, Workflow_Type_Enum_Array, WorkflowType} from "../../data-model/workflow-def";
+import {I_OdaPmWorkflow, Tag_Prefix_Tag} from "../../data-model/workflow-def";
 import React, {useContext, useEffect, useState} from "react";
 import {PluginContext} from "../manage-page-view";
 import {EventEmitter} from "events";
-
-import {initialToUpper} from "../../utils/format-util";
 import {
     FilterMethod_Excluded,
     FilterMethod_Included,
@@ -12,22 +10,22 @@ import {
     getSettings,
     setSettingsValueAndSave
 } from "../../Settings";
-import {ClickableIconView, I_Stylable, InternalLinkView} from "./view-template/icon-view";
+import {ClickableIconView} from "./view-template/icon-view";
 import {OdaPmDbProvider} from "../../data-model/odaPmDb";
 import {Evt_DbReloaded, Evt_JumpTask, Evt_JumpWorkflow} from "../../typing/dataview-event";
 import {devLog} from "../../utils/env-util";
 import {HStack} from "./view-template/h-stack";
 import {OdaPmTask} from "../../data-model/OdaPmTask";
-import {ExternalControlledCheckbox} from "./view-template/checkbox";
 import {TaskTableView} from "./task-table-view";
-import {openTaskPrecisely} from "../../utils/io-util";
-import {getIconByWorkflow, getIconViewByWorkflowType, iconViewAsAWholeStyle} from "./style-def";
+import {iconViewAsAWholeStyle} from "./style-def";
+import {WorkflowFilter} from "./workflow-filter";
 
 
 export function ReactManagePage({eventCenter}: {
     eventCenter?: EventEmitter
 }) {
     devLog("ReactManagePage rendered.")
+    // region Re-render trigger
     // only for re-render
     const [rerenderState, setRerenderState] = useState(0);
 
@@ -36,6 +34,9 @@ export function ReactManagePage({eventCenter}: {
         setRerenderState((prevState) => prevState + 1)
     }
 
+    // endregion
+
+    // region Event
     function jumpTask(oTask: OdaPmTask) {
         jumpWf(oTask.type)
     }
@@ -57,7 +58,7 @@ export function ReactManagePage({eventCenter}: {
 
         }
     }, [rerenderState]);
-
+    // endregion
     const plugin = useContext(PluginContext);
 
     const db = OdaPmDbProvider.get();
@@ -104,17 +105,8 @@ export function ReactManagePage({eventCenter}: {
     return (
         <>
 
-            <WorkflowFilterHeading workflows={workflows} displayWorkflowNames={displayWorkflowNames}
-                                   handleSetDisplayWorkflows={handleSetDisplayWorkflows}/>
-            <div>
-                {workflows.map((workflow: I_OdaPmWorkflow) => {
-                    return (
-                        <WorkflowFilterCheckbox key={workflow.name} displayWorkflows={displayWorkflowNames}
-                                                workflow={workflow}
-                                                setDisplayWorkflows={handleSetDisplayWorkflows}/>
-                    )
-                })}
-            </div>
+            <WorkflowFilter workflows={workflows} displayWorkflowNames={displayWorkflowNames}
+                            handleSetDisplayWorkflows={handleSetDisplayWorkflows}/>
             {pmTags.length > 0 ?
                 <HStack style={{alignItems: "center"}} spacing={10}>
                     <h3>{rectifiedDisplayTags.length}/{pmTags.length} Tags(s)</h3>
@@ -146,7 +138,6 @@ export function ReactManagePage({eventCenter}: {
                 }
             </div>
 
-            {/*<WorkflowOverviewView filteredTasks={filteredTasks}/>*/}
             <p/>
             <TaskTableView displayWorkflows={displayWorkflows}
                            filteredTasks={filteredTasks}/>
@@ -159,83 +150,8 @@ const EmptyWorkflowView = () => {
     return <h1>No Workflow defined, or Dataview is not initialized.</h1>
 }
 
-export function WorkflowTypeLegend({type, style}: { type: WorkflowType } & I_Stylable) {
-    return <span style={style}>
-        <HStack spacing={3}>
-        {getIconViewByWorkflowType(type)}
-            <label>{initialToUpper(type)}</label>
-    </HStack>
-    </span>;
-}
 
-export function WorkflowTypeLegendView() {
-    return <HStack spacing={10}>
-        {Workflow_Type_Enum_Array.map((type: WorkflowType) => {
-            return <WorkflowTypeLegend key={type}
-                                       type={type}/>
-
-        })}
-    </HStack>;
-}
-
-const WorkflowFilterHeading = ({displayWorkflowNames, workflows, handleSetDisplayWorkflows}: {
-    displayWorkflowNames: string[],
-    workflows: I_OdaPmWorkflow[],
-    handleSetDisplayWorkflows: (s: string[]) => void
-}) => {
-    return <span style={{display: "flex"}}>
-            <HStack style={{
-                display: "flex",
-                alignItems: "center"
-            }} spacing={10}>
-                <h2>{displayWorkflowNames.length}/{workflows.length} Workflow(s)</h2>
-                <button onClick={() => handleSetDisplayWorkflows(workflows.map(k => k.name))}>Select All
-                </button>
-                <button onClick={() => handleSetDisplayWorkflows([])}>Unselect All
-                </button>
-<WorkflowTypeLegendView/>
-            </HStack>
-            </span>
-}
-
-const WorkflowFilterCheckbox = ({workflow, displayWorkflows, setDisplayWorkflows}: {
-    workflow: I_OdaPmWorkflow,
-    displayWorkflows: string[],
-    setDisplayWorkflows: React.Dispatch<React.SetStateAction<string[]>>
-}) => {
-    const plugin = useContext(PluginContext);
-
-    const wfName = workflow.name;
-
-    function tickCheckbox() {
-        // invert the checkbox
-        const v = !displayWorkflows.includes(wfName)
-        const newArr = v ? [...displayWorkflows, wfName] : displayWorkflows.filter(k => k != wfName)
-        setDisplayWorkflows(newArr)
-    }
-
-    // inline-block: make this check box a whole element. It won't be split into multiple sub-elements when layout.
-    // block will start a new line, inline will not, so we use inline-block
-    return <span style={{display: "inline-block", marginRight: 15}}>
-        <ExternalControlledCheckbox
-            content={<>
-                <InternalLinkView
-                    content={<span style={iconViewAsAWholeStyle}>
-                        {getIconByWorkflow(workflow)}
-                        <label style={{marginLeft: 3}}>{wfName}</label>
-                    </span>}
-                    onIconClicked={() =>
-                        // Go to workflow def
-                        openTaskPrecisely(plugin.app.workspace, workflow.boundTask)}
-                    onContentClicked={tickCheckbox}/>
-            </>}
-            onChange={tickCheckbox}
-            externalControl={displayWorkflows.includes(wfName)}
-        />
-    </span>
-
-}
-
+// region Tag Filter
 const TagFilterCheckbox = ({tag, displayed, setDisplayed, excludeTags, setExcludedTags}: {
     tag: string,
     displayed: string[],
@@ -277,8 +193,4 @@ const TagFilterCheckbox = ({tag, displayed, setDisplayed, excludeTags, setExclud
 
 }
 
-
 // endregion
-
-// endregion
- 

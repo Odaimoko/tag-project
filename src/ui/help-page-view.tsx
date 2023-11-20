@@ -1,7 +1,6 @@
 import {App, ItemView, Modal, WorkspaceLeaf} from "obsidian";
 import {createRoot, Root} from "react-dom/client";
 import React, {JSX, useContext, useState} from "react";
-import {WorkflowTypeLegend} from "./react-view/react-manage-page";
 import {I_Stylable, ObsidianIconView} from "./react-view/view-template/icon-view";
 import OdaPmToolPlugin, {
     CmdPal_JumpToManagePage,
@@ -17,6 +16,7 @@ import {setSettingsValueAndSave} from "../Settings";
 import {HStack} from "./react-view/view-template/h-stack";
 import {StrictModeWrapper} from "./react-view/view-template/strict-mode-wrapper";
 import {DataTable} from "./react-view/view-template/data-table";
+import {WorkflowTypeLegend} from "./react-view/workflow-filter";
 
 export const PmHelpPageViewId = "tpm-help-view";
 export const Desc_ManagePage = "Manage Page";
