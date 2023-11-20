@@ -116,7 +116,13 @@ export function ReactManagePage({eventCenter}: {
     filteredTasks = filteredTasks.filter(k => isInAnyProject(displayProjectNames, k))
     // console.log(`ReactManagePage Render. All tasks: ${tasks_with_workflow.length}. Filtered Tasks: ${filteredTasks.length}. Workflow: ${curWfName}. IncludeCompleted: ${includeCompleted}`)
 
-    const pmTags = db.pmTags || [];
+    let pmTags = db.pmTags || [];
+    pmTags = pmTags.filter(k => {
+        for (const pmTask of filteredTasks) {
+            if (pmTask.boundTask.tags.includes(k))
+                return true;
+        }
+    })
     // endregion
     return (
         <>
