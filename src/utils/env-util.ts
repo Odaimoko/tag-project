@@ -4,6 +4,7 @@ import {expect} from "chai";
 import {OdaPmDb} from "../data-model/odaPmDb";
 import {OdaPmProject, ProjectDefinedType, ProjectName_Unclassified} from "../data-model/OdaPmProject";
 import {OdaPmTask} from "../data-model/OdaPmTask";
+import {I_OdaPmWorkflow} from "../data-model/workflow-def";
 
 export function isProduction() {
     return process.env.NODE_ENV === "production";
@@ -26,6 +27,22 @@ export function assertOnPluginInit(plugin: OdaPmToolPlugin) {
     console.log("Assert End: on plugin init.")
 }
 
+interface AssertFunctions {
+    expectTaskInProject: (taskName: string, projectName: string) => void;
+    expectTaskPath: (taskName: string, path: string) => void;
+    expectWorkflowInProject: (workflowName: string, projectName: string) => void;
+}
+
+const dbAssertFunctions: AssertFunctions = {
+    expectTaskPath: () => {
+    },
+    expectTaskInProject: () => {
+    },
+    expectWorkflowInProject: () => {
+    },
+
+}
+
 function expect_project(prj: OdaPmProject | undefined, projectName: string, definedType?: ProjectDefinedType) {
     expect(prj).to.not.be.undefined;
     if (prj) {
@@ -43,6 +60,14 @@ function expectTaskAbstract(pmDb: OdaPmDb, taskSummary: string, func: (task: Oda
     }
 }
 
+function expectWorkflowAbstract(pmDb: OdaPmDb, workflowName: string, func: (workflow: I_OdaPmWorkflow) => void) {
+    const workflow = pmDb.getWorkflowByName(workflowName);
+    expect(workflow).to.not.be.null;
+    if (workflow) {
+        func(workflow);
+    }
+}
+
 async function testProjectDefinition(projects: OdaPmProject[], pmDb: OdaPmDb) {
     const ut_projects = projects.filter(k =>
         k.name.startsWith("UT_020_1_") && (k.hasDefinedType("file") || k.hasDefinedType("folder"))
@@ -50,6 +75,8 @@ async function testProjectDefinition(projects: OdaPmProject[], pmDb: OdaPmDb) {
     const correct = 4;
     expect(ut_projects, `Front matter defined projects not matched. Prefix 'UT_020_1_'.`)
         .to.have.lengthOf(correct);
+
+    const expectTaskInProject = dbAssertFunctions.expectTaskInProject;
 
     const ut_task_projects = projects.filter(k =>
         k.name.startsWith("UT_020_1_") && k.hasDefinedType("tag_override")
@@ -127,11 +154,7 @@ async function testProjectDefinition(projects: OdaPmProject[], pmDb: OdaPmDb) {
 
 async function testTaskProjectLink(pmDb: OdaPmDb) {
 
-    function expectTaskInProject(taskName: string, projectName: string) {
-        expectTaskAbstract(pmDb, taskName, (task) => {
-            expect(task.isInProject(projectName), `Task ${taskName} not in project ${projectName}. Task Path: ${task.getProjectPath()}. Task Project: ${JSON.stringify(task.getProjectNames())}`).true;
-        })
-    }
+    const expectTaskInProject = dbAssertFunctions.expectTaskInProject;
 
     expectTaskInProject("UT_020_3_2_Unclassified", ProjectName_Unclassified);
     expectTaskInProject("UT_020_3_2_Prj4", "UT_020_3_Prj4");
@@ -144,12 +167,7 @@ async function testTaskProjectLink(pmDb: OdaPmDb) {
 }
 
 async function testGetTaskProjectPath(pmDb: OdaPmDb) {
-    function expectTaskPath(taskName: string, path: string) {
-        expectTaskAbstract(pmDb, taskName, (task) => {
-            expect(task.getProjectPath(), `Task ${taskName} 's path not matched.`)
-                .equal(path);
-        })
-    }
+    const expectTaskPath = dbAssertFunctions.expectTaskPath;
 
     expectTaskPath("UT_020_3_2_Unclassified", "/UT_020_3 layer 0 file_any.md");
     expectTaskPath("UT_020_3_2_Prj4", "/UT_020_3 layer 0 file_any.md:UT_020_3_Prj4");
@@ -172,15 +190,31 @@ async function test_UT_020_3(pmDb: OdaPmDb) {
     testTaskProjectLink(pmDb);
 }
 
+function initAssertFunctions(pmDb: OdaPmDb) {
+
+    dbAssertFunctions.expectTaskInProject = (taskName: string, projectName: string) => expectTaskAbstract(pmDb, taskName,
+        (task) => {
+            expect(task.isInProject(projectName),
+                `Task ${taskName} not in project ${projectName}. Task Path: ${task.getProjectPath()}. Task Project: ${JSON.stringify(task.getProjectNames())}`)
+                .true;
+        })
+    dbAssertFunctions.expectTaskPath = (taskName: string, path: string) => expectTaskAbstract(pmDb, taskName,
+        (task) => {
+            expect(task.getProjectPath(),
+                `Task ${taskName} 's path not matched.`)
+                .equal(path).not;
+        })
+}
+
 // make this async so the failing tests won't block the plugin and database initialization process.
 export async function assertOnDbRefreshed(pmDb: OdaPmDb) {
     devLog("Assert start: on db refreshed...")
+    initAssertFunctions(pmDb);
     const projects = pmDb.pmProjects;
 
     const projectIds = projects.map(k => k.internalKey).unique();
     expect(projectIds, `Project ids are not unique.`).to.have.lengthOf(projects.length);
     test_UT_020_3(pmDb);
     testProjectDefinition(projects, pmDb);
-
     devLog("Assert end: on db refreshed...")
 }

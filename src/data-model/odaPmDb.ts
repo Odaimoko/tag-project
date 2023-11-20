@@ -164,7 +164,7 @@ function getAllProjectsAndLinkTasks(pmTasks: OdaPmTask[]): OdaPmProject[] {
             addProject(project);
         }
     }
-    
+
     // Task def
     for (const pmTask of pmTasks) {
         const taskTag = pmTask.getProjectTag();
@@ -286,6 +286,15 @@ export class OdaPmDb implements I_EvtListener {
             }
         }
         return null;
+    }
+
+    getWorkflowByName(name: string) {
+        for (const workflow of this.workflows) {
+            if (workflow.name === name) {
+                return workflow
+            }
+        }
+        return null
     }
 
 
