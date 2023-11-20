@@ -47,7 +47,7 @@ const dbAssertFunctions: AssertFunctions = {
 
 }
 
-function expect_project(prj: OdaPmProject | undefined, projectName: string, definedType?: ProjectDefinedType) {
+function expect_project(prj: OdaPmProject | null, projectName: string, definedType?: ProjectDefinedType) {
     expect(prj).to.not.be.undefined;
     if (prj) {
         expect(prj.name).to.equal(projectName);
@@ -72,7 +72,19 @@ function expectWorkflowAbstract(pmDb: OdaPmDb, workflowName: string, func: (work
     }
 }
 
-async function testProjectDefinition(projects: OdaPmProject[], pmDb: OdaPmDb) {
+async function test_UT_020_1(pmDb: OdaPmDb) {
+    expect(pmDb.getProjectByName("UT_020_1_7_Multiple"), "UT_020_1_7_Multiple should not be found.")
+        .null;
+    expect(pmDb.getProjectByName("UT_020_1_7_Multiple1"), "UT_020_1_7_Multiple1 should not be found.")
+        .null;
+    expect(pmDb.getProjectByName("UT_020_1_7_Multiple2"), "UT_020_1_7_Multiple2 should be found.")
+        .not.null;
+
+}
+
+
+async function test_UT_020_2(pmDb: OdaPmDb) {
+    const projects: OdaPmProject[] = pmDb.pmProjects;
     // a name can be null/undefined when a front matter is just created, so we check before accessing it.
     // a front matter will be saved even it's an empty string.
     const ut_projects = projects.filter(k =>
@@ -170,7 +182,8 @@ export async function assertOnDbRefreshed(pmDb: OdaPmDb) {
 
     const projectIds = projects.map(k => k.internalKey).unique();
     expect(projectIds, `Project ids are not unique.`).to.have.lengthOf(projects.length);
-    testProjectDefinition(projects, pmDb);
+    test_UT_020_1(pmDb);
+    test_UT_020_2(pmDb);
     test_UT_020_3(pmDb);
     devLog("Assert end: on db refreshed...")
 }
