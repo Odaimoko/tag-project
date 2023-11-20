@@ -73,8 +73,10 @@ function expectWorkflowAbstract(pmDb: OdaPmDb, workflowName: string, func: (work
 }
 
 async function testProjectDefinition(projects: OdaPmProject[], pmDb: OdaPmDb) {
+    // a name can be null/undefined when a front matter is just created, so we check before accessing it.
+    // a front matter will be saved even it's an empty string.
     const ut_projects = projects.filter(k =>
-        k.name.startsWith("UT_020_1_") && (k.hasDefinedType("file") || k.hasDefinedType("folder"))
+        k.name && k.name.startsWith("UT_020_1_") && (k.hasDefinedType("file") || k.hasDefinedType("folder"))
     );
     const correct = 4;
     expect(ut_projects, `Front matter defined projects not matched. Prefix 'UT_020_1_'.`)
