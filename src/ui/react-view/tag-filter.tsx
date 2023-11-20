@@ -1,6 +1,5 @@
 // region Tag Filter
 import React from "react";
-import {HStack} from "./view-template/h-stack";
 import {
     FilterMethod_Excluded,
     FilterMethod_Included,
@@ -10,6 +9,7 @@ import {
 import {ClickableIconView} from "./view-template/icon-view";
 import {iconViewAsAWholeStyle} from "./style-def";
 import {Tag_Prefix_Tag} from "../../data-model/workflow-def";
+import {FilterHeadHStack} from "./workflow-filter";
 
 export function TagFilter({
                               pmTags,
@@ -45,24 +45,26 @@ function TagFilterHeader({rectifiedDisplayTags, pmTags, handleSetDisplayTags, ha
     handleSetDisplayTags: (names: string[]) => void,
     handleSetExcludedTags: (names: string[]) => void
 }) {
-    return pmTags.length > 0 ? <HStack style={{alignItems: "center"}} spacing={10}>
-        <h3>{rectifiedDisplayTags.length}/{pmTags.length} Tags(s)</h3>
-        <button onClick={() => {
-            handleSetDisplayTags([...pmTags]);
-            handleSetExcludedTags([])
-        }}>Include All
-        </button>
-        <button onClick={() => {
-            handleSetDisplayTags([]);
-            handleSetExcludedTags([...pmTags])
-        }}>Exclude All
-        </button>
-        <button onClick={() => {
-            handleSetDisplayTags([]);
-            handleSetExcludedTags([])
-        }}>Clear
-        </button>
-    </HStack> : null;
+    return pmTags.length > 0 ?
+        <FilterHeadHStack>
+            <h3>{rectifiedDisplayTags.length}/{pmTags.length} Tags(s)</h3>
+            <button onClick={() => {
+                handleSetDisplayTags([...pmTags]);
+                handleSetExcludedTags([])
+            }}>Include All
+            </button>
+            <button onClick={() => {
+                handleSetDisplayTags([]);
+                handleSetExcludedTags([...pmTags])
+            }}>Exclude All
+            </button>
+            <button onClick={() => {
+                handleSetDisplayTags([]);
+                handleSetExcludedTags([])
+            }}>Clear
+            </button>
+        </FilterHeadHStack>
+        : null;
 }
 
 function TagFilterCheckboxes({

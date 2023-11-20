@@ -9,6 +9,17 @@ import {getIconByWorkflow, getIconViewByWorkflowType, iconViewAsAWholeStyle} fro
 import {openTaskPrecisely} from "../../utils/io-util";
 import {initialToUpper} from "../../utils/format-util";
 
+export function FilterHeadHStack(props: React.PropsWithChildren<any>) {
+    return <span style={{display: "flex"}}>
+            <HStack style={{
+                display: "flex",
+                alignItems: "center"
+            }} spacing={10}>
+                {props.children}
+            </HStack>
+        </span>
+}
+
 export function WorkflowTypeLegend({type, style}: { type: WorkflowType } & I_Stylable) {
     return <span style={style}>
         <HStack spacing={3}>
@@ -46,19 +57,14 @@ const WorkflowFilterHeading = ({displayWorkflowNames, workflows, handleSetDispla
     workflows: I_OdaPmWorkflow[],
     handleSetDisplayWorkflows: (s: string[]) => void
 }) => {
-    return <span style={{display: "flex"}}>
-            <HStack style={{
-                display: "flex",
-                alignItems: "center"
-            }} spacing={10}>
-                <h2>{displayWorkflowNames.length}/{workflows.length} Workflow(s)</h2>
-                <button onClick={() => handleSetDisplayWorkflows(workflows.map(k => k.name))}>Select All
-                </button>
-                <button onClick={() => handleSetDisplayWorkflows([])}>Unselect All
-                </button>
-<WorkflowTypeLegendView/>
-            </HStack>
-            </span>
+    return <FilterHeadHStack>
+        <h2>{displayWorkflowNames.length}/{workflows.length} Workflow(s)</h2>
+        <button onClick={() => handleSetDisplayWorkflows(workflows.map(k => k.name))}>Select All
+        </button>
+        <button onClick={() => handleSetDisplayWorkflows([])}>Unselect All
+        </button>
+        <WorkflowTypeLegendView/>
+    </FilterHeadHStack>
 }
 const WorkflowCheckboxes = ({workflows, displayWorkflowNames, handleSetDisplayWorkflows}: {
     workflows: I_OdaPmWorkflow[],
