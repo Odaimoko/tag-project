@@ -287,6 +287,7 @@ export class OdaPmDb implements I_EvtListener {
                 return project;
             }
         }
+        return null;
     }
 
     getPmTaskBySummary(summary: string) {

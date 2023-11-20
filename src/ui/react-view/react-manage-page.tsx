@@ -104,7 +104,7 @@ export function ReactManagePage({eventCenter}: {
         return <EmptyWorkflowView/>
 
     function isInAnyProject(projectNames: string[], projectTask: I_OdaPmProjectTask) {
-
+        // TODO Performance
         if (projectNames.length === 0) return true;
         if (projectNames.includes(ProjectFilterOptionValue_All)) return true;
         const b = projectNames.some(k => projectTask.isInProject(k));
@@ -125,7 +125,7 @@ export function ReactManagePage({eventCenter}: {
     filteredTasks = filteredTasks.filter(k => isInAnyProject(displayProjectOptionValues, k))
     // console.log(`ReactManagePage Render. All tasks: ${tasks_with_workflow.length}. Filtered Tasks: ${filteredTasks.length}. Workflow: ${curWfName}. IncludeCompleted: ${includeCompleted}`)
 
-    let pmTags = db.pmTags || [];
+    const pmTags = db.pmTags || [];
     // It is undefined how saved tags will behave after we switch projects.
     // So we prevent tags from being filtered by tasks.
     // pmTags = pmTags.filter(k => {
@@ -137,7 +137,6 @@ export function ReactManagePage({eventCenter}: {
     // endregion
     return (
         <>
-            <p/>
             <ProjectFilter projects={projects} displayNames={displayProjectOptionValues}
                            handleSetDisplayNames={handleSetDisplayProjects}
             />
@@ -192,6 +191,7 @@ function ProjectFilter(props: {
                     {projectsAndAll.map((project: ProjectOptionValue) => {
                         return (
                             <option key={project.name} value={
+                                // @ts-ignore
                                 Object.keys(project).includes("optionValue") ? project['optionValue'] : project.name
                             }>{project.name}</option>
                         )
@@ -200,7 +200,7 @@ function ProjectFilter(props: {
             </FilterHeadHStack>
         </div>
         <label style={centerStyle}>
-            Only shows workflows, tags and tasks in this project.
+            Only shows workflows and tasks in this project.
         </label>
     </div>
 }

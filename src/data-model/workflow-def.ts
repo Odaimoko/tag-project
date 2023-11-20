@@ -151,6 +151,10 @@ export function isTaskSingleLine(task: STask) {
 }
 
 // region Project 
+/**
+ * The first project tag in the task will be returned.
+ * @param task
+ */
 export function getProjectTagFromSTask(task: STask) {
 
     for (const tag of task.tags) {
