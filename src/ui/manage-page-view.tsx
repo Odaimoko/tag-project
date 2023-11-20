@@ -59,6 +59,7 @@ export class ManagePageView extends ItemView {
                         <h1>{this.getDisplayText()}</h1>
                         <ClickableIconView onIconClicked={() => new PmHelpModal(this.plugin).open()}
                                            iconName={"help-circle"}/>
+                        <label style={{fontWeight: "bold"}}>v{this.plugin.manifest.version}</label>
                     </HStack>
                 </div>
                 <ContainerContext.Provider value={container}>
