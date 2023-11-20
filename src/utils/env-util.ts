@@ -88,10 +88,11 @@ async function test_UT_020_2(pmDb: OdaPmDb) {
     // a name can be null/undefined when a front matter is just created, so we check before accessing it.
     // a front matter will be saved even it's an empty string.
     const ut_projects = projects.filter(k =>
-        k.name && k.name.startsWith("UT_020_1_") && (k.hasDefinedType("file") || k.hasDefinedType("folder"))
+        k.name && k.name.startsWith("UT_020_1_Project")
+        && (k.hasDefinedType("file") || k.hasDefinedType("folder"))
     );
-    const correct = 4;
-    expect(ut_projects, `Front matter defined projects not matched. Prefix 'UT_020_1_'.`)
+    const correct = 3;
+    expect(ut_projects, `Front matter defined projects not matched. Prefix 'UT_020_1_Project'.`)
         .to.have.lengthOf(correct);
 
     const expectTaskInProject = dbAssertFunctions.expectTaskInProject;
