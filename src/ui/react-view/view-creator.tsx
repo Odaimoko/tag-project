@@ -6,19 +6,19 @@ import {
     TaskStatus_unchecked,
     Workflow_Type_Enum_Array,
     WorkflowType
-} from "../data-model/workflow-def";
+} from "../../data-model/workflow-def";
 import {DataArray, STask} from "obsidian-dataview";
 import {MarkdownRenderer, Workspace} from "obsidian";
 import React, {ReactElement, useContext, useEffect, useState} from "react";
-import {IRenderable} from "./i-renderable";
+import {IRenderable} from "../i-renderable";
 
-import {rewriteTask} from "../utils/io-util";
-import {ContainerContext, PluginContext} from "./manage-page-view";
+import {rewriteTask} from "../../utils/io-util";
+import {ContainerContext, PluginContext} from "../manage-page-view";
 import {EventEmitter} from "events";
-import OdaPmToolPlugin from "../main";
-import {notify} from "../utils/o-notice";
+import OdaPmToolPlugin from "../../main";
+import {notify} from "../../utils/o-notice";
 
-import {initialToUpper, isStringNullOrEmpty, simpleFilter} from "../utils/format-util";
+import {initialToUpper, isStringNullOrEmpty, simpleFilter} from "../../utils/format-util";
 import {
     FilterMethod_Excluded,
     FilterMethod_Included,
@@ -29,22 +29,17 @@ import {
     SortMethod_Appearance,
     SortMethod_Ascending,
     totalSortMethods
-} from "../Settings";
-import {
-    ClickableIconView,
-    DataTable,
-    ExternalControlledCheckbox,
-    HTMLStringComponent,
-    I_Stylable,
-    InternalLinkView,
-    ObsidianIconView
-} from "./view-template";
-import {appendBoldText} from "./html-template";
-import {OdaPmDbProvider} from "../data-model/odaPmDb";
-import {Evt_DbReloaded, Evt_JumpTask, Evt_JumpWorkflow} from "../typing/dataview-event";
-import {devLog} from "../utils/env-util";
-import {HStack} from "./h-stack";
-import {OdaPmTask} from "../data-model/OdaPmTask";
+} from "../../Settings";
+import {ClickableIconView, I_Stylable, InternalLinkView, ObsidianIconView} from "./view-template/icon-view";
+import {appendBoldText} from "../html-template";
+import {OdaPmDbProvider} from "../../data-model/odaPmDb";
+import {Evt_DbReloaded, Evt_JumpTask, Evt_JumpWorkflow} from "../../typing/dataview-event";
+import {devLog} from "../../utils/env-util";
+import {HStack} from "./view-template/h-stack";
+import {OdaPmTask} from "../../data-model/OdaPmTask";
+import {HtmlStringComponent} from "./view-template/html-string-component";
+import {ExternalControlledCheckbox} from "./view-template/checkbox";
+import {DataTable} from "./view-template/data-table";
 
 
 // dark light compatible
@@ -389,7 +384,7 @@ const OdaTaskSummaryCell = ({oTask, taskFirstColumn}: {
         // @ts-ignore
         MarkdownRenderer.render(plugin.app, summaryMd, container, oTask.boundTask.path, plugin).then(() => {
             // container.children[0] is a <p>, so we only use its innerHTML
-            setSummaryView(<HTMLStringComponent htmlString={container.children[0].innerHTML}/>);
+            setSummaryView(<HtmlStringComponent htmlString={container.children[0].innerHTML}/>);
         })
     }, []);
 

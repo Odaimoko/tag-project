@@ -107,7 +107,6 @@ export class OdaPmProject extends BaseDatabaseObject {
         project.addPage(page);
         project.addDefPath(defPath)
         globalProjectMap.set(name, project);
-        devLog(`Project ${name} created. Adding page ${page.path}.`)
         return project;
     }
 

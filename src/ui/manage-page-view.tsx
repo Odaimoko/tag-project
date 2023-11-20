@@ -1,12 +1,13 @@
 // https://docs.obsidian.md/Plugins/User+interface/Views
 import {ItemView, WorkspaceLeaf} from "obsidian";
-import {ReactManagePage} from "./view-creator";
+import {ReactManagePage} from "./react-view/view-creator";
 import {createRoot, Root} from "react-dom/client";
 import {createContext} from "react";
 import OdaPmToolPlugin, {PLUGIN_NAME} from "../main";
-import {ClickableIconView, StrictModeWrapper} from "./view-template";
+import {ClickableIconView} from "./react-view/view-template/icon-view";
 import {PmHelpModal} from "./help-page-view";
-import {HStack} from "./h-stack";
+import {HStack} from "./react-view/view-template/h-stack";
+import {StrictModeWrapper} from "./react-view/view-template/strict-mode-wrapper";
 
 export const Icon_ManagePage = "book-open-check";
 

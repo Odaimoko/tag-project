@@ -1,6 +1,6 @@
 import {App, Component, MarkdownRenderer} from "obsidian";
-import {HTMLStringComponent} from "./view-template";
 import React from "react";
+import {HtmlStringComponent} from "./react-view/view-template/html-string-component";
 
 export const templateMd = `# Workflows
 A workflow definition is a **task** with either #tpm/workflow_type/chain or #tpm/workflow_type/checkbox. 
@@ -45,7 +45,7 @@ const pageStyle = {border: "solid", borderWidth: 2, padding: 5}
 
 export const ManagePageForTemplate = () => {
     return <div style={pageStyle}>
-        <HTMLStringComponent
+        <HtmlStringComponent
             htmlString={templateHtmlString}/>
     </div>
 }
@@ -53,5 +53,5 @@ export const ManagePageForTemplate = () => {
 export async function getTemplateHtml(app: App, el: Element) {
     const compo = new Component()
     await MarkdownRenderer.render(app, templateMd, el as HTMLElement, "", compo);
-    return <div style={pageStyle}><HTMLStringComponent htmlString={el.outerHTML}/></div>
+    return <div style={pageStyle}><HtmlStringComponent htmlString={el.outerHTML}/></div>
 }
