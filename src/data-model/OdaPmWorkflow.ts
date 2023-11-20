@@ -49,6 +49,10 @@ class OdaPmWorkflow implements I_OdaPmWorkflow {
         // TODO performance
         return this.projects.map(k => k.name).includes(name);
     }
+
+    getProjectPath(): string {
+        return getProjectPathFromSTask(this.boundTask);
+    }
 }
 
 const globalWorkflowMap: Map<string, OdaPmWorkflow> = new Map<string, OdaPmWorkflow>();

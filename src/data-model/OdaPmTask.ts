@@ -172,5 +172,14 @@ export class OdaPmTask extends BaseDatabaseObject {
         return this.projects.filter(k => k.name === name).length > 0;
     }
 
+    getProjectPath(): string {
+        return getProjectPathFromSTask(this.boundTask);
+    }
+
     // endregion
+
+    // debug
+    getProjectNames(): string[] {
+        return this.projects.map(k => k.name);
+    }
 }

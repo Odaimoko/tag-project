@@ -260,6 +260,15 @@ export class OdaPmDb implements I_EvtListener {
         return null;
     }
 
+    getPmTaskBySummary(summary: string) {
+        for (const task of this.pmTasks) {
+            if (task.summary === summary) {
+                return task;
+            }
+        }
+        return null;
+    }
+
 
     getFilteredTasks(displayWorkflows: I_OdaPmWorkflow[], rectifiedDisplayTags: string[], rectifiedExcludedTags: string[]): OdaPmTask[] {
         return this.pmTasks.filter(function (k: OdaPmTask) {

@@ -3,6 +3,7 @@ import OdaPmToolPlugin from "../main";
 import {expect} from "chai";
 import {OdaPmDb} from "../data-model/odaPmDb";
 import {OdaPmProject, ProjectDefinedType, ProjectName_Unclassified} from "../data-model/OdaPmProject";
+import {OdaPmTask} from "../data-model/OdaPmTask";
 
 export function isProduction() {
     return process.env.NODE_ENV === "production";
@@ -34,14 +35,15 @@ function expect_project(prj: OdaPmProject | undefined, projectName: string, defi
     }
 }
 
-// make this async so the failing tests won't block the plugin and database initialization process.
-export async function assertOnDbRefreshed(pmDb: OdaPmDb) {
-    devLog("Assert start: on db refreshed...")
-    const projects = pmDb.pmProjects;
+function expectTaskAbstract(pmDb: OdaPmDb, taskSummary: string, func: (task: OdaPmTask) => void) {
+    const task = pmDb.getPmTaskBySummary(taskSummary);
+    expect(task).to.not.be.null;
+    if (task) {
+        func(task);
+    }
+}
 
-    const projectIds = projects.map(k => k.internalKey).unique();
-    expect(projectIds, `Project ids are not unique.`).to.have.lengthOf(projects.length);
-
+async function testProjectDefinition(projects: OdaPmProject[], pmDb: OdaPmDb) {
     const ut_projects = projects.filter(k =>
         k.name.startsWith("UT_020_1_") && (k.hasDefinedType("file") || k.hasDefinedType("folder"))
     );
@@ -121,7 +123,57 @@ export async function assertOnDbRefreshed(pmDb: OdaPmDb) {
     if (ut_020_2_4_wf) {
         expect(ut_020_2_4_wf.isInProject("UT_020_2_Project_Layer_1_task_definition"));
     }
-    
-    
+}
+
+async function testTaskProjectLink(pmDb: OdaPmDb) {
+
+    function expectTaskInProject(taskName: string, projectName: string) {
+        expectTaskAbstract(pmDb, taskName, (task) => {
+            expect(task.isInProject(projectName), `Task ${taskName} not in project ${projectName}. ${JSON.stringify(task.getProjectNames())}`).true;
+        })
+    }
+
+    expectTaskInProject("UT_020_3_2_Unclassified", ProjectName_Unclassified);
+    expectTaskInProject("UT_020_3_2_Prj4", "UT_040_3_2_Prj4");
+}
+
+async function testGetTaskProjectPath(pmDb: OdaPmDb) {
+    function expectTaskPath(taskName: string, path: string) {
+        expectTaskAbstract(pmDb, taskName, (task) => {
+            expect(task.getProjectPath(), `Task ${taskName} 's path not matched.`)
+                .equal(path);
+        })
+    }
+
+    expectTaskPath("UT_020_3_2_Unclassified", "/UT_020_3 layer 0 file_any.md");
+    expectTaskPath("UT_020_3_2_Prj4", "/UT_020_3 layer 0 file_any.md:UT_020_3_Prj4");
+    expectTaskPath("UT_020_3_2_file1_Prj1", "/UT_020_3 project Folder/UT_020_3 projectroot Prj1.md")
+    expectTaskPath("UT_020_3_2_file2_Prj2", "/UT_020_3 project Folder/UT_020_3 file2 Prj2.md")
+    expectTaskPath("UT_020_3_2_file3_Prj1", "/UT_020_3 project Folder/UT_020_3 file3 Prj1.md")
+    expectTaskPath("UT_020_3_2_file3_Prj3", "/UT_020_3 project Folder/UT_020_3 file3 Prj1.md:UT_020_3_Prj3")
+    expectTaskPath("UT_020_3_2_file4_Prj3", "/UT_020_3 project Folder/UT_020_3 file4 Prj3.md")
+}
+
+function test_UT_020_3(pmDb: OdaPmDb) {
+    // UT_020_3
+    // Sanity check
+    const ut_020_3_tasks = pmDb.pmTasks.filter(k => {
+        return k.summary.startsWith("UT_020_3")
+    });
+    expect(ut_020_3_tasks, `PmTask with prefix 'UT_020_3' not matched`).to.have.lengthOf(7);
+    testGetTaskProjectPath(pmDb);
+    // testTaskProjectLink(pmDb);
+}
+
+// make this async so the failing tests won't block the plugin and database initialization process.
+export async function assertOnDbRefreshed(pmDb: OdaPmDb) {
+    devLog("Assert start: on db refreshed...")
+    const projects = pmDb.pmProjects;
+
+    const projectIds = projects.map(k => k.internalKey).unique();
+    expect(projectIds, `Project ids are not unique.`).to.have.lengthOf(projects.length);
+    test_UT_020_3(pmDb);
+    testProjectDefinition(projects, pmDb);
+
     devLog("Assert end: on db refreshed...")
 }

@@ -135,3 +135,33 @@ export function isTaskSingleLine(task: STask) {
 
     return hasTextAfterEol;
 }
+
+// region Project 
+export function getProjectTagFromSTask(task: STask) {
+
+    for (const tag of task.tags) {
+        if (tag.startsWith(Tag_Prefix_Project)) {
+            return tag;
+        }
+    }
+    return null;
+}
+
+export function getProjectNameFromTag(tag: string) {
+    const name = tag.replace(Tag_Prefix_Project, "");
+    return name;
+}
+
+// - A task's path is
+// 1. If it defines a project, the project name is appended.
+// 2. If not, the task's path is the same as the file's.
+export function getProjectPathFromSTask(task: STask) {
+    const prjTag = getProjectTagFromSTask(task);
+    if (prjTag !== null) {
+        // If defined by a task, path = `path/to/file:{project name}`. 
+        return `/${task.path}:${getProjectNameFromTag(prjTag)}`;
+    } else
+        return `/${task.path}`;
+}
+
+// endregion

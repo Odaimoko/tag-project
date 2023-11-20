@@ -31,6 +31,7 @@ export class OdaPmProject extends BaseDatabaseObject {
     pages: SMarkdownPage[];
     workflows: I_OdaPmWorkflow[];
     pmTasks: OdaPmTask[];
+    defPaths: string[]; // Each project has multiple paths
 
     constructor() {
         super();
@@ -38,6 +39,7 @@ export class OdaPmProject extends BaseDatabaseObject {
         this.pages = []
         this.workflows = []
         this.pmTasks = []
+        this.defPaths = [];
     }
 
 
@@ -58,6 +60,13 @@ export class OdaPmProject extends BaseDatabaseObject {
         }
     }
 
+    private addDefPath(obsidianPath: string) {
+        // Obsidian path is relative. Add '/' before path to form a tree
+        obsidianPath = "/" + obsidianPath;
+        this.defPaths.push(obsidianPath);
+
+    }
+
     /**
      *
      * @param page
@@ -72,18 +81,23 @@ export class OdaPmProject extends BaseDatabaseObject {
 
         let name = null;
         let definedType = null;
+        let defPath = null;
         if (keys.includes(Frontmatter_FolderProject)) {
             name = fm[Frontmatter_FolderProject];
             definedType = "folder";
+            // If defined by a folder root (TPM-0.2.0-1-1), path = folder's path, not the file's path.
+            defPath = path.dirname(page.path);
+
             if (keys.includes(Frontmatter_FileProject)) {
                 // TPM-0.2.0-1-5
                 // TODO Notify is disturbing in dev mode
                 devLog(`Frontmatter in ${page.path} has both folder and file frontmatter. Using ${Frontmatter_FolderProject}.`, 5)
             }
-
         } else if (keys.includes(Frontmatter_FileProject)) {
             name = fm[Frontmatter_FileProject];
             definedType = "file";
+            // If this project is defined by a file (TPM-0.2.0-1-3), it's path is the same as the file.
+            defPath = page.path;
         } else {
             return null;
         }
@@ -91,22 +105,25 @@ export class OdaPmProject extends BaseDatabaseObject {
         const project = this.getOrCreateProject(name)
         project.addDefinedType(definedType);
         project.addPage(page);
+        project.addDefPath(defPath)
         globalProjectMap.set(name, project);
         devLog(`Project ${name} created. Adding page ${page.path}.`)
         return project;
     }
 
-    public static createProjectFromTaskTag(tag: string) {
-        const name = tag.replace(Tag_Prefix_Project, "");
-
+    public static createProjectFromTaskTag(task: OdaPmTask, tag: string) {
+        const name = getProjectNameFromTag(tag);
         const project = this.getOrCreateProject(name)
         project.addDefinedType('tag_override');
+        // If defined by a task, path = `path/to/file:{project name}`. 
+        project.addDefPath(task.getProjectPath());
         return project;
     }
 
     public static createUnclassifiedProject() {
         const project = this.getOrCreateProject(ProjectName_Unclassified)
         project.addDefinedType("system")
+        project.addDefPath("");
         return project;
     }
 
@@ -124,6 +141,7 @@ export class OdaPmProject extends BaseDatabaseObject {
 
         return project;
     }
+
 
 // endregion
 
