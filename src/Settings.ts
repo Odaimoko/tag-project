@@ -42,6 +42,7 @@ export interface TPMSettings {
     display_workflow_names: SerializedType[],
     manage_page_display_tags: SerializedType[],
     manage_page_excluded_tags: SerializedType[],
+    manage_page_display_projects: SerializedType[], // 0.2.0
     help_page_tutorial_tldr: SerializedType,
 }
 
@@ -58,6 +59,7 @@ export const TPM_DEFAULT_SETTINGS: Partial<TPMSettings> = {
     display_workflow_names: [] as SerializedType[],
     manage_page_display_tags: [] as SerializedType[],
     manage_page_excluded_tags: [] as SerializedType[],
+    manage_page_display_projects: [] as SerializedType[], // 0.2.0
     help_page_tutorial_tldr: false,
 }
 

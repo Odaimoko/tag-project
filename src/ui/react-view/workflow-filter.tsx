@@ -8,7 +8,14 @@ import {I_Stylable, InternalLinkView} from "./view-template/icon-view";
 import {getIconByWorkflow, getIconViewByWorkflowType, iconViewAsAWholeStyle} from "./style-def";
 import {openTaskPrecisely} from "../../utils/io-util";
 import {initialToUpper} from "../../utils/format-util";
+import {NameableFilterHeading} from "./nameable-filter-heading";
+import {I_Nameable} from "../../data-model/I_Nameable";
 
+/**
+ * Accept children as a HStack with a unified style
+ * @param props
+ * @constructor
+ */
 export function FilterHeadHStack(props: React.PropsWithChildren<any>) {
     return <span style={{display: "flex"}}>
             <HStack style={{
@@ -47,42 +54,34 @@ export const WorkflowFilter = ({workflows, displayNames, handleSetDisplayNames}:
     handleSetDisplayNames: (names: string[]) => void
 }) => <div>
 
-    <WorkflowFilterHeading workflows={workflows} displayNames={displayNames}
-                           handleSetDisplayNames={handleSetDisplayNames}/>
-    <WorkflowCheckboxes workflows={workflows} displayWorkflowNames={displayNames}
-                        handleSetDisplayWorkflows={handleSetDisplayNames}/>
-</div>
-const WorkflowFilterHeading = ({displayNames, workflows, handleSetDisplayNames}: {
-    displayNames: string[],
-    workflows: I_OdaPmWorkflow[],
-    handleSetDisplayNames: (s: string[]) => void
-}) => {
-    return <FilterHeadHStack>
-        <h2>{displayNames.length}/{workflows.length} Workflow(s)</h2>
-        <button onClick={() => handleSetDisplayNames(workflows.map(k => k.name))}>Select All
-        </button>
-        <button onClick={() => handleSetDisplayNames([])}>Unselect All
-        </button>
+    <NameableFilterHeading nameableTypeName={"Workflow"} nameables={workflows} displayNames={displayNames}
+                           handleSetDisplayNames={handleSetDisplayNames}>
         <WorkflowTypeLegendView/>
-    </FilterHeadHStack>
-}
-const WorkflowCheckboxes = ({workflows, displayWorkflowNames, handleSetDisplayWorkflows}: {
-    workflows: I_OdaPmWorkflow[],
-    displayWorkflowNames: string[],
-    handleSetDisplayWorkflows: (names: string[]) => void
-}) => <div>
-    {workflows.map((workflow: I_OdaPmWorkflow) => {
-        return (
-            <WorkflowFilterCheckbox key={workflow.name} displayWorkflows={displayWorkflowNames}
-                                    workflow={workflow}
-                                    setDisplayWorkflows={handleSetDisplayWorkflows}/>
-        )
-    })}
-</div>;
-const WorkflowFilterCheckbox = ({workflow, displayWorkflows, setDisplayWorkflows}: {
+    </NameableFilterHeading>
+    <WorkflowCheckboxes nameables={workflows} displayNames={displayNames}
+                        handleSetDisplayNames={handleSetDisplayNames}/>
+</div>
+
+const WorkflowCheckboxes = ({nameables, displayNames, handleSetDisplayNames}: {
+    nameables: I_Nameable[],
+    displayNames: string[],
+    handleSetDisplayNames: (names: string[]) => void
+}) => {
+    return <div>
+        {nameables.map((workflow: I_OdaPmWorkflow) => {
+            return (
+                <WorkflowFilterCheckbox key={workflow.name} displayNames={displayNames}
+                                        workflow={workflow}
+                                        setDisplayNames={handleSetDisplayNames}/>
+            )
+        })}
+    </div>;
+};
+    
+const WorkflowFilterCheckbox = ({workflow, displayNames, setDisplayNames}: {
     workflow: I_OdaPmWorkflow,
-    displayWorkflows: string[],
-    setDisplayWorkflows: React.Dispatch<React.SetStateAction<string[]>>
+    displayNames: string[],
+    setDisplayNames: React.Dispatch<React.SetStateAction<string[]>>
 }) => {
     const plugin = useContext(PluginContext);
 
@@ -90,9 +89,9 @@ const WorkflowFilterCheckbox = ({workflow, displayWorkflows, setDisplayWorkflows
 
     function tickCheckbox() {
         // invert the checkbox
-        const v = !displayWorkflows.includes(wfName)
-        const newArr = v ? [...displayWorkflows, wfName] : displayWorkflows.filter(k => k != wfName)
-        setDisplayWorkflows(newArr)
+        const v = !displayNames.includes(wfName)
+        const newArr = v ? [...displayNames, wfName] : displayNames.filter(k => k != wfName)
+        setDisplayNames(newArr)
     }
 
     // inline-block: make this check box a whole element. It won't be split into multiple sub-elements when layout.
@@ -111,7 +110,7 @@ const WorkflowFilterCheckbox = ({workflow, displayWorkflows, setDisplayWorkflows
                     onContentClicked={tickCheckbox}/>
             </>}
             onChange={tickCheckbox}
-            externalControl={displayWorkflows.includes(wfName)}
+            externalControl={displayNames.includes(wfName)}
         />
     </span>
 

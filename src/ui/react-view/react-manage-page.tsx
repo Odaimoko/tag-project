@@ -8,8 +8,12 @@ import {Evt_DbReloaded, Evt_JumpTask, Evt_JumpWorkflow} from "../../typing/datav
 import {devLog} from "../../utils/env-util";
 import {OdaPmTask} from "../../data-model/OdaPmTask";
 import {TaskTableView} from "./task-table-view";
-import {WorkflowFilter} from "./workflow-filter";
+import {FilterHeadHStack, WorkflowFilter} from "./workflow-filter";
 import {TagFilter} from "./tag-filter";
+import {OdaPmProject, ProjectName_Unclassified} from "../../data-model/OdaPmProject";
+import {NameableFilterHeading} from "./nameable-filter-heading";
+import {I_Nameable} from "../../data-model/I_Nameable";
+import {HStack} from "./view-template/h-stack";
 
 
 export function ReactManagePage({eventCenter}: {
@@ -54,13 +58,22 @@ export function ReactManagePage({eventCenter}: {
 
     const db = OdaPmDbProvider.get();
     const workflows = db?.workflows || [];
-
+    const projects = db?.pmProjects || [];
     // Use workflow names as filters' state instead. previously we use workflows themselves as state, but this requires dataview to be initialized.
     // However, this component might render before dataview is ready. The partially ready workflows will be used as the initial value, which is incorrect.
     // This is to fix the bug: On open Obsidian, the filter may not work.
     const [displayWorkflowNames, setDisplayWorkflowNames] = useState(getSettings()?.display_workflow_names as string[]);
     const [displayTags, setDisplayTags] = useState(getSettings()?.manage_page_display_tags as string[]);
     const [excludedTags, setExcludedTags] = useState(getSettings()?.manage_page_excluded_tags as string[]);
+    const [displayProjectNames, setDisplayProjectNames] = useState(initDisplayProjectNames);
+
+    function initDisplayProjectNames() {
+        const settingsValue = getSettings()?.manage_page_display_projects as string[];
+        if (settingsValue.length === 0) {
+            settingsValue.push(ProjectName_Unclassified);
+        }
+        return settingsValue;
+    }
 
     function handleSetDisplayWorkflows(names: string[]) {
         setSettingsValueAndSave(plugin, "display_workflow_names", [...names])
@@ -77,12 +90,23 @@ export function ReactManagePage({eventCenter}: {
         setExcludedTags(names)
     }
 
+    function handleSetDisplayProjects(names: string[]) {
+        setSettingsValueAndSave(plugin, "manage_page_display_projects", [...names])
+        setDisplayProjectNames(names)
+    }
+
     const rectifiedDisplayTags = displayTags.filter(k => db?.pmTags.contains(k))
     const rectifiedExcludedTags = excludedTags.filter(k => db?.pmTags.contains(k))
 
     // place all hooks before return. React doesn't allow the order to be changed.
     if (workflows.length === 0 || db === null)
         return <EmptyWorkflowView/>
+
+    // Filter
+    const displayProjects = projects.filter(k => {
+        return displayProjectNames.includes(k.name);
+    });
+    devLog(displayProjects);
 
     const displayWorkflows = workflows.filter(k => {
         return displayWorkflowNames.includes(k.name);
@@ -93,8 +117,13 @@ export function ReactManagePage({eventCenter}: {
     // console.log(`ReactManagePage Render. All tasks: ${tasks_with_workflow.length}. Filtered Tasks: ${filteredTasks.length}. Workflow: ${curWfName}. IncludeCompleted: ${includeCompleted}`)
 
     const pmTags = db.pmTags || [];
+    // endregion
     return (
         <>
+            <p/>
+            <ProjectFilter projects={projects} displayNames={displayProjectNames}
+                           handleSetDisplayNames={handleSetDisplayProjects}
+            />
             <WorkflowFilter workflows={workflows} displayNames={displayWorkflowNames}
                             handleSetDisplayNames={handleSetDisplayWorkflows}/>
             <TagFilter
@@ -116,5 +145,30 @@ const EmptyWorkflowView = () => {
     return <h1>No Workflow defined, or Dataview is not initialized.</h1>
 }
 
+
+function ProjectFilter(props: {
+    projects: OdaPmProject[],
+    handleSetDisplayNames: (names: string[]) => void,
+    displayNames: string[]
+}) {
+    return <div style={{
+        display: "flex",
+        justifyContent: "center"
+    }}>
+        <FilterHeadHStack>
+            <h2>Project</h2>
+
+            <select style={{fontSize: "medium"}} value={props.displayNames.first()} onChange={(event) => {
+                props.handleSetDisplayNames([event.target.value])
+            }}>
+                {props.projects.map((project: OdaPmProject) => {
+                    return (
+                        <option key={project.name} value={project.name}>{project.name}</option>
+                    )
+                })}
+            </select>
+        </FilterHeadHStack>
+    </div>
+}
 
 // endregion
