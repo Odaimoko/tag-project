@@ -117,12 +117,14 @@ export function ReactManagePage({eventCenter}: {
     // console.log(`ReactManagePage Render. All tasks: ${tasks_with_workflow.length}. Filtered Tasks: ${filteredTasks.length}. Workflow: ${curWfName}. IncludeCompleted: ${includeCompleted}`)
 
     let pmTags = db.pmTags || [];
-    pmTags = pmTags.filter(k => {
-        for (const pmTask of filteredTasks) {
-            if (pmTask.boundTask.tags.includes(k))
-                return true;
-        }
-    })
+    // It is undefined how saved tags will behave after we switch projects.
+    // So we prevent tags from being filtered by tasks.
+    // pmTags = pmTags.filter(k => {
+    //     for (const pmTask of filteredTasks) {
+    //         if (pmTask.boundTask.tags.includes(k))
+    //             return true;
+    //     }
+    // })
     // endregion
     return (
         <>
@@ -157,11 +159,12 @@ function ProjectFilter(props: {
     handleSetDisplayNames: (names: string[]) => void,
     displayNames: string[]
 }) {
+    const centerStyle = {
+        display: "flex",
+        justifyContent: "center"
+    };
     return <div>
-        <div style={{
-            display: "flex",
-            justifyContent: "center"
-        }}>
+        <div style={centerStyle}>
             <FilterHeadHStack>
                 <h2>Project</h2>
 
@@ -175,12 +178,8 @@ function ProjectFilter(props: {
                     })}
                 </select>
             </FilterHeadHStack>
-
         </div>
-        <label style={{
-            display: "flex",
-            justifyContent: "center"
-        }}>
+        <label style={centerStyle}>
             Only shows workflows, tags and tasks in this project.
         </label>
     </div>
