@@ -51,7 +51,7 @@ class OdaPmWorkflow implements I_OdaPmWorkflow {
     }
 
     getProjectPath(): string {
-        return getProjectPathFromSTask(this.boundTask);
+        return getProjectPathFromSTask(this.boundTask, true);
     }
 }
 

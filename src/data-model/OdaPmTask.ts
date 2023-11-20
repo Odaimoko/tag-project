@@ -173,7 +173,7 @@ export class OdaPmTask extends BaseDatabaseObject {
     }
 
     getProjectPath(): string {
-        return getProjectPathFromSTask(this.boundTask);
+        return getProjectPathFromSTask(this.boundTask, true);
     }
 
     // endregion

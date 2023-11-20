@@ -74,6 +74,18 @@ export function getWorkflowNameFromRawText(text: string) {
     return found ? found[0] : null;
 }
 
+export interface I_OdaPmProjectTask {
+
+    // 0.2.0
+    projects: OdaPmProject[];
+    addProject: (project: OdaPmProject) => void;
+    isInProject: (name: string) => boolean;
+    /**
+     * Called when no project is added. Returns the path of the markdown path.
+     */
+    getProjectPath: () => string;
+}
+
 // Unit Test
 // console.log(getWorkflowNameFromRawText("带你飞 带你飞2  \n vads ads f \t li"))
 
@@ -84,7 +96,7 @@ export interface I_OdaPmStep {
 }
 
 
-export interface I_OdaPmWorkflow {
+export interface I_OdaPmWorkflow extends I_OdaPmProjectTask {
     boundTask: STask;
     name: string;
     stepsDef: I_OdaPmStep[];
@@ -155,13 +167,13 @@ export function getProjectNameFromTag(tag: string) {
 // - A task's path is
 // 1. If it defines a project, the project name is appended.
 // 2. If not, the task's path is the same as the file's.
-export function getProjectPathFromSTask(task: STask) {
+export function getProjectPathFromSTask(task: STask, leadingSlash = false) {
     const prjTag = getProjectTagFromSTask(task);
     if (prjTag !== null) {
         // If defined by a task, path = `path/to/file:{project name}`. 
-        return `/${task.path}:${getProjectNameFromTag(prjTag)}`;
+        return `${leadingSlash ? "/" : ""}${task.path}:${getProjectNameFromTag(prjTag)}`;
     } else
-        return `/${task.path}`;
+        return `${leadingSlash ? "/" : ""}${task.path}`;
 }
 
 // endregion

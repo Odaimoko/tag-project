@@ -64,7 +64,6 @@ export class OdaPmProject extends BaseDatabaseObject {
         // Obsidian path is relative. Add '/' before path to form a tree
         obsidianPath = "/" + obsidianPath;
         this.defPaths.push(obsidianPath);
-
     }
 
     /**
