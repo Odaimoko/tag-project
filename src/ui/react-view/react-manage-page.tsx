@@ -1,6 +1,4 @@
 import {I_OdaPmWorkflow, Tag_Prefix_Tag, Workflow_Type_Enum_Array, WorkflowType} from "../../data-model/workflow-def";
-import {STask} from "obsidian-dataview";
-import {Workspace} from "obsidian";
 import React, {useContext, useEffect, useState} from "react";
 import {PluginContext} from "../manage-page-view";
 import {EventEmitter} from "events";
@@ -14,7 +12,7 @@ import {
     getSettings,
     setSettingsValueAndSave
 } from "../../Settings";
-import {ClickableIconView, I_Stylable, InternalLinkView, ObsidianIconView} from "./view-template/icon-view";
+import {ClickableIconView, I_Stylable, InternalLinkView} from "./view-template/icon-view";
 import {OdaPmDbProvider} from "../../data-model/odaPmDb";
 import {Evt_DbReloaded, Evt_JumpTask, Evt_JumpWorkflow} from "../../typing/dataview-event";
 import {devLog} from "../../utils/env-util";
@@ -22,43 +20,9 @@ import {HStack} from "./view-template/h-stack";
 import {OdaPmTask} from "../../data-model/OdaPmTask";
 import {ExternalControlledCheckbox} from "./view-template/checkbox";
 import {TaskTableView} from "./task-table-view";
+import {openTaskPrecisely} from "../../utils/io-util";
+import {getIconByWorkflow, getIconViewByWorkflowType, iconViewAsAWholeStyle} from "./style-def";
 
-
-// dark light compatible
-export const Color_WorkflowChain = "#6289bb"
-export const Color_Workflow_Checkbox = "#5eb95f"
-
-const iconViewAsAWholeStyle = {display: "inline-flex", justifyItems: "center"};
-
-function getColorByWorkflow(type: I_OdaPmWorkflow) {
-    switch (type.type) {
-        case "chain":
-            return Color_WorkflowChain;
-        case "checkbox" :
-            return Color_Workflow_Checkbox;
-    }
-    return "currentColor"
-}
-
-
-// if we use workspace.openLinkText, a task without a block id will be opened with its section
-export function openTaskPrecisely(workspace: Workspace, task: STask) {
-    // Copy from dataview. See TaskItem.
-    workspace.openLinkText(
-        task.link.toFile().obsidianLink(),
-        task.path,
-        false,
-        {
-            eState: {
-                cursor: {
-                    from: {line: task.line, ch: task.position.start.col},
-                    to: {line: task.line + task.lineCount - 1, ch: task.position.end.col},
-                },
-                line: task.line,
-            },
-        }
-    );
-}
 
 export function ReactManagePage({eventCenter}: {
     eventCenter?: EventEmitter
@@ -311,18 +275,6 @@ const TagFilterCheckbox = ({tag, displayed, setDisplayed, excludeTags, setExclud
         />
     </span>
 
-}
-
-function getIconNameByWorkflowType(type: WorkflowType) {
-    return type === "chain" ? "footprints" : "check-check"
-}
-
-function getIconViewByWorkflowType(type: WorkflowType) {
-    return <ObsidianIconView iconName={getIconNameByWorkflowType(type)}/>;
-}
-
-export function getIconByWorkflow(workflow: I_OdaPmWorkflow) {
-    return getIconViewByWorkflowType(workflow.type);
 }
 
 

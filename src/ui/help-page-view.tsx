@@ -1,7 +1,7 @@
 import {App, ItemView, Modal, WorkspaceLeaf} from "obsidian";
 import {createRoot, Root} from "react-dom/client";
 import React, {JSX, useContext, useState} from "react";
-import {WorkflowTypeLegend} from "./react-view/view-creator";
+import {WorkflowTypeLegend} from "./react-view/react-manage-page";
 import {I_Stylable, ObsidianIconView} from "./react-view/view-template/icon-view";
 import OdaPmToolPlugin, {
     CmdPal_JumpToManagePage,

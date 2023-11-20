@@ -1,4 +1,4 @@
-import {Vault} from "obsidian";
+import {Vault, Workspace} from "obsidian";
 import {STask} from "obsidian-dataview";
 
 // region Copied from dataview
@@ -42,3 +42,21 @@ export const LIST_ITEM_REGEX = /^[\s>]*(\d+\.|\d+\)|\*|-|\+)\s*(\[.{0,1}\])?\s*(
 
 
 // endregion
+// if we use workspace.openLinkText, a task without a block id will be opened with its section
+export function openTaskPrecisely(workspace: Workspace, task: STask) {
+    // Copy from dataview. See TaskItem.
+    workspace.openLinkText(
+        task.link.toFile().obsidianLink(),
+        task.path,
+        false,
+        {
+            eState: {
+                cursor: {
+                    from: {line: task.line, ch: task.position.start.col},
+                    to: {line: task.line + task.lineCount - 1, ch: task.position.end.col},
+                },
+                line: task.line,
+            },
+        }
+    );
+}

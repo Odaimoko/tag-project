@@ -1,7 +1,7 @@
 import {OdaPmTask} from "../../data-model/OdaPmTask";
 import OdaPmToolPlugin from "../../main";
 import {I_OdaPmStep, I_OdaPmWorkflow, TaskStatus_checked, TaskStatus_unchecked} from "../../data-model/workflow-def";
-import {rewriteTask} from "../../utils/io-util";
+import {openTaskPrecisely, rewriteTask} from "../../utils/io-util";
 import React, {ReactElement, useContext, useEffect, useState} from "react";
 import {ContainerContext, PluginContext} from "../manage-page-view";
 import {
@@ -21,9 +21,9 @@ import {IRenderable} from "../i-renderable";
 import {DataArray} from "obsidian-dataview";
 import {MarkdownRenderer} from "obsidian";
 import {HtmlStringComponent} from "./view-template/html-string-component";
-import {getIconByWorkflow, openTaskPrecisely} from "./view-creator";
 import {appendBoldText} from "../html-template";
 import {notify} from "../../utils/o-notice";
+import {getIconByWorkflow} from "./style-def";
 
 function getIconByTask(oTask: OdaPmTask) {
     return getIconByWorkflow(oTask.type)
