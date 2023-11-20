@@ -31,14 +31,18 @@ interface AssertFunctions {
     expectTaskInProject: (taskName: string, projectName: string) => void;
     expectTaskPath: (taskName: string, path: string) => void;
     expectWorkflowInProject: (workflowName: string, projectName: string) => void;
+    // expectProject: (projectName: string, definedType?: ProjectDefinedType) => void;
 }
 
 const dbAssertFunctions: AssertFunctions = {
     expectTaskPath: () => {
+        throw new Error("Not Implemented.")
     },
     expectTaskInProject: () => {
+        throw new Error("Not Implemented.")
     },
     expectWorkflowInProject: () => {
+        throw new Error("Not Implemented.")
     },
 
 }
@@ -54,7 +58,7 @@ function expect_project(prj: OdaPmProject | undefined, projectName: string, defi
 
 function expectTaskAbstract(pmDb: OdaPmDb, taskSummary: string, func: (task: OdaPmTask) => void) {
     const task = pmDb.getPmTaskBySummary(taskSummary);
-    expect(task).to.not.be.null;
+    expect(task, `Task ${taskSummary} not found.`).to.not.be.null;
     if (task) {
         func(task);
     }
@@ -62,7 +66,7 @@ function expectTaskAbstract(pmDb: OdaPmDb, taskSummary: string, func: (task: Oda
 
 function expectWorkflowAbstract(pmDb: OdaPmDb, workflowName: string, func: (workflow: I_OdaPmWorkflow) => void) {
     const workflow = pmDb.getWorkflowByName(workflowName);
-    expect(workflow).to.not.be.null;
+    expect(workflow, `Workflow ${workflowName} not found.`).to.not.be.null;
     if (workflow) {
         func(workflow);
     }
@@ -77,79 +81,22 @@ async function testProjectDefinition(projects: OdaPmProject[], pmDb: OdaPmDb) {
         .to.have.lengthOf(correct);
 
     const expectTaskInProject = dbAssertFunctions.expectTaskInProject;
+    const expectWorkflowInProject = dbAssertFunctions.expectWorkflowInProject;
+    expect_project(pmDb.getProjectByName("UT_020_1_Project_Layer_1_task_definition"),
+        "UT_020_1_Project_Layer_1_task_definition", "tag_override");
 
-    const ut_task_projects = projects.filter(k =>
-        k.name.startsWith("UT_020_1_") && k.hasDefinedType("tag_override")
-    );
-    expect(ut_task_projects, `Task tag defined projects not matched. Prefix 'UT_020_1_'.`).to.have.lengthOf(1);
+    expectWorkflowInProject("UT_020_2_1_Wf", ProjectName_Unclassified);
+    expectTaskInProject("UT_020_2_1_Task", ProjectName_Unclassified);
 
-    const ut_020_2_1_projects = projects.filter(k => {
-        return k.pmTasks.filter(m => m.summary.startsWith("UT_020_2_1")).length > 0
-    }); // The task starting with UT_020_2_1 is in Unclassified project.
-    expect(ut_020_2_1_projects, `PmTask with prefix 'UT_020_2_1' not matched`).to.have.lengthOf(1);
-    expect_project(ut_020_2_1_projects.first(), ProjectName_Unclassified, "tag_override");
+    expectWorkflowInProject("UT_020_2_2_Wf", "UT_020_2_Project_Layer_1_folder_definition");
+    expectTaskInProject("UT_020_2_2_Task", "UT_020_2_Project_Layer_1_folder_definition");
 
-    const ut_020_2_1_projects_wf = projects.filter(k => {
-        return k.workflows.filter(m => m.name.startsWith("UT_020_2_1")).length > 0
-    }); // The workflow starting with UT_020_2_1 is in Unclassified project.
-    expect(ut_020_2_1_projects_wf, `Workflow with prefix 'UT_020_2_1' not matched`).to.have.lengthOf(1);
-    expect_project(ut_020_2_1_projects_wf.first(), ProjectName_Unclassified, "tag_override");
+    expectWorkflowInProject("UT_020_2_3_Wf", "UT_020_2_Project_Layer_1_file_definition");
+    expectTaskInProject("UT_020_2_3_Task", "UT_020_2_Project_Layer_1_file_definition");
 
-    const ut_020_2_2_tasks = pmDb.pmTasks.filter(k => {
-        return k.summary.startsWith("UT_020_2_2")
-    })
-    expect(ut_020_2_2_tasks, `PmTask with prefix 'UT_020_2_2' not matched`).to.have.lengthOf(1);
-    const ut_020_2_2_task = ut_020_2_2_tasks.first();
-    if (ut_020_2_2_task) {
-        expect(ut_020_2_2_task.isInProject("UT_020_2_Project_Layer_1_folder_definition"));
-    }
-
-    const ut_020_2_2_workflows = pmDb.workflows.filter(k => {
-        return k.name.startsWith("UT_020_2_2")
-    });
-    expect(ut_020_2_2_workflows, `Workflow with prefix 'UT_020_2_2' not matched`).to.have.lengthOf(1);
-    const ut_020_2_2_wf = ut_020_2_2_workflows.first();
-    if (ut_020_2_2_wf) {
-        expect(ut_020_2_2_wf.isInProject("UT_020_2_Project_Layer_1_folder_definition"));
-    }
-
-
-    const ut_020_2_3_tasks = pmDb.pmTasks.filter(k => {
-        return k.summary.startsWith("UT_020_2_3")
-    })
-    expect(ut_020_2_3_tasks, `PmTask with prefix 'UT_020_2_3' not matched`).to.have.lengthOf(1);
-    const ut_020_2_3_task = ut_020_2_3_tasks.first();
-    if (ut_020_2_3_task) {
-        expect(ut_020_2_3_task.isInProject("UT_020_2_Project_Layer_1_file_definition"));
-    }
-
-    const ut_020_2_3_workflows = pmDb.workflows.filter(k => {
-        return k.name.startsWith("UT_020_2_3")
-    });
-    expect(ut_020_2_3_workflows, `Workflow with prefix 'UT_020_2_3' not matched`).to.have.lengthOf(1);
-    const ut_020_2_3_wf = ut_020_2_3_workflows.first();
-    if (ut_020_2_3_wf) {
-        expect(ut_020_2_3_wf.isInProject("UT_020_2_Project_Layer_1_file_definition"));
-    }
-
-
-    const ut_020_2_4_tasks = pmDb.pmTasks.filter(k => {
-        return k.summary.startsWith("UT_020_2_4")
-    })
-    expect(ut_020_2_4_tasks, `PmTask with prefix 'UT_020_2_4' not matched`).to.have.lengthOf(1);
-    const ut_020_2_4_task = ut_020_2_4_tasks.first();
-    if (ut_020_2_4_task) {
-        expect(ut_020_2_4_task.isInProject("UT_020_2_Project_Layer_1_task_definition"));
-    }
-
-    const ut_020_2_4_workflows = pmDb.workflows.filter(k => {
-        return k.name.startsWith("UT_020_2_4")
-    });
-    expect(ut_020_2_4_workflows, `Workflow with prefix 'UT_020_2_4' not matched`).to.have.lengthOf(1);
-    const ut_020_2_4_wf = ut_020_2_4_workflows.first();
-    if (ut_020_2_4_wf) {
-        expect(ut_020_2_4_wf.isInProject("UT_020_2_Project_Layer_1_task_definition"));
-    }
+    expectWorkflowInProject("UT_020_2_4_Wf", "UT_020_2_Project_Layer_1_task_definition");
+    expectTaskInProject("UT_020_2_4_Task", "UT_020_2_Project_Layer_1_task_definition");
+    devLog("Test PASSED: Project Definition.")
 }
 
 async function testTaskProjectLink(pmDb: OdaPmDb) {
@@ -202,8 +149,15 @@ function initAssertFunctions(pmDb: OdaPmDb) {
         (task) => {
             expect(task.getProjectPath(),
                 `Task ${taskName} 's path not matched.`)
-                .equal(path).not;
+                .equal(path);
         })
+    dbAssertFunctions.expectWorkflowInProject = (workflowName: string, projectName: string) => expectWorkflowAbstract(pmDb, workflowName,
+        (workflow) => {
+            expect(workflow.isInProject(projectName),
+                `Workflow ${workflowName} not in project ${projectName}.`)
+                .true;
+        }
+    )
 }
 
 // make this async so the failing tests won't block the plugin and database initialization process.
@@ -214,7 +168,7 @@ export async function assertOnDbRefreshed(pmDb: OdaPmDb) {
 
     const projectIds = projects.map(k => k.internalKey).unique();
     expect(projectIds, `Project ids are not unique.`).to.have.lengthOf(projects.length);
-    test_UT_020_3(pmDb);
     testProjectDefinition(projects, pmDb);
+    test_UT_020_3(pmDb);
     devLog("Assert end: on db refreshed...")
 }

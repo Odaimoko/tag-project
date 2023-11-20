@@ -279,6 +279,14 @@ export class OdaPmDb implements I_EvtListener {
         return null;
     }
 
+    getProjectByName(name: string) {
+        for (const project of this.pmProjects) {
+            if (project.name === name) {
+                return project;
+            }
+        }
+    }
+
     getPmTaskBySummary(summary: string) {
         for (const task of this.pmTasks) {
             if (task.summary === summary) {
