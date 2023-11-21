@@ -85,7 +85,7 @@ const SearchDropdown = (props: {
                         // Let the project_choice button handle the click event
                         // Otherwise when we lose focus and hide the dropdown, the button will not be triggered.
                     } else {
-                        // TODO Close when click outside
+                        // Close when click outside
                         hideDropdown()
                     }
                 }}
@@ -107,8 +107,8 @@ const SearchDropdown = (props: {
                onFocus={() => {
                    // show when click search input box
 
-                   console.log("Input Focused")
-                   showDropdown()
+                   devLog("Input Focused");
+                   showDropdown();
                }}
         />
         {/*Add background so it won't be transparent. */}

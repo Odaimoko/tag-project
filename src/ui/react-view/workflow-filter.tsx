@@ -10,6 +10,7 @@ import {openTaskPrecisely} from "../../utils/io-util";
 import {initialToUpper} from "../../utils/format-util";
 import {NameableFilterHeading} from "./nameable-filter-heading";
 import {I_Nameable} from "../../data-model/I_Nameable";
+import {taskCheckBoxMargin} from "./task-table-view";
 
 /**
  * Accept children as a HStack with a unified style
@@ -106,7 +107,7 @@ export const WorkflowFilterCheckbox = ({workflow, displayNames, setDisplayNames,
         <InternalLinkView
             content={<span style={iconViewAsAWholeStyle}>
                 {showWorkflowIcon ? getIconByWorkflow(workflow) : null}
-                <label style={{marginLeft: 3}}>{wfName}</label>
+                <label style={taskCheckBoxMargin}>{wfName}</label>
             </span>}
             onIconClicked={() =>
                 // Go to workflow def

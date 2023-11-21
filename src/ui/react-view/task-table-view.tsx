@@ -25,6 +25,8 @@ import {appendBoldText} from "../common/html-template";
 import {notify} from "../../utils/o-notice";
 import {getIconByWorkflow} from "./style-def";
 
+export const taskCheckBoxMargin = {marginLeft: 3};
+
 function getIconByTask(oTask: OdaPmTask) {
     return getIconByWorkflow(oTask.type)
 }
@@ -87,7 +89,8 @@ export const OdaTaskSummaryCell = ({oTask, taskFirstColumn, showCheckBox, showWo
         // @ts-ignore
         MarkdownRenderer.render(plugin.app, summaryMd, container, oTask.boundTask.path, plugin).then(() => {
             // container.children[0] is a <p>, so we only use its innerHTML
-            setSummaryView(<HtmlStringComponent htmlString={container.children[0].innerHTML}/>);
+            setSummaryView(<HtmlStringComponent style={taskCheckBoxMargin}
+                                                htmlString={container.children[0].innerHTML}/>);
         })
     }, []);
 
