@@ -1,5 +1,5 @@
 import {I_OdaPmProjectTask, I_OdaPmWorkflow} from "../../data-model/workflow-def";
-import React, {Fragment, useContext, useEffect, useRef, useState} from "react";
+import React, {KeyboardEvent, useContext, useEffect, useRef, useState} from "react";
 import {PluginContext} from "../manage-page-view";
 import {EventEmitter} from "events";
 import {getSettings, setSettingsValueAndSave} from "../../Settings";
@@ -203,6 +203,27 @@ function getOptionValueName(opValue: string | undefined, listOpValues: OptionVal
     return null;
 }
 
+const isCharacterInput = (event: KeyboardEvent) => {
+    // Check if the key is a character input excluding the escape key
+    return (
+        event.key.length === 1 && // Check for single character keys
+        event.key !== 'Escape' && // Exclude the escape key
+        !event.ctrlKey && !event.altKey && // Exclude control and alt keys
+        !event.metaKey // Exclude meta key (e.g., Command key on macOS)
+        // Add more conditions as needed for specific cases
+    );
+};
+
+
+function loopIndex(nextIdx: number, len: number) {
+    if (nextIdx < 0) {
+        nextIdx = len - 1;
+    } else if (nextIdx >= len) {
+        nextIdx = 0;
+    }
+    return nextIdx;
+}
+
 const SearchDropdown = (props: {
     data: OptionValueType[]
     handleSetOptionValues(param: string[]): void;
@@ -217,54 +238,55 @@ const SearchDropdown = (props: {
     }
 
     const childRefs: Record<string, HTMLElement | null> = {}; // Object to hold references to child components
+    const inputRef = useRef<HTMLInputElement>(null);
     const selectedChild = useRef(-1);
+    // Put OnKeyDown Event on the container div, so that we can use arrow keys to select the project.
+    // Dont put it on the input box, otherwise when the focus is not on the input box, the event will not be triggered.
+    function resetKeyboardState() {
+        selectedChild.current = -1;
+    }
+
     return <div style={props.style}
-                onKeyDown={(event) => {
-                    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-                        if (event.key === "ArrowDown") {
-                            selectedChild.current = Math.min(Object.keys(childRefs).length,
-                                selectedChild.current + 1);
-                        } else {
-                            selectedChild.current = Math.max(-1, selectedChild.current - 1);
-                        }
-                        childRefs[Object.keys(childRefs)[selectedChild.current]]?.focus();
+                onKeyDown={handleBaseKeyboard}
+
+                onBlur={(event) => {
+                    // Hide Dropdown if we lose focus
+                    if (event.relatedTarget && event.relatedTarget.id.startsWith("project_choice")) {
+                        // Let the project_choice button handle the click event
+                        // Otherwise when we lose focus and hide the dropdown, the button will not be triggered.
                     } else {
-                        childRefs["search_input"]?.focus();
+                        hideDropdown()
                     }
-                }}>
-        <input ref={(ref) => {
-            childRefs["search_input"] = ref;
-        }}
+                }}
+    >
+        <input ref={inputRef}
                type="text" placeholder="Search/Select Project"
                value={searchText}
                onChange={(event) => {
                    const text = event.target.value;
                    // when there is text, show the dropdown
                    if (text && text.length > 0) {
-                       setDropDownDisplay("block")
-                   } else {
-                       setDropDownDisplay("none")
-                   }
-                   handleSetSearchText(text)
-               }}
-               onFocus={showDropdown}
-               onBlur={(event) => {
-                   if (event.relatedTarget && event.relatedTarget.id.startsWith("project_choice")) {
-                       // Let the project_choice button handle the click event
-                       // Otherwise when we lose focus and hide the dropdown, the button will not be triggered.
+                       showDropdown()
                    } else {
                        hideDropdown()
                    }
+                   handleSetSearchText(text)
+               }}
+
+               onFocus={() => {
+                   console.log("Input Focused")
+                   showDropdown()
                }}
         />
 
         <div id={"project_choices"} style={{
             display: dropDownDisplay,
             position: "absolute",
-            zIndex: 1
+            zIndex: 1,
+            background: "var(--background-primary)"
         }}
         >
-            <VStack spacing={1}>
+            <VStack spacing={2}>
                 {filtered.map((project: OptionValueType) => {
                     const childId = `project_choice_${project.name}`;
                     return (
@@ -285,12 +307,37 @@ const SearchDropdown = (props: {
         </div>
     </div>
 
+    function handleBaseKeyboard(event: KeyboardEvent) {
+
+        if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+            showDropdown()
+            const keys = Object.keys(childRefs);
+            if (keys.length === 0) return true;
+            const offset = event.key === "ArrowDown" ? 1 : -1;
+
+            selectedChild.current = loopIndex(selectedChild.current + offset, keys.length);
+            const curKey = keys[selectedChild.current];
+            childRefs[curKey]?.focus();
+        } else if (isCharacterInput(event)) {
+            devLog(`Input Focus via ${event.key}`)
+            inputRef.current?.focus();
+        } else if (event.key === "Escape") {
+            inputRef.current?.focus()
+        } else if (event.key === "Enter") {
+            console.log("Propagate")
+            // inputRef.current?.focus();
+            return true
+        }
+        return undefined;
+    }
+
     function showDropdown() {
         setDropDownDisplay("block")
     }
 
     function hideDropdown() {
         setDropDownDisplay("none")
+        resetKeyboardState()
     }
 }
 
