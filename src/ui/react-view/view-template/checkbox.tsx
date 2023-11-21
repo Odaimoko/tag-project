@@ -1,6 +1,6 @@
 import React, {JSX, useState} from "react";
 import {I_Stylable} from "./icon-view";
-import {IRenderable} from "../../i-renderable";
+import {IRenderable} from "../../common/i-renderable";
 
 /**
  * A checkbox that is totally controlled by its parent.

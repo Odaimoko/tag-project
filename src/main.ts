@@ -1,5 +1,5 @@
 import {Editor, MarkdownFileInfo, MarkdownView, Plugin} from 'obsidian';
-import {Icon_ManagePage, ManagePageView, ManagePageViewId} from "./ui/manage-page-view";
+import {Icon_ManagePage, ManagePageView, ManagePageViewId} from "./ui/obsidian/manage-page-view";
 import {ONotice} from "./utils/o-notice";
 import {SettingsProvider, TPM_DEFAULT_SETTINGS, TPMSettings, TPMSettingsTab} from "./Settings";
 
@@ -13,8 +13,8 @@ import {EventEmitter} from "events";
 import {OdaPmDb, OdaPmDbProvider} from "./data-model/odaPmDb";
 import {addTagText, I_OdaPmWorkflow} from "./data-model/workflow-def";
 import {rewriteTask} from "./utils/io-util";
-import {WorkflowSuggestionModal} from "./ui/workflow-suggestion-modal";
-import {Icon_HelpPage, PmHelpPageView, PmHelpPageViewId} from "./ui/help-page-view";
+import {WorkflowSuggestionModal} from "./ui/obsidian/workflow-suggestion-modal";
+import {Icon_HelpPage, PmHelpPageView, PmHelpPageViewId} from "./ui/obsidian/help-page-view";
 import {assertOnPluginInit, devLog} from "./utils/env-util";
 import {OdaPmTask} from "./data-model/OdaPmTask";
 
@@ -141,14 +141,7 @@ export default class OdaPmToolPlugin extends Plugin {
 
     }
 
-    private addWorkflowToMdTask(editor: Editor, view: MarkdownView | MarkdownFileInfo) {
-        const cursor = editor.getCursor();
-        const filePath = view.file?.path;
-        if (!filePath) {
-            new ONotice("No markdown file.")
-            return; // no file
-        }
-        // console.log(`line: ${editor.getLine(cursor.line)}`)
+    private checkValidMdTask(filePath: string) {
         const pageCache = this.app.metadataCache.getCache(filePath);
         /* A task object is like this. A list object is similar but without "task" field.
         {
@@ -174,8 +167,21 @@ export default class OdaPmToolPlugin extends Plugin {
             // console.log(pageCache)
             // console.log(pageCache?.listItems?.map(k => k.position.start))
             new ONotice("It's not a markdown task.\nTry remove indentations or texts directly following on the next line (you can use list to describe details).\nOnly the task that is part of a list are recognized (or the task itself is a list itself). ")
-            return;
+            return false;
         }
+        return true;
+    }
+
+    private addWorkflowToMdTask(editor: Editor, view: MarkdownView | MarkdownFileInfo) {
+        const cursor = editor.getCursor();
+        const filePath = view.file?.path;
+        if (!filePath) {
+            new ONotice("No markdown file.")
+            return; // no file
+        }
+        // console.log(`line: ${editor.getLine(cursor.line)}`)
+        if (!this.checkValidMdTask(filePath)) return;
+        
         // console.log(taskCache)
         const workflow = this.pmDb.getWorkflow(filePath, cursor.line);
         if (workflow) {

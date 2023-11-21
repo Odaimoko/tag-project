@@ -2,7 +2,7 @@
 import {HStack} from "./view-template/h-stack";
 import {I_OdaPmWorkflow, Workflow_Type_Enum_Array, WorkflowType} from "../../data-model/workflow-def";
 import React, {useContext} from "react";
-import {PluginContext} from "../manage-page-view";
+import {PluginContext} from "../obsidian/manage-page-view";
 import {ExternalControlledCheckbox} from "./view-template/checkbox";
 import {I_Stylable, InternalLinkView} from "./view-template/icon-view";
 import {getIconByWorkflow, getIconViewByWorkflowType, iconViewAsAWholeStyle} from "./style-def";

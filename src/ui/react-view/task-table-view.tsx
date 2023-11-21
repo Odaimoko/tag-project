@@ -3,7 +3,7 @@ import OdaPmToolPlugin from "../../main";
 import {I_OdaPmStep, I_OdaPmWorkflow, TaskStatus_checked, TaskStatus_unchecked} from "../../data-model/workflow-def";
 import {openTaskPrecisely, rewriteTask} from "../../utils/io-util";
 import React, {ReactElement, useContext, useEffect, useState} from "react";
-import {PluginContext} from "../manage-page-view";
+import {PluginContext} from "../obsidian/manage-page-view";
 import {
     getSettings,
     setSettingsValueAndSave,
@@ -17,11 +17,11 @@ import {HStack} from "./view-template/h-stack";
 import {ClickableIconView, I_Stylable, InternalLinkView} from "./view-template/icon-view";
 import {ExternalControlledCheckbox} from "./view-template/checkbox";
 import {DataTable} from "./view-template/data-table";
-import {IRenderable} from "../i-renderable";
+import {IRenderable} from "../common/i-renderable";
 import {DataArray} from "obsidian-dataview";
 import {MarkdownRenderer} from "obsidian";
 import {HtmlStringComponent} from "./view-template/html-string-component";
-import {appendBoldText} from "../html-template";
+import {appendBoldText} from "../common/html-template";
 import {notify} from "../../utils/o-notice";
 import {getIconByWorkflow} from "./style-def";
 

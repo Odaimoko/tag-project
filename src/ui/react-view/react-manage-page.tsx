@@ -1,6 +1,6 @@
 import {I_OdaPmProjectTask, I_OdaPmWorkflow} from "../../data-model/workflow-def";
 import React, {useContext, useEffect, useState} from "react";
-import {PluginContext} from "../manage-page-view";
+import {PluginContext} from "../obsidian/manage-page-view";
 import {EventEmitter} from "events";
 import {getSettings, setSettingsValueAndSave} from "../../Settings";
 import {OdaPmDb, OdaPmDbProvider} from "../../data-model/odaPmDb";

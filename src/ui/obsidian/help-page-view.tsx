@@ -1,22 +1,22 @@
 import {App, ItemView, Modal, WorkspaceLeaf} from "obsidian";
 import {createRoot, Root} from "react-dom/client";
 import React, {JSX, useContext, useState} from "react";
-import {I_Stylable, ObsidianIconView} from "./react-view/view-template/icon-view";
+import {I_Stylable, ObsidianIconView} from "../react-view/view-template/icon-view";
 import OdaPmToolPlugin, {
     CmdPal_JumpToManagePage,
     CmdPal_OpenManagePage,
     CmdPal_SetWorkflowToTask,
     PLUGIN_NAME
-} from "../main";
-import {Tag_Prefix_Step, Tag_Prefix_Tag, Tag_Prefix_TaskType, Tag_Prefix_Workflow} from "../data-model/workflow-def";
+} from "../../main";
+import {Tag_Prefix_Step, Tag_Prefix_Tag, Tag_Prefix_TaskType, Tag_Prefix_Workflow} from "../../data-model/workflow-def";
 import {Icon_ManagePage, PluginContext} from "./manage-page-view";
-import {getTemplateHtml, ManagePageForTemplate, templateMd} from "./tpm-template-md";
-import {IRenderable} from "./i-renderable";
-import {setSettingsValueAndSave} from "../Settings";
-import {HStack} from "./react-view/view-template/h-stack";
-import {StrictModeWrapper} from "./react-view/view-template/strict-mode-wrapper";
-import {DataTable} from "./react-view/view-template/data-table";
-import {WorkflowTypeLegend} from "./react-view/workflow-filter";
+import {getTemplateHtml, ManagePageForTemplate, templateMd} from "../tpm-template-md";
+import {IRenderable} from "../common/i-renderable";
+import {setSettingsValueAndSave} from "../../Settings";
+import {HStack} from "../react-view/view-template/h-stack";
+import {StrictModeWrapper} from "../react-view/view-template/strict-mode-wrapper";
+import {DataTable} from "../react-view/view-template/data-table";
+import {WorkflowTypeLegend} from "../react-view/workflow-filter";
 
 export const PmHelpPageViewId = "tpm-help-view";
 export const Desc_ManagePage = "Manage Page";

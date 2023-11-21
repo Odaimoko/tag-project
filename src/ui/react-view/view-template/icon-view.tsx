@@ -1,4 +1,4 @@
-import {IRenderable} from "../../i-renderable";
+import {IRenderable} from "../../common/i-renderable";
 import React from "react";
 import {getIcon} from "obsidian";
 import {HtmlStringComponent} from "./html-string-component";
