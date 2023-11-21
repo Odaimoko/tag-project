@@ -248,13 +248,13 @@ const SearchDropdown = (props: {
 
     return <div style={props.style}
                 onKeyDown={handleBaseKeyboard}
-
                 onBlur={(event) => {
                     // Hide Dropdown if we lose focus
                     if (event.relatedTarget && event.relatedTarget.id.startsWith("project_choice")) {
                         // Let the project_choice button handle the click event
                         // Otherwise when we lose focus and hide the dropdown, the button will not be triggered.
                     } else {
+                        // TODO Close when click outside
                         hideDropdown()
                     }
                 }}
@@ -274,6 +274,8 @@ const SearchDropdown = (props: {
                }}
 
                onFocus={() => {
+                   // show when click search inputbox
+
                    console.log("Input Focused")
                    showDropdown()
                }}
@@ -348,7 +350,7 @@ function ProjectFilter(props: {
 }) {
     const headingStyle = {
         display: "flex",
-        justifyContent: "center" // 横向居中
+        justifyContent: "flex-start" // 横向居中
     };
     const projectsAndAll = [
         {
@@ -357,27 +359,19 @@ function ProjectFilter(props: {
         }, ...props.projects
     ]
     // If optionValue is not defined, use name as optionValue
-    // TODO Close when click outside
-    // TODO show when click search inputbox
-
     return <div>
-
-        <div style={{position: "absolute", alignItems: "center"}}>
-            {/*Add h2 to match the height of Project Header*/}
-            <h2></h2>
-            <SearchDropdown data={projectsAndAll}
-                            handleSetOptionValues={props.handleSetDisplayNames}/>
-        </div>
         <div style={headingStyle}>
 
             <FilterHeadHStack>
+                <SearchDropdown data={projectsAndAll}
+                                handleSetOptionValues={props.handleSetDisplayNames}/>
                 <h2>Project: {getOptionValueName(props.displayNames.first(), projectsAndAll)}</h2>
             </FilterHeadHStack>
         </div>
 
-        <label style={headingStyle}>
-            Only shows workflows and tasks in this project.
-        </label>
+        {/*<label style={headingStyle}>*/}
+        {/*    Only shows workflows and tasks in this project.*/}
+        {/*</label>*/}
 
     </div>
 }
