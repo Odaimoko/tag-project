@@ -138,7 +138,7 @@ export function ReactManagePage({eventCenter}: {
     // })
     // endregion
     return (
-        <>
+        <div>
 
             <ProjectFilter projects={projects} displayNames={displayProjectOptionValues}
                            handleSetDisplayNames={handleSetDisplayProjects}
@@ -156,7 +156,7 @@ export function ReactManagePage({eventCenter}: {
             <TaskTableView displayWorkflows={displayWorkflows}
                            filteredTasks={filteredTasks}/>
 
-        </>
+        </div>
     )
 }
 
@@ -278,7 +278,7 @@ const SearchDropdown = (props: {
                    showDropdown()
                }}
         />
-
+        {/*Add background so it won't be transparent. */}
         <div id={"project_choices"} style={{
             display: dropDownDisplay,
             position: "absolute",

@@ -3,7 +3,7 @@ import OdaPmToolPlugin from "../../main";
 import {I_OdaPmStep, I_OdaPmWorkflow, TaskStatus_checked, TaskStatus_unchecked} from "../../data-model/workflow-def";
 import {openTaskPrecisely, rewriteTask} from "../../utils/io-util";
 import React, {ReactElement, useContext, useEffect, useState} from "react";
-import {ContainerContext, PluginContext} from "../manage-page-view";
+import {PluginContext} from "../manage-page-view";
 import {
     getSettings,
     setSettingsValueAndSave,
@@ -218,8 +218,6 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
     });
 
     // add background for table header, according to the theme.
-    const container = useContext(ContainerContext)
-    const themedBackground = container.getCssPropertyValue("background-color")
     // striped rows. center step cell but not summary cell.
     const evenBg: React.CSSProperties = {backgroundColor: "rgba(0,0,0,0.2)"};
     const oddBg: React.CSSProperties = {};
@@ -301,7 +299,7 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
 
                         thStyleGetter={(columnIndex: number): React.CSSProperties => {
                             const style = {
-                                backgroundColor: themedBackground,
+                                backgroundColor: "var(--background-primary)",
                                 position: "sticky", top: -16,
                                 padding: 10,
                                 minWidth: (columnIndex === sumCol ? minSummaryWidth : "unset"),
