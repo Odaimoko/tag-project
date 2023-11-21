@@ -1,5 +1,5 @@
 import {I_OdaPmProjectTask, I_OdaPmWorkflow} from "../../data-model/workflow-def";
-import React, {Fragment, useContext, useEffect, useState} from "react";
+import React, {Fragment, useContext, useEffect, useRef, useState} from "react";
 import {PluginContext} from "../manage-page-view";
 import {EventEmitter} from "events";
 import {getSettings, setSettingsValueAndSave} from "../../Settings";
@@ -209,7 +209,6 @@ const SearchDropdown = (props: {
 } & StyleProps) => {
     const [searchText, setSearchText] = useState("")
     const [dropDownDisplay, setDropDownDisplay] = useState("none");
-    console.log(`DropdownEle rendered. ${searchText}`)
 
     const filtered = props.data.filter(k => k.name.toLowerCase().includes(searchText.toLowerCase()))
 
@@ -217,37 +216,68 @@ const SearchDropdown = (props: {
         setSearchText(txt)
     }
 
-    return <div style={props.style}>
-        <input type="text" placeholder="Search/Select Project"
-               value={searchText} onChange={(event) => {
-
-            const text = event.target.value;
-            // when there is text, show the dropdown
-            if (text && text.length > 0) {
-                setDropDownDisplay("block")
-            } else {
-                setDropDownDisplay("none")
-            }
-            handleSetSearchText(text)
+    const childRefs: Record<string, HTMLElement | null> = {}; // Object to hold references to child components
+    const selectedChild = useRef(-1);
+    return <div style={props.style}
+                onKeyDown={(event) => {
+                    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                        if (event.key === "ArrowDown") {
+                            selectedChild.current = Math.min(Object.keys(childRefs).length,
+                                selectedChild.current + 1);
+                        } else {
+                            selectedChild.current = Math.max(-1, selectedChild.current - 1);
+                        }
+                        childRefs[Object.keys(childRefs)[selectedChild.current]]?.focus();
+                    } else {
+                        childRefs["search_input"]?.focus();
+                    }
+                }}>
+        <input ref={(ref) => {
+            childRefs["search_input"] = ref;
         }}
-               onClick={showDropdown}
+               type="text" placeholder="Search/Select Project"
+               value={searchText}
+               onChange={(event) => {
+                   const text = event.target.value;
+                   // when there is text, show the dropdown
+                   if (text && text.length > 0) {
+                       setDropDownDisplay("block")
+                   } else {
+                       setDropDownDisplay("none")
+                   }
+                   handleSetSearchText(text)
+               }}
+               onFocus={showDropdown}
+               onBlur={(event) => {
+                   if (event.relatedTarget && event.relatedTarget.id.startsWith("project_choice")) {
+                       // Let the project_choice button handle the click event
+                       // Otherwise when we lose focus and hide the dropdown, the button will not be triggered.
+                   } else {
+                       hideDropdown()
+                   }
+               }}
         />
 
-        <div style={{
+        <div id={"project_choices"} style={{
             display: dropDownDisplay,
             position: "absolute",
             zIndex: 1
-        }}>
-            <VStack>
+        }}
+        >
+            <VStack spacing={1}>
                 {filtered.map((project: OptionValueType) => {
+                    const childId = `project_choice_${project.name}`;
                     return (
-                        <button onClick={(event) => {
+                        <button id={childId} onClick={(event) => {
                             // console.log(event.target) // html element
-                            console.log(`Project selected. ${project.name}`)
                             props.handleSetOptionValues([getProjectOptionValue(project)])
-                            setDropDownDisplay("none")
+                            hideDropdown()
                             handleSetSearchText("");
-                        }} key={project.name}>{project.name}</button>
+                        }} key={project.name}
+                                ref={(ref) => {
+                                    childRefs[childId] = ref;
+                                }}
+                        >{project.name}</button>
                     )
                 })}
             </VStack>
@@ -257,6 +287,10 @@ const SearchDropdown = (props: {
 
     function showDropdown() {
         setDropDownDisplay("block")
+    }
+
+    function hideDropdown() {
+        setDropDownDisplay("none")
     }
 }
 
@@ -281,7 +315,7 @@ function ProjectFilter(props: {
 
     return <div>
 
-        <div style={{width: "100%", position: "absolute", alignItems: "center"}}>
+        <div style={{position: "absolute", alignItems: "center"}}>
             {/*Add h2 to match the height of Project Header*/}
             <h2></h2>
             <SearchDropdown data={projectsAndAll}
