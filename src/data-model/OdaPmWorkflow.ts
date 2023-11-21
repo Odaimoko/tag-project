@@ -68,6 +68,10 @@ class OdaPmWorkflow implements I_OdaPmWorkflow {
     getProjectPath(): string {
         return getProjectPathFromSTask(this.boundTask, true);
     }
+
+    getFirstProject(): OdaPmProject | null {
+        return this.projects.length > 0 ? this.projects[0] : null;
+    }
 }
 
 const globalWorkflowMap: Map<string, OdaPmWorkflow> = new Map<string, OdaPmWorkflow>();

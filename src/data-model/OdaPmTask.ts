@@ -188,6 +188,11 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmProjectTask 
         return getProjectPathFromSTask(this.boundTask, true);
     }
 
+
+    getFirstProject = (): OdaPmProject | null => {
+        if (this.projects.length == 0) return null;
+        return this.projects[0];
+    }
     // endregion
 
     // debug

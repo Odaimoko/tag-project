@@ -180,6 +180,7 @@ function getAllProjectsAndLinkTasks(pmTasks: OdaPmTask[]): OdaPmProject[] {
 }
 
 export class OdaPmDb implements I_EvtListener {
+    inited = false;
     workflows: I_OdaPmWorkflow[];
     workflowTags: string[];
     stepTags: string[];
@@ -187,7 +188,9 @@ export class OdaPmDb implements I_EvtListener {
     boundReloadWorkflows: () => void;
     pmTasks: OdaPmTask[]
     pmTags: string[];
+    // 0.2.0
     pmProjects: OdaPmProject[]
+    danglingTasks: OdaPmTask[]
 
     constructor(emitter: EventEmitter) {
         this.emitter = emitter;
@@ -206,6 +209,7 @@ export class OdaPmDb implements I_EvtListener {
 
 // region Init
     private reloadDb() {
+        this.inited = false;
         this.workflows = getAllWorkflows()
         this.workflowTags = getWorkflowTypeTags()
         this.stepTags = this.initStepTags(this.workflows);
@@ -217,7 +221,9 @@ export class OdaPmDb implements I_EvtListener {
         this.pmProjects = getAllProjectsAndLinkTasks(this.pmTasks)
 
         this.linkProject(this.pmProjects, this.pmTasks, this.workflows);
+        this.danglingTasks = this.getDanglingTasks(this.pmTasks);
         this.emitter.emit(Evt_DbReloaded)
+        this.inited = true;
         assertOnDbRefreshed(this);
         devLog("Database Reloaded.")
     }
@@ -259,6 +265,16 @@ export class OdaPmDb implements I_EvtListener {
             const linkingProject: OdaPmProject = projectTree.getProjectByPmWorkflow(pmWorkflow);
             linkingProject.linkWorkflow(pmWorkflow);
         }
+    }
+
+    /**
+     * A dangling task's project does not match its workflows, so it will not show in any filters.
+     * Should be called after linkProject.
+     */
+    getDanglingTasks(pmTasks: OdaPmTask[]) {
+        return pmTasks.filter(k =>
+            k.getFirstProject() !== k.type.getFirstProject()
+        )
     }
 
 // endregion

@@ -86,6 +86,7 @@ export interface I_OdaPmProjectTask {
      * Called when no project is added. Returns the path of the markdown path.
      */
     getProjectPath: () => string;
+    getFirstProject: () => OdaPmProject | null;
 }
 
 // Unit Test

@@ -175,6 +175,15 @@ function initAssertFunctions(pmDb: OdaPmDb) {
     )
 }
 
+async function test_UT_020_4(pmDb: OdaPmDb) {
+    const danglingTasks = pmDb.danglingTasks;
+
+    const ut_020_4_dangling_tasks = danglingTasks.filter(k => {
+        return k.summary === "UT_020_4_task_incorrect"
+    })
+    expect(ut_020_4_dangling_tasks, "Should have one task: UT_020_4_task_incorrect").length(1);
+}
+
 // make this async so the failing tests won't block the plugin and database initialization process.
 export async function assertOnDbRefreshed(pmDb: OdaPmDb) {
     devLog("Assert start: on db refreshed...")
@@ -186,5 +195,6 @@ export async function assertOnDbRefreshed(pmDb: OdaPmDb) {
     test_UT_020_1(pmDb);
     test_UT_020_2(pmDb);
     test_UT_020_3(pmDb);
+    test_UT_020_4(pmDb);
     devLog("Assert end: on db refreshed...")
 }
