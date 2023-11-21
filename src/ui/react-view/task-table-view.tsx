@@ -140,7 +140,7 @@ function rectifyOdaTaskOnMdTaskChanged(oTask: OdaPmTask, plugin: OdaPmToolPlugin
     }
 }
 
-export function getDefaultTableStyleGetters(minSummaryWidth: number | string = 500, maxSummaryWidth: number | string = 300, summaryColumn = 0) {
+export function getDefaultTableStyleGetters(minSummaryWidth: number | string = 500, maxSummaryWidth: number | string = 300, summaryColumn = 0, isCellCentered = true) {
     // striped rows. center step cell but not summary cell.
     // TODO performance, we instantiate a lot of dictionaries here
     const evenBg: React.CSSProperties = {backgroundColor: "rgba(0,0,0,0.2)"};
@@ -153,7 +153,7 @@ export function getDefaultTableStyleGetters(minSummaryWidth: number | string = 5
     const summaryEvenCellStyle = {...summaryCellStyle, ...evenBg}
     const summaryOddCellStyle = {...summaryCellStyle, ...oddBg}
 
-    const stepCellStyle: React.CSSProperties = {textAlign: "center"}
+    const stepCellStyle: React.CSSProperties = {textAlign: isCellCentered ? "center" : "inherit"}
     const stepEvenCellStyle = {...stepCellStyle, ...evenBg}
     const stepOddCellStyle = {...stepCellStyle, ...oddBg}
 

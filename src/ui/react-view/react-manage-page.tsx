@@ -31,23 +31,15 @@ function DanglingTasksFixPanel({db}: { db: OdaPmDb }) {
             <div> {task.type.getFirstProject()?.name}</div>
         </VStack>]
     })
-    const {cellStyleGetter, headStyleGetter} = getDefaultTableStyleGetters("unset", "unset");
+    const {cellStyleGetter, headStyleGetter} = getDefaultTableStyleGetters(
+        "unset", "unset",
+        0, false
+    );
     return <div>
         <DataTable tableTitle={"SomeTitleNtImp"} headers={headers} rows={rows}
                    thStyleGetter={headStyleGetter}
                    cellStyleGetter={cellStyleGetter}
         />
-        {/*{danglingTasks.map((task, i) => {*/}
-        {/*    return <div key={i}>*/}
-        {/*        <button onClick={() => {*/}
-        {/*            // db.fixDanglingTask(task)*/}
-        {/*        }}>*/}
-        {/*            Fix*/}
-        {/*        </button> {task.summary} in Project {task.getFirstProject()?.name}*/}
-        {/*        <OdaTaskSummaryCell key={`${task.boundTask.path}:${task.boundTask.line}`} oTask={task}*/}
-        {/*                            taskFirstColumn={task.summary}/>*/}
-        {/*    </div>*/}
-        {/*})}*/}
     </div>
 }
 
