@@ -77,17 +77,20 @@ const WorkflowCheckboxes = ({nameables, displayNames, handleSetDisplayNames}: {
         })}
     </div>;
 };
-    
-const WorkflowFilterCheckbox = ({workflow, displayNames, setDisplayNames}: {
+export const WorkflowFilterCheckbox = ({workflow, displayNames, setDisplayNames, showCheckBox}: {
     workflow: I_OdaPmWorkflow,
-    displayNames: string[],
-    setDisplayNames: React.Dispatch<React.SetStateAction<string[]>>
+    displayNames?: string[],
+    setDisplayNames?: React.Dispatch<React.SetStateAction<string[]>>,
+    showCheckBox?: boolean
 }) => {
+    showCheckBox = showCheckBox ?? true; // backward compatibility. 
+    // if showCheckBox, displayNames and setDisplayNames must be defined
+    console.assert(!showCheckBox || (displayNames !== undefined && setDisplayNames !== undefined))
     const plugin = useContext(PluginContext);
-
     const wfName = workflow.name;
 
     function tickCheckbox() {
+        if (!setDisplayNames || !displayNames) return;
         // invert the checkbox
         const v = !displayNames.includes(wfName)
         const newArr = v ? [...displayNames, wfName] : displayNames.filter(k => k != wfName)
@@ -96,22 +99,23 @@ const WorkflowFilterCheckbox = ({workflow, displayNames, setDisplayNames}: {
 
     // inline-block: make this check box a whole element. It won't be split into multiple sub-elements when layout.
     // block will start a new line, inline will not, so we use inline-block
+    const content = <>
+        <InternalLinkView
+            content={<span style={iconViewAsAWholeStyle}>
+                {getIconByWorkflow(workflow)}
+                <label style={{marginLeft: 3}}>{wfName}</label>
+            </span>}
+            onIconClicked={() =>
+                // Go to workflow def
+                openTaskPrecisely(plugin.app.workspace, workflow.boundTask)}
+            onContentClicked={tickCheckbox}/>
+    </>;
     return <span style={{display: "inline-block", marginRight: 15}}>
-        <ExternalControlledCheckbox
-            content={<>
-                <InternalLinkView
-                    content={<span style={iconViewAsAWholeStyle}>
-                        {getIconByWorkflow(workflow)}
-                        <label style={{marginLeft: 3}}>{wfName}</label>
-                    </span>}
-                    onIconClicked={() =>
-                        // Go to workflow def
-                        openTaskPrecisely(plugin.app.workspace, workflow.boundTask)}
-                    onContentClicked={tickCheckbox}/>
-            </>}
+        {showCheckBox ? <ExternalControlledCheckbox
+            content={content}
             onChange={tickCheckbox}
-            externalControl={displayNames.includes(wfName)}
-        />
+            externalControl={displayNames !== undefined && displayNames.includes(wfName)}
+        /> : content}
     </span>
 
 }

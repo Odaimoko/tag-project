@@ -3,14 +3,69 @@ import React, {useContext, useEffect, useState} from "react";
 import {PluginContext} from "../manage-page-view";
 import {EventEmitter} from "events";
 import {getSettings, setSettingsValueAndSave} from "../../Settings";
-import {OdaPmDbProvider} from "../../data-model/odaPmDb";
+import {OdaPmDb, OdaPmDbProvider} from "../../data-model/odaPmDb";
 import {Evt_DbReloaded, Evt_JumpTask, Evt_JumpWorkflow} from "../../typing/dataview-event";
 import {devLog} from "../../utils/env-util";
 import {OdaPmTask} from "../../data-model/OdaPmTask";
-import {TaskTableView} from "./task-table-view";
-import {WorkflowFilter} from "./workflow-filter";
+import {OdaTaskSummaryCell, TaskTableView} from "./task-table-view";
+import {WorkflowFilter, WorkflowFilterCheckbox} from "./workflow-filter";
 import {TagFilter} from "./tag-filter";
 import {ProjectFilter, ProjectFilterOptionValue_All} from "./project-filter";
+import {HStack, VStack} from "./view-template/h-stack";
+import {ObsidianIconView} from "./view-template/icon-view";
+import {DataTable} from "./view-template/data-table";
+
+function DanglingTasksFixPanel({db}: { db: OdaPmDb }) {
+    const danglingTasks = db.danglingTasks;
+    // Task\n Workflow
+    // Project\n Project
+    const headers = ["Task/Workflow", "Project"];
+    const rows = danglingTasks.map((task, i) => {
+        return [<VStack spacing={2}>
+            <OdaTaskSummaryCell key={`${task.boundTask.path}:${task.boundTask.line}`} oTask={task}
+                                taskFirstColumn={task.summary} showCheckBox={false}/>
+            <WorkflowFilterCheckbox showCheckBox={false} workflow={task.type}/>
+
+        </VStack>, <VStack spacing={2}>
+            <div>{task.getFirstProject()?.name} </div>
+            <div> {task.type.getFirstProject()?.name}</div>
+        </VStack>]
+    })
+    return <div>
+        <DataTable tableTitle={"He"} headers={headers} rows={rows}
+                   tableStyle={{borderCollapse: "collapse",}}
+                   thStyle={{border: "solid", borderWidth: 1}}
+
+        />
+        {/*{danglingTasks.map((task, i) => {*/}
+        {/*    return <div key={i}>*/}
+        {/*        <button onClick={() => {*/}
+        {/*            // db.fixDanglingTask(task)*/}
+        {/*        }}>*/}
+        {/*            Fix*/}
+        {/*        </button> {task.summary} in Project {task.getFirstProject()?.name}*/}
+        {/*        <OdaTaskSummaryCell key={`${task.boundTask.path}:${task.boundTask.line}`} oTask={task}*/}
+        {/*                            taskFirstColumn={task.summary}/>*/}
+        {/*    </div>*/}
+        {/*})}*/}
+    </div>
+}
+
+function FixDanglingTasks({db}: { db: OdaPmDb }) {
+    const [panelShown, setPanelShown] = useState(true);
+    const danglingTasks = db.danglingTasks;
+    if (danglingTasks.length === 0) return <></>;
+
+    return <div><HStack spacing={5} style={{alignItems: "center"}}>
+        <ObsidianIconView style={{color: "var(--color-red)"}} iconName={"alert-circle"}/>
+        <button onClick={() => setPanelShown(!panelShown)}>
+            Fix {danglingTasks.length} dangling task(s)
+        </button>
+    </HStack>
+
+        {panelShown ? <DanglingTasksFixPanel db={db}/> : null}
+    </div>;
+}
 
 export function ReactManagePage({eventCenter}: {
     eventCenter?: EventEmitter
@@ -134,10 +189,14 @@ export function ReactManagePage({eventCenter}: {
     // endregion
     return (
         <div>
+            <HStack>
 
-            <ProjectFilter projects={projects} displayNames={displayProjectOptionValues}
-                           handleSetDisplayNames={handleSetDisplayProjects}
-            />
+                <ProjectFilter projects={projects} displayNames={displayProjectOptionValues}
+                               handleSetDisplayNames={handleSetDisplayProjects}
+                />
+            </HStack>
+            <FixDanglingTasks db={db}/>
+
             <WorkflowFilter workflows={workflows} displayNames={displayWorkflowNames}
                             handleSetDisplayNames={handleSetDisplayWorkflows}/>
             <TagFilter

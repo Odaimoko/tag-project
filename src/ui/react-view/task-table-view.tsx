@@ -45,10 +45,12 @@ function notifyTask(oTask: OdaPmTask, reason: string) {
  * @param taskFirstColumn
  * @constructor
  */
-const OdaTaskSummaryCell = ({oTask, taskFirstColumn}: {
+export const OdaTaskSummaryCell = ({oTask, taskFirstColumn, showCheckBox}: {
     oTask: OdaPmTask,
-    taskFirstColumn: IRenderable
+    taskFirstColumn: IRenderable,
+    showCheckBox?: boolean
 }) => {
+    showCheckBox = showCheckBox ?? true // backward compatibility
     const plugin = useContext(PluginContext);
     const workspace = plugin.app.workspace;
     const [summaryView, setSummaryView] = useState<ReactElement>();
@@ -87,20 +89,23 @@ const OdaTaskSummaryCell = ({oTask, taskFirstColumn}: {
         })
     }, []);
 
+    const checkBoxContent = <span>
+        <InternalLinkView content={summaryView} onIconClicked={openThisTask} onContentClicked={openThisTask}/>
+    </span>;
     return <HStack spacing={5}>
         {getIconByTask(oTask)}
-        <ExternalControlledCheckbox
-            content={<span>
-                <InternalLinkView content={summaryView}/>
-            </span>}
+        {showCheckBox ? <ExternalControlledCheckbox
+            content={checkBoxContent}
             onChange={tickSummary}
-            onLabelClicked={() => {
-                openTaskPrecisely(workspace, oTask.boundTask);
-            }}
+            onLabelClicked={openThisTask}
             externalControl={oTask.stepCompleted()}
-        />
+        /> : checkBoxContent}
 
     </HStack>;
+
+    function openThisTask() {
+        openTaskPrecisely(workspace, oTask.boundTask);
+    }
 
 
 };
