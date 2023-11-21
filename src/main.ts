@@ -1,4 +1,4 @@
-import {Editor, MarkdownFileInfo, MarkdownView, Plugin} from 'obsidian';
+import {Editor, EditorPosition, MarkdownFileInfo, MarkdownView, Plugin} from 'obsidian';
 import {Icon_ManagePage, ManagePageView, ManagePageViewId} from "./ui/obsidian/manage-page-view";
 import {ONotice} from "./utils/o-notice";
 import {SettingsProvider, TPM_DEFAULT_SETTINGS, TPMSettings, TPMSettingsTab} from "./Settings";
@@ -11,17 +11,22 @@ import {
 } from "./typing/dataview-event";
 import {EventEmitter} from "events";
 import {OdaPmDb, OdaPmDbProvider} from "./data-model/odaPmDb";
-import {addTagText, I_OdaPmWorkflow} from "./data-model/workflow-def";
+import {addTagText, getWorkflowNameFromRawText, I_OdaPmWorkflow} from "./data-model/workflow-def";
 import {rewriteTask} from "./utils/io-util";
 import {WorkflowSuggestionModal} from "./ui/obsidian/workflow-suggestion-modal";
 import {Icon_HelpPage, PmHelpPageView, PmHelpPageViewId} from "./ui/obsidian/help-page-view";
 import {assertOnPluginInit, devLog} from "./utils/env-util";
 import {OdaPmTask} from "./data-model/OdaPmTask";
+import {ProjectSuggestionModal} from "./ui/obsidian/project-suggestion-modal";
+import {Tag_Prefix_Project} from "./data-model/OdaPmProject";
 
 export const PLUGIN_NAME = 'Tag Project';
 export const CmdPal_OpenManagePage = `Open Manage Page`; // `Open ${Desc_ManagePage}`
 export const CmdPal_SetWorkflowToTask = 'Set workflow';
+export const CmdPal_SetProject = 'Set Project';
 export const CmdPal_JumpToManagePage = `Jump To Manage Page`;
+
+
 export default class OdaPmToolPlugin extends Plugin {
     settings: TPMSettings;
     private emitter: EventEmitter;
@@ -106,6 +111,13 @@ export default class OdaPmToolPlugin extends Plugin {
                 this.addWorkflowToMdTask(editor, view);
             }
         });
+        this.addCommand({
+            id: 'set-project',
+            name: CmdPal_SetProject,
+            editorCallback: (editor: Editor, view: MarkdownView) => {
+                this.addProjectToMdTask(editor, view);
+            }
+        });
         // endregion
 
         this.registerEvent(
@@ -119,7 +131,6 @@ export default class OdaPmToolPlugin extends Plugin {
                             // console.log(leaf.view)
                             // console.log(this.pmDb.pmTasks.filter(k => k.summary == "Open a md task in Manage Page"))
                         });
-
                 });
             })
         )
@@ -132,16 +143,27 @@ export default class OdaPmToolPlugin extends Plugin {
                         .setIcon(Icon_ManagePage)
                         .onClick(async () => {
                             this.addWorkflowToMdTask(editor, view);
-
                         });
 
                 });
             })
         )
+        this.registerEvent(
+            this.app.workspace.on("editor-menu", (menu, editor, view) => {
+                menu.addItem((item) => {
+                    item
+                        .setTitle(CmdPal_SetProject)
+                        .setIcon(Icon_ManagePage)
+                        .onClick(async () => {
+                            this.addProjectToMdTask(editor, view);
+                        });
 
+                });
+            })
+        )
     }
 
-    private checkValidMdTask(filePath: string) {
+    private checkValidMdTask(filePath: string, cursor: EditorPosition) {
         const pageCache = this.app.metadataCache.getCache(filePath);
         /* A task object is like this. A list object is similar but without "task" field.
         {
@@ -162,6 +184,7 @@ export default class OdaPmToolPlugin extends Plugin {
         }
         * */
         const taskCache = pageCache?.listItems?.find(k => k.position.start.line == cursor.line && k.task);
+        // console.log(taskCache)
         // we only process if it's a md task
         if (!taskCache) {
             // console.log(pageCache)
@@ -173,16 +196,15 @@ export default class OdaPmToolPlugin extends Plugin {
     }
 
     private addWorkflowToMdTask(editor: Editor, view: MarkdownView | MarkdownFileInfo) {
-        const cursor = editor.getCursor();
         const filePath = view.file?.path;
         if (!filePath) {
             new ONotice("No markdown file.")
             return; // no file
         }
+        const cursor = editor.getCursor();
+        if (!this.checkValidMdTask(filePath, cursor)) return;
+
         // console.log(`line: ${editor.getLine(cursor.line)}`)
-        if (!this.checkValidMdTask(filePath)) return;
-        
-        // console.log(taskCache)
         const workflow = this.pmDb.getWorkflow(filePath, cursor.line);
         if (workflow) {
             new ONotice("This is a workflow definition, not a task.")
@@ -195,14 +217,77 @@ export default class OdaPmToolPlugin extends Plugin {
             if (!workflow) {
                 return;
             }
+            const targetTag = workflow.tag;
             if (pmTask) {
                 // replace the existent workflow tag
-                const desiredText = `${pmTask.boundTask.text.replace(pmTask.type.tag, workflow.tag)}`;
+                const sTask = pmTask.boundTask;
+                const srcTag = pmTask.type.tag;
+                const desiredText = `${sTask.text.replace(srcTag, targetTag)}`;
                 // console.log(desiredText)
-                rewriteTask(this.app.vault, pmTask.boundTask, pmTask.boundTask.status, desiredText)
+                rewriteTask(this.app.vault, sTask, sTask.status, desiredText)
                 return;
             } else {
-                const desiredText = addTagText(editor.getLine(cursor.line), workflow.tag);
+                const desiredText = addTagText(editor.getLine(cursor.line), targetTag);
+                editor.setLine(cursor.line, desiredText)
+            }
+        }).open();
+    }
+
+    private addProjectToMdTask(editor: Editor, view: MarkdownView | MarkdownFileInfo) {
+        const filePath = view.file?.path;
+        if (!filePath) {
+            new ONotice("No markdown file.")
+            return; // no file
+        }
+        const cursor = editor.getCursor();
+        if (!this.checkValidMdTask(filePath, cursor)) return;
+
+        new ProjectSuggestionModal(this.app, (prj, evt) => {
+            if (!prj) {
+                return;
+            }
+            const sanityCheckProject = getWorkflowNameFromRawText(prj.name);
+            if (prj.name !== sanityCheckProject) {
+                new ONotice(`Cannot add tag: Tag is not valid.\n - [${prj.name}]`)
+                return;
+            }
+            const targetTag = `${Tag_Prefix_Project}${prj.name}`; // project tag
+            // Add to task 
+            const pmTask = this.pmDb.getPmTask(filePath, cursor.line);
+            let writeRawTask = false;
+            if (pmTask) {
+                // replace the existent workflow tag
+                const projectPath = pmTask.getProjectPath();
+                if (projectPath.contains(":")) {
+                    // Defined by a task
+                    const srcTag = `${Tag_Prefix_Project}${pmTask.getFirstProject()?.name}`;
+                    const sTask = pmTask.boundTask;
+                    const desiredText = `${sTask.text.replace(srcTag, targetTag)}`;
+                    // console.log(desiredText)
+                    rewriteTask(this.app.vault, sTask, sTask.status, desiredText)
+                } else {
+                    writeRawTask = true;
+                }
+            }
+
+            // Add to workflow
+            const workflow = this.pmDb.getWorkflow(filePath, cursor.line);
+            if (workflow) {
+                const projectPath = workflow.getProjectPath();
+                if (projectPath.contains(":")) {
+                    // Defined by a task
+                    const srcTag = `${Tag_Prefix_Project}${workflow.getFirstProject()?.name}`;
+                    const sTask = workflow.boundTask;
+                    const desiredText = `${sTask.text.replace(srcTag, targetTag)}`;
+                    // console.log(desiredText)
+                    rewriteTask(this.app.vault, sTask, sTask.status, desiredText)
+                } else {
+                    writeRawTask = true;
+                }
+            }
+            if (writeRawTask) {
+
+                const desiredText = addTagText(editor.getLine(cursor.line), targetTag);
                 editor.setLine(cursor.line, desiredText)
             }
         }).open();
