@@ -176,12 +176,12 @@ function initAssertFunctions(pmDb: OdaPmDb) {
 }
 
 async function test_UT_020_4(pmDb: OdaPmDb) {
-    const danglingTasks = pmDb.danglingTasks;
+    const orphanTasks = pmDb.orphanTasks;
 
-    const ut_020_4_dangling_tasks = danglingTasks.filter(k => {
+    const ut_020_4_orphan_tasks = orphanTasks.filter(k => {
         return k.summary === "UT_020_4_task_incorrect"
     })
-    expect(ut_020_4_dangling_tasks, "Should have one task: UT_020_4_task_incorrect").length(1);
+    expect(ut_020_4_orphan_tasks, "Should have one task: UT_020_4_task_incorrect").length(1);
 }
 
 // make this async so the failing tests won't block the plugin and database initialization process.

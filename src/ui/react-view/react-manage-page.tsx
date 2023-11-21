@@ -10,17 +10,18 @@ import {OdaPmTask} from "../../data-model/OdaPmTask";
 import {getDefaultTableStyleGetters, OdaTaskSummaryCell, TaskTableView} from "./task-table-view";
 import {WorkflowFilter, WorkflowFilterCheckbox} from "./workflow-filter";
 import {TagFilter} from "./tag-filter";
-import {ProjectFilter, ProjectFilterOptionValue_All} from "./project-filter";
+import {ProjectFilter, ProjectFilterName_All, ProjectFilterOptionValue_All} from "./project-filter";
 import {HStack, VStack} from "./view-template/h-stack";
 import {ObsidianIconView} from "./view-template/icon-view";
 import {DataTable} from "./view-template/data-table";
 
-function DanglingTasksFixPanel({db}: { db: OdaPmDb }) {
-    const danglingTasks = db.danglingTasks;
+
+function OrphanTasksFixPanel({db}: { db: OdaPmDb }) {
+    const orphanTasks = db.orphanTasks;
     // Task\n Workflow
     // Project\n Project
     const headers = ["Task/Workflow", "Project"];
-    const rows = danglingTasks.map((task, i) => {
+    const rows = orphanTasks.map((task, i) => {
         return [<VStack spacing={2}>
             <OdaTaskSummaryCell key={`${task.boundTask.path}:${task.boundTask.line}`} oTask={task}
                                 taskFirstColumn={task.summary} showCheckBox={false} showWorkflowIcon={false}/>
@@ -43,20 +44,37 @@ function DanglingTasksFixPanel({db}: { db: OdaPmDb }) {
     </div>
 }
 
-function FixDanglingTasks({db}: { db: OdaPmDb }) {
+function FixOrphanTasks({db}: { db: OdaPmDb }) {
     const [panelShown, setPanelShown] = useState(true);
-    const danglingTasks = db.danglingTasks;
-    if (danglingTasks.length === 0) return <></>;
+    const orphanTasks = db.orphanTasks;
+    if (orphanTasks.length === 0) return <></>;
 
     return <div><HStack spacing={5} style={{alignItems: "center"}}>
         <ObsidianIconView style={{color: "var(--color-red)"}} iconName={"alert-circle"}/>
         <button onClick={() => setPanelShown(!panelShown)}>
-            Fix {danglingTasks.length} dangling task(s)
+            Fix {orphanTasks.length} orphan task(s)
         </button>
+        <VStack>
+
+            <label>
+                An orphan task's project does not match its workflow's.
+            </label>
+            <label>
+                It will not show except in <b>{ProjectFilterName_All}</b>.
+            </label>
+        </VStack>
     </HStack>
 
-        {panelShown ? <DanglingTasksFixPanel db={db}/> : null}
+        {panelShown ? <OrphanTasksFixPanel db={db}/> : null}
     </div>;
+}
+
+function isInAnyProject(projectNames: string[], projectTask: I_OdaPmProjectTask) {
+    // TODO Performance
+    if (projectNames.length === 0) return true;
+    if (projectNames.includes(ProjectFilterOptionValue_All)) return true;
+    const b = projectNames.some(k => projectTask.isInProject(k));
+    return b;
 }
 
 export function ReactManagePage({eventCenter}: {
@@ -80,6 +98,7 @@ export function ReactManagePage({eventCenter}: {
     }
 
     function jumpWf(wf: I_OdaPmWorkflow) {
+        setDisplayProjectOptionValues([ProjectFilterOptionValue_All]);
         setDisplayWorkflowNames([wf.name])
         setDisplayTags([])
     }
@@ -102,10 +121,11 @@ export function ReactManagePage({eventCenter}: {
     const db = OdaPmDbProvider.get();
     let workflows = db?.workflows || [];
     const projects = db?.pmProjects || [];
+
+    //region Display Variables
     // Use workflow names as filters' state instead. previously we use workflows themselves as state, but this requires dataview to be initialized.
     // However, this component might render before dataview is ready. The partially ready workflows will be used as the initial value, which is incorrect.
     // This is to fix the bug: On open Obsidian, the filter may not work.
-
     // Load from settings. settingsDisplayWorkflowNames is not directly used. It is also filtered against projects.
     const [settingsDisplayWorkflowNames, setDisplayWorkflowNames] = useState(getSettings()?.display_workflow_names as string[]);
     const [displayTags, setDisplayTags] = useState(getSettings()?.manage_page_display_tags as string[]);
@@ -115,7 +135,7 @@ export function ReactManagePage({eventCenter}: {
     function initDisplayProjectOptionValues() {
         const settingsValue = getSettings()?.manage_page_display_projects as string[];
         if (settingsValue.length === 0) {
-            settingsValue.push(ProjectFilterOptionValue_All);
+            settingsValue.push(ProjectFilterOptionValue_All); // Default show all
         }
         return settingsValue;
     }
@@ -140,24 +160,23 @@ export function ReactManagePage({eventCenter}: {
         setDisplayProjectOptionValues(names)
     }
 
-    const rectifiedDisplayTags = displayTags.filter(k => db?.pmTags.contains(k))
-    const rectifiedExcludedTags = excludedTags.filter(k => db?.pmTags.contains(k))
+    // endregion
 
     // place all hooks before return. React doesn't allow the order to be changed.
     if (workflows.length === 0 || db === null)
         return <EmptyWorkflowView/>
 
-    function isInAnyProject(projectNames: string[], projectTask: I_OdaPmProjectTask) {
-        // TODO Performance
-        if (projectNames.length === 0) return true;
-        if (projectNames.includes(ProjectFilterOptionValue_All)) return true;
-        const b = projectNames.some(k => projectTask.isInProject(k));
-        return b;
-    }
+    // region Filtering
+    const rectifiedDisplayTags = displayTags.filter(k => db?.pmTags.contains(k))
+    const rectifiedExcludedTags = excludedTags.filter(k => db?.pmTags.contains(k))
 
     // Filter
     // Show only this project's workflows
-    workflows = workflows.filter(k => isInAnyProject(displayProjectOptionValues, k));
+    workflows = workflows.filter(isWorkflowInProject);
+
+    function isWorkflowInProject(k: I_OdaPmWorkflow) {
+        return isInAnyProject(displayProjectOptionValues, k);
+    }
 
     // settingsDisplayWorkflowNames may contain workflows from other projects. We filter them out.
     const displayWorkflowNames = settingsDisplayWorkflowNames.filter(k => workflows.some(wf => wf.name === k));
@@ -165,8 +184,8 @@ export function ReactManagePage({eventCenter}: {
         return displayWorkflowNames.includes(k.name);
     });
 
-    let filteredTasks = db.getFilteredTasks(displayWorkflows, rectifiedDisplayTags, rectifiedExcludedTags);
-    filteredTasks = filteredTasks.filter(k => isInAnyProject(displayProjectOptionValues, k))
+    const filteredTasks = db.getFilteredTasks(displayWorkflows, rectifiedDisplayTags, rectifiedExcludedTags)
+        .filter(k => isInAnyProject(displayProjectOptionValues, k))
     // console.log(`ReactManagePage Render. All tasks: ${tasks_with_workflow.length}. Filtered Tasks: ${filteredTasks.length}. Workflow: ${curWfName}. IncludeCompleted: ${includeCompleted}`)
 
     const pmTags = db.pmTags || [];
@@ -187,7 +206,7 @@ export function ReactManagePage({eventCenter}: {
                                handleSetDisplayNames={handleSetDisplayProjects}
                 />
             </HStack>
-            <FixDanglingTasks db={db}/>
+            <FixOrphanTasks db={db}/>
 
             <WorkflowFilter workflows={workflows} displayNames={displayWorkflowNames}
                             handleSetDisplayNames={handleSetDisplayWorkflows}/>

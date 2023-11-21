@@ -5,7 +5,7 @@ import {FilterHeadHStack} from "./workflow-filter";
 import {StyleProps, VStack} from "./view-template/h-stack";
 import {devLog} from "../../utils/env-util";
 
-const ProjectFilterName_All = "All Projects";
+export const ProjectFilterName_All = "All Projects";
 export const ProjectFilterOptionValue_All = "###ALL###";
 
 interface I_OptionItem {

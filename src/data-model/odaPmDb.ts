@@ -190,7 +190,7 @@ export class OdaPmDb implements I_EvtListener {
     pmTags: string[];
     // 0.2.0
     pmProjects: OdaPmProject[]
-    danglingTasks: OdaPmTask[]
+    orphanTasks: OdaPmTask[]
 
     constructor(emitter: EventEmitter) {
         this.emitter = emitter;
@@ -221,7 +221,7 @@ export class OdaPmDb implements I_EvtListener {
         this.pmProjects = getAllProjectsAndLinkTasks(this.pmTasks)
 
         this.linkProject(this.pmProjects, this.pmTasks, this.workflows);
-        this.danglingTasks = this.getDanglingTasks(this.pmTasks);
+        this.orphanTasks = this.getOrphanTasks(this.pmTasks);
         this.emitter.emit(Evt_DbReloaded)
         this.inited = true;
         assertOnDbRefreshed(this);
@@ -268,10 +268,10 @@ export class OdaPmDb implements I_EvtListener {
     }
 
     /**
-     * A dangling task's project does not match its workflows, so it will not show in any filters.
+     * An orphan task's project does not match its workflow's, so it will only show in ==All projects==.
      * Should be called after linkProject.
      */
-    getDanglingTasks(pmTasks: OdaPmTask[]) {
+    getOrphanTasks(pmTasks: OdaPmTask[]) {
         return pmTasks.filter(k =>
             k.getFirstProject() !== k.type.getFirstProject()
         )

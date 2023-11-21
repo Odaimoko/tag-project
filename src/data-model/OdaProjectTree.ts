@@ -49,4 +49,11 @@ export class OdaProjectTree {
     getProjectByPmWorkflow(pmWorkflow: I_OdaPmWorkflow): OdaPmProject {
         return getProjectByTaskPath(this.projectDict, pmWorkflow.getProjectPath());
     }
+
+    getProjectByName(name: string) {
+        if (this.projectDict.hasOwnProperty(name)) {
+            return this.projectDict[name];
+        }
+        return null;
+    }
 }
