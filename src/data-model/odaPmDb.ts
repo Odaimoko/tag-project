@@ -221,7 +221,7 @@ export class OdaPmDb implements I_EvtListener {
         this.pmProjects = getAllProjectsAndLinkTasks(this.pmTasks)
 
         this.linkProject(this.pmProjects, this.pmTasks, this.workflows);
-        this.orphanTasks = this.getOrphanTasks(this.pmTasks);
+        this.orphanTasks = this.initOrphanTasks(this.pmTasks);
         this.emitter.emit(Evt_DbReloaded)
         this.inited = true;
         assertOnDbRefreshed(this);
@@ -271,9 +271,12 @@ export class OdaPmDb implements I_EvtListener {
      * An orphan task's project does not match its workflow's, so it will only show in ==All projects==.
      * Should be called after linkProject.
      */
-    getOrphanTasks(pmTasks: OdaPmTask[]) {
-        return pmTasks.filter(k =>
-            k.getFirstProject() !== k.type.getFirstProject()
+    initOrphanTasks(pmTasks: OdaPmTask[]) {
+        return pmTasks.filter(k => {
+                // console.log(k.getFirstProject()?.name, k.type.getFirstProject()?.name, k.getFirstProject()?.internalKey, k.type.getFirstProject()?.internalKey, k.getFirstProject() !== k.type.getFirstProject())
+                // name is the most consistent comparison. internalKey and reference are fragile. 
+                return k.getFirstProject()?.name !== k.type.getFirstProject()?.name; // 
+            }
         )
     }
 
