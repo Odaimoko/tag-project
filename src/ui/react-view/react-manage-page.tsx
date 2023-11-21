@@ -1,5 +1,5 @@
 import {I_OdaPmProjectTask, I_OdaPmWorkflow} from "../../data-model/workflow-def";
-import React, {useContext, useEffect, useState} from "react";
+import React, {Fragment, useContext, useEffect, useState} from "react";
 import {PluginContext} from "../manage-page-view";
 import {EventEmitter} from "events";
 import {getSettings, setSettingsValueAndSave} from "../../Settings";
@@ -11,6 +11,8 @@ import {TaskTableView} from "./task-table-view";
 import {FilterHeadHStack, WorkflowFilter} from "./workflow-filter";
 import {TagFilter} from "./tag-filter";
 import {OdaPmProject} from "../../data-model/OdaPmProject";
+import {StyleProps, VStack} from "./view-template/h-stack";
+import {I_Nameable} from "../../data-model/I_Nameable";
 
 const ProjectFilterName_All = "All Projects";
 const ProjectFilterOptionValue_All = "###ALL###";
@@ -137,6 +139,7 @@ export function ReactManagePage({eventCenter}: {
     // endregion
     return (
         <>
+
             <ProjectFilter projects={projects} displayNames={displayProjectOptionValues}
                            handleSetDisplayNames={handleSetDisplayProjects}
             />
@@ -162,14 +165,109 @@ const EmptyWorkflowView = () => {
 }
 
 
+function toggleDropDown(setDropDownDisplay: (value: (((prevState: string) => string) | string)) => void) {
+    setDropDownDisplay((prevState) => {
+            if (prevState === "none") {
+                return "block";
+            } else {
+                return "none";
+            }
+        }
+    )
+}
+
+interface I_OptionItem {
+    name: string,
+    optionValue: string,
+}
+
+type OptionValueType = I_Nameable | I_OptionItem;
+
+function getProjectOptionValue(project: OptionValueType) {
+    // @ts-ignore
+    return Object.keys(project).includes("optionValue") ? project['optionValue'] : project.name;
+}
+
+function getOptionValueName(opValue: string | undefined, listOpValues: OptionValueType[]) {
+    if (opValue === undefined) return null;
+
+    for (const project of listOpValues) {
+        // @ts-ignore
+        if (Object.keys(project).includes("optionValue") && project['optionValue'] === opValue) {
+            return project.name;
+        } else if (
+            project.name === opValue
+        )
+            return project.name
+    }
+    return null;
+}
+
+const SearchDropdown = (props: {
+    data: OptionValueType[]
+    handleSetOptionValues(param: string[]): void;
+} & StyleProps) => {
+    const [searchText, setSearchText] = useState("")
+    const [dropDownDisplay, setDropDownDisplay] = useState("none");
+    console.log(`DropdownEle rendered. ${searchText}`)
+
+    const filtered = props.data.filter(k => k.name.toLowerCase().includes(searchText.toLowerCase()))
+
+    function handleSetSearchText(txt: string) {
+        setSearchText(txt)
+    }
+
+    return <div style={props.style}>
+        <input type="text" placeholder="Search/Select Project"
+               value={searchText} onChange={(event) => {
+
+            const text = event.target.value;
+            // when there is text, show the dropdown
+            if (text && text.length > 0) {
+                setDropDownDisplay("block")
+            } else {
+                setDropDownDisplay("none")
+            }
+            handleSetSearchText(text)
+        }}
+               onClick={showDropdown}
+        />
+
+        <div style={{
+            display: dropDownDisplay,
+            position: "absolute",
+            zIndex: 1
+        }}>
+            <VStack>
+                {filtered.map((project: OptionValueType) => {
+                    return (
+                        <button onClick={(event) => {
+                            // console.log(event.target) // html element
+                            console.log(`Project selected. ${project.name}`)
+                            props.handleSetOptionValues([getProjectOptionValue(project)])
+                            setDropDownDisplay("none")
+                            handleSetSearchText("");
+                        }} key={project.name}>{project.name}</button>
+                    )
+                })}
+            </VStack>
+
+        </div>
+    </div>
+
+    function showDropdown() {
+        setDropDownDisplay("block")
+    }
+}
+
 function ProjectFilter(props: {
     projects: OdaPmProject[],
     handleSetDisplayNames: (names: string[]) => void,
     displayNames: string[]
 }) {
-    const centerStyle = {
+    const headingStyle = {
         display: "flex",
-        justifyContent: "center"
+        justifyContent: "center" // 横向居中
     };
     const projectsAndAll = [
         {
@@ -178,30 +276,28 @@ function ProjectFilter(props: {
         }, ...props.projects
     ]
     // If optionValue is not defined, use name as optionValue
-    type ProjectOptionValue = typeof projectsAndAll[number];
+    // TODO Close when click outside
+    // TODO show when click search inputbox
 
     return <div>
-        <div style={centerStyle}>
-            <FilterHeadHStack>
-                <h2>Project</h2>
 
-                <select style={{fontSize: "medium"}} value={props.displayNames.first()} onChange={(event) => {
-                    props.handleSetDisplayNames([event.target.value])
-                }}>
-                    {projectsAndAll.map((project: ProjectOptionValue) => {
-                        return (
-                            <option key={project.name} value={
-                                // @ts-ignore
-                                Object.keys(project).includes("optionValue") ? project['optionValue'] : project.name
-                            }>{project.name}</option>
-                        )
-                    })}
-                </select>
+        <div style={{width: "100%", position: "absolute", alignItems: "center"}}>
+            {/*Add h2 to match the height of Project Header*/}
+            <h2></h2>
+            <SearchDropdown data={projectsAndAll}
+                            handleSetOptionValues={props.handleSetDisplayNames}/>
+        </div>
+        <div style={headingStyle}>
+
+            <FilterHeadHStack>
+                <h2>Project: {getOptionValueName(props.displayNames.first(), projectsAndAll)}</h2>
             </FilterHeadHStack>
         </div>
-        <label style={centerStyle}>
+
+        <label style={headingStyle}>
             Only shows workflows and tasks in this project.
         </label>
+
     </div>
 }
 
