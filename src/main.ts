@@ -12,20 +12,18 @@ import {
 import {EventEmitter} from "events";
 import {OdaPmDb, OdaPmDbProvider} from "./data-model/odaPmDb";
 import {addTagText, getWorkflowNameFromRawText, I_OdaPmWorkflow} from "./data-model/workflow-def";
-import {rewriteTask} from "./utils/io-util";
+import {rewriteTask, setProjectTagAtPath} from "./utils/io-util";
 import {WorkflowSuggestionModal} from "./ui/obsidian/workflow-suggestion-modal";
 import {Icon_HelpPage, PmHelpPageView, PmHelpPageViewId} from "./ui/obsidian/help-page-view";
 import {assertOnPluginInit, devLog} from "./utils/env-util";
 import {OdaPmTask} from "./data-model/OdaPmTask";
 import {ProjectSuggestionModal} from "./ui/obsidian/project-suggestion-modal";
-import {Tag_Prefix_Project} from "./data-model/OdaPmProject";
 
 export const PLUGIN_NAME = 'Tag Project';
 export const CmdPal_OpenManagePage = `Open Manage Page`; // `Open ${Desc_ManagePage}`
 export const CmdPal_SetWorkflowToTask = 'Set workflow';
 export const CmdPal_SetProject = 'Set Project';
 export const CmdPal_JumpToManagePage = `Jump To Manage Page`;
-
 
 export default class OdaPmToolPlugin extends Plugin {
     settings: TPMSettings;
@@ -227,7 +225,8 @@ export default class OdaPmToolPlugin extends Plugin {
                 rewriteTask(this.app.vault, sTask, sTask.status, desiredText)
                 return;
             } else {
-                const desiredText = addTagText(editor.getLine(cursor.line), targetTag);
+                const lineText = editor.getLine(cursor.line);
+                const desiredText = addTagText(lineText, targetTag);
                 editor.setLine(cursor.line, desiredText)
             }
         }).open();
@@ -248,48 +247,10 @@ export default class OdaPmToolPlugin extends Plugin {
             }
             const sanityCheckProject = getWorkflowNameFromRawText(prj.name);
             if (prj.name !== sanityCheckProject) {
-                new ONotice(`Cannot add tag: Tag is not valid.\n - [${prj.name}]`)
+                new ONotice(`Cannot assign Project: Project name is not a valid Tag.\n - [${prj.name}]`)
                 return;
             }
-            const targetTag = `${Tag_Prefix_Project}${prj.name}`; // project tag
-            // Add to task 
-            const pmTask = this.pmDb.getPmTask(filePath, cursor.line);
-            let writeRawTask = false;
-            if (pmTask) {
-                // replace the existent workflow tag
-                const projectPath = pmTask.getProjectPath();
-                if (projectPath.contains(":")) {
-                    // Defined by a task
-                    const srcTag = `${Tag_Prefix_Project}${pmTask.getFirstProject()?.name}`;
-                    const sTask = pmTask.boundTask;
-                    const desiredText = `${sTask.text.replace(srcTag, targetTag)}`;
-                    // console.log(desiredText)
-                    rewriteTask(this.app.vault, sTask, sTask.status, desiredText)
-                } else {
-                    writeRawTask = true;
-                }
-            }
-
-            // Add to workflow
-            const workflow = this.pmDb.getWorkflow(filePath, cursor.line);
-            if (workflow) {
-                const projectPath = workflow.getProjectPath();
-                if (projectPath.contains(":")) {
-                    // Defined by a task
-                    const srcTag = `${Tag_Prefix_Project}${workflow.getFirstProject()?.name}`;
-                    const sTask = workflow.boundTask;
-                    const desiredText = `${sTask.text.replace(srcTag, targetTag)}`;
-                    // console.log(desiredText)
-                    rewriteTask(this.app.vault, sTask, sTask.status, desiredText)
-                } else {
-                    writeRawTask = true;
-                }
-            }
-            if (writeRawTask) {
-
-                const desiredText = addTagText(editor.getLine(cursor.line), targetTag);
-                editor.setLine(cursor.line, desiredText)
-            }
+            setProjectTagAtPath.call(this, prj, filePath, cursor);
         }).open();
     }
 

@@ -76,6 +76,9 @@ export function getWorkflowNameFromRawText(text: string) {
     return found ? found[0] : null;
 }
 
+export interface I_OdaPmBoundTask {
+    boundTask: STask;
+}
 export interface I_OdaPmProjectTask {
 
     // 0.2.0

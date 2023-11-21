@@ -1,8 +1,7 @@
 import React, {Fragment, ReactNode} from "react";
+import {I_Stylable} from "./icon-view";
 
-export interface StyleProps {
-    style?: React.CSSProperties,
-}
+export type StyleProps = I_Stylable
 
 // https://react.dev/learn/rendering-lists#keeping-list-items-in-order-with-key
 // JSX elements directly inside a map() call always need keys! 

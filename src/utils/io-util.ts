@@ -1,5 +1,8 @@
-import {Vault, Workspace} from "obsidian";
+import {EditorPosition, Vault, Workspace} from "obsidian";
 import {STask} from "obsidian-dataview";
+import {OdaPmProject, Tag_Prefix_Project} from "../data-model/OdaPmProject";
+import {addTagText, I_OdaPmBoundTask, I_OdaPmProjectTask} from "../data-model/workflow-def";
+import {ONotice} from "./o-notice";
 
 // region Copied from dataview
 
@@ -59,4 +62,51 @@ export function openTaskPrecisely(workspace: Workspace, task: STask) {
             },
         }
     );
+}
+
+/**
+ *
+ * @param task
+ * @param tag
+ * @return True if the workflow is defined by a task and the tag is replaced. False we need to use editor.setLine.
+ */
+// need to bind to the plugin instance
+export function setProjectTagToTask(task: I_OdaPmBoundTask & I_OdaPmProjectTask, tag: string) {
+    // replace the existent workflow tag
+    const projectPath = task.getProjectPath();
+    let desiredText;
+    const sTask = task.boundTask;
+    if (projectPath.contains(":")) {
+        // The project is defined by a task tag, so a colon is inside the path.
+        // We need to replace it since we allow only one project per task.
+        const srcTag = `${Tag_Prefix_Project}${task.getFirstProject()?.name}`;
+        desiredText = `${sTask.text.replace(srcTag, tag)}`;
+        // console.log(desiredText)
+    } else {
+        desiredText = addTagText(sTask.text, tag);
+    }
+    rewriteTask(this.app.vault, sTask, sTask.status, desiredText)
+}
+
+// need to bind to the plugin instance
+// setProjectToTaskOrWorkflow.call(this, prj, filePath, cursor, editor);
+export function setProjectTagAtPath(prj: OdaPmProject, filePath: string, cursor: EditorPosition) {
+    const targetTag = `${Tag_Prefix_Project}${prj.name}`; // project tag
+    // Add to task 
+
+    const pmTask = this.pmDb.getPmTask(filePath, cursor.line);
+    if (pmTask) {
+        setProjectTagToTask.call(this, pmTask, targetTag);
+    }
+
+    // Add to workflow
+    const workflow = this.pmDb.getWorkflow(filePath, cursor.line);
+
+    if (workflow) {
+        setProjectTagToTask.call(this, workflow, targetTag);
+    }
+    if (!workflow && !pmTask) {
+        new ONotice("Project can only be added to a task or workflow.")
+        return
+    }
 }
