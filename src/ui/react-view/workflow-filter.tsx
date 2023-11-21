@@ -77,13 +77,16 @@ const WorkflowCheckboxes = ({nameables, displayNames, handleSetDisplayNames}: {
         })}
     </div>;
 };
-export const WorkflowFilterCheckbox = ({workflow, displayNames, setDisplayNames, showCheckBox}: {
+
+export const WorkflowFilterCheckbox = ({workflow, displayNames, setDisplayNames, showCheckBox, showWorkflowIcon}: {
     workflow: I_OdaPmWorkflow,
     displayNames?: string[],
     setDisplayNames?: React.Dispatch<React.SetStateAction<string[]>>,
-    showCheckBox?: boolean
+    showCheckBox?: boolean,
+    showWorkflowIcon?: boolean
 }) => {
-    showCheckBox = showCheckBox ?? true; // backward compatibility. 
+    showCheckBox = showCheckBox ?? true; // backward compatibility.
+    showWorkflowIcon = showWorkflowIcon ?? true;
     // if showCheckBox, displayNames and setDisplayNames must be defined
     console.assert(!showCheckBox || (displayNames !== undefined && setDisplayNames !== undefined))
     const plugin = useContext(PluginContext);
@@ -102,7 +105,7 @@ export const WorkflowFilterCheckbox = ({workflow, displayNames, setDisplayNames,
     const content = <>
         <InternalLinkView
             content={<span style={iconViewAsAWholeStyle}>
-                {getIconByWorkflow(workflow)}
+                {showWorkflowIcon ? getIconByWorkflow(workflow) : null}
                 <label style={{marginLeft: 3}}>{wfName}</label>
             </span>}
             onIconClicked={() =>

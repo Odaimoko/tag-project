@@ -7,7 +7,7 @@ import {OdaPmDb, OdaPmDbProvider} from "../../data-model/odaPmDb";
 import {Evt_DbReloaded, Evt_JumpTask, Evt_JumpWorkflow} from "../../typing/dataview-event";
 import {devLog} from "../../utils/env-util";
 import {OdaPmTask} from "../../data-model/OdaPmTask";
-import {OdaTaskSummaryCell, TaskTableView} from "./task-table-view";
+import {getDefaultTableStyleGetters, OdaTaskSummaryCell, TaskTableView} from "./task-table-view";
 import {WorkflowFilter, WorkflowFilterCheckbox} from "./workflow-filter";
 import {TagFilter} from "./tag-filter";
 import {ProjectFilter, ProjectFilterOptionValue_All} from "./project-filter";
@@ -23,19 +23,19 @@ function DanglingTasksFixPanel({db}: { db: OdaPmDb }) {
     const rows = danglingTasks.map((task, i) => {
         return [<VStack spacing={2}>
             <OdaTaskSummaryCell key={`${task.boundTask.path}:${task.boundTask.line}`} oTask={task}
-                                taskFirstColumn={task.summary} showCheckBox={false}/>
-            <WorkflowFilterCheckbox showCheckBox={false} workflow={task.type}/>
+                                taskFirstColumn={task.summary} showCheckBox={false} showWorkflowIcon={false}/>
+            <WorkflowFilterCheckbox workflow={task.type} showCheckBox={false} showWorkflowIcon={false}/>
 
         </VStack>, <VStack spacing={2}>
             <div>{task.getFirstProject()?.name} </div>
             <div> {task.type.getFirstProject()?.name}</div>
         </VStack>]
     })
+    const {cellStyleGetter, headStyleGetter} = getDefaultTableStyleGetters("unset", "unset");
     return <div>
-        <DataTable tableTitle={"He"} headers={headers} rows={rows}
-                   tableStyle={{borderCollapse: "collapse",}}
-                   thStyle={{border: "solid", borderWidth: 1}}
-
+        <DataTable tableTitle={"SomeTitleNtImp"} headers={headers} rows={rows}
+                   thStyleGetter={headStyleGetter}
+                   cellStyleGetter={cellStyleGetter}
         />
         {/*{danglingTasks.map((task, i) => {*/}
         {/*    return <div key={i}>*/}

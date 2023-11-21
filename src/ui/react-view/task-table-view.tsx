@@ -45,12 +45,14 @@ function notifyTask(oTask: OdaPmTask, reason: string) {
  * @param taskFirstColumn
  * @constructor
  */
-export const OdaTaskSummaryCell = ({oTask, taskFirstColumn, showCheckBox}: {
+export const OdaTaskSummaryCell = ({oTask, taskFirstColumn, showCheckBox, showWorkflowIcon}: {
     oTask: OdaPmTask,
     taskFirstColumn: IRenderable,
     showCheckBox?: boolean
+    showWorkflowIcon?: boolean
 }) => {
     showCheckBox = showCheckBox ?? true // backward compatibility
+    showWorkflowIcon = showWorkflowIcon ?? true
     const plugin = useContext(PluginContext);
     const workspace = plugin.app.workspace;
     const [summaryView, setSummaryView] = useState<ReactElement>();
@@ -93,7 +95,7 @@ export const OdaTaskSummaryCell = ({oTask, taskFirstColumn, showCheckBox}: {
         <InternalLinkView content={summaryView} onIconClicked={openThisTask} onContentClicked={openThisTask}/>
     </span>;
     return <HStack spacing={5}>
-        {getIconByTask(oTask)}
+        {showWorkflowIcon ? getIconByTask(oTask) : null}
         {showCheckBox ? <ExternalControlledCheckbox
             content={checkBoxContent}
             onChange={tickSummary}
@@ -136,6 +138,47 @@ function rectifyOdaTaskOnMdTaskChanged(oTask: OdaPmTask, plugin: OdaPmToolPlugin
             notifyTask(oTask, `Keep the last step: `)
         }
     }
+}
+
+export function getDefaultTableStyleGetters(minSummaryWidth: number | string = 500, maxSummaryWidth: number | string = 300, summaryColumn = 0) {
+    // striped rows. center step cell but not summary cell.
+    // TODO performance, we instantiate a lot of dictionaries here
+    const evenBg: React.CSSProperties = {backgroundColor: "rgba(0,0,0,0.2)"};
+    const oddBg: React.CSSProperties = {};
+    const summaryCellStyle: React.CSSProperties = {
+        minWidth: minSummaryWidth,
+        maxWidth: maxSummaryWidth,
+        padding: 5, paddingLeft: 10
+    }
+    const summaryEvenCellStyle = {...summaryCellStyle, ...evenBg}
+    const summaryOddCellStyle = {...summaryCellStyle, ...oddBg}
+
+    const stepCellStyle: React.CSSProperties = {textAlign: "center"}
+    const stepEvenCellStyle = {...stepCellStyle, ...evenBg}
+    const stepOddCellStyle = {...stepCellStyle, ...oddBg}
+
+    function cellStyleGetter(column: number, row: number): React.CSSProperties {
+        const even = row % 2 === 0;
+        const cellStyle = even ? stepEvenCellStyle : stepOddCellStyle
+        const summaryStyle = even ? summaryEvenCellStyle : summaryOddCellStyle
+        if (column === summaryColumn) {
+            return summaryStyle
+        } else return cellStyle
+    }
+
+    function headStyleGetter(columnIndex: number): React.CSSProperties {
+        const style = {
+            backgroundColor: "var(--background-primary)",
+            position: "sticky", top: -16,
+            padding: 10,
+            minWidth: (columnIndex === summaryColumn ? minSummaryWidth : "unset"),
+            maxWidth: (columnIndex === summaryColumn ? maxSummaryWidth : "unset")
+        };
+        // console.log(`thStyleGetter: ${JSON.stringify(style)}`)
+        return style as React.CSSProperties;
+    }
+
+    return {cellStyleGetter, headStyleGetter};
 }
 
 export function TaskTableView({displayWorkflows, filteredTasks}: {
@@ -203,7 +246,6 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
     })).flatMap(k => k).unique();
 
     const curWfName = "Tasks";// displayWorkflows.map(k => k.name).join(", ")
-    const sumCol = 0;
     const headers = [
         <WorkflowOverviewView filteredTasks={filteredTasks}/>
         , ...(getSettings()?.table_steps_shown ? displayStepNames.map(
@@ -222,31 +264,7 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
         return row
     });
 
-    // add background for table header, according to the theme.
-    // striped rows. center step cell but not summary cell.
-    const evenBg: React.CSSProperties = {backgroundColor: "rgba(0,0,0,0.2)"};
-    const oddBg: React.CSSProperties = {};
-    const maxSummaryWidth = 500, minSummaryWidth = 300;
-    const summaryCellStyle: React.CSSProperties = {
-        minWidth: minSummaryWidth,
-        maxWidth: maxSummaryWidth,
-        padding: 5, paddingLeft: 10
-    }
-    const summaryEvenCellStyle = {...summaryCellStyle, ...evenBg}
-    const summaryOddCellStyle = {...summaryCellStyle, ...oddBg}
-
-    const stepCellStyle: React.CSSProperties = {textAlign: "center"}
-    const stepEvenCellStyle = {...stepCellStyle, ...evenBg}
-    const stepOddCellStyle = {...stepCellStyle, ...oddBg}
-
-    function taskTableStyleGetter(column: number, row: number): React.CSSProperties {
-        const even = row % 2 === 0;
-        const cellStyle = even ? stepEvenCellStyle : stepOddCellStyle
-        const summaryStyle = even ? summaryEvenCellStyle : summaryOddCellStyle
-        if (column === sumCol) {
-            return summaryStyle
-        } else return cellStyle
-    }
+    const {cellStyleGetter, headStyleGetter} = getDefaultTableStyleGetters();
 
     return (
         <>
@@ -302,19 +320,8 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
                         headers={headers}
                         rows={taskRows}
 
-                        thStyleGetter={(columnIndex: number): React.CSSProperties => {
-                            const style = {
-                                backgroundColor: "var(--background-primary)",
-                                position: "sticky", top: -16,
-                                padding: 10,
-                                minWidth: (columnIndex === sumCol ? minSummaryWidth : "unset"),
-                                maxWidth: (columnIndex === sumCol ? maxSummaryWidth : "unset")
-                            };
-                            // console.log(`thStyleGetter: ${JSON.stringify(style)}`)
-                            return style as React.CSSProperties;
-                        }}
-                        // TODO performance, we instantiate a lot of dictionaries here
-                        cellStyleGetter={taskTableStyleGetter}
+                        thStyleGetter={headStyleGetter}
+                        cellStyleGetter={cellStyleGetter}
                     /> : <label>No results.</label>
                 )
             }
