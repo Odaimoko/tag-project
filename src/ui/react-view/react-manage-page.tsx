@@ -12,24 +12,42 @@ import {WorkflowFilter, WorkflowFilterCheckbox} from "./workflow-filter";
 import {TagFilter} from "./tag-filter";
 import {ProjectFilter, ProjectFilterName_All, ProjectFilterOptionValue_All} from "./project-filter";
 import {HStack, VStack} from "./view-template/h-stack";
-import {ObsidianIconView} from "./view-template/icon-view";
+import {ClickableIconView, ObsidianIconView} from "./view-template/icon-view";
 import {DataTable} from "./view-template/data-table";
+import {OdaPmProject} from "../../data-model/OdaPmProject";
 
+function ProjectView(props: {
+    project: OdaPmProject | null,
+    style?: React.CSSProperties
+}) {
+    const project = props.project;
+    // TODO Jump To Project Definition
+    return <div style={props.style}>
+        <ClickableIconView iconName={"folder"} content={<label>{project?.name}</label>}/>
+    </div>
+}
 
 function OrphanTasksFixPanel({db}: { db: OdaPmDb }) {
     const orphanTasks = db.orphanTasks;
+    const plugin = useContext(PluginContext);
     // Task\n Workflow
     // Project\n Project
-    const headers = ["Task/Workflow", "Project"];
+    const headers = ["Task", "Workflow"];
     const rows = orphanTasks.map((task, i) => {
         return [<VStack spacing={2}>
-            <OdaTaskSummaryCell key={`${task.boundTask.path}:${task.boundTask.line}`} oTask={task}
+            <OdaTaskSummaryCell key={`${task.boundTask.path}:${task.boundTask.line}`}
+                                oTask={task}
                                 taskFirstColumn={task.summary} showCheckBox={false} showWorkflowIcon={false}/>
-            <WorkflowFilterCheckbox workflow={task.type} showCheckBox={false} showWorkflowIcon={false}/>
 
-        </VStack>, <VStack spacing={2}>
-            <div>{task.getFirstProject()?.name} </div>
-            <div> {task.type.getFirstProject()?.name}</div>
+            <ProjectView project={task.getFirstProject()}/>
+
+        </VStack>, <VStack style={{margin: 10}} spacing={2}>
+            <WorkflowFilterCheckbox workflow={task.type} showCheckBox={false} showWorkflowIcon={false}/> <HStack
+            style={{alignItems: "center"}} spacing={10}>
+            {/*<button>Assign to</button>*/}
+            <ProjectView project={task.type.getFirstProject()}/>
+
+        </HStack>
         </VStack>]
     })
     const {cellStyleGetter, headStyleGetter} = getDefaultTableStyleGetters(
