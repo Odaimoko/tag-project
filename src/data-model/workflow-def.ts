@@ -125,9 +125,9 @@ export function factoryTask(task: STask, type: I_OdaPmWorkflow) {
 /**
  * add a tag at the end of the line. the tag will be followed by a space
  * @param text
- * @param stepTag
+ * @param tag
  */
-export function addTagText(text: string, stepTag: string) {
+export function addTagText(text: string, tag: string) {
     // With the rule that a task cannot cross multiple lines, we can safely assume that the last char is \n if there is a \n.
     const hasTrailingEol = text.indexOf("\n") == text.length - 1
     // We believe dataview gives the correct result. In the latter case there will be no step.tag in the original text if includes is false.
@@ -136,9 +136,9 @@ export function addTagText(text: string, stepTag: string) {
     // https://help.obsidian.md/Linking+notes+and+files/Internal+links#Link+to+a+block+in+a+note
     const blockRefMatch = textCleanAtRight.match(/ \^[a-zA-Z0-9-]+/);
     if (blockRefMatch) {
-        return `${textCleanAtRight.replace(blockRefMatch[0], "")} ${stepTag} ${blockRefMatch[0]}` + (hasTrailingEol ? "\n" : "");
+        return `${textCleanAtRight.replace(blockRefMatch[0], "")} ${tag} ${blockRefMatch[0]}` + (hasTrailingEol ? "\n" : "");
     } else
-        return `${textCleanAtRight} ${stepTag} ${hasTrailingEol ? "\n" : ""}`;
+        return `${textCleanAtRight} ${tag} ${hasTrailingEol ? "\n" : ""}`;
 }
 
 // TODO wont remove the space before or after the tag
