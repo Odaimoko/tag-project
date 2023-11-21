@@ -19,8 +19,9 @@ function wrapChildrenWithArray(
     children: React.ReactNode
 ): React.ReactNode[] {
     if (children === undefined) return [];
-    if (children instanceof Array) return children;
-    return [children];
+    //remove null and undefined, otherwise they will still contribute to spacing
+    if (children instanceof Array) return children.filter(k => k);
+    return [children].filter(k => k);
 }
 
 function Stack(props: StackProps & { isHorizontal?: boolean }) {
