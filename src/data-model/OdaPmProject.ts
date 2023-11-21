@@ -120,6 +120,15 @@ export class OdaPmProject extends BaseDatabaseObject implements I_Nameable {
         return project;
     }
 
+    public static createProjectFromWorkflowTag(workflow: I_OdaPmWorkflow, tag: string) {
+        const name = getProjectNameFromTag(tag);
+        const project = this.getOrCreateProject(name)
+        project.addDefinedType('tag_override');
+        // If defined by a task, path = `path/to/file:{project name}`. 
+        project.addDefPath(workflow.getProjectPath());
+        return project;
+    }
+
     public static createUnclassifiedProject() {
         const project = this.getOrCreateProject(ProjectName_Unclassified)
         project.addDefinedType("system")
@@ -127,7 +136,7 @@ export class OdaPmProject extends BaseDatabaseObject implements I_Nameable {
         return project;
     }
 
-    private static createProject(name: string) {
+    private static createNewProject(name: string) {
         const p = new OdaPmProject();
         p.name = name;
         p.internalKey = ++currentMaxProjectId;
@@ -135,9 +144,13 @@ export class OdaPmProject extends BaseDatabaseObject implements I_Nameable {
     }
 
     private static getOrCreateProject(name: string) {
-        const project = globalProjectMap.has(name) ?
-            globalProjectMap.get(name) as OdaPmProject
-            : this.createProject(name);
+        let project: OdaPmProject;
+        if (globalProjectMap.has(name)) {
+            project = globalProjectMap.get(name) as OdaPmProject;
+        } else {
+            project = this.createNewProject(name);
+            globalProjectMap.set(name, project);
+        }
 
         return project;
     }

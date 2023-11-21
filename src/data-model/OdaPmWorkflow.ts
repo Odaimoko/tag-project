@@ -1,6 +1,7 @@
 import {STask} from "obsidian-dataview";
 import {
     getProjectPathFromSTask,
+    getProjectTagFromSTask,
     I_OdaPmStep,
     I_OdaPmWorkflow,
     isTaskSingleLine,
@@ -71,6 +72,10 @@ class OdaPmWorkflow implements I_OdaPmWorkflow {
 
     getFirstProject(): OdaPmProject | null {
         return this.projects.length > 0 ? this.projects[0] : null;
+    }
+
+    getProjectTag(): string | null {
+        return getProjectTagFromSTask(this.boundTask);
     }
 }
 

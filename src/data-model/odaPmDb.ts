@@ -142,7 +142,7 @@ function getAllPmTasks(workflows: I_OdaPmWorkflow[]) {
  * Pass 2: link tasks/Wf to projects.
  * @param pmTasks
  */
-function getAllProjectsAndLinkTasks(pmTasks: OdaPmTask[]): OdaPmProject[] {
+function getAllProjectsAndLinkTasks(pmTasks: OdaPmTask[], workflows: I_OdaPmWorkflow[]): OdaPmProject[] {
     clearGlobalProjectMap();
 
     const projects: OdaPmProject[] = [
@@ -170,6 +170,15 @@ function getAllProjectsAndLinkTasks(pmTasks: OdaPmTask[]): OdaPmProject[] {
         const taskTag = pmTask.getProjectTag();
         if (taskTag) {
             const project = OdaPmProject.createProjectFromTaskTag(pmTask, taskTag);
+            if (project) {
+                addProject(project);
+            }
+        }
+    }
+    for (const workflow of workflows) {
+        const taskTag = workflow.getProjectTag();
+        if (taskTag) {
+            const project = OdaPmProject.createProjectFromWorkflowTag(workflow, taskTag);
             if (project) {
                 addProject(project);
             }
@@ -218,7 +227,7 @@ export class OdaPmDb implements I_EvtListener {
 
         this.pmTags = this.initManagedTags(this.pmTasks)
 
-        this.pmProjects = getAllProjectsAndLinkTasks(this.pmTasks)
+        this.pmProjects = getAllProjectsAndLinkTasks(this.pmTasks, this.workflows);
 
         this.linkProject(this.pmProjects, this.pmTasks, this.workflows);
         this.orphanTasks = this.initOrphanTasks(this.pmTasks);
