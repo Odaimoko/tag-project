@@ -29,8 +29,10 @@ export function assertOnPluginInit(plugin: OdaPmToolPlugin) {
 
 interface AssertFunctions {
     expectTaskInProject: (taskName: string, projectName: string) => void;
+    expectTaskNotInProject: (taskName: string, projectName: string) => void;
     expectTaskPath: (taskName: string, path: string) => void;
     expectWorkflowInProject: (workflowName: string, projectName: string) => void;
+    expectWorkflowNotInProject: (workflowName: string, projectName: string) => void;
     // expectProject: (projectName: string, definedType?: ProjectDefinedType) => void;
 }
 
@@ -41,10 +43,16 @@ const dbAssertFunctions: AssertFunctions = {
     expectTaskInProject: () => {
         throw new Error("Not Implemented.")
     },
+    expectTaskNotInProject: () => {
+        throw new Error("Not Implemented.")
+    }
+    ,
     expectWorkflowInProject: () => {
         throw new Error("Not Implemented.")
     },
-
+    expectWorkflowNotInProject: () => {
+        throw new Error("Not Implemented.")
+    }
 }
 
 function expect_project(prj: OdaPmProject | null, projectName: string, definedType?: ProjectDefinedType) {
@@ -160,6 +168,12 @@ function initAssertFunctions(pmDb: OdaPmDb) {
                 `Task ${taskName} not in project ${projectName}. Task Path: ${task.getProjectPath()}. Task Project: ${JSON.stringify(task.getProjectNames())}`)
                 .true;
         })
+    dbAssertFunctions.expectTaskNotInProject = (taskName: string, projectName: string) => expectTaskAbstract(pmDb, taskName,
+        (task) => {
+            expect(task.isInProject(projectName),
+                `Task ${taskName} in project ${projectName}. Task Path: ${task.getProjectPath()}. Task Project: ${JSON.stringify(task.getProjectNames())}`)
+                .false;
+        })
     dbAssertFunctions.expectTaskPath = (taskName: string, path: string) => expectTaskAbstract(pmDb, taskName,
         (task) => {
             expect(task.getProjectPath(),
@@ -173,6 +187,13 @@ function initAssertFunctions(pmDb: OdaPmDb) {
                 .true;
         }
     )
+    dbAssertFunctions.expectWorkflowNotInProject = (workflowName: string, projectName: string) => expectWorkflowAbstract(pmDb, workflowName,
+        (workflow) => {
+            expect(workflow.isInProject(projectName),
+                `Workflow ${workflowName} in project ${projectName}.`)
+                .false;
+        }
+    )
 }
 
 async function test_UT_020_4(pmDb: OdaPmDb) {
@@ -182,6 +203,30 @@ async function test_UT_020_4(pmDb: OdaPmDb) {
         return k.summary === "UT_020_4_task_incorrect"
     })
     expect(ut_020_4_orphan_tasks, "Should have one task: UT_020_4_task_incorrect").length(1);
+}
+
+async function test_UT_020_6(pmDb: OdaPmDb) {
+    const prj_main_name = "UT_020_6_file_main";
+    const prj_sub1_name = "UT_020_6_file_main/sub1";
+    const prj_sub2_name = "UT_020_6_file_main/sub1/sub2";
+    dbAssertFunctions.expectTaskInProject("UT_020_6_task_main", prj_main_name);
+    dbAssertFunctions.expectTaskNotInProject("UT_020_6_task_main", prj_sub1_name);
+    dbAssertFunctions.expectTaskNotInProject("UT_020_6_task_main", prj_sub2_name);
+    dbAssertFunctions.expectWorkflowInProject("UT_020_6_Wf", prj_main_name);
+    dbAssertFunctions.expectWorkflowInProject("UT_020_6_Wf", prj_sub1_name);
+    dbAssertFunctions.expectWorkflowInProject("UT_020_6_Wf", prj_sub2_name);
+
+    dbAssertFunctions.expectWorkflowNotInProject("UT_020_6_Wf_main_sub1", prj_main_name)
+    dbAssertFunctions.expectWorkflowInProject("UT_020_6_Wf_main_sub1", prj_sub1_name)
+    dbAssertFunctions.expectWorkflowInProject("UT_020_6_Wf_main_sub1", prj_sub2_name)
+
+    dbAssertFunctions.expectTaskInProject("UT_020_6_task_main_sub1", prj_main_name)
+    dbAssertFunctions.expectTaskInProject("UT_020_6_task_main_sub1", prj_sub1_name)
+    dbAssertFunctions.expectTaskNotInProject("UT_020_6_task_main_sub1", prj_sub2_name)
+
+    dbAssertFunctions.expectTaskInProject("UT_020_6_task_main_sub1_sub2", prj_main_name)
+    dbAssertFunctions.expectTaskInProject("UT_020_6_task_main_sub1_sub2", prj_sub1_name)
+    dbAssertFunctions.expectTaskInProject("UT_020_6_task_main_sub1_sub2", prj_sub2_name)
 }
 
 // make this async so the failing tests won't block the plugin and database initialization process.
@@ -196,5 +241,6 @@ export async function assertOnDbRefreshed(pmDb: OdaPmDb) {
     test_UT_020_2(pmDb);
     test_UT_020_3(pmDb);
     test_UT_020_4(pmDb);
+    test_UT_020_6(pmDb);
     devLog("Assert end: on db refreshed...")
 }
