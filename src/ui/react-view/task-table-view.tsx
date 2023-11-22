@@ -156,7 +156,10 @@ export function getDefaultTableStyleGetters(minSummaryWidth: number | string = 5
     const summaryEvenCellStyle = {...summaryCellStyle, ...evenBg}
     const summaryOddCellStyle = {...summaryCellStyle, ...oddBg}
 
-    const stepCellStyle: React.CSSProperties = {textAlign: isCellCentered ? "center" : "inherit"}
+    const stepCellStyle: React.CSSProperties = {
+        textAlign: isCellCentered ? "center" : "inherit",
+        padding: 10,
+    }
     const stepEvenCellStyle = {...stepCellStyle, ...evenBg}
     const stepOddCellStyle = {...stepCellStyle, ...oddBg}
 
