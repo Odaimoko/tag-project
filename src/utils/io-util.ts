@@ -1,6 +1,6 @@
 import {EditorPosition, Vault, Workspace} from "obsidian";
 import {STask} from "obsidian-dataview";
-import {OdaPmProject, Tag_Prefix_Project} from "../data-model/OdaPmProject";
+import {OdaPmProject, OdaPmProjectDefinition, Tag_Prefix_Project} from "../data-model/OdaPmProject";
 import {addTagText, I_OdaPmBoundTask, I_OdaPmProjectTask} from "../data-model/workflow-def";
 import {ONotice} from "./o-notice";
 
@@ -45,6 +45,21 @@ export const LIST_ITEM_REGEX = /^[\s>]*(\d+\.|\d+\)|\*|-|\+)\s*(\[.{0,1}\])?\s*(
 
 
 // endregion
+
+function openFileAtStart(workspace: Workspace, path: string) {
+    workspace.openLinkText(path, path, false, {
+        state: {
+            active: true,
+            mode: "source",
+            start: {
+                line: 0,
+                ch: 0,
+            },
+        },
+    });
+
+}
+
 // if we use workspace.openLinkText, a task without a block id will be opened with its section
 export function openTaskPrecisely(workspace: Workspace, task: STask) {
     // Copy from dataview. See TaskItem.
@@ -62,6 +77,20 @@ export function openTaskPrecisely(workspace: Workspace, task: STask) {
             },
         }
     );
+}
+
+export function openProjectPrecisely(project: OdaPmProject, defType: OdaPmProjectDefinition, workspace: Workspace) {
+    switch (defType.type) {
+        case "folder": // Project_FolderProject_Frontmatter
+        case "file": // Project_FileProject_Frontmatter
+            openFileAtStart(workspace, defType.page?.path)
+            console.log(defType.page?.path)
+            break;
+        case "tag_override": // task or wf override
+            console.log(`openProjectPrecisely: tag_override. ${defType.taskable} ${defType.path}`)
+            openTaskPrecisely(workspace, defType.taskable?.boundTask)
+            break;
+    }
 }
 
 /**

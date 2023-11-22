@@ -55,6 +55,17 @@ function loopIndex(nextIdx: number, len: number) {
     return nextIdx;
 }
 
+export function getDropdownStyle(dropDownDisplay: string) {
+
+    const dropdownStyle = {
+        display: dropDownDisplay,
+        position: "absolute",
+        zIndex: 1,
+        background: "var(--background-primary)"
+    } as React.CSSProperties;
+    return dropdownStyle;
+}
+
 const SearchDropdown = (props: {
     data: OptionValueType[]
     handleSetOptionValues(param: string[]): void;
@@ -112,12 +123,7 @@ const SearchDropdown = (props: {
                }}
         />
         {/*Add background so it won't be transparent. */}
-        <div id={"project_choices"} style={{
-            display: dropDownDisplay,
-            position: "absolute",
-            zIndex: 1,
-            background: "var(--background-primary)"
-        }}
+        <div id={"project_choices"} style={getDropdownStyle(dropDownDisplay)}
         >
             <VStack spacing={2}>
                 {filtered.map((project: OptionValueType) => {

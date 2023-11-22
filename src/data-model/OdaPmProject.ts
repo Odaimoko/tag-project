@@ -1,6 +1,6 @@
-import {SMarkdownPage, STask} from "obsidian-dataview";
+import {SMarkdownPage} from "obsidian-dataview";
 import {devLog} from "../utils/env-util";
-import {getProjectNameFromTag, I_OdaPmBoundTask, I_OdaPmProjectTask, I_OdaPmWorkflow} from "./workflow-def";
+import {getProjectNameFromTag, I_OdaPmTaskble, I_OdaPmWorkflow} from "./workflow-def";
 import {BaseDatabaseObject} from "./BaseDatabaseObject";
 import {OdaPmTask} from "./OdaPmTask";
 import * as path from "path";
@@ -27,17 +27,17 @@ export function clearGlobalProjectMap() {
 export
 type ProjectDefinedType = typeof Project_Def_Enum_Array[number]
 
-class OdaPmProjectDefinition {
+export class OdaPmProjectDefinition {
     type: ProjectDefinedType;
     path: string;
     page?: SMarkdownPage;
-    task?: STask;
+    taskable?: I_OdaPmTaskble;
 
-    constructor(type: ProjectDefinedType, path: string, page?: SMarkdownPage, task?: STask) {
+    constructor(type: ProjectDefinedType, path: string, page?: SMarkdownPage, task?: I_OdaPmTaskble) {
         this.type = type;
         this.path = path;
         this.page = page;
-        this.task = task;
+        this.taskable = task;
     }
 
     hasDefinedType(type: ProjectDefinedType) {
@@ -63,7 +63,7 @@ export class OdaPmProject extends BaseDatabaseObject implements I_Nameable {
     }
 
 // region Factory
-    addProjectDefinition(type: ProjectDefinedType, obsidianPath: string, page?: SMarkdownPage, task?: STask) {
+    addProjectDefinition(type: ProjectDefinedType, obsidianPath: string, page?: SMarkdownPage, task?: I_OdaPmTaskble) {
         //     Obsidian path is relative. Add '/' before path to form a tree
         obsidianPath = (obsidianPath.startsWith("/") ? "" : "/") + obsidianPath; // prevent doubling leading '/'
         const odaPmProjectDefinition = new OdaPmProjectDefinition(
@@ -114,11 +114,11 @@ export class OdaPmProject extends BaseDatabaseObject implements I_Nameable {
         return project;
     }
 
-    public static createProjectFromTaskable(task: I_OdaPmProjectTask & I_OdaPmBoundTask, tag: string) {
+    public static createProjectFromTaskable(task: I_OdaPmTaskble, tag: string) {
         const name = getProjectNameFromTag(tag);
         const project = this.getOrCreateProject(name)
         // If defined by a task, path = `path/to/file:{project name}`. 
-        project.addProjectDefinition('tag_override', task.getProjectPath(), null, task.boundTask);
+        project.addProjectDefinition('tag_override', task.getProjectPath(), null, task);
         return project;
     }
 

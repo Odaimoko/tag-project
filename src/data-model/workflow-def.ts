@@ -79,6 +79,7 @@ export function getWorkflowNameFromRawText(text: string) {
 export interface I_OdaPmBoundTask {
     boundTask: STask;
 }
+
 export interface I_OdaPmProjectTask {
 
     // 0.2.0
@@ -92,6 +93,7 @@ export interface I_OdaPmProjectTask {
     getFirstProject: () => OdaPmProject | null;
 }
 
+export type I_OdaPmTaskble = I_OdaPmBoundTask & I_OdaPmProjectTask;
 // Unit Test
 // console.log(getWorkflowNameFromRawText("带你飞 带你飞2  \n vads ads f \t li"))
 

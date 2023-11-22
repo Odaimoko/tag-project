@@ -10,20 +10,43 @@ import {OdaPmTask} from "../../data-model/OdaPmTask";
 import {getDefaultTableStyleGetters, OdaTaskSummaryCell, TaskTableView} from "./task-table-view";
 import {WorkflowFilter, WorkflowFilterCheckbox} from "./workflow-filter";
 import {TagFilter} from "./tag-filter";
-import {ProjectFilter, ProjectFilterName_All, ProjectFilterOptionValue_All} from "./project-filter";
+import {getDropdownStyle, ProjectFilter, ProjectFilterName_All, ProjectFilterOptionValue_All} from "./project-filter";
 import {HStack, VStack} from "./view-template/h-stack";
-import {ClickableIconView, ObsidianIconView} from "./view-template/icon-view";
+import {ClickableIconView, InternalLinkView, ObsidianIconView} from "./view-template/icon-view";
 import {DataTable} from "./view-template/data-table";
 import {OdaPmProject} from "../../data-model/OdaPmProject";
+import {openProjectPrecisely} from "../../utils/io-util";
 
 function ProjectView(props: {
     project: OdaPmProject | null,
     style?: React.CSSProperties
 }) {
+    if (props.project === null) return <></>;
+    const [dropDownDisplay, setDropDownDisplay] = useState("none");
     const project = props.project;
-    // TODO Jump To Project Definition
+    const plugin = useContext(PluginContext);
+
+    // TODO Jump To Project Definition 
+
+    function toggleDropdown() {
+        toggleDropDown(setDropDownDisplay)
+    }
+
     return <div style={props.style}>
-        <ClickableIconView iconName={"folder"} content={<label>{project?.name}</label>}/>
+        <ClickableIconView onContentClicked={toggleDropdown} onIconClicked={toggleDropdown} iconName={"folder"}
+                           content={<label>{project.name}</label>}/>
+        <div style={getDropdownStyle(dropDownDisplay)}>
+            {project.projectDefinitions.map((def, i) => {
+                return <div key={i}>
+                    <InternalLinkView onIconClicked={openProject} onContentClicked={openProject}
+                                      content={<label>{def.path}</label>}/>
+                </div>
+
+                function openProject() {
+                    openProjectPrecisely(project, def, plugin.app.workspace);
+                }
+            })}
+        </div>
     </div>
 }
 
