@@ -12,17 +12,19 @@ import {WorkflowFilter, WorkflowFilterCheckbox} from "./workflow-filter";
 import {TagFilter} from "./tag-filter";
 import {ProjectFilter, ProjectFilterName_All, ProjectFilterOptionValue_All} from "./project-filter";
 import {HStack, VStack} from "./view-template/h-stack";
-import {ObsidianIconView} from "./view-template/icon-view";
+import {obsidianIconOffsetStyle, ObsidianIconView} from "./view-template/icon-view";
 import {DataTable} from "./view-template/data-table";
 import {ProjectView} from "./project-view";
 import {HoveringPopup} from "./view-template/hovering-popup";
+import {TwiceConfirmButton} from "./view-template/twice-confirm-button";
 
 function OrphanTasksFixPanel({db}: { db: OdaPmDb }) {
     const orphanTasks = db.orphanTasks;
     // Task\n Workflow
     // Project\n Project
-    const headers = ["Task", "Workflow"];
+    const headers = ["Task", "Workflow", "Fix"];
     const rows = orphanTasks.map((task, i) => {
+        const wfProject = task.type.getFirstProject();
         return [<VStack spacing={2}>
             <OdaTaskSummaryCell key={`${task.boundTask.path}:${task.boundTask.line}`}
                                 oTask={task}
@@ -30,14 +32,32 @@ function OrphanTasksFixPanel({db}: { db: OdaPmDb }) {
 
             <ProjectView project={task.getFirstProject()}/>
 
-        </VStack>, <VStack style={{margin: 10}} spacing={2}>
+        </VStack>, <VStack spacing={2}>
             <WorkflowFilterCheckbox workflow={task.type} showCheckBox={false} showWorkflowIcon={false}/> <HStack
             style={{alignItems: "center"}} spacing={10}>
             {/*<button>Assign to</button>*/}
-            <ProjectView project={task.type.getFirstProject()}/>
+            <ProjectView project={wfProject}/>
 
         </HStack>
-        </VStack>]
+        </VStack>, <HStack style={{alignItems: "center"}} spacing={2}>
+
+            <HoveringPopup
+                hoveredContent={<TwiceConfirmButton
+                    onConfirm={() => {
+                        task.assignToWorkflowProject();
+                    }}
+                    confirmView={"Fix"}
+                    twiceConfirmView={<label>Confirm</label>}
+                />}
+                popupContent={<VStack style={{alignItems: "center"}} spacing={2}>
+                    {`${task.getFirstProject()?.name}`}
+                    <ObsidianIconView style={obsidianIconOffsetStyle} iconName={"chevron-down"}/>
+                    {`${wfProject?.name}`}
+                </VStack>}
+                title={"Move Task to Project?"}
+            />
+            {/*<label style={{whiteSpace: "nowrap"}}>Move Task to Project</label>*/}
+        </HStack>]
     })
     const {cellStyleGetter, headStyleGetter} = getDefaultTableStyleGetters(
         "unset", "unset",
@@ -238,7 +258,6 @@ export function ReactManagePage({eventCenter}: {
 const EmptyWorkflowView = () => {
     return <h1>No Workflow defined, or Dataview is not initialized.</h1>
 }
-
 
 
 // endregion

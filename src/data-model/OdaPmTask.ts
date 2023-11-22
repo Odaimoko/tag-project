@@ -1,5 +1,5 @@
 import {STask} from "obsidian-dataview";
-import {OdaPmProject} from "./OdaPmProject";
+import {OdaPmProject, Tag_Prefix_Project} from "./OdaPmProject";
 import {
     addTagText,
     getProjectPathFromSTask,
@@ -12,6 +12,7 @@ import {
 } from "./workflow-def";
 import {BaseDatabaseObject} from "./BaseDatabaseObject";
 import {getOrCreateStep} from "./OdaPmStep";
+import {setProjectTagToTask} from "../utils/io-util";
 
 export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmProjectTask {
     boundTask: STask;
@@ -172,6 +173,16 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmProjectTask 
         return getProjectTagFromSTask(this.boundTask);
     }
 
+    assignToWorkflowProject() {
+        const workflowProjectName = this.type.getFirstProject()?.name;
+        
+        const prjTag = `${Tag_Prefix_Project}${workflowProjectName}`;
+        setProjectTagToTask(this, prjTag);
+    }
+
+    // region Interface
+
+
     addProject(project: OdaPmProject) {
         // TODO performance
         if (!this.projects.includes(project)) {
@@ -199,6 +210,9 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmProjectTask 
         if (this.projects.length == 0) return null;
         return this.projects[0];
     }
+
+
+    // endregion
     // endregion
 
     // debug

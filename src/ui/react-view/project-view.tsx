@@ -4,7 +4,7 @@ import {PluginContext} from "../obsidian/manage-page-view";
 import {ClickableIconView, InternalLinkView} from "./view-template/icon-view";
 import {iconViewAsAWholeStyle} from "./style-def";
 import {openProjectPrecisely} from "../../utils/io-util";
-import {HStack, VStack} from "./view-template/h-stack";
+import {VStack} from "./view-template/h-stack";
 import {HoveringPopup, usePopup} from "./view-template/hovering-popup";
 
 export const IconName_Project = "folder";
@@ -45,11 +45,8 @@ export function ProjectView(props: {
     const popupContent = showableDefinitions.length > 0 ?
         <div>
             <div>
-                <HStack style={{justifyContent: "space-between", alignItems: "center", margin: 5}}>
-                    <label style={{whiteSpace: "nowrap"}}>Define at</label>
-                    <ClickableIconView onIconClicked={hideDropdown} iconName={"x"}/>
-                </HStack>
-                <VStack>
+
+            <VStack>
                     {showableDefinitions.map((def, i) => {
                         return <ProjectLinkView key={i} project={project} def={def}/>
                     })}
@@ -57,7 +54,7 @@ export function ProjectView(props: {
             </div>
         </div>
         : null;
-    return <HoveringPopup {...popupProps}
+    return <HoveringPopup {...popupProps} title={"Defined At"}
                           hoveredContent={hoveredContent} popupContent={popupContent}/>
 
 }
