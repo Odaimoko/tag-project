@@ -227,6 +227,10 @@ async function test_UT_020_6(pmDb: OdaPmDb) {
     dbAssertFunctions.expectTaskInProject("UT_020_6_task_main_sub1_sub2", prj_main_name)
     dbAssertFunctions.expectTaskInProject("UT_020_6_task_main_sub1_sub2", prj_sub1_name)
     dbAssertFunctions.expectTaskInProject("UT_020_6_task_main_sub1_sub2", prj_sub2_name)
+    
+    const orphans = pmDb.orphanTasks;
+    const orphans_020_6 = orphans.filter(k => k.summary.startsWith("UT_020_6"));
+    expect(orphans_020_6, `Should have 0 orphan tasks in UT_020_6`).length(0);
     console.log("Test PASSED: Sub Project Inclusion.")
 }
 

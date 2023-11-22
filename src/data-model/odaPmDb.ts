@@ -18,7 +18,7 @@ import {getAPI, STask} from "obsidian-dataview";
 import {ONotice} from "../utils/o-notice";
 import {getSettings} from "../Settings";
 import {GenericProvider} from "../utils/GenericProvider";
-import {clearGlobalProjectMap, OdaPmProject} from "./OdaPmProject";
+import {clearGlobalProjectMap, OdaPmProject, ProjectName_Unclassified} from "./OdaPmProject";
 import {assertOnDbRefreshed, devLog} from "../utils/env-util";
 import {OdaPmTask} from "./OdaPmTask";
 import {getOrCreateWorkflow, removeWorkflow} from "./OdaPmWorkflow";
@@ -284,7 +284,13 @@ export class OdaPmDb implements I_EvtListener {
         return pmTasks.filter(k => {
                 // console.log(k.getFirstProject()?.name, k.type.getFirstProject()?.name, k.getFirstProject()?.internalKey, k.type.getFirstProject()?.internalKey, k.getFirstProject() !== k.type.getFirstProject())
                 // name is the most consistent comparison. internalKey and reference are fragile. 
-                return k.getFirstProject()?.name !== k.type.getFirstProject()?.name; // 
+            const wfPrjName = k.type.getFirstProject()?.name ?? "";
+            // A task can use its parents' workflows.
+            // A workflow in unclassified project can be used in any Project. 
+            return !(
+                k.isInProject(wfPrjName, true)
+                || k.type.isInProject(ProjectName_Unclassified)
+            );
             }
         )
     }
