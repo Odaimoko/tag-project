@@ -26,7 +26,7 @@ export class OdaProjectTree {
     static buildProjectShadowTree(projects: OdaPmProject[]): OdaProjectTree {
         const tree = new OdaProjectTree();
         for (const project of projects) {
-            for (const path of project.defPaths) {
+            for (const {path} of project.projectDefinitions) {
                 if (tree.projectDict.hasOwnProperty(path)) {
                     // TPM-0.2.0-1-7-3
                     const collidedProject = tree.projectDict[path];

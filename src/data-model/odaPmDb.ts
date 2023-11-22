@@ -169,7 +169,7 @@ function getAllProjectsAndLinkTasks(pmTasks: OdaPmTask[], workflows: I_OdaPmWork
     for (const pmTask of pmTasks) {
         const taskTag = pmTask.getProjectTag();
         if (taskTag) {
-            const project = OdaPmProject.createProjectFromTaskTag(pmTask, taskTag);
+            const project = OdaPmProject.createProjectFromTaskable(pmTask, taskTag);
             if (project) {
                 addProject(project);
             }
@@ -178,7 +178,7 @@ function getAllProjectsAndLinkTasks(pmTasks: OdaPmTask[], workflows: I_OdaPmWork
     for (const workflow of workflows) {
         const taskTag = workflow.getProjectTag();
         if (taskTag) {
-            const project = OdaPmProject.createProjectFromWorkflowTag(workflow, taskTag);
+            const project = OdaPmProject.createProjectFromTaskable(workflow, taskTag);
             if (project) {
                 addProject(project);
             }

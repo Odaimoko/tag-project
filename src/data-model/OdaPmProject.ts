@@ -1,6 +1,6 @@
-import {SMarkdownPage} from "obsidian-dataview";
+import {SMarkdownPage, STask} from "obsidian-dataview";
 import {devLog} from "../utils/env-util";
-import {getProjectNameFromTag, I_OdaPmWorkflow} from "./workflow-def";
+import {getProjectNameFromTag, I_OdaPmBoundTask, I_OdaPmProjectTask, I_OdaPmWorkflow} from "./workflow-def";
 import {BaseDatabaseObject} from "./BaseDatabaseObject";
 import {OdaPmTask} from "./OdaPmTask";
 import * as path from "path";
@@ -27,46 +27,51 @@ export function clearGlobalProjectMap() {
 export
 type ProjectDefinedType = typeof Project_Def_Enum_Array[number]
 
+class OdaPmProjectDefinition {
+    type: ProjectDefinedType;
+    path: string;
+    page?: SMarkdownPage;
+    task?: STask;
+
+    constructor(type: ProjectDefinedType, path: string, page?: SMarkdownPage, task?: STask) {
+        this.type = type;
+        this.path = path;
+        this.page = page;
+        this.task = task;
+    }
+
+    hasDefinedType(type: ProjectDefinedType) {
+        return this.type == type;
+    }
+
+}
+
 export class OdaPmProject extends BaseDatabaseObject implements I_Nameable {
     name: string;
-    definedTypes: ProjectDefinedType[];
-    pages: SMarkdownPage[];
     workflows: I_OdaPmWorkflow[];
     pmTasks: OdaPmTask[];
-    defPaths: string[]; // Each project has multiple paths
+    projectDefinitions: OdaPmProjectDefinition[] = []
 
     constructor() {
         super();
-        this.definedTypes = []
-        this.pages = []
         this.workflows = []
         this.pmTasks = []
-        this.defPaths = [];
     }
 
-
     hasDefinedType(type: ProjectDefinedType) {
-        return this.definedTypes.includes(type);
+        return this.projectDefinitions.some(k => k.hasDefinedType(type));
     }
 
 // region Factory
-    private addDefinedType(type: ProjectDefinedType) {
-        if (!this.hasDefinedType(type)) {
-            this.definedTypes.push(type);
-        }
-    }
-
-    private addPage(page: SMarkdownPage) {
-        if (!this.pages.includes(page)) {
-            this.pages.push(page);
-        }
-    }
-
-    private addDefPath(obsidianPath: string) {
-        // Obsidian path is relative. Add '/' before path to form a tree
+    addProjectDefinition(type: ProjectDefinedType, obsidianPath: string, page?: SMarkdownPage, task?: STask) {
+        //     Obsidian path is relative. Add '/' before path to form a tree
         obsidianPath = (obsidianPath.startsWith("/") ? "" : "/") + obsidianPath; // prevent doubling leading '/'
-        this.defPaths.push(obsidianPath);
+        const odaPmProjectDefinition = new OdaPmProjectDefinition(
+            type, obsidianPath, page, task
+        );
+        this.projectDefinitions.push(odaPmProjectDefinition)
     }
+
 
     /**
      *
@@ -104,35 +109,22 @@ export class OdaPmProject extends BaseDatabaseObject implements I_Nameable {
         }
 
         const project = this.getOrCreateProject(name)
-        project.addDefinedType(definedType);
-        project.addPage(page);
-        project.addDefPath(defPath)
+        project.addProjectDefinition(definedType, defPath, page);
         globalProjectMap.set(name, project);
         return project;
     }
 
-    public static createProjectFromTaskTag(task: OdaPmTask, tag: string) {
+    public static createProjectFromTaskable(task: I_OdaPmProjectTask & I_OdaPmBoundTask, tag: string) {
         const name = getProjectNameFromTag(tag);
         const project = this.getOrCreateProject(name)
-        project.addDefinedType('tag_override');
         // If defined by a task, path = `path/to/file:{project name}`. 
-        project.addDefPath(task.getProjectPath());
-        return project;
-    }
-
-    public static createProjectFromWorkflowTag(workflow: I_OdaPmWorkflow, tag: string) {
-        const name = getProjectNameFromTag(tag);
-        const project = this.getOrCreateProject(name)
-        project.addDefinedType('tag_override');
-        // If defined by a task, path = `path/to/file:{project name}`. 
-        project.addDefPath(workflow.getProjectPath());
+        project.addProjectDefinition('tag_override', task.getProjectPath(), null, task.boundTask);
         return project;
     }
 
     public static createUnclassifiedProject() {
         const project = this.getOrCreateProject(ProjectName_Unclassified)
-        project.addDefinedType("system")
-        project.addDefPath("");
+        project.addProjectDefinition('system', "");
         return project;
     }
 
