@@ -174,7 +174,7 @@ export function getDefaultTableStyleGetters(minSummaryWidth: number | string = 5
 
     function headStyleGetter(columnIndex: number): React.CSSProperties {
         const style = {
-            backgroundColor: "var(--background-primary)",
+            backgroundColor: "var(--background-secondary)",
             position: "sticky", top: -16,
             padding: 10,
             minWidth: (columnIndex === summaryColumn ? minSummaryWidth : "unset"),
