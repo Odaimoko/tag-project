@@ -10,123 +10,12 @@ import {OdaPmTask} from "../../data-model/OdaPmTask";
 import {getDefaultTableStyleGetters, OdaTaskSummaryCell, TaskTableView} from "./task-table-view";
 import {WorkflowFilter, WorkflowFilterCheckbox} from "./workflow-filter";
 import {TagFilter} from "./tag-filter";
-import {getDropdownStyle, ProjectFilter, ProjectFilterName_All, ProjectFilterOptionValue_All} from "./project-filter";
+import {ProjectFilter, ProjectFilterName_All, ProjectFilterOptionValue_All} from "./project-filter";
 import {HStack, VStack} from "./view-template/h-stack";
-import {ClickableIconView, InternalLinkView, ObsidianIconView} from "./view-template/icon-view";
+import {ObsidianIconView} from "./view-template/icon-view";
 import {DataTable} from "./view-template/data-table";
-import {OdaPmProject, OdaPmProjectDefinition} from "../../data-model/OdaPmProject";
-import {openProjectPrecisely} from "../../utils/io-util";
-import {iconViewAsAWholeStyle} from "./style-def";
-import {IRenderable} from "../common/i-renderable";
-
-function usePopup(init = "none") {
-    const [dropDownDisplay, setDropDownDisplay] = useState(init);
-
-    function toggleDropdown() {
-        toggleDropDown(setDropDownDisplay)
-    }
-
-    function showDropdown() {
-        setDropDownDisplay("block")
-    }
-
-    function hideDropdown() {
-        setDropDownDisplay("none")
-    }
-
-    return {dropDownDisplay, setDropDownDisplay, toggleDropdown, showDropdown, hideDropdown}
-}
-
-type PopupProps = Partial<ReturnType<typeof usePopup>>;
-
-function ProjectLinkView(props: {
-    project: OdaPmProject,
-    def: OdaPmProjectDefinition
-}) {
-    const plugin = useContext(PluginContext);
-    return <InternalLinkView style={iconViewAsAWholeStyle} onIconClicked={openProject}
-                             onContentClicked={openProject}
-                             content={<label style={{whiteSpace: "nowrap"}}>{props.def.getLinkText()}</label>}/>
-
-    function openProject() {
-        openProjectPrecisely(props.project, props.def, plugin.app.workspace);
-    }
-}
-
-/**
- *
- * @param props If hideDropdown or showDropdown is not given, use usePopup() to get them.
- * @constructor
- */
-function HoveringPopup(props: {
-    hoveredContent: IRenderable, popupContent: IRenderable, style?: React.CSSProperties
-} & PopupProps) {
-    let {dropDownDisplay, hideDropdown, showDropdown} = props;
-    if (hideDropdown === undefined || showDropdown === undefined) {
-        const {dropDownDisplay: d, hideDropdown: h, showDropdown: s} = usePopup();
-        dropDownDisplay = d;
-        hideDropdown = h;
-        showDropdown = s;
-    }
-
-    return <div
-        onMouseEnter={() => {
-            showDropdown?.()
-        }} onMouseLeave={() => {
-        hideDropdown?.()
-    }}
-        style={Object.assign({}, props.style, {position: "relative"},)}>
-        {props.hoveredContent}
-        {props.popupContent ? <div style={Object.assign({
-            borderWidth: 1,
-            border: "solid var(--link-color)",
-            borderRadius: 10,
-        }, getDropdownStyle(dropDownDisplay))}>
-            <div style={{margin: 5}}>
-                {props.popupContent}
-            </div>
-        </div> : null}
-    </div>
-}
-
-function ProjectView(props: {
-    project: OdaPmProject | null,
-    style?: React.CSSProperties
-}) {
-    if (props.project === null) return <></>;
-    const project = props.project;
-    const popupProps = usePopup("none");
-    const {hideDropdown} = popupProps;
-
-    // TODO Jump To Project Definition 
-
-    function toggleDropdown() {
-        // toggleDropDown(setDropDownDisplay)
-    }
-
-    const showableDefinitions = project.projectDefinitions.filter(k => k.type !== "system");
-    const hoveredContent = <ClickableIconView onContentClicked={toggleDropdown} onIconClicked={toggleDropdown}
-                                              iconName={"folder"}
-                                              content={<label>{project.name}</label>}/>;
-    const popupContent = showableDefinitions.length > 0 ?
-        <div>
-            <div>
-                <HStack style={{justifyContent: "space-between", alignItems: "center", margin: 5}}>
-                    <label style={{whiteSpace: "nowrap"}}>Define at</label>
-                    <ClickableIconView onIconClicked={hideDropdown} iconName={"x"}/>
-                </HStack>
-                <VStack>
-                    {showableDefinitions.map((def, i) => {
-                        return <ProjectLinkView key={i} project={project} def={def}/>
-                    })}
-                </VStack>
-            </div>
-        </div>
-        : null;
-    return <HoveringPopup {...popupProps}
-                          hoveredContent={hoveredContent} popupContent={popupContent}/>
-
-}
+import {ProjectView} from "./project-view";
+import {HoveringPopup} from "./view-template/hovering-popup";
 
 function OrphanTasksFixPanel({db}: { db: OdaPmDb }) {
     const orphanTasks = db.orphanTasks;
@@ -350,17 +239,6 @@ const EmptyWorkflowView = () => {
     return <h1>No Workflow defined, or Dataview is not initialized.</h1>
 }
 
-
-function toggleDropDown(setDropDownDisplay: (value: (((prevState: string) => string) | string)) => void) {
-    setDropDownDisplay((prevState) => {
-            if (prevState === "none") {
-                return "block";
-            } else {
-                return "none";
-            }
-        }
-    )
-}
 
 
 // endregion

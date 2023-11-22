@@ -4,6 +4,9 @@ import {OdaPmProject} from "../../data-model/OdaPmProject";
 import {FilterHeadHStack} from "./workflow-filter";
 import {StyleProps, VStack} from "./view-template/h-stack";
 import {devLog} from "../../utils/env-util";
+import {ObsidianIconView} from "./view-template/icon-view";
+
+import {IconName_Project} from "./project-view";
 
 export const ProjectFilterName_All = "All Projects";
 export const ProjectFilterOptionValue_All = "###ALL###";
@@ -206,7 +209,8 @@ export function ProjectFilter(props: {
             <FilterHeadHStack>
                 <SearchDropdown data={projectsAndAll}
                                 handleSetOptionValues={props.handleSetDisplayNames}/>
-                <h2>Project: {getOptionValueName(props.displayNames.first(), projectsAndAll)}</h2>
+                <h2><ObsidianIconView iconName={IconName_Project}/>
+                    Project: {getOptionValueName(props.displayNames.first(), projectsAndAll)}</h2>
             </FilterHeadHStack>
         </div>
 
