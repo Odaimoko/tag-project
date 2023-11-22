@@ -197,7 +197,7 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmProjectTask 
         // - A task in main project will not appear in the sub project.
         // if the given project's name is the prefix of this task's  name, then it is in the project
         return this.projects.filter(k =>
-            k.name === name || (includeSubProjects && k.name.startsWith(name)))
+            k.name === name || (includeSubProjects && k.isSubProjectOfName(name)))
             .length > 0;
     }
 

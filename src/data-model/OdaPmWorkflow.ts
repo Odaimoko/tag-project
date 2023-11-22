@@ -65,9 +65,8 @@ class OdaPmWorkflow implements I_OdaPmWorkflow {
         // TODO performance
         // - A workflow in main project -> in sub
         // - workflow in sub -> not in main
-        // if this workflow's project's name is the prefix of the given name, then it is in the project
         return this.projects.filter(k =>
-            k.name === name || (includeSubProjects && name.startsWith(k.name)))
+            k.name === name || (includeSubProjects && k.isParentProjectOf(name)))
             .length > 0;
     }
 
