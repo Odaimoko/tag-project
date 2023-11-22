@@ -57,9 +57,8 @@ function ProjectView(props: {
                            content={<label>{project.name}</label>}/>
         {showableDefinitions.length > 0 ?
             <div style={Object.assign({}, getDropdownStyle(dropDownDisplay), {
-                borderColor: "var(--link-color)",
                 borderWidth: 1,
-                border: "solid",
+                border: "solid var(--link-color)",
                 borderRadius: 10,
             } as React.CSSProperties)}>
                 <div style={{margin: 5}}>

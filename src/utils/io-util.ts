@@ -49,11 +49,13 @@ export const LIST_ITEM_REGEX = /^[\s>]*(\d+\.|\d+\)|\*|-|\+)\s*(\[.{0,1}\])?\s*(
 function openFileAtStart(workspace: Workspace, path: string) {
     workspace.openLinkText(path, path, false, {
         state: {
-            active: true,
-            mode: "source",
-            start: {
-                line: 0,
-                ch: 0,
+            active: true
+        },
+        eState: {
+            line: 0,
+            cursor: {
+                from: {line: 0, ch: 0},
+                to: {line: 1, ch: 0},
             },
         },
     });
