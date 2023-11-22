@@ -36,7 +36,7 @@ function OrphanTasksFixPanel({db}: { db: OdaPmDb }) {
                 title={<label style={{
                     whiteSpace: "nowrap",
                     color: warningColor
-                }}>NOT Undoable</label>}
+                }}>NOT Undoable: Move Task to Project</label>}
             />
             {/*<label style={{whiteSpace: "nowrap"}}>Move Task to Project</label>*/}
         </HStack>, <VStack spacing={2}>
@@ -68,7 +68,7 @@ function OrphanTasksFixPanel({db}: { db: OdaPmDb }) {
 }
 
 export function FixOrphanTasks({db}: { db: OdaPmDb }) {
-    const [panelShown, setPanelShown] = useState(true);
+    const [panelShown, setPanelShown] = useState(false);
     const orphanTasks = db.orphanTasks;
     if (orphanTasks.length === 0) return <></>;
     return <div><HStack spacing={5} style={{alignItems: "center"}}>
