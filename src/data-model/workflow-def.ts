@@ -85,7 +85,7 @@ export interface I_OdaPmProjectTask {
     // 0.2.0
     projects: OdaPmProject[];
     addProject: (project: OdaPmProject) => void;
-    isInProject: (name: string) => boolean;
+    isInProject: (name: string, includeSubProjects?: boolean) => boolean;
     /**
      * Called when no project is added. Returns the path of the markdown path.
      */
@@ -104,7 +104,7 @@ export interface I_OdaPmStep {
 }
 
 
-export interface I_OdaPmWorkflow extends I_OdaPmProjectTask, I_Nameable {
+export interface I_OdaPmWorkflow extends I_OdaPmTaskble, I_Nameable {
     boundTask: STask;
     name: string;
     stepsDef: I_OdaPmStep[];

@@ -227,6 +227,7 @@ async function test_UT_020_6(pmDb: OdaPmDb) {
     dbAssertFunctions.expectTaskInProject("UT_020_6_task_main_sub1_sub2", prj_main_name)
     dbAssertFunctions.expectTaskInProject("UT_020_6_task_main_sub1_sub2", prj_sub1_name)
     dbAssertFunctions.expectTaskInProject("UT_020_6_task_main_sub1_sub2", prj_sub2_name)
+    console.log("Test PASSED: Sub Project Inclusion.")
 }
 
 // make this async so the failing tests won't block the plugin and database initialization process.

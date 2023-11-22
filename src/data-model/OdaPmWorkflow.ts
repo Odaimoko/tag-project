@@ -61,9 +61,14 @@ class OdaPmWorkflow implements I_OdaPmWorkflow {
     }
 
 
-    isInProject(name: string): boolean {
+    isInProject(name: string, includeSubProjects = true): boolean {
         // TODO performance
-        return this.projects.map(k => k.name).includes(name);
+        // - A workflow in main project -> in sub
+        // - workflow in sub -> not in main
+        // if this workflow's project's name is the prefix of the given name, then it is in the project
+        return this.projects.filter(k =>
+            k.name === name || (includeSubProjects && name.startsWith(k.name)))
+            .length > 0;
     }
 
     getProjectPath(): string {

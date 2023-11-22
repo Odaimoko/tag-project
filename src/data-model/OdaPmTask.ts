@@ -179,9 +179,15 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmProjectTask 
         }
     }
 
-    isInProject(name: string) {
+
+    isInProject(name: string, includeSubProjects = true): boolean {
         // TODO performance
-        return this.projects.filter(k => k.name === name).length > 0;
+        // - A task in a sub project is linked to a list of hierarchical projects.
+        // - A task in main project will not appear in the sub project.
+        // if the given project's name is the prefix of this task's  name, then it is in the project
+        return this.projects.filter(k =>
+            k.name === name || (includeSubProjects && k.name.startsWith(name)))
+            .length > 0;
     }
 
     getProjectPath(): string {

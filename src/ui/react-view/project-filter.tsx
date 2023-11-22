@@ -7,6 +7,7 @@ import {devLog} from "../../utils/env-util";
 import {ObsidianIconView} from "./view-template/icon-view";
 
 import {IconName_Project} from "./project-view";
+import {usePopup} from "./view-template/hovering-popup";
 
 export const ProjectFilterName_All = "All Projects";
 export const ProjectFilterOptionValue_All = "###ALL###";
@@ -78,8 +79,7 @@ const SearchDropdown = (props: {
     handleSetOptionValues(param: string[]): void;
 } & StyleProps) => {
     const [searchText, setSearchText] = useState("")
-    const [dropDownDisplay, setDropDownDisplay] = useState("none");
-
+    const {dropDownDisplay, setDropDownDisplay, showDropdown} = usePopup();
     const filtered = props.data.filter(k => k.name.toLowerCase().includes(searchText.toLowerCase()))
 
     function handleSetSearchText(txt: string) {
@@ -177,9 +177,6 @@ const SearchDropdown = (props: {
         return undefined;
     }
 
-    function showDropdown() {
-        setDropDownDisplay("block")
-    }
 
     function hideDropdown() {
         setDropDownDisplay("none")
@@ -196,11 +193,13 @@ export function ProjectFilter(props: {
         display: "flex",
         justifyContent: "flex-start" // 横向居中
     };
+    const sortedProjects = [...props.projects].sort(
+        (a, b) => a.name.localeCompare(b.name))
     const projectsAndAll = [
         {
             name: ProjectFilterName_All,
             optionValue: ProjectFilterOptionValue_All
-        }, ...props.projects
+        }, ...sortedProjects
     ]
     // If optionValue is not defined, use name as optionValue
     return <div>
