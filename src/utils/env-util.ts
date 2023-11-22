@@ -10,22 +10,25 @@ export function isProduction() {
     return process.env.NODE_ENV === "production";
 }
 
-export function devLog(...args: any[]) {
-    if (isProduction()) return;
-    console.log(...args);
+function prodWrapper(func: CallableFunction) {
+    // @ts-ignore
+    function f(...args) {
+        if (isProduction()) return;
+        func(...args);
+    }
+
+    return f;
 }
 
-export function devAssert(...args: any[]) {
-    if (isProduction()) return;
-    console.assert(...args)
-}
+export const devLog = prodWrapper(console.log);
+
 
 // Test in dev mode.
-export function assertOnPluginInit(plugin: OdaPmToolPlugin) {
+export const assertOnPluginInit = prodWrapper((plugin: OdaPmToolPlugin) => {
     if (isProduction()) return;
     console.log("Assert start: on plugin init...");
     console.log("Assert End: on plugin init.")
-}
+})
 
 interface AssertFunctions {
     expectTaskInProject: (taskName: string, projectName: string) => void;
@@ -54,6 +57,7 @@ const dbAssertFunctions: AssertFunctions = {
         throw new Error("Not Implemented.")
     }
 }
+
 
 function expect_project(prj: OdaPmProject | null, projectName: string, definedType?: ProjectDefinedType) {
     expect(prj).to.not.be.undefined;
@@ -239,11 +243,12 @@ async function test_UT_020_6(pmDb: OdaPmDb) {
     const orphans = pmDb.orphanTasks;
     const orphans_020_6 = orphans.filter(k => k.summary.startsWith("UT_020_6"));
     expect(orphans_020_6, `Should have 0 orphan tasks in UT_020_6`).length(0);
-    console.log("Test PASSED: Sub Project Inclusion.")
+    devLog("Test PASSED: Sub Project Inclusion.")
 }
 
 // make this async so the failing tests won't block the plugin and database initialization process.
 export async function assertOnDbRefreshed(pmDb: OdaPmDb) {
+    if (isProduction()) return;
     devLog("Assert start: on db refreshed...")
     initAssertFunctions(pmDb);
     const projects = pmDb.pmProjects;
