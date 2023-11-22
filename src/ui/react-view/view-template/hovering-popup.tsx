@@ -1,6 +1,8 @@
 import React, {useState} from "react";
 import {IRenderable} from "../../common/i-renderable";
 import {getDropdownStyle} from "../project-filter";
+import {ClickableIconView} from "./icon-view";
+import {HStack} from "./h-stack";
 
 function toggleDropDown(setDropDownDisplay: (value: (((prevState: string) => string) | string)) => void) {
     setDropDownDisplay((prevState) => {
@@ -39,7 +41,7 @@ type PopupProps = Partial<ReturnType<typeof usePopup>>;
  * @constructor
  */
 export function HoveringPopup(props: {
-    hoveredContent: IRenderable, popupContent: IRenderable, style?: React.CSSProperties
+    hoveredContent: IRenderable, popupContent: IRenderable, style?: React.CSSProperties, title?: string
 } & PopupProps) {
     let {dropDownDisplay, hideDropdown, showDropdown} = props;
     if (hideDropdown === undefined || showDropdown === undefined) {
@@ -63,6 +65,11 @@ export function HoveringPopup(props: {
             borderRadius: 10,
         }, getDropdownStyle(dropDownDisplay))}>
             <div style={{margin: 5}}>
+                <HStack
+                    style={{justifyContent: "space-between", alignItems: "center", margin: 5}}>
+                    <label style={{whiteSpace: "nowrap"}}>{props.title}</label>
+                    <ClickableIconView onIconClicked={hideDropdown} iconName={"x"}/>
+                </HStack>
                 {props.popupContent}
             </div>
         </div> : null}
