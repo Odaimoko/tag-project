@@ -208,6 +208,7 @@ async function test_UT_020_4(pmDb: OdaPmDb) {
 async function test_UT_020_6(pmDb: OdaPmDb) {
     const prj_main_name = "UT_020_6_file_main";
     const prj_sub1_name = "UT_020_6_file_main/sub1";
+    const prj_sub13_name = "UT_020_6_file_main/sub13";
     const prj_sub2_name = "UT_020_6_file_main/sub1/sub2";
     dbAssertFunctions.expectTaskInProject("UT_020_6_task_main", prj_main_name);
     dbAssertFunctions.expectTaskNotInProject("UT_020_6_task_main", prj_sub1_name);
@@ -227,7 +228,14 @@ async function test_UT_020_6(pmDb: OdaPmDb) {
     dbAssertFunctions.expectTaskInProject("UT_020_6_task_main_sub1_sub2", prj_main_name)
     dbAssertFunctions.expectTaskInProject("UT_020_6_task_main_sub1_sub2", prj_sub1_name)
     dbAssertFunctions.expectTaskInProject("UT_020_6_task_main_sub1_sub2", prj_sub2_name)
-    
+
+    dbAssertFunctions.expectWorkflowNotInProject("UT_020_6_Wf_main_sub13", prj_main_name)
+    dbAssertFunctions.expectWorkflowNotInProject("UT_020_6_Wf_main_sub13", prj_sub1_name)
+    dbAssertFunctions.expectWorkflowInProject("UT_020_6_Wf_main_sub13", prj_sub13_name)
+    dbAssertFunctions.expectTaskInProject("UT_020_6_task_main_sub13", prj_main_name)
+    dbAssertFunctions.expectTaskNotInProject("UT_020_6_task_main_sub13", prj_sub1_name)
+    dbAssertFunctions.expectTaskInProject("UT_020_6_task_main_sub13", prj_sub13_name)
+
     const orphans = pmDb.orphanTasks;
     const orphans_020_6 = orphans.filter(k => k.summary.startsWith("UT_020_6"));
     expect(orphans_020_6, `Should have 0 orphan tasks in UT_020_6`).length(0);
