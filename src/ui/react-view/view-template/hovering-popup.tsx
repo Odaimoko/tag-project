@@ -41,7 +41,7 @@ type PopupProps = Partial<ReturnType<typeof usePopup>>;
  * @constructor
  */
 export function HoveringPopup(props: {
-    hoveredContent: IRenderable, popupContent: IRenderable, style?: React.CSSProperties, title?: string
+    hoveredContent: IRenderable, popupContent: IRenderable, style?: React.CSSProperties, title?: IRenderable
 } & PopupProps) {
     let {dropDownDisplay, hideDropdown, showDropdown} = props;
     if (hideDropdown === undefined || showDropdown === undefined) {
@@ -67,7 +67,10 @@ export function HoveringPopup(props: {
             <div style={{margin: 5}}>
                 <HStack
                     style={{justifyContent: "space-between", alignItems: "center", margin: 5}}>
-                    <label style={{whiteSpace: "nowrap"}}>{props.title}</label>
+                    {typeof props.title === "string" ?
+                        <label style={{whiteSpace: "nowrap"}}>{props.title}</label> :
+                        props.title as React.ReactNode
+                    }
                     <ClickableIconView onIconClicked={hideDropdown} iconName={"x"}/>
                 </HStack>
                 {props.popupContent}

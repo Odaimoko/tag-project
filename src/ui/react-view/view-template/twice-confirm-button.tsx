@@ -1,5 +1,6 @@
 import {IRenderable} from "../../common/i-renderable";
 import React, {useState} from "react";
+import {warningColor} from "../fix-orphan-tasks";
 
 export function TwiceConfirmButton(props: {
     onConfirm: () => void,
@@ -9,7 +10,7 @@ export function TwiceConfirmButton(props: {
     const [clicked, setClicked] = useState(false);
 
     return <button onMouseLeave={unclick} onBlur={unclick} style={{
-        background: clicked ? "var(--text-warning)" : "var(--background-primary)",
+        background: clicked ? warningColor : "var(--background-primary)",
     }} onClick={() => {
         if (clicked) {
             props.onConfirm();
