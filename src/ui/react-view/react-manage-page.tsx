@@ -76,7 +76,7 @@ export function ReactManagePage({eventCenter}: {
     const [settingsDisplayWorkflowNames, setDisplayWorkflowNames] = useState(getSettings()?.display_workflow_names as string[]);
     const [displayTags, setDisplayTags] = useState(getSettings()?.manage_page_display_tags as string[]);
     const [excludedTags, setExcludedTags] = useState(getSettings()?.manage_page_excluded_tags as string[]);
-    const [displayProjectOptionValues, setDisplayProjectOptionValues] = useState(initDisplayProjectOptionValues);
+    const [settingsDisplayProjectOptionValues, setDisplayProjectOptionValues] = useState(initDisplayProjectOptionValues);
 
     function initDisplayProjectOptionValues() {
         const settingsValue = getSettings()?.manage_page_display_projects as string[];
@@ -116,6 +116,17 @@ export function ReactManagePage({eventCenter}: {
     const rectifiedDisplayTags = displayTags.filter(k => db?.pmTags.contains(k))
     const rectifiedExcludedTags = excludedTags.filter(k => db?.pmTags.contains(k))
 
+    // region Rectify
+
+    // if a project is deleted while being displayed, use all projects instead.
+    const displayProjectOptionValues = settingsDisplayProjectOptionValues.filter(k => {
+        return projects.some(p => p.name === k)
+    })
+    if (displayProjectOptionValues.length === 0) {
+        displayProjectOptionValues.push(ProjectFilterOptionValue_All)
+    }
+    // endregion
+
     // Filter
     // Show only this project's workflows
     workflows = workflows.filter(isWorkflowShownInPage);
@@ -132,7 +143,6 @@ export function ReactManagePage({eventCenter}: {
 
     const filteredTasks = db.getFilteredTasks(displayWorkflows, rectifiedDisplayTags, rectifiedExcludedTags)
         .filter(k => isInAnyProject(displayProjectOptionValues, k))
-    // console.log(`ReactManagePage Render. All tasks: ${tasks_with_workflow.length}. Filtered Tasks: ${filteredTasks.length}. Workflow: ${curWfName}. IncludeCompleted: ${includeCompleted}`)
 
     const pmTags = db.pmTags || [];
     // It is undefined how saved tags will behave after we switch projects.
