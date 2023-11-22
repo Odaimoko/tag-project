@@ -4,7 +4,8 @@ import {getIcon} from "obsidian";
 import {HtmlStringComponent} from "./html-string-component";
 
 export const CssClass_Link = "cm-underline";
-
+export const obsidianIconTopOffset = 4;
+export const obsidianIconOffsetStyle = {position: "relative", top: obsidianIconTopOffset} as React.CSSProperties;
 export interface I_Stylable {
     style?: React.CSSProperties;
 }
@@ -51,5 +52,3 @@ export function ClickableIconView({content, onIconClicked, onContentClicked, ico
         </span>
     </span>
 }
-
-
