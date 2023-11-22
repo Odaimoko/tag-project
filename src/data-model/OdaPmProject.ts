@@ -44,6 +44,23 @@ export class OdaPmProjectDefinition {
         return this.type == type;
     }
 
+    getLinkText() {
+        switch (this.type) {
+            case "folder":
+            case "file":
+                return path.basename(this.page.path);
+            case "tag_override":
+                if (this.taskable instanceof OdaPmTask)
+                    return path.basename(this.taskable.summary);
+                else {
+                    // workflow
+                    // @ts-ignore
+                    return path.basename(this.taskable.name);
+                }
+            case "system":
+                return ProjectName_Unclassified;
+        }
+    }
 }
 
 export class OdaPmProject extends BaseDatabaseObject implements I_Nameable {

@@ -88,7 +88,7 @@ const SearchDropdown = (props: {
         selectedChild.current = -1;
     }
 
-    return <div style={props.style}
+    return <div style={Object.assign({}, props.style, {position: "relative"})}
                 onKeyDown={handleBaseKeyboard}
                 onBlur={(event) => {
                     // Hide Dropdown if we lose focus

@@ -14,8 +14,23 @@ import {getDropdownStyle, ProjectFilter, ProjectFilterName_All, ProjectFilterOpt
 import {HStack, VStack} from "./view-template/h-stack";
 import {ClickableIconView, InternalLinkView, ObsidianIconView} from "./view-template/icon-view";
 import {DataTable} from "./view-template/data-table";
-import {OdaPmProject} from "../../data-model/OdaPmProject";
+import {OdaPmProject, OdaPmProjectDefinition} from "../../data-model/OdaPmProject";
 import {openProjectPrecisely} from "../../utils/io-util";
+import {iconViewAsAWholeStyle} from "./style-def";
+
+function ProjectLinkView(props: {
+    project: OdaPmProject,
+    def: OdaPmProjectDefinition
+}) {
+    const plugin = useContext(PluginContext);
+    return <InternalLinkView style={iconViewAsAWholeStyle} onIconClicked={openProject}
+                             onContentClicked={openProject}
+                             content={<label style={{whiteSpace: "nowrap"}}>{props.def.getLinkText()}</label>}/>
+
+    function openProject() {
+        openProjectPrecisely(props.project, props.def, plugin.app.workspace);
+    }
+}
 
 function ProjectView(props: {
     project: OdaPmProject | null,
@@ -24,35 +39,56 @@ function ProjectView(props: {
     if (props.project === null) return <></>;
     const [dropDownDisplay, setDropDownDisplay] = useState("none");
     const project = props.project;
-    const plugin = useContext(PluginContext);
 
     // TODO Jump To Project Definition 
 
     function toggleDropdown() {
-        toggleDropDown(setDropDownDisplay)
+        // toggleDropDown(setDropDownDisplay)
     }
 
-    return <div style={props.style}>
+    const showableDefinitions = project.projectDefinitions.filter(k => k.type !== "system");
+    return <div onMouseEnter={() => {
+        showDropdown()
+    }} onMouseLeave={() => {
+        hideDropdown()
+    }}
+                style={Object.assign({}, props.style, {position: "relative"},)}>
         <ClickableIconView onContentClicked={toggleDropdown} onIconClicked={toggleDropdown} iconName={"folder"}
                            content={<label>{project.name}</label>}/>
-        <div style={getDropdownStyle(dropDownDisplay)}>
-            {project.projectDefinitions.map((def, i) => {
-                return <div key={i}>
-                    <InternalLinkView onIconClicked={openProject} onContentClicked={openProject}
-                                      content={<label>{def.path}</label>}/>
-                </div>
+        {showableDefinitions.length > 0 ?
+            <div style={Object.assign({}, getDropdownStyle(dropDownDisplay), {
+                borderColor: "var(--link-color)",
+                borderWidth: 1,
+                border: "solid",
+                borderRadius: 10,
+            } as React.CSSProperties)}>
+                <div style={{margin: 5}}>
+                    <HStack style={{justifyContent: "space-between", alignItems: "center", margin: 5}}>
+                        <label style={{whiteSpace: "nowrap"}}>Define at</label>
 
-                function openProject() {
-                    openProjectPrecisely(project, def, plugin.app.workspace);
-                }
-            })}
-        </div>
+                        <ClickableIconView onIconClicked={hideDropdown} iconName={"x"}/>
+                    </HStack>
+                    <VStack>
+                        {showableDefinitions.map((def, i) => {
+                            return <ProjectLinkView key={i} project={project} def={def}/>
+                        })}
+                    </VStack>
+                </div>
+            </div>
+            : null}
     </div>
+
+    function showDropdown() {
+        setDropDownDisplay("block")
+    }
+
+    function hideDropdown() {
+        setDropDownDisplay("none")
+    }
 }
 
 function OrphanTasksFixPanel({db}: { db: OdaPmDb }) {
     const orphanTasks = db.orphanTasks;
-    const plugin = useContext(PluginContext);
     // Task\n Workflow
     // Project\n Project
     const headers = ["Task", "Workflow"];
