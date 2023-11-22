@@ -55,8 +55,12 @@ function loopIndex(nextIdx: number, len: number) {
     return nextIdx;
 }
 
-export function getDropdownStyle(dropDownDisplay: string) {
-
+/**
+ * A style that will show or hide the dropdown.
+ * @param dropDownDisplay
+ */
+export function getDropdownStyle(dropDownDisplay: string | undefined) {
+    dropDownDisplay ??= "none";
     const dropdownStyle = {
         display: dropDownDisplay,
         position: "absolute",

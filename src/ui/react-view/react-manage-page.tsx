@@ -17,6 +17,27 @@ import {DataTable} from "./view-template/data-table";
 import {OdaPmProject, OdaPmProjectDefinition} from "../../data-model/OdaPmProject";
 import {openProjectPrecisely} from "../../utils/io-util";
 import {iconViewAsAWholeStyle} from "./style-def";
+import {IRenderable} from "../common/i-renderable";
+
+function usePopup(init = "none") {
+    const [dropDownDisplay, setDropDownDisplay] = useState(init);
+
+    function toggleDropdown() {
+        toggleDropDown(setDropDownDisplay)
+    }
+
+    function showDropdown() {
+        setDropDownDisplay("block")
+    }
+
+    function hideDropdown() {
+        setDropDownDisplay("none")
+    }
+
+    return {dropDownDisplay, setDropDownDisplay, toggleDropdown, showDropdown, hideDropdown}
+}
+
+type PopupProps = Partial<ReturnType<typeof usePopup>>;
 
 function ProjectLinkView(props: {
     project: OdaPmProject,
@@ -32,13 +53,50 @@ function ProjectLinkView(props: {
     }
 }
 
+/**
+ *
+ * @param props If hideDropdown or showDropdown is not given, use usePopup() to get them.
+ * @constructor
+ */
+function HoveringPopup(props: {
+    hoveredContent: IRenderable, popupContent: IRenderable, style?: React.CSSProperties
+} & PopupProps) {
+    let {dropDownDisplay, hideDropdown, showDropdown} = props;
+    if (hideDropdown === undefined || showDropdown === undefined) {
+        const {dropDownDisplay: d, hideDropdown: h, showDropdown: s} = usePopup();
+        dropDownDisplay = d;
+        hideDropdown = h;
+        showDropdown = s;
+    }
+
+    return <div
+        onMouseEnter={() => {
+            showDropdown?.()
+        }} onMouseLeave={() => {
+        hideDropdown?.()
+    }}
+        style={Object.assign({}, props.style, {position: "relative"},)}>
+        {props.hoveredContent}
+        {props.popupContent ? <div style={Object.assign({
+            borderWidth: 1,
+            border: "solid var(--link-color)",
+            borderRadius: 10,
+        }, getDropdownStyle(dropDownDisplay))}>
+            <div style={{margin: 5}}>
+                {props.popupContent}
+            </div>
+        </div> : null}
+    </div>
+}
+
 function ProjectView(props: {
     project: OdaPmProject | null,
     style?: React.CSSProperties
 }) {
     if (props.project === null) return <></>;
-    const [dropDownDisplay, setDropDownDisplay] = useState("none");
     const project = props.project;
+    const popupProps = usePopup("none");
+    const {hideDropdown} = popupProps;
 
     // TODO Jump To Project Definition 
 
@@ -47,43 +105,27 @@ function ProjectView(props: {
     }
 
     const showableDefinitions = project.projectDefinitions.filter(k => k.type !== "system");
-    return <div onMouseEnter={() => {
-        showDropdown()
-    }} onMouseLeave={() => {
-        hideDropdown()
-    }}
-                style={Object.assign({}, props.style, {position: "relative"},)}>
-        <ClickableIconView onContentClicked={toggleDropdown} onIconClicked={toggleDropdown} iconName={"folder"}
-                           content={<label>{project.name}</label>}/>
-        {showableDefinitions.length > 0 ?
-            <div style={Object.assign({}, getDropdownStyle(dropDownDisplay), {
-                borderWidth: 1,
-                border: "solid var(--link-color)",
-                borderRadius: 10,
-            } as React.CSSProperties)}>
-                <div style={{margin: 5}}>
-                    <HStack style={{justifyContent: "space-between", alignItems: "center", margin: 5}}>
-                        <label style={{whiteSpace: "nowrap"}}>Define at</label>
-
-                        <ClickableIconView onIconClicked={hideDropdown} iconName={"x"}/>
-                    </HStack>
-                    <VStack>
-                        {showableDefinitions.map((def, i) => {
-                            return <ProjectLinkView key={i} project={project} def={def}/>
-                        })}
-                    </VStack>
-                </div>
+    const hoveredContent = <ClickableIconView onContentClicked={toggleDropdown} onIconClicked={toggleDropdown}
+                                              iconName={"folder"}
+                                              content={<label>{project.name}</label>}/>;
+    const popupContent = showableDefinitions.length > 0 ?
+        <div>
+            <div>
+                <HStack style={{justifyContent: "space-between", alignItems: "center", margin: 5}}>
+                    <label style={{whiteSpace: "nowrap"}}>Define at</label>
+                    <ClickableIconView onIconClicked={hideDropdown} iconName={"x"}/>
+                </HStack>
+                <VStack>
+                    {showableDefinitions.map((def, i) => {
+                        return <ProjectLinkView key={i} project={project} def={def}/>
+                    })}
+                </VStack>
             </div>
-            : null}
-    </div>
+        </div>
+        : null;
+    return <HoveringPopup {...popupProps}
+                          hoveredContent={hoveredContent} popupContent={popupContent}/>
 
-    function showDropdown() {
-        setDropDownDisplay("block")
-    }
-
-    function hideDropdown() {
-        setDropDownDisplay("none")
-    }
 }
 
 function OrphanTasksFixPanel({db}: { db: OdaPmDb }) {
@@ -124,21 +166,24 @@ function FixOrphanTasks({db}: { db: OdaPmDb }) {
     const [panelShown, setPanelShown] = useState(true);
     const orphanTasks = db.orphanTasks;
     if (orphanTasks.length === 0) return <></>;
-
     return <div><HStack spacing={5} style={{alignItems: "center"}}>
-        <ObsidianIconView style={{color: "var(--color-red)"}} iconName={"alert-circle"}/>
+        <HoveringPopup
+            hoveredContent={<ObsidianIconView style={{color: "var(--color-red)"}}
+                                              iconName={"alert-circle"}/>}
+            popupContent={
+                <VStack>
+                    <label style={{whiteSpace: "nowrap"}}>
+                        An orphan task's project does not match its workflow's.
+                    </label>
+                    <label style={{whiteSpace: "nowrap"}}>
+                        It will not show except in <b>{ProjectFilterName_All}</b>.
+                    </label>
+                </VStack>}/>
+
         <button onClick={() => setPanelShown(!panelShown)}>
             Fix {orphanTasks.length} orphan task(s)
         </button>
-        <VStack>
 
-            <label>
-                An orphan task's project does not match its workflow's.
-            </label>
-            <label>
-                It will not show except in <b>{ProjectFilterName_All}</b>.
-            </label>
-        </VStack>
     </HStack>
 
         {panelShown ? <OrphanTasksFixPanel db={db}/> : null}
