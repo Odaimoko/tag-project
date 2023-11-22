@@ -22,25 +22,10 @@ function OrphanTasksFixPanel({db}: { db: OdaPmDb }) {
     const orphanTasks = db.orphanTasks;
     // Task\n Workflow
     // Project\n Project
-    const headers = ["Task", "Workflow", "Fix"];
+    const headers = ["Fix", "Task", "Workflow",];
     const rows = orphanTasks.map((task, i) => {
         const wfProject = task.type.getFirstProject();
-        return [<VStack spacing={2}>
-            <OdaTaskSummaryCell key={`${task.boundTask.path}:${task.boundTask.line}`}
-                                oTask={task}
-                                taskFirstColumn={task.summary} showCheckBox={false} showWorkflowIcon={false}/>
-
-            <ProjectView project={task.getFirstProject()}/>
-
-        </VStack>, <VStack spacing={2}>
-            <WorkflowFilterCheckbox workflow={task.type} showCheckBox={false} showWorkflowIcon={false}/> <HStack
-            style={{alignItems: "center"}} spacing={10}>
-            {/*<button>Assign to</button>*/}
-            <ProjectView project={wfProject}/>
-
-        </HStack>
-        </VStack>, <HStack style={{alignItems: "center"}} spacing={2}>
-
+        return [<HStack style={{alignItems: "center"}} spacing={2}>
             <HoveringPopup
                 hoveredContent={<TwiceConfirmButton
                     onConfirm={() => {
@@ -57,14 +42,28 @@ function OrphanTasksFixPanel({db}: { db: OdaPmDb }) {
                 title={"Move Task to Project?"}
             />
             {/*<label style={{whiteSpace: "nowrap"}}>Move Task to Project</label>*/}
-        </HStack>]
+        </HStack>, <VStack spacing={2}>
+            <OdaTaskSummaryCell key={`${task.boundTask.path}:${task.boundTask.line}`}
+                                oTask={task}
+                                taskFirstColumn={task.summary} showCheckBox={false} showWorkflowIcon={false}/>
+
+            <ProjectView project={task.getFirstProject()}/>
+
+        </VStack>, <VStack spacing={2}>
+            <WorkflowFilterCheckbox workflow={task.type} showCheckBox={false} showWorkflowIcon={false}/> <HStack
+            style={{alignItems: "center"}} spacing={10}>
+            {/*<button>Assign to</button>*/}
+            <ProjectView project={wfProject}/>
+
+        </HStack>
+        </VStack>,]
     })
     const {cellStyleGetter, headStyleGetter} = getDefaultTableStyleGetters(
         "unset", "unset",
         0, false
     );
     return <div>
-        <DataTable tableTitle={"SomeTitleNtImp"} headers={headers} rows={rows}
+        <DataTable tableTitle={"Orphan Tasks"} headers={headers} rows={rows}
                    thStyleGetter={headStyleGetter}
                    cellStyleGetter={cellStyleGetter}
         />
@@ -87,7 +86,9 @@ function FixOrphanTasks({db}: { db: OdaPmDb }) {
                     <label style={{whiteSpace: "nowrap"}}>
                         It will not show except in <b>{ProjectFilterName_All}</b>.
                     </label>
-                </VStack>}/>
+                </VStack>}
+            title={"What is an Orphan Task?"}
+        />
 
         <button onClick={() => setPanelShown(!panelShown)}>
             Fix {orphanTasks.length} orphan task(s)
