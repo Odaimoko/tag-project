@@ -15,7 +15,7 @@ import {addTagText, getWorkflowNameFromRawText, I_OdaPmWorkflow} from "./data-mo
 import {rewriteTask, setProjectTagAtPath} from "./utils/io-util";
 import {WorkflowSuggestionModal} from "./ui/obsidian/workflow-suggestion-modal";
 import {Icon_HelpPage, PmHelpPageView, PmHelpPageViewId} from "./ui/obsidian/help-page-view";
-import {devLog} from "./utils/env-util";
+import {devLog, initPluginEnv, removePluginEnv, setVaultName} from "./utils/env-util";
 import {OdaPmTask} from "./data-model/OdaPmTask";
 import {ProjectSuggestionModal} from "./ui/obsidian/project-suggestion-modal";
 import {assertOnPluginInit} from "./test_runtime/assertDatabase";
@@ -43,7 +43,6 @@ export default class OdaPmToolPlugin extends Plugin {
             }));
             return;
         }
-
         await this.initPlugin();
     }
 
@@ -52,16 +51,19 @@ export default class OdaPmToolPlugin extends Plugin {
         SettingsProvider.remove();
         if (this.inited) {
             OdaPmDbProvider.remove();
+            removePluginEnv();
             this.emitter.removeAllListeners()
         }
     }
 
 
     private async initPlugin() {
+        initPluginEnv();
+        setVaultName(this.app.vault.getName());
         this.emitter = new EventEmitter();
         this.pmDb = new OdaPmDb(this.emitter);
         OdaPmDbProvider.add(this.pmDb);
-        // console.log("add OdaPmDbProvider")
+
         this.regPluginListener()
 
         this.initCommands();

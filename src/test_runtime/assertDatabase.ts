@@ -1,5 +1,5 @@
 // Test in dev mode.
-import {devLog, isProduction, prodWrapper} from "../utils/env-util";
+import {devLog, getVaultName, prodWrapper} from "../utils/env-util";
 import {OdaPmTask} from "../data-model/OdaPmTask";
 import {OdaPmProject, ProjectDefinedType, ProjectName_Unclassified} from "../data-model/OdaPmProject";
 import {I_OdaPmWorkflow} from "../data-model/workflow-def";
@@ -237,15 +237,23 @@ async function test_UT_020_6(pmDb: OdaPmDb) {
  * so it's ok that the transpiler cannot resolve references.
  */
 export const assertOnPluginInit = prodWrapper((plugin: OdaPmToolPlugin) => {
-    if (isProduction()) return;
+//#ifdef DEVELOPMENT_BUILD
+    if (!getVaultName().contains("test-obsidian-vault")) {
+        return;
+    }
     console.log("Assert start: on plugin init...");
     console.log("Assert End: on plugin init.")
+//#endif
 })
 
 // make this async so the failing tests won't block the plugin and database initialization process.
 export const assertDatabase = prodWrapper(async (pmDb: OdaPmDb) => {
-
+//#ifdef DEVELOPMENT_BUILD
+    if (!getVaultName().contains("test-obsidian-vault")) {
+        return;
+    }
     devLog("Assert start: on db refreshed...")
+    // Only Assert in dev vault.
     initAssertFunctions(pmDb);
     const projects = pmDb.pmProjects;
 
@@ -257,4 +265,5 @@ export const assertDatabase = prodWrapper(async (pmDb: OdaPmDb) => {
     test_UT_020_4(pmDb);
     test_UT_020_6(pmDb);
     devLog("Assert end: on db refreshed...")
+//#endif
 });
