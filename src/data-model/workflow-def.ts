@@ -2,7 +2,7 @@ import {STask} from "obsidian-dataview";
 import {OdaPmTask} from "./OdaPmTask";
 import {OdaPmProject, Tag_Prefix_Project} from "./OdaPmProject";
 import {I_Nameable} from "./I_Nameable";
-import {matchCodeInline, matchTags, POTENTIAL_TAG_MATCHER} from "./markdown-parse";
+import {matchTags, POTENTIAL_TAG_MATCHER} from "./markdown-parse";
 
 export const Tag_Prefix_Step = "#tpm/step/";
 export const Tag_Prefix_Workflow = "#tpm/workflow_type/";
@@ -44,11 +44,6 @@ export function isTaskSummaryValid(task: STask) {
     return summary && summary.length > 0;
 }
 
-export function matchTags(text: string) {
-    const tags = text.match(POTENTIAL_FULLTAG_MATCHER)
-    return tags;
-}
-
 export function trimTagsFromTask(task: STask): string {
     // remove all tags from text
     let text: string = task.text;
@@ -63,10 +58,6 @@ export function trimTagsFromTask(task: STask): string {
 
 // https://github.com/blacksmithgu/obsidian-dataview/blob/322217ad563defbc213f6731c9cd5a5f5a7e3638/src/data-import/common.ts#L5
 // Forbid @ since obsidian does not allow it
-
-const POTENTIAL_TAG_MATCHER = /[^+@\s,;.:!&*?'"`()\[\]{}]+/giu;
-// With hashtag and spaces before
-const POTENTIAL_FULLTAG_MATCHER = /\s+#[^+@\s,;.:!&*?'"`()\[\]{}]+/giu;
 
 /**
  * Only take the first word
@@ -169,14 +160,17 @@ export function isTaskSingleLine(task: STask) {
     return hasTextAfterEol;
 }
 
+function getTagsFromSTask(task: STask): string[] {
+    return matchTags(task.text);
+}
+
 // region Project 
 /**
  * The first project tag in the task will be returned.
  * @param task
  */
 export function getProjectTagFromSTask(task: STask) {
-
-    for (const tag of task.tags) {
+    for (const tag of getTagsFromSTask(task)) {
         if (tag.startsWith(Tag_Prefix_Project)) {
             return tag;
         }
