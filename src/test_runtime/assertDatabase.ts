@@ -70,6 +70,14 @@ async function test_UT_020_1(pmDb: OdaPmDb) {
     expect(pmDb.getProjectByName("UT_020_1_7_Multiple2"), "UT_020_1_7_Multiple2 should be found.")
         .not.null;
 
+    expect(pmDb.getProjectByName("UT_020_1_9_code_block"), "UT_020_1_9_code_block should not be found.")
+        .null;
+    expect(pmDb.getProjectByName("UT_020_1_9_code_block_asterisk"), "UT_020_1_9_code_block_asterisk should not be found.")
+        .null;
+    expect(pmDb.getProjectByName("UT_020_1_9_code_block_bold"), "UT_020_1_9_code_block_bold should be found.")
+        .not.null;
+    expect(pmDb.getProjectByName("UT_020_1_9_code_block_outside_code"), "UT_020_1_9_code_block_outside_code should be found.")
+        .not.null;
 }
 
 async function test_UT_020_2(pmDb: OdaPmDb) {
