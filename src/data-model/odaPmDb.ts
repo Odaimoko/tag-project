@@ -142,7 +142,6 @@ function getAllPmTasks(workflows: I_OdaPmWorkflow[]) {
 /**
  * Pass 1: create projects from frontmatter and tasks.
  * Pass 2: link tasks/Wf to projects.
- * @param pmTasks
  */
 function getAllProjectsAndLinkTasks(pmTasks: OdaPmTask[], workflows: I_OdaPmWorkflow[]): OdaPmProject[] {
     clearGlobalProjectMap();

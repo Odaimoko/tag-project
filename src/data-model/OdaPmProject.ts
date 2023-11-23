@@ -81,7 +81,10 @@ export class OdaPmProject extends BaseDatabaseObject implements I_Nameable {
 
 // region Factory
     addProjectDefinition(type: ProjectDefinedType, obsidianPath: string, page?: SMarkdownPage, task?: I_OdaPmTaskble) {
-        //     Obsidian path is relative. Add '/' before path to form a tree
+        // Obsidian path is relative.
+        // Remove . at the beginning. 
+        // Add '/' before path to form a tree
+        obsidianPath = obsidianPath.startsWith(".") ? obsidianPath.substring(1) : obsidianPath
         obsidianPath = (obsidianPath.startsWith("/") ? "" : "/") + obsidianPath; // prevent doubling leading '/'
         const odaPmProjectDefinition = new OdaPmProjectDefinition(
             type, obsidianPath, page, task

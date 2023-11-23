@@ -47,6 +47,7 @@ export class OdaProjectTree {
     }
 
     getProjectByPmWorkflow(pmWorkflow: I_OdaPmWorkflow): OdaPmProject {
+        // console.log(pmWorkflow.name, pmWorkflow.getProjectPath(), this.projectDict, getProjectByTaskPath(this.projectDict, pmWorkflow.getProjectPath()))
         return getProjectByTaskPath(this.projectDict, pmWorkflow.getProjectPath());
     }
 
