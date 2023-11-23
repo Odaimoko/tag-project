@@ -73,7 +73,7 @@ export function FixOrphanTasks({db}: { db: OdaPmDb }) {
     if (orphanTasks.length === 0) return <></>;
     return <div><HStack spacing={5} style={{alignItems: "center"}}>
         <HoveringPopup
-            hoveredContent={<ObsidianIconView style={{color: "var(--color-red)"}}
+            hoveredContent={<ObsidianIconView style={{color: "var(--text-warning)"}}
                                               iconName={"alert-circle"}/>}
             popupContent={
                 <VStack>
@@ -90,6 +90,11 @@ export function FixOrphanTasks({db}: { db: OdaPmDb }) {
         <button onClick={() => setPanelShown(!panelShown)}>
             Fix {orphanTasks.length} orphan task(s)
         </button>
+        {
+            panelShown ?
+                <ObsidianIconView style={obsidianIconOffsetStyle} iconName={"chevron-down"}/> :
+                <ObsidianIconView style={obsidianIconOffsetStyle} iconName={"chevron-right"}/>
+        }
 
     </HStack>
 
