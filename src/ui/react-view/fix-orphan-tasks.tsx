@@ -2,7 +2,7 @@ import {OdaPmDb} from "../../data-model/odaPmDb";
 import {HStack, VStack} from "./view-template/h-stack";
 import {HoveringPopup} from "./view-template/hovering-popup";
 import {TwiceConfirmButton} from "./view-template/twice-confirm-button";
-import {obsidianIconOffsetStyle, ObsidianIconView} from "./view-template/icon-view";
+import {obsidianIconOffsetCenteredStyle, obsidianIconOffsetStyle, ObsidianIconView} from "./view-template/icon-view";
 import {getDefaultTableStyleGetters, OdaTaskSummaryCell} from "./task-table-view";
 import {ProjectView} from "./project-view";
 import {WorkflowFilterCheckbox} from "./workflow-filter";
@@ -88,13 +88,13 @@ export function FixOrphanTasks({db}: { db: OdaPmDb }) {
         />
 
         <button onClick={() => setPanelShown(!panelShown)}>
-            Fix {orphanTasks.length} orphan task(s)
-        </button>
-        {
+            Fix {orphanTasks.length} orphan task(s) {
             panelShown ?
-                <ObsidianIconView style={obsidianIconOffsetStyle} iconName={"chevron-down"}/> :
-                <ObsidianIconView style={obsidianIconOffsetStyle} iconName={"chevron-right"}/>
+                <ObsidianIconView style={obsidianIconOffsetCenteredStyle} iconName={"chevron-down"}/> :
+                <ObsidianIconView style={obsidianIconOffsetCenteredStyle} iconName={"chevron-right"}/>
         }
+        </button>
+
 
     </HStack>
 
