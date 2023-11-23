@@ -36,7 +36,7 @@ export default class OdaPmToolPlugin extends Plugin {
         await this.initSettings();
 
         if (!this.hasDataviewPlugin()) {
-            new ONotice("Dataview plugin is not enabled. Please enable it to use this plugin.");
+            new ONotice("Dataview plugin is not enabled.");
 
             this.registerEvent(this.app.metadataCache.on(DataviewIndexReadyEvent, () => {
                 this.initPlugin()
@@ -188,7 +188,8 @@ export default class OdaPmToolPlugin extends Plugin {
         if (!taskCache) {
             // console.log(pageCache)
             // console.log(pageCache?.listItems?.map(k => k.position.start))
-            new ONotice("It's not a markdown task.\nTry remove indentations or texts directly following on the next line (you can use list to describe details).\nOnly the task that is part of a list are recognized (or the task itself is a list itself). ")
+            // new ONotice("It's not a markdown task.\nTry remove indentations or texts directly following on the next line (you can use list to describe details).\nOnly the task that is part of a list are recognized (or the task itself is a list itself). ")
+            new ONotice("Not a markdown task.")
             return false;
         }
         return true;
@@ -197,7 +198,7 @@ export default class OdaPmToolPlugin extends Plugin {
     private addWorkflowToMdTask(editor: Editor, view: MarkdownView | MarkdownFileInfo) {
         const filePath = view.file?.path;
         if (!filePath) {
-            new ONotice("No markdown file.")
+            new ONotice("Not a markdown file.")
             return; // no file
         }
         const cursor = editor.getCursor();
@@ -236,7 +237,7 @@ export default class OdaPmToolPlugin extends Plugin {
     private addProjectToMdTask(editor: Editor, view: MarkdownView | MarkdownFileInfo) {
         const filePath = view.file?.path;
         if (!filePath) {
-            new ONotice("No markdown file.")
+            new ONotice("Not a markdown file.")
             return; // no file
         }
         const cursor = editor.getCursor();
@@ -248,7 +249,7 @@ export default class OdaPmToolPlugin extends Plugin {
             }
             const sanityCheckProject = getWorkflowNameFromRawText(prj.name);
             if (prj.name !== sanityCheckProject) {
-                new ONotice(`Cannot assign Project: Project name is not a valid Tag.\n - [${prj.name}]`)
+                new ONotice(`Project name is not a valid Tag.\n - [${prj.name}]`)
                 return;
             }
             setProjectTagAtPath.call(this, prj, filePath, cursor);

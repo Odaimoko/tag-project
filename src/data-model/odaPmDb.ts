@@ -30,7 +30,8 @@ const dv = getAPI(); // We can use dv just like the examples in the docs
 function notifyMalformedTask(task: STask, reason: string) {
     // console.log(pmPlugin && pmPlugin.settings.report_malformed_task)
     if (getSettings()?.report_malformed_task)
-        new ONotice(`${reason}\nYou can disable this popup in settings.\n\nSee Task in ${task.path}, line ${task.line + 1}:\n\t${task.text}`, 5)
+        // new ONotice(`${reason}\nYou can disable this popup in settings.\n\nSee Task in ${task.path}, line ${task.line + 1}:\n\t${task.text}`, 5)
+        new ONotice(`${reason}\nYou can disable this popup in settings.\n\nSee Task in ${task.path}, line ${task.line + 1}`, 5)
 }
 
 function getTaskMultiLineErrMsg() {
