@@ -22,4 +22,36 @@ describe("Match tags", () => {
         const result = matchTags(text)
         expect(result?.length).toBe(2);
     })
+    test("Match bold", () => {
+        const text = "block **#tpm/project/UT_020_1_9_code_block_bold**";
+        const result = matchTags(text)
+        expect(result?.length).toBe(1);
+    })
+    test("Match bold 2", () => {
+        const text = "_9_code_block_bold  #tpm/workflow/UT_020_1_8_prefix **#tpm/project/UT_020_1_9_code_block_bold**";
+        const result = matchTags(text)
+        expect(result?.length).toBe(2);
+        expect(result[0]).toBe("#tpm/workflow/UT_020_1_8_prefix");
+        expect(result[1]).toBe("#tpm/project/UT_020_1_9_code_block_bold");
+    })
+    test("Match italic *", () => {
+        const text = "block *#tpm/project/UT_020_1_9_code_block_italic*";
+        const result = matchTags(text)
+        expect(result?.length).toBe(1);
+    })
+    test("Do not match italic _", () => {
+        const text = "block _#tpm/project/UT_020_1_9_code_block_italic2_";
+        const result = matchTags(text)
+        expect(result?.length).toBe(0);
+    })
+    test("Do not match code inline", () => {
+        const text = "block `#tpm/project/UT_020_1_9_code_block_italic2`";
+        const result = matchTags(text)
+        expect(result?.length).toBe(0);
+    })
+    test("Do not match code inline with space", () => {
+        const text = "block ` #tpm/project/UT_020_1_9_code_block_italic2` ";
+        const result = matchTags(text)
+        expect(result?.length).toBe(0);
+    })
 }) 
