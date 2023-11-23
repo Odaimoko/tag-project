@@ -2,6 +2,7 @@ import esbuild from "esbuild";
 import builtins from "builtin-modules";
 import {replace} from "esbuild-plugin-replace";
 import ifdef from "esbuild-plugin-ifdef";
+import {executePostBuildPlugin} from "./ci/postbuildPlugin.mjs";
 
 const banner =
     `/*
@@ -11,7 +12,6 @@ if you want to view the source, please visit the github repository of this plugi
 `;
 
 const prod = (process.argv[2] === "production");
-
 const ifdef_define = {
     "process.env.DEVELOPMENT_BUILD": JSON.stringify(!prod),
 };
@@ -26,6 +26,7 @@ const context = await esbuild.context({
         replace({
             "process.env.NODE_ENV": JSON.stringify(prod ? "production" : "development"),
         }),
+        executePostBuildPlugin,
     ],
     entryPoints: ["src/main.ts"],
     bundle: true,
@@ -56,5 +57,6 @@ if (prod) {
     await context.rebuild();
     process.exit(0);
 } else {
+    console.log("Watching for changes...")
     await context.watch();
 }

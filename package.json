@@ -6,7 +6,8 @@
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"version": "./ci/bump_version.sh"
+		"version": "./ci/bump_version.sh",
+		"postbuild": "ci/postbuild.sh"
 	},
 	"keywords": [],
 	"author": "",
