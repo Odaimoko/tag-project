@@ -2,11 +2,10 @@ import React, {KeyboardEvent, useRef, useState} from "react";
 import {I_Nameable} from "../../data-model/I_Nameable";
 import {OdaPmProject} from "../../data-model/OdaPmProject";
 import {FilterHeadHStack} from "./workflow-filter";
-import {StyleProps, VStack} from "./view-template/h-stack";
+import {HStack, StyleProps, VStack} from "./view-template/h-stack";
 import {devLog} from "../../utils/env-util";
-import {ObsidianIconView} from "./view-template/icon-view";
 
-import {IconName_Project} from "./project-view";
+import {ProjectView} from "./project-view";
 import {usePopup} from "./view-template/hovering-popup";
 
 export const ProjectFilterName_All = "All Projects";
@@ -202,14 +201,20 @@ export function ProjectFilter(props: {
         }, ...sortedProjects
     ]
     // If optionValue is not defined, use name as optionValue
+    const projectDisplayName = getOptionValueName(props.displayNames.first(), projectsAndAll);
+    const displayingProject = props.projects.filter(k => k.name === projectDisplayName).first();
     return <div>
         <div style={headingStyle}>
 
             <FilterHeadHStack>
                 <SearchDropdown data={projectsAndAll}
                                 handleSetOptionValues={props.handleSetDisplayNames}/>
-                <h2><ObsidianIconView iconName={IconName_Project}/>
-                    Project: {getOptionValueName(props.displayNames.first(), projectsAndAll)}</h2>
+                <h2><HStack spacing={5}>
+                    Project: {displayingProject ? displayingProject &&
+                    <ProjectView project={displayingProject}/> : projectDisplayName}
+                </HStack>
+                </h2>
+
             </FilterHeadHStack>
         </div>
 
