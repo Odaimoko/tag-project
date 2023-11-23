@@ -132,7 +132,9 @@ export function ReactManagePage({eventCenter}: {
     workflows = workflows.filter(isWorkflowShownInPage);
 
     function isWorkflowShownInPage(k: I_OdaPmWorkflow) {
-        return isInAnyProject(displayProjectOptionValues, k) || k.getFirstProject()?.name === ProjectName_Unclassified;
+        return isInAnyProject(displayProjectOptionValues, k) || (
+            getSettings()?.show_unclassified_workflows_in_filter && k.getFirstProject()?.name === ProjectName_Unclassified
+        );
     }
 
     // settingsDisplayWorkflowNames may contain workflows from other projects. We filter them out.
