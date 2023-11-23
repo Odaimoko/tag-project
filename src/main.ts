@@ -18,7 +18,7 @@ import {Icon_HelpPage, PmHelpPageView, PmHelpPageViewId} from "./ui/obsidian/hel
 import {devLog} from "./utils/env-util";
 import {OdaPmTask} from "./data-model/OdaPmTask";
 import {ProjectSuggestionModal} from "./ui/obsidian/project-suggestion-modal";
-import {assertOnPluginInit} from "./test_runtime/assert";
+import {assertOnPluginInit} from "./test_runtime/assertDatabase";
 
 export const PLUGIN_NAME = 'Tag Project';
 export const CmdPal_OpenManagePage = `Open Manage Page`; // `Open ${Desc_ManagePage}`

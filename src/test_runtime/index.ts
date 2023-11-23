@@ -1,0 +1,1 @@
+export {assertDatabase} from "./assertDatabase"

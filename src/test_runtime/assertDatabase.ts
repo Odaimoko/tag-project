@@ -1,17 +1,13 @@
 // Test in dev mode.
-import {OdaPmDb} from "../data-model/odaPmDb";
-import {expect} from "chai";
+import {devLog, isProduction, prodWrapper} from "../utils/env-util";
 import {OdaPmTask} from "../data-model/OdaPmTask";
 import {OdaPmProject, ProjectDefinedType, ProjectName_Unclassified} from "../data-model/OdaPmProject";
 import {I_OdaPmWorkflow} from "../data-model/workflow-def";
 import OdaPmToolPlugin from "../main";
-import {devLog, isProduction, prodWrapper} from "../utils/env-util";
+import {OdaPmDb} from "../data-model/odaPmDb";
+//#ifdef DEVELOPMENT_BUILD
+import {expect} from "chai";
 
-export const assertOnPluginInit = prodWrapper((plugin: OdaPmToolPlugin) => {
-    if (isProduction()) return;
-    console.log("Assert start: on plugin init...");
-    console.log("Assert End: on plugin init.")
-})
 
 interface AssertFunctions {
     expectTaskInProject: (taskName: string, projectName: string) => void;
@@ -227,9 +223,20 @@ async function test_UT_020_6(pmDb: OdaPmDb) {
     devLog("Test PASSED: Sub Project Inclusion.")
 }
 
-// make this async so the failing tests won't block the plugin and database initialization process.
-export async function assert(pmDb: OdaPmDb) {
+//#endif
+/**
+ * The following functions wrapped inside prodWrapper will not be called,
+ * so it's ok that the transpiler cannot resolve references.
+ */
+export const assertOnPluginInit = prodWrapper((plugin: OdaPmToolPlugin) => {
     if (isProduction()) return;
+    console.log("Assert start: on plugin init...");
+    console.log("Assert End: on plugin init.")
+})
+
+// make this async so the failing tests won't block the plugin and database initialization process.
+export const assertDatabase = prodWrapper(async (pmDb: OdaPmDb) => {
+
     devLog("Assert start: on db refreshed...")
     initAssertFunctions(pmDb);
     const projects = pmDb.pmProjects;
@@ -242,4 +249,4 @@ export async function assert(pmDb: OdaPmDb) {
     test_UT_020_4(pmDb);
     test_UT_020_6(pmDb);
     devLog("Assert end: on db refreshed...")
-}
+});

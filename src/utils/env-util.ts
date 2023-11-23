@@ -7,9 +7,12 @@ export function isProduction() {
 export function prodWrapper(func: CallableFunction) {
     // @ts-ignore
     function f(...args) {
+//#ifdef DEVELOPMENT_BUILD
         if (isProduction()) return;
         func(...args);
+//#endif
     }
+
 
     return f;
 }
