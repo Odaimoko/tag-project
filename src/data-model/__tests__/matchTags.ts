@@ -1,5 +1,5 @@
-import {matchTags} from "../workflow-def";
 import {describe} from "@jest/globals";
+import {matchTags} from "../markdown-parse";
 
 describe("Match tags", () => {
     test("Do not match heading", () => {
