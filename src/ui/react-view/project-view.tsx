@@ -30,23 +30,22 @@ export function ProjectView(props: {
     if (props.project === null) return <></>;
     const project = props.project;
     const popupProps = usePopup("none");
-    const {hideDropdown} = popupProps;
-
-    // TODO Jump To Project Definition 
 
     function toggleDropdown() {
         // toggleDropDown(setDropDownDisplay)
     }
 
     const showableDefinitions = project.projectDefinitions.filter(k => k.type !== "system");
+    const projectContent = <label>{project.name}</label>;
     const hoveredContent = <ClickableIconView onContentClicked={toggleDropdown} onIconClicked={toggleDropdown}
                                               iconName={IconName_Project}
-                                              content={<label>{project.name}</label>}/>;
+                                              content={projectContent} clickable={showableDefinitions.length > 0}/>;
+    // if showableDefinitions.length === 0, we don't show the popup
     const popupContent = showableDefinitions.length > 0 ?
         <div>
             <div>
 
-            <VStack>
+                <VStack>
                     {showableDefinitions.map((def, i) => {
                         return <ProjectLinkView key={i} project={project} def={def}/>
                     })}

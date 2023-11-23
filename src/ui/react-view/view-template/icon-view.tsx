@@ -6,6 +6,7 @@ import {HtmlStringComponent} from "./html-string-component";
 export const CssClass_Link = "cm-underline";
 export const obsidianIconTopOffset = 4;
 export const obsidianIconOffsetStyle = {position: "relative", top: obsidianIconTopOffset} as React.CSSProperties;
+
 export interface I_Stylable {
     style?: React.CSSProperties;
 }
@@ -36,17 +37,21 @@ export function InternalLinkView({content, onIconClicked, onContentClicked, styl
     />
 }
 
-export function ClickableIconView({content, onIconClicked, onContentClicked, iconName, style}: {
+/**
+ * Can also be used as non-clickable
+ */
+export function ClickableIconView({content, onIconClicked, onContentClicked, iconName, style, clickable = true}: {
     content?: IRenderable,
     onIconClicked?: () => void,
     onContentClicked?: () => void,
-    iconName: string
+    iconName: string,
+    clickable?: boolean,
 } & I_Stylable) {
     return <span style={style}>
 
-        <a className={CssClass_Link} onClick={onIconClicked}>
-           <ObsidianIconView iconName={iconName}/>
-        </a>
+        {clickable ? <a className={CssClass_Link} onClick={onIconClicked}>
+            <ObsidianIconView iconName={iconName}/>
+        </a> : <ObsidianIconView iconName={iconName}/>}
         <span onClick={onContentClicked}>
         {content}
         </span>
