@@ -19,10 +19,11 @@ import {ONotice} from "../utils/o-notice";
 import {getSettings} from "../Settings";
 import {GenericProvider} from "../utils/GenericProvider";
 import {clearGlobalProjectMap, OdaPmProject, ProjectName_Unclassified} from "./OdaPmProject";
-import {assertOnDbRefreshed, devLog} from "../utils/env-util";
+import {devLog} from "../utils/env-util";
 import {OdaPmTask} from "./OdaPmTask";
 import {getOrCreateWorkflow, removeWorkflow} from "./OdaPmWorkflow";
 import {OdaProjectTree} from "./OdaProjectTree";
+import {assert} from "../test_runtime/assert";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
 
@@ -233,7 +234,7 @@ export class OdaPmDb implements I_EvtListener {
         this.orphanTasks = this.initOrphanTasks(this.pmTasks);
         this.emitter.emit(Evt_DbReloaded)
         this.inited = true;
-        assertOnDbRefreshed(this);
+        assert(this);
         devLog("Database Reloaded.")
     }
 

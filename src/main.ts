@@ -15,9 +15,10 @@ import {addTagText, getWorkflowNameFromRawText, I_OdaPmWorkflow} from "./data-mo
 import {rewriteTask, setProjectTagAtPath} from "./utils/io-util";
 import {WorkflowSuggestionModal} from "./ui/obsidian/workflow-suggestion-modal";
 import {Icon_HelpPage, PmHelpPageView, PmHelpPageViewId} from "./ui/obsidian/help-page-view";
-import {assertOnPluginInit, devLog} from "./utils/env-util";
+import {devLog} from "./utils/env-util";
 import {OdaPmTask} from "./data-model/OdaPmTask";
 import {ProjectSuggestionModal} from "./ui/obsidian/project-suggestion-modal";
+import {assertOnPluginInit} from "./test_runtime/assert";
 
 export const PLUGIN_NAME = 'Tag Project';
 export const CmdPal_OpenManagePage = `Open Manage Page`; // `Open ${Desc_ManagePage}`
