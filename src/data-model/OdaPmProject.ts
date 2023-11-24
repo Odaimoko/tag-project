@@ -5,6 +5,7 @@ import {BaseDatabaseObject} from "./BaseDatabaseObject";
 import {OdaPmTask} from "./OdaPmTask";
 import * as path from "path";
 import {I_Nameable} from "./I_Nameable";
+import {ONotice} from "../utils/o-notice";
 
 export const Frontmatter_FolderProject = "tpm_project_root";
 export const Frontmatter_FileProject = "tpm_project";
@@ -125,8 +126,7 @@ export class OdaPmProject extends BaseDatabaseObject implements I_Nameable {
         }
 
         const project = this.getOrCreateProject(name)
-        project.addProjectDefinition(definedType, defPath, page);
-        globalProjectMap.set(name, project);
+        project?.addProjectDefinition(definedType, defPath, page);
         return project;
     }
 
@@ -134,29 +134,36 @@ export class OdaPmProject extends BaseDatabaseObject implements I_Nameable {
         const name = getProjectNameFromTag(tag);
         const project = this.getOrCreateProject(name)
         // If defined by a task, path = `path/to/file:{project name}`. 
-        project.addProjectDefinition('tag_override', task.getProjectPath(), null, task);
+        project?.addProjectDefinition('tag_override', task.getProjectPath(), null, task);
         return project;
     }
 
     public static createUnclassifiedProject() {
         const project = this.getOrCreateProject(ProjectName_Unclassified)
-        project.addProjectDefinition('system', "");
-        return project;
+        project?.addProjectDefinition('system', "");
+        return project as OdaPmProject;
     }
 
-    private static createNewProject(name: string) {
-        const p = new OdaPmProject();
-        p.name = name;
-        p.internalKey = ++currentMaxProjectId;
-        return p;
-    }
 
     private static getOrCreateProject(name: string) {
+        if (name.startsWith('/')) {
+            new ONotice(`Project namecannot with \`/\`:\n - ${name}.`)
+            return null;
+        }
+
+        function createNewProject(name: string) {
+            const p = new OdaPmProject();
+            devLog(`Creating new project ${name}`)
+            p.name = name;
+            p.internalKey = ++currentMaxProjectId;
+            return p;
+        }
+
         let project: OdaPmProject;
         if (globalProjectMap.has(name)) {
             project = globalProjectMap.get(name) as OdaPmProject;
         } else {
-            project = this.createNewProject(name);
+            project = createNewProject(name);
             globalProjectMap.set(name, project);
         }
 

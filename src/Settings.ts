@@ -77,7 +77,7 @@ export
 async function setSettingsValueAndSave<T extends SerializedType>(plugin: OdaPmToolPlugin, settingName: SettingName, value: T) {
     // @ts-ignore
     plugin.settings[settingName] = value;
-    console.log(`Going to emit ${Evt_SettingsChanged} ${settingName} = ${value}...`);
+    devLog(`Going to emit ${Evt_SettingsChanged} ${settingName} = ${value}...`);
     plugin.getEmitter().emit(Evt_SettingsChanged, settingName, value);
     await plugin.saveSettings();
 }
@@ -147,7 +147,7 @@ export function usePluginSettings<T extends SettingName>(name: SettingName) {
     const [value, setValue] = React.useState(plugin.settings[name] as T);
 
     function setValueAndSave(newValue: T) {
-        console.log(`DirectSetValue: ${name}, Old value: ${plugin.settings[name]}`)
+        devLog(`DirectSetValue: ${name}, Old value: ${plugin.settings[name]}`)
         setSettingsValueAndSave(plugin, name, newValue)
     }
 
