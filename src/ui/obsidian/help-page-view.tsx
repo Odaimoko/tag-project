@@ -1,6 +1,6 @@
 import {App, ItemView, Modal, WorkspaceLeaf} from "obsidian";
 import {createRoot, Root} from "react-dom/client";
-import React, {JSX, useContext, useState} from "react";
+import React, {JSX, useState} from "react";
 import {ObsidianIconView} from "../react-view/view-template/icon-view";
 import OdaPmToolPlugin, {
     CmdPal_JumpToManagePage,
@@ -11,7 +11,7 @@ import OdaPmToolPlugin, {
 import {Tag_Prefix_Step, Tag_Prefix_Tag, Tag_Prefix_TaskType, Tag_Prefix_Workflow} from "../../data-model/workflow-def";
 import {Icon_ManagePage, PluginContext} from "./manage-page-view";
 import {getTemplateHtml, ManagePageForTemplate, templateMd} from "../tpm-template-md";
-import {setSettingsValueAndSave, usePluginSettings} from "../../Settings";
+import {usePluginSettings} from "../../Settings";
 import {HStack} from "../react-view/view-template/h-stack";
 import {StrictModeWrapper} from "../react-view/view-template/strict-mode-wrapper";
 import {DataTable} from "../react-view/view-template/data-table";
@@ -141,7 +141,6 @@ const CommonHelpViewInModalAndLeaf = ({plugin, container}: {
 }
 
 const BasicTutorial = () => {
-    const plugin = useContext(PluginContext);
     const [isTlDr, setIsTlDr] = usePluginSettings("help_page_tutorial_tldr")
     // hidden when tldr mode is on.
     const blockTldrOmitStyle: React.CSSProperties = {display: isTlDr ? "none" : "block"} //  visibility:"hidden" will still take space. So we use display instead
@@ -155,7 +154,6 @@ const BasicTutorial = () => {
             <ExternalToggleView externalControl={isTlDr} onChange={() => {
                 const nextValue = !isTlDr;
                 setIsTlDr(nextValue)
-                setSettingsValueAndSave(plugin, "help_page_tutorial_tldr", nextValue)
             }} content={<label style={{padding: 5}}>{"TL;DR - Use when you understand the concepts"}</label>}/>
         </HStack>
 
