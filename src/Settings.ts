@@ -103,7 +103,7 @@ export class TPMSettingsTab extends PluginSettingTab {
         const projectHeader = containerEl.createEl("h2", {text: "Projects"})
 
         new Setting(containerEl)
-            .setName('Show unclassified workflows for any projects')
+            .setName('Unclassified workflows available for all projects')
             .setDesc("If ON, unclassified workflows will be available to any projects. If OFF, only workflows in that project are available.")
             .addToggle(this.setValueAndSave("show_unclassified_workflows_in_filter"));
 

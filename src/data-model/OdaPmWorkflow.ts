@@ -9,7 +9,8 @@ import {
     WorkflowType
 } from "./workflow-def";
 import {getOrCreateStep} from "./OdaPmStep";
-import {OdaPmProject} from "./OdaPmProject";
+import {OdaPmProject, ProjectName_Unclassified} from "./OdaPmProject";
+import {getSettings} from "../Settings";
 
 class OdaPmWorkflow implements I_OdaPmWorkflow {
     boundTask: STask;
@@ -65,9 +66,16 @@ class OdaPmWorkflow implements I_OdaPmWorkflow {
         // TODO performance
         // - A workflow in main project -> in sub
         // - workflow in sub -> not in main
-        return this.projects.filter(k =>
-            k.name === name || (includeSubProjects && k.isParentProjectOf(name)))
+        const inProject = this.projects.filter(k => {
+            const isInUnclassified =
+                getSettings()?.show_unclassified_workflows_in_filter && k.name === ProjectName_Unclassified
+
+            const isInParentProject = includeSubProjects && k.isParentProjectOf(name);
+            return k.name === name || isInParentProject || isInUnclassified;
+        })
             .length > 0;
+
+        return inProject;
     }
 
     getProjectPath(): string {

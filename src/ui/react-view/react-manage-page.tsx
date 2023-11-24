@@ -13,7 +13,6 @@ import {TagFilter} from "./tag-filter";
 import {ProjectFilter, ProjectFilterOptionValue_All} from "./project-filter";
 import {HStack} from "./view-template/h-stack";
 import {FixOrphanTasks} from "./fix-orphan-tasks";
-import {ProjectName_Unclassified} from "../../data-model/OdaPmProject";
 
 function isInAnyProject(projectNames: string[], projectTask: I_OdaPmProjectTask) {
     // TODO Performance
@@ -132,9 +131,7 @@ export function ReactManagePage({eventCenter}: {
     workflows = workflows.filter(isWorkflowShownInPage);
 
     function isWorkflowShownInPage(k: I_OdaPmWorkflow) {
-        return isInAnyProject(displayProjectOptionValues, k) || (
-            getSettings()?.show_unclassified_workflows_in_filter && k.getFirstProject()?.name === ProjectName_Unclassified
-        );
+        return isInAnyProject(displayProjectOptionValues, k) 
     }
 
     // settingsDisplayWorkflowNames may contain workflows from other projects. We filter them out.
