@@ -17,10 +17,10 @@ export const ToggleView = ({
         onChange?.(nextToggle);
     };
     return <ExternalToggleView externalControl={isChecked} content={content} onChange={handleCheckboxChange}
-                               onLabelClicked={onLabelClicked}
+                               onLabelClicked={onLabelClicked} style={props.style}
     />
 }
-export const ExternalToggleView = ({externalControl, onChange, onLabelClicked, content}:
+export const ExternalToggleView = (props:
                                        {
                                            externalControl: boolean,
                                            onChange: () => void,
@@ -28,10 +28,12 @@ export const ExternalToggleView = ({externalControl, onChange, onLabelClicked, c
                                            content?: IRenderable,
 
                                        } & I_Stylable) => {
+    const {externalControl, onChange, onLabelClicked, content} = props;
     const className = externalControl ? "checkbox-container  is-enabled" : "checkbox-container";
     return <div style={{
         display: "flex",
-        alignItems: "center"
+        alignItems: "center",
+        ...props.style
     } as React.CSSProperties}>
         <span className={className} onClick={onChange}>
             <input type="checkbox"/>
