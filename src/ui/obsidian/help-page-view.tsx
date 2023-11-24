@@ -16,9 +16,16 @@ import {HStack} from "../react-view/view-template/h-stack";
 import {StrictModeWrapper} from "../react-view/view-template/strict-mode-wrapper";
 import {DataTable} from "../react-view/view-template/data-table";
 import {WorkflowTypeLegend} from "../react-view/workflow-filter";
-import {Frontmatter_FileProject, Frontmatter_FolderProject, Tag_Prefix_Project} from "../../data-model/OdaPmProject";
+import {
+    Frontmatter_FileProject,
+    Frontmatter_FolderProject,
+    ProjectName_Unclassified,
+    Tag_Prefix_Project
+} from "../../data-model/OdaPmProject";
 import {FileNavView} from "../common/file-nav-view";
 import {ExternalToggleView} from "../react-view/view-template/toggle-view";
+import {ProjectFilterName_All} from "../react-view/project-filter";
+import {OrphanTaskButtonAndPanel} from "../react-view/fix-orphan-tasks";
 
 export const PmHelpPageViewId = "tpm-help-view";
 export const Desc_ManagePage = "Manage Page";
@@ -376,10 +383,81 @@ const BasicTutorial = () => {
         </p>
 
 
-        <h3>Subprojects</h3>
+        <h2>Subprojects</h2>
+        <p>
+            When a project grows larger and larger, it is important to keep it manageable.
+            You can use subprojects to split a large project into smaller ones.
+        </p>
+
+        <p>
+            <label>Subprojects can be added with <InlineCodeView text={"/"}/> in the project name. </label>
+            <i>MyProject/MySubproject</i> is a subproject of <i>MyProject</i>. This naming method is consistent with the
+            hierarchical tags. Thus, project tags is naturally supported.
+        </p>
+
+        <p>
+            Personally, I use subprojects for versioning. When I am developing {PLUGIN_NAME}, I have a project named
+            <i> TagProject</i>. For each version, I use <i> TagProject/x.y.z</i> to focus on certain features. You can
+            develop your own way of
+            breaking down projects, either by version, by module or by assignee.
+        </p>
+
+        <h2>Project, workflow and tasks' Relationships</h2>
+        <p>
+            This section could be quite technical. You can safely skip this section and come back when you find
+            some of your workflows or tasks missing.
+        </p>
+        <h3>Orphan tasks</h3>
+        <p>
+            A workflow or a task will always be assigned to a certain project. In {Desc_ManagePage}, only the workflows
+            in the chosen project will be displayed. Tasks will only be displayed if they are in the shown
+            project, <b>and</b> are in the shown workflows.
+        </p>
+        <p>
+            An orphan task's project does not match its workflow's. According to the rules above, it will not show
+            except in <b>{ProjectFilterName_All}</b>. When there are orphan tasks in your vault, a fix button will
+            appear in {Desc_ManagePage}, letting you go through all the orphan tasks and fix them, by forcefully adding
+            the workflow's project tag to the task. Or, you can manually fix them in the markdown file yourself.
+        </p>
+        <OrphanTaskButtonAndPanel orphanTasks={[]}/>
+        <p>
+            By default, they are
+            under <i>{ProjectName_Unclassified}</i>.
+        </p>
 
 
-        <h3>Project, workflow and tasks' Relationships</h3>
+        <h3>Considering subprojects</h3>
+
+
+        <h2>Use tags to add, well, tags</h2>
+        <p style={blockTldrOmitStyle}>
+            Sometimes you want to give a task a property, but you don't want to make it a workflow step. For example,
+            you
+            want to mark the task abandoned, or this task has high priority, or you want to group tasks into
+            different projects.
+            You can use <i>managed tags</i> to do that.
+        </p>
+        <p style={blockTldrOmitStyle}>
+            The managed tags have the prefix <HashTagView tagWithoutHash={Tag_Prefix_Tag}/> so it would not be confused
+            with
+            normal tags, such as <HashTagView tagWithoutHash={`${Tag_Prefix_Tag}abandoned`}/>.
+        </p>
+        <p style={blockTldrShowStyle}>
+            The managed tags have the prefix <HashTagView tagWithoutHash={Tag_Prefix_Tag}/>, such as <HashTagView
+            tagWithoutHash={`${Tag_Prefix_Tag}abandoned`}/>.
+        </p>
+        <TaggedTaskView content={"card: warlock, fire magic"}
+                        tags={[`${Tag_Prefix_TaskType}card_design`, `${Tag_Prefix_TaskType}abandoned`]}/>
+        <p style={blockTldrOmitStyle}>
+            Managed tags will show in {Desc_ManagePage} as filters, while normal tags won't. You can set a tag be
+            included
+            or excluded in the search on {Desc_ManagePage}.</p>
+        <p style={blockTldrOmitStyle}>
+            If you want to define a workflow without any steps, it should not be called a workflow. The built-in
+            tag should suffice. If you want to manage that task in {PLUGIN_NAME}, you can always place a dummy step tag
+            in the workflow definition.
+        </p>
+
 
         <h2>Best Practices</h2>
         <p style={blockTldrOmitStyle}>Since the step tag is already defined, they can be auto completed.
@@ -415,36 +493,6 @@ const BasicTutorial = () => {
         <p style={blockTldrOmitStyle}>
             You can choose whichever way is more convenient for you. Markdown is a
             text file after all.
-        </p>
-
-
-        <h2>Use tags to add, well, tags</h2>
-        <p style={blockTldrOmitStyle}>
-            Sometimes you want to give a task a property, but you don't want to make it a workflow step. For example,
-            you
-            want to mark the task abandoned, or this task has high priority, or you want to group tasks into
-            different projects.
-            You can use <i>managed tags</i> to do that.
-        </p>
-        <p style={blockTldrOmitStyle}>
-            The managed tags have the prefix <HashTagView tagWithoutHash={Tag_Prefix_Tag}/> so it would not be confused
-            with
-            normal tags, such as <HashTagView tagWithoutHash={`${Tag_Prefix_Tag}abandoned`}/>.
-        </p>
-        <p style={blockTldrShowStyle}>
-            The managed tags have the prefix <HashTagView tagWithoutHash={Tag_Prefix_Tag}/>, such as <HashTagView
-            tagWithoutHash={`${Tag_Prefix_Tag}abandoned`}/>.
-        </p>
-        <TaggedTaskView content={"card: warlock, fire magic"}
-                        tags={[`${Tag_Prefix_TaskType}card_design`, `${Tag_Prefix_TaskType}abandoned`]}/>
-        <p style={blockTldrOmitStyle}>
-            Managed tags will show in {Desc_ManagePage} as filters, while normal tags won't. You can set a tag be
-            included
-            or excluded in the search on {Desc_ManagePage}.</p>
-        <p style={blockTldrOmitStyle}>
-            If you want to define a workflow without any steps, it should not be called a workflow. The built-in
-            tag should suffice. If you want to manage that task in {PLUGIN_NAME}, you can always place a dummy step tag
-            in the workflow definition.
         </p>
 
 

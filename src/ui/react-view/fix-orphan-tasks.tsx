@@ -9,11 +9,11 @@ import {WorkflowFilterCheckbox} from "./workflow-filter";
 import {DataTable} from "./view-template/data-table";
 import React, {useState} from "react";
 import {ProjectFilterName_All} from "./project-filter";
+import {OdaPmTask} from "../../data-model/OdaPmTask";
 
 export const warningColor = "var(--text-warning)";
 
-function OrphanTasksFixPanel({db}: { db: OdaPmDb }) {
-    const orphanTasks = db.orphanTasks;
+function OrphanTasksFixPanel({orphanTasks}: { orphanTasks: OdaPmTask[] }) {
     // Task\n Workflow
     // Project\n Project
     const headers = ["Fix", "Task", "Workflow",];
@@ -67,10 +67,10 @@ function OrphanTasksFixPanel({db}: { db: OdaPmDb }) {
     </div>
 }
 
-export function FixOrphanTasks({db}: { db: OdaPmDb }) {
+export function OrphanTaskButtonAndPanel(props: {
+    orphanTasks: OdaPmTask[]
+}) {
     const [panelShown, setPanelShown] = useState(false);
-    const orphanTasks = db.orphanTasks;
-    if (orphanTasks.length === 0) return <></>;
     return <div><HStack spacing={5} style={{alignItems: "center"}}>
         <HoveringPopup
             hoveredContent={<ObsidianIconView style={{color: "var(--text-warning)"}}
@@ -88,7 +88,7 @@ export function FixOrphanTasks({db}: { db: OdaPmDb }) {
         />
 
         <button onClick={() => setPanelShown(!panelShown)}>
-            Fix {orphanTasks.length} orphan task(s) {
+            Fix {props.orphanTasks.length} orphan task(s) {
             panelShown ?
                 <ObsidianIconView style={obsidianIconOffsetCenteredStyle} iconName={"chevron-down"}/> :
                 <ObsidianIconView style={obsidianIconOffsetCenteredStyle} iconName={"chevron-right"}/>
@@ -98,6 +98,12 @@ export function FixOrphanTasks({db}: { db: OdaPmDb }) {
 
     </HStack>
 
-        {panelShown ? <OrphanTasksFixPanel db={db}/> : null}
+        {panelShown ? <OrphanTasksFixPanel orphanTasks={props.orphanTasks}/> : null}
     </div>;
+}
+
+export function FixOrphanTasks({db}: { db?: OdaPmDb }) {
+    const orphanTasks = db?.orphanTasks || [];
+    if (orphanTasks.length === 0) return <></>;
+    return <OrphanTaskButtonAndPanel orphanTasks={orphanTasks}/>
 }
