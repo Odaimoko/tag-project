@@ -24,6 +24,7 @@ import {HtmlStringComponent} from "./view-template/html-string-component";
 import {appendBoldText} from "../common/html-template";
 import {notify} from "../../utils/o-notice";
 import {getIconByWorkflow} from "./style-def";
+import {getStickyHeaderStyle} from "./view-template/style-helper";
 
 export const taskCheckBoxMargin = {marginLeft: 3};
 
@@ -174,8 +175,8 @@ export function getDefaultTableStyleGetters(minSummaryWidth: number | string = 5
 
     function headStyleGetter(columnIndex: number): React.CSSProperties {
         const style = {
+            ...getStickyHeaderStyle(),
             backgroundColor: "var(--background-secondary)",
-            position: "sticky", top: -16,
             padding: 10,
             minWidth: (columnIndex === summaryColumn ? minSummaryWidth : "unset"),
             maxWidth: (columnIndex === summaryColumn ? maxSummaryWidth : "unset")
@@ -318,8 +319,7 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
             </HStack>
             <p/>
             {
-                // -16 is the padding of the obsidian leaf view container. The content will overflow the container's box.
-                // sticky header see: https://css-tricks.com/position-sticky-and-table-headers/
+               
                 displayWorkflows.length === 0 ? <label>No Workflow selected.</label> : (
                     taskRows.length > 0 ? <DataTable
                         tableTitle={curWfName}

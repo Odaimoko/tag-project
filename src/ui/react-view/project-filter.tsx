@@ -8,6 +8,8 @@ import {devLog} from "../../utils/env-util";
 import {ProjectView} from "./project-view";
 import {usePopup} from "./view-template/hovering-popup";
 
+import {varBackgroundPrimary} from "./view-template/style-helper";
+
 export const ProjectFilterName_All = "All Projects";
 export const ProjectFilterOptionValue_All = "###ALL###";
 
@@ -68,7 +70,7 @@ export function getDropdownStyle(dropDownDisplay: string | undefined) {
         display: dropDownDisplay,
         position: "absolute",
         zIndex: 1,
-        background: "var(--background-primary)"
+        background: varBackgroundPrimary
     } as React.CSSProperties;
     return dropdownStyle;
 }

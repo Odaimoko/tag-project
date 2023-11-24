@@ -31,6 +31,7 @@ import {TaggedTaskView} from "../common/tagged-task-view";
 import {HashTagView} from "../common/hash-tag-view";
 import {MarkdownFrontMatterView} from "../common/markdown-front-matter-view";
 import {InlineCodeView} from "../common/inline-code-view";
+import {getStickyHeaderStyle, varBackgroundPrimary} from "../react-view/view-template/style-helper";
 
 export const PmHelpPageViewId = "tpm-help-view";
 export const Desc_ManagePage = "Manage Page";
@@ -166,8 +167,12 @@ const BasicTutorial = () => {
     } = useSharedTlDr();
 
     return <>
-        <HStack style={{alignItems: "center"}} spacing={10}>
-            <h1>Tutorial</h1>
+        <HStack style={{
+            alignItems: "center",
+            background: varBackgroundPrimary,
+            ...getStickyHeaderStyle()
+        }} spacing={10}>
+            <h1 style={{}}>Tutorial</h1>
             <ExternalToggleView externalControl={isTlDr} onChange={() => {
                 const nextValue = !isTlDr;
                 setIsTlDr(nextValue)
