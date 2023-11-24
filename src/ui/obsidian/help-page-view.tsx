@@ -564,7 +564,7 @@ const CommandTutorialView = ({}) => {
         <h2>Commands and Context Menu</h2>
 
         It is suggested that you set a hotkey for your most used commands. You can do this in Obsidian's Settings -
-        Hotkeys - Search for "{PLUGIN_NAME}". 
+        Hotkeys - Search for "{PLUGIN_NAME}".
 
         <h3>{CmdPal_JumpToManagePage}</h3>
 
@@ -588,7 +588,7 @@ const CommandTutorialView = ({}) => {
         Choose the workflows available in the current task's project, and set the workflow.
         <h3>{CmdPal_SetProject}</h3>
         From all the defined projects, choose one to assign to the workflow or task.
-        
+
     </>
 }
 
@@ -598,6 +598,39 @@ const UserManual = () => {
 
     return <>
         <h1>User Manual</h1>
+
+
+        <h2>Projects</h2>
+
+
+        <p>A project</p>
+        <ul>
+            <li>
+                can have many subprojects
+            </li>
+            <li>can have many workflows and tasks</li>
+        </ul>
+        <p>
+            A workflow
+        </p>
+        <ul>
+            <li>can have many tasks</li>
+            <li>can have one project</li>
+            <li>belongs to all subprojects</li>
+            <li>is in <i>{ProjectName_Unclassified}</i> if not in any other project</li>
+            <li>belongs to all projects if it is in the <i>{ProjectName_Unclassified}</i> project, if the user want</li>
+        </ul>
+
+        <p>
+            A task
+        </p>
+        <ul>
+            <li>can have one project</li>
+            <li>can have one workflow</li>
+            <li>belongs to all parent projects</li>
+            <li>is in <i>{ProjectName_Unclassified}</i> if not in any other project</li>
+        </ul>
+        
         <h2>Rules for workflows and tasks</h2>
         A workflow definition or a managed task has to obey the following rules.
         <ul>
@@ -701,6 +734,7 @@ const UserManual = () => {
 
             </li>
         </ul>
+
     </>
 }
 const templateTargetFilePath = "TagProject_Template.md";
