@@ -1,7 +1,7 @@
 import {EditorPosition, Vault, Workspace} from "obsidian";
 import {STask} from "obsidian-dataview";
 import {OdaPmProject, OdaPmProjectDefinition, Tag_Prefix_Project} from "../data-model/OdaPmProject";
-import {addTagText, I_OdaPmBoundTask, I_OdaPmProjectTask} from "../data-model/workflow-def";
+import {addTagText, I_OdaPmTaskble} from "../data-model/workflow-def";
 import {ONotice} from "./o-notice";
 
 // region Copied from dataview
@@ -102,7 +102,7 @@ export function openProjectPrecisely(project: OdaPmProject, defType: OdaPmProjec
  * @return True if the workflow is defined by a task and the tag is replaced. False we need to use editor.setLine.
  */
 // need to bind to the plugin instance
-export function setProjectTagToTask(task: I_OdaPmBoundTask & I_OdaPmProjectTask, tag: string) {
+export function setProjectTagToTask(task: I_OdaPmTaskble, tag: string) {
     // replace the existent workflow tag
     const projectPath = task.getProjectPath();
     let desiredText;

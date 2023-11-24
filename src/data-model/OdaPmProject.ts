@@ -1,6 +1,6 @@
 import {SMarkdownPage} from "obsidian-dataview";
 import {devLog} from "../utils/env-util";
-import {getProjectNameFromTag, I_OdaPmTaskble, I_OdaPmWorkflow} from "./workflow-def";
+import {getProjectNameFromTag, getProjectPathFromFilePath, I_OdaPmTaskble, I_OdaPmWorkflow} from "./workflow-def";
 import {BaseDatabaseObject} from "./BaseDatabaseObject";
 import {OdaPmTask} from "./OdaPmTask";
 import * as path from "path";
@@ -81,11 +81,7 @@ export class OdaPmProject extends BaseDatabaseObject implements I_Nameable {
 
 // region Factory
     addProjectDefinition(type: ProjectDefinedType, obsidianPath: string, page?: SMarkdownPage, task?: I_OdaPmTaskble) {
-        // Obsidian path is relative.
-        // Remove . at the beginning. 
-        // Add '/' before path to form a tree
-        obsidianPath = obsidianPath.startsWith(".") ? obsidianPath.substring(1) : obsidianPath
-        obsidianPath = (obsidianPath.startsWith("/") ? "" : "/") + obsidianPath; // prevent doubling leading '/'
+        obsidianPath = getProjectPathFromFilePath(obsidianPath);
         const odaPmProjectDefinition = new OdaPmProjectDefinition(
             type, obsidianPath, page, task
         );
