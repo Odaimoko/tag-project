@@ -2,14 +2,15 @@ import React, {JSX, useState} from "react";
 import {I_Stylable} from "./icon-view";
 import {IRenderable} from "../../common/i-renderable";
 
-export const ToggleView = ({
-                               content, onChange, onLabelClicked, initialState = false,
-                           }: {
+export const ToggleView = (props: {
     content?: string | JSX.Element,
     onChange?: (nextChecked: boolean) => void,
     onLabelClicked?: () => void,
     initialState?: boolean,
 } & I_Stylable) => {
+    const {
+        content, onChange, onLabelClicked, initialState = false,
+    } = props;
     const [isChecked, setIsChecked] = useState(initialState);
     const handleCheckboxChange = () => {
         const nextToggle = !isChecked;

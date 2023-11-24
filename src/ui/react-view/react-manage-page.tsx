@@ -77,6 +77,7 @@ export function ReactManagePage({eventCenter}: {
     const [excludedTags, setExcludedTags] = useState(getSettings()?.manage_page_excluded_tags as string[]);
     const [settingsDisplayProjectOptionValues, setDisplayProjectOptionValues] = useState(initDisplayProjectOptionValues);
     const [showSubProjectWorkflows, setShowSubProjectWorkflows] = useState(false)
+    const [showUnclassified, setShowUnclassified] = useState(false)
 
     function initDisplayProjectOptionValues() {
         const settingsValue = getSettings()?.manage_page_display_projects as string[];
@@ -172,6 +173,8 @@ export function ReactManagePage({eventCenter}: {
                             handleSetDisplayNames={handleSetDisplayWorkflows}
                             showSubProjectWorkflows={showSubProjectWorkflows}
                             setShowSubProjectWorkflows={setShowSubProjectWorkflows}
+                            showUnclassifiedWorkflows={showUnclassified}
+                            setShowUnclassifiedWorkflows={setShowUnclassified}
             />
             <TagFilter
                 pmTags={pmTags}

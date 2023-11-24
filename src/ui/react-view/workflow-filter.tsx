@@ -56,10 +56,13 @@ export const WorkflowFilter = (props: {
     displayNames: string[],
     handleSetDisplayNames: (names: string[]) => void,
     showSubProjectWorkflows: boolean,
-    setShowSubProjectWorkflows: (v: boolean) => void
+    setShowSubProjectWorkflows: (v: boolean) => void,
+    showUnclassifiedWorkflows: boolean,
+    setShowUnclassifiedWorkflows: (v: boolean) => void,
 }) => {
     const {
         showSubProjectWorkflows, setShowSubProjectWorkflows,
+        showUnclassifiedWorkflows, setShowUnclassifiedWorkflows,
         workflows, displayNames, handleSetDisplayNames
     } = props;
     const plugin = useContext(PluginContext);
@@ -69,12 +72,20 @@ export const WorkflowFilter = (props: {
                                handleSetDisplayNames={handleSetDisplayNames}>
             <WorkflowTypeLegendView/>
         </NameableFilterHeading>
+        <HStack spacing={10}>
 
-        <ExternalToggleView externalControl={showSubProjectWorkflows} onChange={() => {
-            const nextValue = !showSubProjectWorkflows;
-            setShowSubProjectWorkflows(nextValue)
-            setSettingsValueAndSave(plugin, "show_subproject_workflows", nextValue)
-        }} content={<label>{"Show Subprojects' workflows"}</label>}/>
+            <ExternalToggleView style={{marginBottom: 10}} externalControl={showSubProjectWorkflows} onChange={() => {
+                const nextValue = !showSubProjectWorkflows;
+                setShowSubProjectWorkflows(nextValue)
+                setSettingsValueAndSave(plugin, "show_subproject_workflows", nextValue)
+            }} content={<label>{"Subproject Workflows"}</label>}/>
+
+            <ExternalToggleView style={{marginBottom: 10}} externalControl={showUnclassifiedWorkflows} onChange={() => {
+                const nextValue = !showUnclassifiedWorkflows;
+                setShowUnclassifiedWorkflows(nextValue)
+                setSettingsValueAndSave(plugin, "unclassified_workflows_available_to_all_projects", nextValue)
+            }} content={<label>{"Unclassified Workflows"}</label>}/>
+        </HStack>
         <WorkflowCheckboxes nameables={workflows} displayNames={displayNames}
                             handleSetDisplayNames={handleSetDisplayNames}/>
     </div>;
