@@ -5,6 +5,7 @@ import {ObsidianIconView} from "../react-view/view-template/icon-view";
 import OdaPmToolPlugin, {
     CmdPal_JumpToManagePage,
     CmdPal_OpenManagePage,
+    CmdPal_SetProject,
     CmdPal_SetWorkflowToTask,
     PLUGIN_NAME
 } from "../../main";
@@ -545,11 +546,6 @@ const BasicTutorial = () => {
 
         <CommandTutorialView/>
 
-        <h2>A {Desc_ManagePage} Example</h2>
-        <p>
-            You can find the source markdown in the <i>{HelpViewTabsNames[2]}</i> tab.
-        </p>
-        <ManagePageForTemplate/>
     </>
 }
 
@@ -567,6 +563,8 @@ const CommandTutorialView = ({}) => {
     return <>
         <h2>Commands and Context Menu</h2>
 
+        It is suggested that you set a hotkey for your most used commands. You can do this in Obsidian's Settings -
+        Hotkeys - Search for "{PLUGIN_NAME}". 
 
         <h3>{CmdPal_JumpToManagePage}</h3>
 
@@ -581,20 +579,16 @@ const CommandTutorialView = ({}) => {
                 If the cursor is at a managed task, you can open {Desc_ManagePage} with only this task shown.
             </li>
         </ul>
+
         <p style={blockTldrShowStyle}>
-            Jump to workflow or task:
+            Jump to workflow or task in {Desc_ManagePage} when the cursor is at a workflow or a managed task.
         </p>
-        <ul style={blockTldrShowStyle}>
-            <li>
-                when the cursor is at a workflow or a managed task
-            </li>
-            <li>
-                with context menu or command palette (<i>{CmdPal_JumpToManagePage}</i>)
-            </li>
-        </ul>
 
         <h3>{CmdPal_SetWorkflowToTask}</h3>
-
+        Choose the workflows available in the current task's project, and set the workflow.
+        <h3>{CmdPal_SetProject}</h3>
+        From all the defined projects, choose one to assign to the workflow or task.
+        
     </>
 }
 
