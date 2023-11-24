@@ -145,13 +145,25 @@ const CommonHelpViewInModalAndLeaf = ({plugin, container}: {
     </StrictModeWrapper>
 }
 
-const BasicTutorial = () => {
+function useSharedTlDr() {
     const [isTlDr, setIsTlDr] = usePluginSettings("help_page_tutorial_tldr")
     // hidden when tldr mode is on.
     const blockTldrOmitStyle: React.CSSProperties = {display: isTlDr ? "none" : "block"} //  visibility:"hidden" will still take space. So we use display instead
     const blockTldrShowStyle: React.CSSProperties = {display: isTlDr ? "block" : "none"}
     const inlineTldrOmitStyle: React.CSSProperties = {display: isTlDr ? "none" : "inline"}
     const inlineTldrShowStyle: React.CSSProperties = {display: isTlDr ? "inline" : "none"}
+    return {isTlDr, setIsTlDr, blockTldrOmitStyle, blockTldrShowStyle, inlineTldrOmitStyle, inlineTldrShowStyle};
+}
+
+const BasicTutorial = () => {
+    const {
+        isTlDr,
+        setIsTlDr,
+        blockTldrOmitStyle,
+        blockTldrShowStyle,
+        inlineTldrOmitStyle,
+        inlineTldrShowStyle
+    } = useSharedTlDr();
 
     return <>
         <HStack style={{alignItems: "center"}} spacing={10}>
@@ -526,6 +538,28 @@ const BasicTutorial = () => {
             text file after all.
         </p>
 
+        <CommandTutorialView/>
+
+        <h2>A {Desc_ManagePage} Example</h2>
+        <p>
+            You can find the source markdown in the <i>{HelpViewTabsNames[2]}</i> tab.
+        </p>
+        <ManagePageForTemplate/>
+    </>
+}
+
+const CommandTutorialView = ({}) => {
+
+    const {
+        isTlDr,
+        setIsTlDr,
+        blockTldrOmitStyle,
+        blockTldrShowStyle,
+        inlineTldrOmitStyle,
+        inlineTldrShowStyle
+    } = useSharedTlDr();
+
+    return <>
         <h2>Commands and Context Menu</h2>
 
 
@@ -556,16 +590,10 @@ const BasicTutorial = () => {
 
         <h3>{CmdPal_SetWorkflowToTask}</h3>
 
-
-
-
-        <h2>A {Desc_ManagePage} Example</h2>
-        <p>
-            You can find the source markdown in the <i>{HelpViewTabsNames[2]}</i> tab.
-        </p>
-        <ManagePageForTemplate/>
     </>
 }
+
+
 const UserManual = () => {
     const stepStateStyle = {fontWeight: "bold"};
 
