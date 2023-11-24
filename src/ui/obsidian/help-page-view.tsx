@@ -26,6 +26,11 @@ import {FileNavView} from "../common/file-nav-view";
 import {ExternalToggleView} from "../react-view/view-template/toggle-view";
 import {ProjectFilterName_All} from "../react-view/project-filter";
 import {OrphanTaskButtonAndPanel} from "../react-view/fix-orphan-tasks";
+import {LinkView} from "../common/link-view";
+import {TaggedTaskView} from "../common/tagged-task-view";
+import {HashTagView} from "../common/hash-tag-view";
+import {MarkdownFrontMatterView} from "../common/markdown-front-matter-view";
+import {InlineCodeView} from "../common/inline-code-view";
 
 export const PmHelpPageViewId = "tpm-help-view";
 export const Desc_ManagePage = "Manage Page";
@@ -521,9 +526,12 @@ const BasicTutorial = () => {
             text file after all.
         </p>
 
-
         <h2>Commands and Context Menu</h2>
-        <p style={blockTldrOmitStyle}>Apart from this, when your cursor is at a task or workflow, you
+
+
+        <h3>{CmdPal_JumpToManagePage}</h3>
+
+        <p style={blockTldrOmitStyle}>When your cursor is at a task or workflow, you
             can do the following things
             with context menu or command palette (<i>{CmdPal_JumpToManagePage}</i>):
         </p>
@@ -546,25 +554,17 @@ const BasicTutorial = () => {
             </li>
         </ul>
 
+        <h3>{CmdPal_SetWorkflowToTask}</h3>
+
+
+
+
         <h2>A {Desc_ManagePage} Example</h2>
         <p>
             You can find the source markdown in the <i>{HelpViewTabsNames[2]}</i> tab.
         </p>
         <ManagePageForTemplate/>
     </>
-}
-const InlineCodeView = ({text}: {
-    text: string
-}) => {
-    return <span style={{
-        color: "var(--code-normal)",
-        backgroundColor: "var(--code-background)",
-        fontSize: "var(--code-size)",
-        fontFamily: "var(--font-monospace)",
-        verticalAlign: "baseline",
-        borderRadius: "var(--code-radius)",
-        padding: "0.25em",
-    }} spellCheck="false">{text}</span>
 }
 const UserManual = () => {
     const stepStateStyle = {fontWeight: "bold"};
@@ -713,63 +713,5 @@ const ExampleManagePage = ({app, container}: {
         </p>
         {templateView}
     </>
-}
-const LinkView = ({text, onClick}: {
-    text: string,
-    onClick?: () => void
-}) => {
-    return <a className="internal-link" onClick={onClick}>{text}</a>
-}
-const TaggedTaskView = ({content, tags}: {
-    content: string,
-    tags: string[]
-}) => {
-    const checkBoxExampleStyle = {marginTop: 10, marginBottom: 10,}
-
-    return <div style={checkBoxExampleStyle}>
-        <input type={"checkbox"}/>
-        <label>{content} </label>
-        {
-            tags.map(tag => <HashTagView key={tag} tagWithoutHash={tag}/>)
-        }
-    </div>
-}
-const HashTagView = ({tagWithoutHash}: {
-    tagWithoutHash: string
-}) => {
-    tagWithoutHash = tagWithoutHash.startsWith("#") ? tagWithoutHash.substring(1) : tagWithoutHash
-    return <>
-            <span
-                className="cm-formatting cm-formatting-hashtag cm-hashtag cm-hashtag-begin cm-list-1 cm-meta">#</span>
-        <span
-            className="cm-hashtag cm-hashtag-end cm-list-1 cm-meta ">{tagWithoutHash}</span>
-        <label> </label>
-    </>
-}
-const MarkdownFrontMatterView = (props: {
-    keyString?: string,
-    valueString?: string,
-}) => {
-    return <div className="metadata-property" data-property-key="tpm_project" data-property-type="text">
-        <div className="metadata-property-key">
-            <span className="metadata-property-icon" aria-disabled="false">
-                <svg
-                    xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                    className="svg-icon lucide-text">
-                    <path d="M17 6.1H3"></path><path d="M21 12.1H3"></path><path
-                    d="M15.1 18H3"></path>
-                </svg>
-            </span>
-            <input className="metadata-property-key-input" type="text" value={props.keyString}
-                   onChange={() => {
-                   }}/>
-        </div>
-        <div className="metadata-property-value">
-            <div className="metadata-input-longtext mod-truncate" placeholder="Empty"
-            >{props.valueString}</div>
-        </div>
-
-    </div>
 }
 
