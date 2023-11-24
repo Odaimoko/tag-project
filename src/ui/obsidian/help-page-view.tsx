@@ -11,7 +11,7 @@ import OdaPmToolPlugin, {
 import {Tag_Prefix_Step, Tag_Prefix_Tag, Tag_Prefix_TaskType, Tag_Prefix_Workflow} from "../../data-model/workflow-def";
 import {Icon_ManagePage, PluginContext} from "./manage-page-view";
 import {getTemplateHtml, ManagePageForTemplate, templateMd} from "../tpm-template-md";
-import {setSettingsValueAndSave} from "../../Settings";
+import {setSettingsValueAndSave, usePluginSettings} from "../../Settings";
 import {HStack} from "../react-view/view-template/h-stack";
 import {StrictModeWrapper} from "../react-view/view-template/strict-mode-wrapper";
 import {DataTable} from "../react-view/view-template/data-table";
@@ -142,11 +142,12 @@ const CommonHelpViewInModalAndLeaf = ({plugin, container}: {
 
 const BasicTutorial = () => {
     const plugin = useContext(PluginContext);
-    const [isTlDr, setIsTlDr] = useState(plugin.settings.help_page_tutorial_tldr as boolean);
+    const [isTlDr, setIsTlDr] = usePluginSettings("help_page_tutorial_tldr")
     // hidden when tldr mode is on.
     const blockTldrOmitStyle: React.CSSProperties = {display: isTlDr ? "none" : "block"} //  visibility:"hidden" will still take space. So we use display instead
     const blockTldrShowStyle: React.CSSProperties = {display: isTlDr ? "block" : "none"}
     const inlineTldrOmitStyle: React.CSSProperties = {display: isTlDr ? "none" : "inline"}
+    const inlineTldrShowStyle: React.CSSProperties = {display: isTlDr ? "inline" : "none"}
 
     return <>
         <HStack style={{alignItems: "center"}} spacing={10}>
@@ -315,9 +316,9 @@ const BasicTutorial = () => {
         </p>
 
         <h2>
-            A project is?
+            A project <label style={inlineTldrOmitStyle}>is?</label>
         </h2>
-        <p>
+        <p style={blockTldrOmitStyle}>
             A project is a collection of workflows and tasks. You can use project to group related workflows and tasks,
             manage project version, so that you have a nice and clean {Desc_ManagePage}.
         </p>
@@ -334,18 +335,20 @@ const BasicTutorial = () => {
                 <InlineCodeView text={Frontmatter_FileProject}/></li>
         </ul>
 
-        <h3>Group your workflows and tasks</h3>
-        <p>
+
+        <h3 style={blockTldrOmitStyle}>Group your workflows and tasks</h3>
+        <p style={blockTldrOmitStyle}>
             You can set a folder as a project root, and all the workflows and tasks under this folder will be grouped
             into this project. To do this, you can use the obsidian file <LinkView text={"property"}/> <InlineCodeView
             text={Frontmatter_FolderProject}/>.
         </p>
-        <MarkdownFrontMatterView keyString={Frontmatter_FolderProject} valueString={"MyProject"}/>
-        <p>
+        <MarkdownFrontMatterView keyString={Frontmatter_FolderProject}
+                                 valueString={"MyProject"}/>
+        <p style={blockTldrOmitStyle}>
             Add this property to any markdown file directly in this folder, and set the value to your project name.
             The folder hierarchy may look like this.
         </p>
-        <FileNavView pathHierarchy={[
+        <FileNavView style={blockTldrOmitStyle} pathHierarchy={[
             {
                 name: "Example: MyProject - Root", isFolder: true, children: [
                     {name: "MyProject 1 (Contains property `tpm_project_root: MyProject`)", isFolder: false},
@@ -353,14 +356,14 @@ const BasicTutorial = () => {
                 ]
             },
         ]}/>
-        <p>
+        <p style={blockTldrOmitStyle}>
             You can also set a file as a project with <LinkView text={"property"}/> <InlineCodeView
             text={Frontmatter_FileProject}/>. It will override the folder project. For example, tasks in the fodler <i>My
             Project
             3</i> will be in the project <i>Another Project</i>.
 
         </p>
-        <FileNavView pathHierarchy={[
+        <FileNavView style={blockTldrOmitStyle} pathHierarchy={[
             {
                 name: "Example: MyProject - Root", isFolder: true, children: [
                     {name: "MyProject 1 (Contains property `tpm_project_root: MyProject`)", isFolder: false},
@@ -369,7 +372,7 @@ const BasicTutorial = () => {
                 ]
             },
         ]}/>
-        <p>
+        <p style={blockTldrOmitStyle}>
             More granular control can be achieved by using <b>project tags</b>. You can add a project tag to a workflow
             or a task, and it will be grouped into that project.
 
@@ -378,24 +381,28 @@ const BasicTutorial = () => {
         <TaggedTaskView content={"Write preface"}
                         tags={[`${Tag_Prefix_TaskType}write_scripts`, `${Tag_Prefix_Step}write`, `${Tag_Prefix_Project}MyProject`]}/>
         <p>
-            For project tags to work, your project name should form a valid tag. For example, <i>My Project</i> is not a
+            <label style={inlineTldrOmitStyle}>For project tags to work, your project name should form a valid tag. For
+                example, </label>
+            <i>My Project</i> is not a
             valid tag, but <i>MyProject</i> is.
         </p>
 
 
         <h2>Subprojects</h2>
-        <p>
+        <p style={blockTldrOmitStyle}>
             When a project grows larger and larger, it is important to keep it manageable.
             You can use subprojects to split a large project into smaller ones.
         </p>
 
         <p>
-            <label>Subprojects can be added with <InlineCodeView text={"/"}/> in the project name. </label>
-            <i>MyProject/MySubproject</i> is a subproject of <i>MyProject</i>. This naming method is consistent with the
-            hierarchical tags. Thus, project tags is naturally supported.
+            <label style={inlineTldrOmitStyle}>Subprojects can be added with <InlineCodeView text={"/"}/> in the project
+                name. </label>
+            <i>MyProject/MySubproject</i> is a subproject of <i>MyProject</i>.
+            <label style={inlineTldrOmitStyle}>This naming method is consistent with the
+                hierarchical tags. Thus, project tags is naturally supported.</label>
         </p>
 
-        <p>
+        <p style={blockTldrOmitStyle}>
             Personally, I use subprojects for versioning. When I am developing {PLUGIN_NAME}, I have a project named
             <i> TagProject</i>. For each version, I use <i> TagProject/x.y.z</i> to focus on certain features. You can
             develop your own way of
@@ -404,7 +411,7 @@ const BasicTutorial = () => {
 
         <h2>Project, workflow and tasks' Relationships</h2>
         <h3>Orphan tasks</h3>
-        <p>
+        <p style={blockTldrOmitStyle}>
             A workflow or a task will always be assigned to a certain project. In {Desc_ManagePage}, only the workflows
             in the chosen project will be displayed. Tasks will only be displayed if they are in the shown
             project, <b>and</b> are in the shown workflows.
@@ -414,10 +421,13 @@ const BasicTutorial = () => {
             are shown.
         </p>
         <p>
-            An orphan task's project does not match its workflow's. According to the rules above, it will not show
-            except in <b>{ProjectFilterName_All}</b>. When there are orphan tasks in your vault, a fix button will
-            appear in {Desc_ManagePage}, letting you go through all the orphan tasks and fix them, by forcefully adding
-            the workflow's project tag to the task. Or, you can manually fix them in the markdown file yourself.
+            An orphan task's project does not match its workflow's.
+            <label style={inlineTldrOmitStyle}> According to the rules above, i</label>
+            <label style={inlineTldrShowStyle}> I</label>t will not show
+            except in <b>{ProjectFilterName_All}</b>.
+        </p>
+        <p style={blockTldrOmitStyle}>
+
         </p>
         <OrphanTaskButtonAndPanel orphanTasks={[]}/>
 
@@ -425,8 +435,9 @@ const BasicTutorial = () => {
         <h3>Unclassified workflows</h3>
         <p>
             By default, all workflows and tasks are under <i>{ProjectName_Unclassified}</i>.
-            This is designed to share workflows across all projects. If you do not want this behavior, you can disable
-            it in settings.
+            <label style={inlineTldrOmitStyle}>This is designed to share workflows across all projects. If you do not
+                want this behavior, you can disable
+                it in settings.</label>
         </p>
 
         <h3>Share workflows via subprojects</h3>
@@ -435,12 +446,12 @@ const BasicTutorial = () => {
             Simply put, a task belongs not only to its project, but also to all its parent projects.
             A workflow belongs to all its subprojects, but not its parent projects.
         </p>
-        <p>
+        <p style={blockTldrOmitStyle}>
             The reason is that when you are working on a subproject, you may want to reuse the workflows defined in the
             parent. But you may not want to share your subproject's workflows to the parent or other subprojects.
             Also, when you select a project in {Desc_ManagePage}, you can see all the tasks in the subprojects.
         </p>
-        <p>
+        <p style={blockTldrOmitStyle}>
             There's also a toggle in {Desc_ManagePage} to show workflows in subprojects, in case you want to see them.
         </p>
 

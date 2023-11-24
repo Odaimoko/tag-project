@@ -1,4 +1,5 @@
 import React from "react";
+import {I_Stylable} from "../react-view/view-template/icon-view";
 
 interface I_PathHierarchy {
     name: string,
@@ -59,12 +60,12 @@ function FileView(props: {
 
 export const FileNavView = (props: {
     pathHierarchy?: I_PathHierarchy[]
-}) => {
+} & I_Stylable) => {
     const pathHierarchy = props.pathHierarchy ?? []
     if (pathHierarchy.length === 0) {
         return <></>
     }
-    return <div>
+    return <div style={props.style}>
         {pathHierarchy.map(k => {
                 if (k.isFolder) {
                     return <FolderView children={k.children} key={k.name} name={k.name} isCollapsed={k.isFolderCollapsed}/>
