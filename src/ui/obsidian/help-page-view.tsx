@@ -376,7 +376,7 @@ const BasicTutorial = () => {
         </p>
 
 
-        <h3>Sub projects</h3>
+        <h3>Subprojects</h3>
 
 
         <h3>Project, workflow and tasks' Relationships</h3>

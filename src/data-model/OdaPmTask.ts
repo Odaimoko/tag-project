@@ -191,13 +191,13 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
     }
 
 
-    isInProject(name: string, includeSubProjects = true): boolean {
+    isInProject(name: string, includeSubprojects = true): boolean {
         // TODO performance
-        // - A task in a sub project is linked to a list of hierarchical projects.
-        // - A task in main project will not appear in the sub project.
+        // - A task in a subproject is linked to a list of hierarchical projects.
+        // - A task in main project will not appear in the subproject.
         // if the given project's name is the prefix of this task's  name, then it is in the project
         return this.projects.filter(k =>
-            k.name === name || (includeSubProjects && k.isSubProjectOfName(name)))
+            k.name === name || (includeSubprojects && k.isSubprojectOfName(name)))
             .length > 0;
     }
 

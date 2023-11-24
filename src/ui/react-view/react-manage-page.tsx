@@ -76,7 +76,7 @@ export function ReactManagePage({eventCenter}: {
     const [displayTags, setDisplayTags] = useState(getSettings()?.manage_page_display_tags as string[]);
     const [excludedTags, setExcludedTags] = useState(getSettings()?.manage_page_excluded_tags as string[]);
     const [settingsDisplayProjectOptionValues, setDisplayProjectOptionValues] = useState(initDisplayProjectOptionValues);
-    const [showSubProjectWorkflows, setShowSubProjectWorkflows] = usePluginSettings("show_subproject_workflows")
+    const [showSubprojectWorkflows, setShowSubprojectWorkflows] = usePluginSettings("show_subproject_workflows")
     const [showUnclassified, setShowUnclassified] = usePluginSettings("unclassified_workflows_available_to_all_projects");
 
     function initDisplayProjectOptionValues() {
@@ -135,8 +135,8 @@ export function ReactManagePage({eventCenter}: {
     function isWorkflowShownInPage(workflow: I_OdaPmWorkflow) {
         // workflow's isInAnyProject checks if the workflow is in a project's parent.
         return isInAnyProject(workflow, displayProjectOptionValues)
-            || (showSubProjectWorkflows &&
-                displayProjectOptionValues.some(m => workflow.getFirstProject()?.isSubProjectOfName(m))
+            || (showSubprojectWorkflows &&
+                displayProjectOptionValues.some(m => workflow.getFirstProject()?.isSubprojectOfName(m))
             );
     }
 
@@ -171,8 +171,8 @@ export function ReactManagePage({eventCenter}: {
 
             <WorkflowFilter workflows={workflows} displayNames={displayWorkflowNames}
                             handleSetDisplayNames={handleSetDisplayWorkflows}
-                            showSubProjectWorkflows={showSubProjectWorkflows}
-                            setShowSubProjectWorkflows={setShowSubProjectWorkflows}
+                            showSubprojectWorkflows={showSubprojectWorkflows}
+                            setShowSubprojectWorkflows={setShowSubprojectWorkflows}
                             showUnclassifiedWorkflows={showUnclassified}
                             setShowUnclassifiedWorkflows={setShowUnclassified}
             />

@@ -228,7 +228,7 @@ async function test_UT_020_6(pmDb: OdaPmDb) {
     const orphans = pmDb.orphanTasks;
     const orphans_020_6 = orphans.filter(k => k.summary.startsWith("UT_020_6"));
     expect(orphans_020_6, `Should have 0 orphan tasks in UT_020_6`).length(0);
-    devLog("Test PASSED: Sub Project Inclusion.")
+    devLog("Test PASSED: Subproject Inclusion.")
 }
 
 //#endif

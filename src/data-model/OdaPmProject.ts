@@ -185,7 +185,7 @@ export class OdaPmProject extends BaseDatabaseObject implements I_Nameable {
 // endregion
     // main is main/sub's parent. parent should be inside startWith
     // dirname: main/sub13 is not main/sub's parent
-    isSubProjectOfName(name: string) {
+    isSubprojectOfName(name: string) {
         return path.dirname(this.name).startsWith(name);
     }
 

@@ -62,7 +62,7 @@ class OdaPmWorkflow implements I_OdaPmWorkflow {
     }
 
 
-    isInProject(name: string, includeSubProjects = true): boolean {
+    isInProject(name: string, includeSubprojects = true): boolean {
         // TODO performance
         // - A workflow in main project -> in sub
         // - workflow in sub -> not in main
@@ -70,7 +70,7 @@ class OdaPmWorkflow implements I_OdaPmWorkflow {
             const isInUnclassified =
                 getSettings()?.unclassified_workflows_available_to_all_projects && k.name === ProjectName_Unclassified
 
-            const isInParentProject = includeSubProjects && k.isParentProjectOf(name);
+            const isInParentProject = includeSubprojects && k.isParentProjectOf(name);
             return k.name === name || isInParentProject || isInUnclassified;
         })
             .length > 0;

@@ -77,7 +77,7 @@ export interface I_OdaPmProjectTask {
     // 0.2.0
     projects: OdaPmProject[];
     addProject: (project: OdaPmProject) => void;
-    isInProject: (name: string, includeSubProjects?: boolean) => boolean;
+    isInProject: (name: string, includeSubprojects?: boolean) => boolean;
     /**
      * Called when no project is added. Returns the path of the markdown path.
      */

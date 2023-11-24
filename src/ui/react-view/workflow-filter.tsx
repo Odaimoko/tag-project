@@ -54,13 +54,13 @@ export const WorkflowFilter = (props: {
     workflows: I_OdaPmWorkflow[],
     displayNames: string[],
     handleSetDisplayNames: (names: string[]) => void,
-    showSubProjectWorkflows: boolean,
-    setShowSubProjectWorkflows: (v: boolean) => void,
+    showSubprojectWorkflows: boolean,
+    setShowSubprojectWorkflows: (v: boolean) => void,
     showUnclassifiedWorkflows: boolean,
     setShowUnclassifiedWorkflows: (v: boolean) => void,
 }) => {
     const {
-        showSubProjectWorkflows, setShowSubProjectWorkflows,
+        showSubprojectWorkflows, setShowSubprojectWorkflows,
         showUnclassifiedWorkflows, setShowUnclassifiedWorkflows,
         workflows, displayNames, handleSetDisplayNames
     } = props;
@@ -72,9 +72,9 @@ export const WorkflowFilter = (props: {
         </NameableFilterHeading>
         <HStack spacing={10}>
 
-            <ExternalToggleView style={{marginBottom: 10}} externalControl={showSubProjectWorkflows} onChange={() => {
-                const nextValue = !showSubProjectWorkflows;
-                setShowSubProjectWorkflows(nextValue)
+            <ExternalToggleView style={{marginBottom: 10}} externalControl={showSubprojectWorkflows} onChange={() => {
+                const nextValue = !showSubprojectWorkflows;
+                setShowSubprojectWorkflows(nextValue)
             }} content={<label>{"Subproject Workflows"}</label>}/>
 
             <ExternalToggleView style={{marginBottom: 10}} externalControl={showUnclassifiedWorkflows} onChange={() => {
