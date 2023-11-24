@@ -17,6 +17,8 @@ import {HStack} from "../react-view/view-template/h-stack";
 import {StrictModeWrapper} from "../react-view/view-template/strict-mode-wrapper";
 import {DataTable} from "../react-view/view-template/data-table";
 import {WorkflowTypeLegend} from "../react-view/workflow-filter";
+import {Frontmatter_FileProject, Frontmatter_FolderProject, Tag_Prefix_Project} from "../../data-model/OdaPmProject";
+import {FileNavView} from "../common/file-nav-view";
 
 export const PmHelpPageViewId = "tpm-help-view";
 export const Desc_ManagePage = "Manage Page";
@@ -97,7 +99,8 @@ export class PmHelpModal extends Modal {
 }
 
 const centerChildrenVertStyle = {display: "flex", justifyContent: "center"}
-const HelpViewTabsNames = ["Tutorial", "User manual", "Template"]
+const HelpPage_Template = "Template";
+const HelpViewTabsNames = ["Tutorial", "User manual", HelpPage_Template]
 const CommonHelpViewInModalAndLeaf = ({plugin, container}: {
     plugin: OdaPmToolPlugin,
     container: Element
@@ -135,7 +138,7 @@ const BasicTutorial = () => {
     const [isTlDr, setIsTlDr] = useState(plugin.settings.help_page_tutorial_tldr as boolean);
     // hidden when tldr mode is on.
     const blockTldrOmitStyle: React.CSSProperties = {display: isTlDr ? "none" : "block"} //  visibility:"hidden" will still take space. So we use display instead
-    const blockTldrOShowStyle: React.CSSProperties = {display: isTlDr ? "block" : "none"}
+    const blockTldrShowStyle: React.CSSProperties = {display: isTlDr ? "block" : "none"}
     const inlineTldrOmitStyle: React.CSSProperties = {display: isTlDr ? "none" : "inline"}
 
     return <>
@@ -147,10 +150,61 @@ const BasicTutorial = () => {
                 setSettingsValueAndSave(plugin, "help_page_tutorial_tldr", nextValue)
             }} content={<label style={{padding: 5}}>{"TL;DR - Use when you understand the concepts"}</label>}/>
         </HStack>
-        <h2>Workflow Types</h2>
-        <p style={blockTldrOmitStyle}>A task consists of multiple steps. It can be categorized into two workflows
-            according to the the
-            relationships between steps.</p>
+
+        <h2 style={blockTldrOmitStyle}>
+            {PLUGIN_NAME} is?
+        </h2>
+
+        <p style={blockTldrOmitStyle}>
+            A project management plugin for Obsidian.
+            In {PLUGIN_NAME}, everything is defined by markdown tags.
+
+            You can quickly add, navigate, and manage task progress anywhere in markdown.
+        </p>
+        <p style={blockTldrOmitStyle}>
+            Almost all the operations can be done via context menu or command palette. Once you set a hotkey for the
+            command palette, you can manage your tasks in high efficiency.
+        </p>
+
+
+        <h2>Open {Desc_ManagePage}</h2>
+        <p style={blockTldrOmitStyle}>
+            You can open {Desc_ManagePage} directly using the ribbon icon (<ObsidianIconView
+            iconName={Icon_ManagePage}/>) on the leftmost bar, or use the command palette
+            (<i>{CmdPal_OpenManagePage}</i>).
+        </p>
+        <p style={blockTldrOmitStyle}>
+            When you first install {PLUGIN_NAME}, there will be no tasks or workflows. Don't worry, we're gonna go
+            through
+            the basics in the following sections. You will build a beautiful {Desc_ManagePage} in no time.
+
+            You can also use the template to get started.
+            Check {HelpPage_Template} tab for more details.
+        </p>
+        <p style={blockTldrShowStyle}>
+            Open {Desc_ManagePage} via
+
+        </p>
+        <ul style={blockTldrShowStyle}>
+            <li>
+                the ribbon icon (<ObsidianIconView iconName={Icon_ManagePage}/>) on the leftmost bar,
+            </li>
+            <li>
+                the command (<i>{CmdPal_OpenManagePage}</i>).
+
+            </li>
+        </ul>
+
+
+        <h2>A workflow is?</h2>
+        <p style={blockTldrOmitStyle}>
+            When you are working on a task, you may break it down into several steps. Sometimes, these steps are
+            independent, while sometimes they have to be done in a certain order.
+            Therefore, we have two kinds of workflows.
+
+
+        </p>
+
         <div style={centerChildrenVertStyle}>
             <DataTable tableTitle={"Workflow types"} headers={["Type", "Description"]} rows={
                 [[<WorkflowTypeLegend type={"chain"}/>, <>
@@ -173,7 +227,8 @@ const BasicTutorial = () => {
             />
 
         </div>
-        <h2>Use tags to define workflows</h2>
+
+        <h3>Use tags to define workflows</h3>
         <div>
             A <b>chain</b> workflow is defined by a task marked with <HashTagView
             tagWithoutHash={`${Tag_Prefix_Workflow}chain`}/>.<span style={inlineTldrOmitStyle}> The steps in the workflow is defined by tags with
@@ -188,6 +243,7 @@ const BasicTutorial = () => {
             This defines a chain workflow named <i>write_scripts</i>, where the task is to write scripts, revise, and
             export it to somewhere. You cannot revise before writing, and you cannot export before revising.
         </p>
+
 
         <p>
             A <b>checkbox</b> workflow is defined by a task marked with <HashTagView
@@ -206,8 +262,10 @@ const BasicTutorial = () => {
             data before drawing the art, and vice versa.
         </div>
         <p/>
-        <h2>Use tags to define tasks</h2>
-        <label style={blockTldrOmitStyle}>Suppose we have a task to write the preface of the game. We may have a task
+        <h2>Use tags to define managed tasks</h2>
+        <label style={blockTldrOmitStyle}>
+            A normal markdown task is not managed in {PLUGIN_NAME}. You can use workflow tags to define a managed task.
+            Suppose we have a task to write the preface of the book. We may have a task
             like
             this.</label>
         <div style={blockTldrOmitStyle}>
@@ -215,8 +273,7 @@ const BasicTutorial = () => {
         </div>
         <div style={blockTldrOmitStyle}>
             Once workflows are defined, use <HashTagView tagWithoutHash={`${Tag_Prefix_Step}[work_flow_name]`}/> to mark
-            the next
-            step, without the square brackets. For example, if we want to mark a task as <i>write_scripts</i>, we can
+            a task, without the square brackets. For example, if we want to mark a task as <i>write_scripts</i>, we can
             mark it as
         </div>
         <TaggedTaskView content={"Write preface"} tags={[`${Tag_Prefix_TaskType}write_scripts`]}/>
@@ -226,12 +283,119 @@ const BasicTutorial = () => {
             You can use the ribbon icon on the leftmost bar (<ObsidianIconView iconName={Icon_ManagePage}/>), or use the
             command palette (<i>{CmdPal_OpenManagePage}</i>) to open it.
         </p>
+
+        <p style={blockTldrOmitStyle}>
+            Here are more examples of the <i>card_design</i> task.
+        </p>
+        <TaggedTaskView content={"card: warlock, normal attack"} tags={[`${Tag_Prefix_TaskType}card_design`]}/>
+        <TaggedTaskView content={"card: warlock, fire magic"} tags={[`${Tag_Prefix_TaskType}card_design`]}/>
+
+        <h3>Use tags to add steps</h3>
+        <div style={blockTldrOmitStyle}>
+            Remember we define some steps for each workflow. Now we finish the writing work for preface. It goes to the
+            revise phase. So we mark it as:
+        </div>
+        <TaggedTaskView content={"Write preface"}
+                        tags={[`${Tag_Prefix_TaskType}write_scripts`, `${Tag_Prefix_Step}write`]}/>
+
+
+        <p>
+            In {Desc_ManagePage}, ticking or unticking a checkbox will add or remove the corresponding tag in markdown
+            automatically.
+            <span
+                style={inlineTldrOmitStyle}> See <i>{`Tasks Completion`}</i> section under <i>{HelpViewTabsNames[1]}</i> tab for more
+            details.</span>
+        </p>
+
+        <h2>
+            A project is?
+        </h2>
+        <p>
+            A project is a collection of workflows and tasks. You can use project to group related workflows and tasks,
+            manage project version, so that you have a nice and clean {Desc_ManagePage}.
+        </p>
+
+        <h3 style={blockTldrShowStyle}>Define a project</h3>
+        A project can be defined by
+        <ul style={blockTldrShowStyle}>
+            <li> a <b>project tag</b> (a tag with prefix <HashTagView tagWithoutHash={Tag_Prefix_Project}/>)</li>
+            <li><label>obsidian file <LinkView text={"property"}
+                                               onClick={() => open("https://help.obsidian.md/Editing+and+formatting/Properties")}/><label> </label>
+                <InlineCodeView text={Frontmatter_FolderProject}/></label></li>
+            <li> obsidian file <LinkView text={"property"}
+                                         onClick={() => open("https://help.obsidian.md/Editing+and+formatting/Properties")}/><label> </label>
+                <InlineCodeView text={Frontmatter_FileProject}/></li>
+        </ul>
+
+        <h3>Group your workflows and tasks</h3>
+        <p>
+            You can set a folder as a project root, and all the workflows and tasks under this folder will be grouped
+            into this project. To do this, you can use the obsidian file <LinkView text={"property"}/> <InlineCodeView
+            text={Frontmatter_FolderProject}/>.
+        </p>
+        <MarkdownFrontMatterView keyString={Frontmatter_FolderProject} valueString={"MyProject"}/>
+        <p>
+            Add this property to any markdown file directly in this folder, and set the value to your project name.
+            The folder hierarchy may look like this.
+        </p>
+        <FileNavView pathHierarchy={[
+            {
+                name: "Example: MyProject - Root", isFolder: true, children: [
+                    {name: "MyProject 1 (Contains property `tpm_project_root: MyProject`)", isFolder: false},
+                    {name: "MyProject 2 (Tasks in this file will be in [MyProject])", isFolder: false},
+                ]
+            },
+        ]}/>
+        <p>
+            You can also set a file as a project with <LinkView text={"property"}/> <InlineCodeView
+            text={Frontmatter_FileProject}/>. It will override the folder project. For example, tasks in the fodler <i>My
+            Project
+            3</i> will be in the project <i>Another Project</i>.
+            <FileNavView pathHierarchy={[
+                {
+                    name: "Example: MyProject - Root", isFolder: true, children: [
+                        {name: "MyProject 1 (Contains property `tpm_project_root: MyProject`)", isFolder: false},
+                        {name: "MyProject 2 (Tasks in this file will be in [MyProject])", isFolder: false},
+                        {name: "MyProject 3 (Contains property `tpm_project: Another Project`)", isFolder: false},
+                    ]
+                },
+            ]}/>
+        </p>
+
+        <p>
+            More granular control can be achieved by using <b>project tags</b>. You can add a project tag to a workflow
+            or a task, and it will be grouped into that project.
+
+        </p>
+
+        <TaggedTaskView content={"Write preface"}
+                        tags={[`${Tag_Prefix_TaskType}write_scripts`, `${Tag_Prefix_Step}write`, `${Tag_Prefix_Project}MyProject`]}/>
+        <p>
+            For project tags to work, your project name should form a valid tag. For example, <i>My Project</i> is not a
+            valid tag, but <i>MyProject</i> is.
+        </p>
+
+
+        <h3>Sub projects</h3>
+
+        
+        <h3>Project, workflow and tasks' Relationships</h3>
+
+        <h2>Best Practices</h2>
+        <p style={blockTldrOmitStyle}>Since the step tag is already defined, they can be auto completed.
+            Note that adding a step tag represents we have done the step. It is more natural for me and the meaning
+            stays
+            the same with checkbox workflow. If you want to make a step representing the work you are doing, you can add
+            a <b><i>done</i></b> step at the end of each chain workflow.
+        </p>
+
+
         <p style={blockTldrOmitStyle}>
             If you set the workflow for the very first time, it's tag is not available for auto-completion. Instead of
             manually typing the workflow tag, you can also use context menu or command palette
             (<i>{CmdPal_SetWorkflowToTask}</i>) to do it. With a hotkey bound, this is as fast as auto-completion.
         </p>
-        <div style={blockTldrOShowStyle}>
+        <div style={blockTldrShowStyle}>
             Add a workflow tag to a task via:
             <ul>
                 <li>
@@ -246,39 +410,13 @@ const BasicTutorial = () => {
         </div>
         <p style={blockTldrOmitStyle}>After typing the first workflow tag, you can use auto-completion.
             But using the command palette is preferred, since it can replace an existing workflow tag with the new one.
-            You don't have to remove the older one yourself.
+            You don't have to remove the old one yourself.
         </p>
         <p style={blockTldrOmitStyle}>
             You can choose whichever way is more convenient for you. Markdown is a
             text file after all.
         </p>
-        <p style={blockTldrOmitStyle}>
-            Here are more examples of the <i>card_design</i> task.
-        </p>
-        <TaggedTaskView content={"card: warlock, normal attack"} tags={[`${Tag_Prefix_TaskType}card_design`]}/>
-        <TaggedTaskView content={"card: warlock, fire magic"} tags={[`${Tag_Prefix_TaskType}card_design`]}/>
 
-        <h2>Use tags to add steps</h2>
-        <div style={blockTldrOmitStyle}>
-            Remember we define some steps for each workflow. Now we finish the writing work for preface. It goes to the
-            revise phase. So we mark it as:
-        </div>
-        <TaggedTaskView content={"Write preface"}
-                        tags={[`${Tag_Prefix_TaskType}write_scripts`, `${Tag_Prefix_Step}write`]}/>
-        <p style={blockTldrOmitStyle}>Since the step tag is already defined, they can be auto completed.
-            Note that adding a step tag represents we have done the step. It is more natural for me and the meaning
-            stays
-            the same with checkbox workflow. If you want to make a step representing the work you are doing, you can add
-            a <b><i>done</i></b> step at the end of each chain workflow.
-        </p>
-
-        <p>
-            In {Desc_ManagePage}, ticking or unticking a checkbox will add or remove the corresponding tag in markdown
-            automatically.
-            <span
-                style={inlineTldrOmitStyle}> See <i>{`Tasks Completion`}</i> section under <i>{HelpViewTabsNames[1]}</i> tab for more
-            details.</span>
-        </p>
 
         <h2>Use tags to add, well, tags</h2>
         <p style={blockTldrOmitStyle}>
@@ -293,7 +431,7 @@ const BasicTutorial = () => {
             with
             normal tags, such as <HashTagView tagWithoutHash={`${Tag_Prefix_Tag}abandoned`}/>.
         </p>
-        <p style={blockTldrOShowStyle}>
+        <p style={blockTldrShowStyle}>
             The managed tags have the prefix <HashTagView tagWithoutHash={Tag_Prefix_Tag}/>, such as <HashTagView
             tagWithoutHash={`${Tag_Prefix_Tag}abandoned`}/>.
         </p>
@@ -309,29 +447,12 @@ const BasicTutorial = () => {
             in the workflow definition.
         </p>
 
-        <h2>Open {Desc_ManagePage}</h2>
-        <p style={blockTldrOmitStyle}>
-            You can open {Desc_ManagePage} directly using the ribbon icon (<ObsidianIconView
-            iconName={Icon_ManagePage}/>) on the leftmost bar, or use the command palette
-            (<i>{CmdPal_OpenManagePage}</i>).
-        </p>
-        <p style={blockTldrOShowStyle}>
-            Open {Desc_ManagePage} via
 
-        </p>
-        <ul style={blockTldrOShowStyle}>
-            <li>
-                the ribbon icon (<ObsidianIconView iconName={Icon_ManagePage}/>) on the leftmost bar,
-            </li>
-            <li>
-                the command (<i>{CmdPal_OpenManagePage}</i>).
-
-            </li>
-        </ul>
-        <p style={blockTldrOmitStyle}>Apart from this, when your cursor is focusing on a managed task or workflow, you
+        <h2>Commands and Context Menu</h2>
+        <p style={blockTldrOmitStyle}>Apart from this, when your cursor is at a task or workflow, you
             can do the following things
+            with context menu or command palette (<i>{CmdPal_JumpToManagePage}</i>):
         </p>
-        with context menu or command palette (<i>{CmdPal_JumpToManagePage}</i>):
         <ul style={blockTldrOmitStyle}>
             <li>If the cursor is at a workflow, you can open {Desc_ManagePage} with only this workflow filtered.
             </li>
@@ -339,10 +460,10 @@ const BasicTutorial = () => {
                 If the cursor is at a managed task, you can open {Desc_ManagePage} with only this task shown.
             </li>
         </ul>
-        <p style={blockTldrOShowStyle}>
+        <p style={blockTldrShowStyle}>
             Jump to workflow or task:
         </p>
-        <ul style={blockTldrOShowStyle}>
+        <ul style={blockTldrShowStyle}>
             <li>
                 when the cursor is at a workflow or a managed task
             </li>
@@ -350,7 +471,7 @@ const BasicTutorial = () => {
                 with context menu or command palette (<i>{CmdPal_JumpToManagePage}</i>)
             </li>
         </ul>
-        
+
         <h2>A {Desc_ManagePage} Example</h2>
         <p>
             You can find the source markdown in the <i>{HelpViewTabsNames[2]}</i> tab.
@@ -583,3 +704,28 @@ const ExternalToggleView = ({externalControl, onChange, onLabelClicked, content,
         onClick={onLabelClicked}>{content}</span>
     </>
 }
+const MarkdownFrontMatterView = (props: {
+    keyString?: string,
+    valueString?: string,
+}) => {
+    return <div className="metadata-property" data-property-key="tpm_project" data-property-type="text">
+        <div className="metadata-property-key">
+            <span className="metadata-property-icon" aria-disabled="false">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                    className="svg-icon lucide-text">
+                    <path d="M17 6.1H3"></path><path d="M21 12.1H3"></path><path
+                    d="M15.1 18H3"></path>
+                </svg>
+            </span>
+            <input className="metadata-property-key-input" type="text" value={props.keyString}/>
+        </div>
+        <div className="metadata-property-value">
+            <div className="metadata-input-longtext mod-truncate" placeholder="Empty" contentEditable="false"
+            >{props.valueString}</div>
+        </div>
+
+    </div>
+}
+

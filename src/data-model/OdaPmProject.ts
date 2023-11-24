@@ -6,8 +6,8 @@ import {OdaPmTask} from "./OdaPmTask";
 import * as path from "path";
 import {I_Nameable} from "./I_Nameable";
 
-const Frontmatter_FolderProject = "tpm_project_root";
-const Frontmatter_FileProject = "tpm_project";
+export const Frontmatter_FolderProject = "tpm_project_root";
+export const Frontmatter_FileProject = "tpm_project";
 export const ProjectName_Unclassified = "Unclassified";
 export const Tag_Prefix_Project = "#tpm/project/";
 const Project_Def_Enum_Array = [
