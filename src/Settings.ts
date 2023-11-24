@@ -2,6 +2,10 @@ import {App, PluginSettingTab, Setting, ValueComponent} from "obsidian";
 import TPMPlugin from "./main";
 import OdaPmToolPlugin from "./main";
 import {GenericProvider} from "./utils/GenericProvider";
+import {Evt_SettingsChanged} from "./typing/dataview-event";
+import React, {useContext} from "react";
+import {PluginContext} from "./ui/obsidian/manage-page-view";
+import {devLog} from "./utils/env-util";
 
 
 type SerializedType =
@@ -73,7 +77,8 @@ export
 async function setSettingsValueAndSave<T extends SerializedType>(plugin: OdaPmToolPlugin, settingName: SettingName, value: T) {
     // @ts-ignore
     plugin.settings[settingName] = value;
-    // console.log(`Saving settings ${settingName} = ${value}...`);
+    console.log(`Going to emit ${Evt_SettingsChanged} ${settingName} = ${value}...`);
+    plugin.getEmitter().emit(Evt_SettingsChanged, settingName, value);
     await plugin.saveSettings();
 }
 
@@ -128,4 +133,37 @@ export const SettingsProvider: GenericProvider<TPMSettings> = new GenericProvide
 
 export function getSettings() {
     return SettingsProvider.get();
+}
+
+// for react
+/**
+ * This hook returns a function which only triggers Evt_SettingsChanged event by calling set settings function.
+ * Then the event will be handled by `handler`, which then executes setValue.
+ * This is to ensure that when a value is changed in settings, the `handler` will receive the event, and update the value in the ui.
+ * @param name
+ */
+export function usePluginSettings<T extends SettingName>(name: SettingName) {
+    const plugin = useContext(PluginContext);
+    const [value, setValue] = React.useState(plugin.settings[name] as T);
+
+    function setValueAndSave(newValue: T) {
+        console.log(`DirectSetValue: ${name}, Old value: ${plugin.settings[name]}`)
+        setSettingsValueAndSave(plugin, name, newValue)
+    }
+
+    // really set value after settings change
+    const handler = React.useCallback(
+        (settingName: SettingName, newValue: T) => {
+            if (settingName != name) return;
+            devLog(`Received event: ${name}, ${newValue}`)
+            setValue(newValue);
+        }, [name]);
+
+    React.useEffect(() => {
+        plugin.getEmitter().on(Evt_SettingsChanged, handler);
+        return () => {
+            plugin.getEmitter().off(Evt_SettingsChanged, handler);
+        };
+    }, [name, plugin, handler]);
+    return [value, setValueAndSave];
 }

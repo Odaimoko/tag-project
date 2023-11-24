@@ -2,7 +2,7 @@ import {I_OdaPmProjectTask, I_OdaPmWorkflow} from "../../data-model/workflow-def
 import React, {useContext, useEffect, useState} from "react";
 import {PluginContext} from "../obsidian/manage-page-view";
 import {EventEmitter} from "events";
-import {getSettings, setSettingsValueAndSave} from "../../Settings";
+import {getSettings, setSettingsValueAndSave, usePluginSettings} from "../../Settings";
 import {OdaPmDbProvider} from "../../data-model/odaPmDb";
 import {Evt_DbReloaded, Evt_JumpTask, Evt_JumpWorkflow} from "../../typing/dataview-event";
 import {devLog} from "../../utils/env-util";
@@ -53,11 +53,11 @@ export function ReactManagePage({eventCenter}: {
         eventCenter?.addListener(Evt_DbReloaded, triggerRerender)
         eventCenter?.addListener(Evt_JumpTask, jumpTask)
         eventCenter?.addListener(Evt_JumpWorkflow, jumpWf)
+
         return () => {
             eventCenter?.removeListener(Evt_DbReloaded, triggerRerender)
             eventCenter?.removeListener(Evt_JumpTask, jumpTask)
             eventCenter?.removeListener(Evt_JumpWorkflow, jumpWf)
-
         }
     }, [rerenderState]);
     // endregion
@@ -76,8 +76,8 @@ export function ReactManagePage({eventCenter}: {
     const [displayTags, setDisplayTags] = useState(getSettings()?.manage_page_display_tags as string[]);
     const [excludedTags, setExcludedTags] = useState(getSettings()?.manage_page_excluded_tags as string[]);
     const [settingsDisplayProjectOptionValues, setDisplayProjectOptionValues] = useState(initDisplayProjectOptionValues);
-    const [showSubProjectWorkflows, setShowSubProjectWorkflows] = useState(false)
-    const [showUnclassified, setShowUnclassified] = useState(false)
+    const [showSubProjectWorkflows, setShowSubProjectWorkflows] = usePluginSettings("show_subproject_workflows")
+    const [showUnclassified, setShowUnclassified] = usePluginSettings("unclassified_workflows_available_to_all_projects");
 
     function initDisplayProjectOptionValues() {
         const settingsValue = getSettings()?.manage_page_display_projects as string[];

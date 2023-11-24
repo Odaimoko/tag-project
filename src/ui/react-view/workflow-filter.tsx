@@ -11,7 +11,6 @@ import {initialToUpper} from "../../utils/format-util";
 import {NameableFilterHeading} from "./nameable-filter-heading";
 import {I_Nameable} from "../../data-model/I_Nameable";
 import {taskCheckBoxMargin} from "./task-table-view";
-import {setSettingsValueAndSave} from "../../Settings";
 import {ExternalToggleView} from "./view-template/toggle-view";
 
 /**
@@ -65,7 +64,6 @@ export const WorkflowFilter = (props: {
         showUnclassifiedWorkflows, setShowUnclassifiedWorkflows,
         workflows, displayNames, handleSetDisplayNames
     } = props;
-    const plugin = useContext(PluginContext);
     return <div>
 
         <NameableFilterHeading nameableTypeName={"Workflow"} nameables={workflows} displayNames={displayNames}
@@ -77,13 +75,11 @@ export const WorkflowFilter = (props: {
             <ExternalToggleView style={{marginBottom: 10}} externalControl={showSubProjectWorkflows} onChange={() => {
                 const nextValue = !showSubProjectWorkflows;
                 setShowSubProjectWorkflows(nextValue)
-                setSettingsValueAndSave(plugin, "show_subproject_workflows", nextValue)
             }} content={<label>{"Subproject Workflows"}</label>}/>
 
             <ExternalToggleView style={{marginBottom: 10}} externalControl={showUnclassifiedWorkflows} onChange={() => {
                 const nextValue = !showUnclassifiedWorkflows;
                 setShowUnclassifiedWorkflows(nextValue)
-                setSettingsValueAndSave(plugin, "unclassified_workflows_available_to_all_projects", nextValue)
             }} content={<label>{"Unclassified Workflows"}</label>}/>
         </HStack>
         <WorkflowCheckboxes nameables={workflows} displayNames={displayNames}
