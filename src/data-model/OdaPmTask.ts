@@ -1,11 +1,11 @@
 import {STask} from "obsidian-dataview";
-import {OdaPmProject, Tag_Prefix_Project} from "./OdaPmProject";
+import {OdaPmProject, ProjectName_Unclassified, Tag_Prefix_Project} from "./OdaPmProject";
 import {
     addTagText,
     getProjectPathFromSTask,
     getProjectTagFromSTask,
-    I_OdaPmProjectTask,
     I_OdaPmStep,
+    I_OdaPmTaskble,
     I_OdaPmWorkflow,
     removeTagText,
     trimTagsFromTask
@@ -14,7 +14,7 @@ import {BaseDatabaseObject} from "./BaseDatabaseObject";
 import {getOrCreateStep} from "./OdaPmStep";
 import {setProjectTagToTask} from "../utils/io-util";
 
-export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmProjectTask {
+export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
     boundTask: STask;
     // without any step and typeDef tags
     summary: string;
@@ -175,7 +175,7 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmProjectTask 
 
     assignToWorkflowProject() {
         const workflowProjectName = this.type.getFirstProject()?.name;
-        
+
         const prjTag = `${Tag_Prefix_Project}${workflowProjectName}`;
         setProjectTagToTask(this, prjTag);
     }
@@ -202,7 +202,7 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmProjectTask 
     }
 
     getProjectPath(): string {
-        return getProjectPathFromSTask(this.boundTask, true);
+        return getProjectPathFromSTask(this.boundTask);
     }
 
 
@@ -211,6 +211,11 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmProjectTask 
         return this.projects[0];
     }
 
+    getFirstProjectName(): string {
+        const prj = this.getFirstProject();
+        if (prj === null) return ProjectName_Unclassified;
+        return prj.name;
+    }
 
     // endregion
     // endregion
@@ -219,4 +224,5 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmProjectTask 
     getProjectNames(): string[] {
         return this.projects.map(k => k.name);
     }
+
 }

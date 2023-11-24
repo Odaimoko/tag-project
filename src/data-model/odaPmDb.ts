@@ -200,6 +200,7 @@ export class OdaPmDb implements I_EvtListener {
     pmTags: string[];
     // 0.2.0
     pmProjects: OdaPmProject[]
+    projectTree: OdaProjectTree;
     orphanTasks: OdaPmTask[]
 
     constructor(emitter: EventEmitter) {
@@ -265,14 +266,14 @@ export class OdaPmDb implements I_EvtListener {
      * After this step, every task or workflow will link to exactly one project.
      */
     private linkProject(projects: OdaPmProject[], pmTasks: OdaPmTask[], workflows: I_OdaPmWorkflow[]) {
-        const projectTree: OdaProjectTree = OdaProjectTree.buildProjectShadowTree(projects);
+        this.projectTree = OdaProjectTree.buildProjectShadowTree(projects);
 
         for (const pmTask of pmTasks) {
-            const linkingProject: OdaPmProject = projectTree.getProjectByPmTask(pmTask);
+            const linkingProject: OdaPmProject = this.projectTree.getProjectByPmTask(pmTask);
             linkingProject.linkTask(pmTask);
         }
         for (const pmWorkflow of workflows) {
-            const linkingProject: OdaPmProject = projectTree.getProjectByPmWorkflow(pmWorkflow);
+            const linkingProject: OdaPmProject = this.projectTree.getProjectByPmWorkflow(pmWorkflow);
             linkingProject.linkWorkflow(pmWorkflow);
         }
     }
@@ -323,6 +324,10 @@ export class OdaPmDb implements I_EvtListener {
             }
         }
         return null;
+    }
+
+    getProjectByPath(path: string) {
+        return this.projectTree.getProjectByPath(path);
     }
 
     getPmTaskBySummary(summary: string) {

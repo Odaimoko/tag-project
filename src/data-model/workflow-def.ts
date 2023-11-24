@@ -83,6 +83,7 @@ export interface I_OdaPmProjectTask {
      */
     getProjectPath: () => string;
     getFirstProject: () => OdaPmProject | null;
+    getFirstProjectName: () => string;
 }
 
 export type I_OdaPmTaskble = I_OdaPmBoundTask & I_OdaPmProjectTask;
@@ -201,10 +202,10 @@ export function getProjectPathFromFilePath(filePath: string) {// Obsidian path i
 export function getProjectPathFromSTask(task: STask) {
     const prjTag = getProjectTagFromSTask(task);
     if (prjTag !== null) {
-        // If defined by a task, path = `path/to/file:{project name}`. 
-        return `${getProjectPathForFilePath(leadingSlash, task.path)}:${getProjectNameFromTag(prjTag)}`;
+        // If defined by a task, path = `/path/to/file:{project name}`. 
+        return `${getProjectPathFromFilePath(task.path)}:${getProjectNameFromTag(prjTag)}`;
     } else
-        return getProjectPathForFilePath(leadingSlash, task.path);
+        return getProjectPathFromFilePath(task.path);
 }
 
 // endregion

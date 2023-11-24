@@ -213,9 +213,9 @@ export default class OdaPmToolPlugin extends Plugin {
             return; // skip if the task is a workflow def
         }
 
+        const pmTask = this.pmDb.getPmTask(filePath, cursor.line);
         // choose workflow
-        new WorkflowSuggestionModal(this.app, (workflow, evt) => {
-            const pmTask = this.pmDb.getPmTask(filePath, cursor.line);
+        new WorkflowSuggestionModal(this.app, filePath, pmTask, (workflow, evt) => {
             if (!workflow) {
                 return;
             }

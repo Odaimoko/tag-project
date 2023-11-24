@@ -7,6 +7,7 @@ import {ONotice} from "../utils/o-notice";
 
 /**
  * The root is /.
+ * This checks if the task or workflow represented by @taskPath is under a certain project. 
  * @param projectDict Path to OdaPmProject
  * @param taskPath
  */
@@ -56,5 +57,14 @@ export class OdaProjectTree {
             return this.projectDict[name];
         }
         return null;
+    }
+
+    /**
+     * Path does not have to be a key of a project.
+     *
+     * @param path Must start with `/`
+     */
+    getProjectByPath(path: string) {
+        return getProjectByTaskPath(this.projectDict, path)
     }
 }
