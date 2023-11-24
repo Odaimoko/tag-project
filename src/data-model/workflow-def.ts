@@ -183,6 +183,10 @@ export function getProjectNameFromTag(tag: string) {
     return name;
 }
 
+export function getProjectPathForFilePath(leadingSlash: boolean, filePath: string) {
+    return `${leadingSlash ? "/" : ""}${filePath}`;
+}
+
 // - A task's path is
 // 1. If it defines a project, the project name is appended.
 // 2. If not, the task's path is the same as the file's.
@@ -190,9 +194,9 @@ export function getProjectPathFromSTask(task: STask, leadingSlash = false) {
     const prjTag = getProjectTagFromSTask(task);
     if (prjTag !== null) {
         // If defined by a task, path = `path/to/file:{project name}`. 
-        return `${leadingSlash ? "/" : ""}${task.path}:${getProjectNameFromTag(prjTag)}`;
+        return `${getProjectPathForFilePath(leadingSlash, task.path)}:${getProjectNameFromTag(prjTag)}`;
     } else
-        return `${leadingSlash ? "/" : ""}${task.path}`;
+        return getProjectPathForFilePath(leadingSlash, task.path);
 }
 
 // endregion
