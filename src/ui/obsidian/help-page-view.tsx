@@ -351,17 +351,17 @@ const BasicTutorial = () => {
             text={Frontmatter_FileProject}/>. It will override the folder project. For example, tasks in the fodler <i>My
             Project
             3</i> will be in the project <i>Another Project</i>.
-            <FileNavView pathHierarchy={[
-                {
-                    name: "Example: MyProject - Root", isFolder: true, children: [
-                        {name: "MyProject 1 (Contains property `tpm_project_root: MyProject`)", isFolder: false},
-                        {name: "MyProject 2 (Tasks in this file will be in [MyProject])", isFolder: false},
-                        {name: "MyProject 3 (Contains property `tpm_project: Another Project`)", isFolder: false},
-                    ]
-                },
-            ]}/>
-        </p>
 
+        </p>
+        <FileNavView pathHierarchy={[
+            {
+                name: "Example: MyProject - Root", isFolder: true, children: [
+                    {name: "MyProject 1 (Contains property `tpm_project_root: MyProject`)", isFolder: false},
+                    {name: "MyProject 2 (Tasks in this file will be in [MyProject])", isFolder: false},
+                    {name: "MyProject 3 (Contains property `tpm_project: Another Project`)", isFolder: false},
+                ]
+            },
+        ]}/>
         <p>
             More granular control can be achieved by using <b>project tags</b>. You can add a project tag to a workflow
             or a task, and it will be grouped into that project.
@@ -378,7 +378,7 @@ const BasicTutorial = () => {
 
         <h3>Sub projects</h3>
 
-        
+
         <h3>Project, workflow and tasks' Relationships</h3>
 
         <h2>Best Practices</h2>
@@ -687,10 +687,12 @@ const MarkdownFrontMatterView = (props: {
                     d="M15.1 18H3"></path>
                 </svg>
             </span>
-            <input className="metadata-property-key-input" type="text" value={props.keyString}/>
+            <input className="metadata-property-key-input" type="text" value={props.keyString}
+                   onChange={() => {
+                   }}/>
         </div>
         <div className="metadata-property-value">
-            <div className="metadata-input-longtext mod-truncate" placeholder="Empty" contentEditable="false"
+            <div className="metadata-input-longtext mod-truncate" placeholder="Empty"
             >{props.valueString}</div>
         </div>
 
