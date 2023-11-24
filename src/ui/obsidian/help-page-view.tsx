@@ -403,15 +403,15 @@ const BasicTutorial = () => {
         </p>
 
         <h2>Project, workflow and tasks' Relationships</h2>
-        <p>
-            This section could be quite technical. You can safely skip this section and come back when you find
-            some of your workflows or tasks missing.
-        </p>
         <h3>Orphan tasks</h3>
         <p>
             A workflow or a task will always be assigned to a certain project. In {Desc_ManagePage}, only the workflows
             in the chosen project will be displayed. Tasks will only be displayed if they are in the shown
             project, <b>and</b> are in the shown workflows.
+
+            When using the command <i>{CmdPal_SetWorkflowToTask}</i>, only the workflows available in the current task's
+            project
+            are shown.
         </p>
         <p>
             An orphan task's project does not match its workflow's. According to the rules above, it will not show
@@ -420,16 +420,33 @@ const BasicTutorial = () => {
             the workflow's project tag to the task. Or, you can manually fix them in the markdown file yourself.
         </p>
         <OrphanTaskButtonAndPanel orphanTasks={[]}/>
+
+
+        <h3>Unclassified workflows</h3>
         <p>
-            By default, they are
-            under <i>{ProjectName_Unclassified}</i>.
+            By default, all workflows and tasks are under <i>{ProjectName_Unclassified}</i>.
+            This is designed to share workflows across all projects. If you do not want this behavior, you can disable
+            it in settings.
+        </p>
+
+        <h3>Share workflows via subprojects</h3>
+
+        <p>
+            Simply put, a task belongs not only to its project, but also to all its parent projects.
+            A workflow belongs to all its subprojects, but not its parent projects.
+        </p>
+        <p>
+            The reason is that when you are working on a subproject, you may want to reuse the workflows defined in the
+            parent. But you may not want to share your subproject's workflows to the parent or other subprojects.
+            Also, when you select a project in {Desc_ManagePage}, you can see all the tasks in the subprojects.
+        </p>
+        <p>
+            There's also a toggle in {Desc_ManagePage} to show workflows in subprojects, in case you want to see them.
         </p>
 
 
-        <h3>Considering subprojects</h3>
-
-
         <h2>Use tags to add, well, tags</h2>
+
         <p style={blockTldrOmitStyle}>
             Sometimes you want to give a task a property, but you don't want to make it a workflow step. For example,
             you
