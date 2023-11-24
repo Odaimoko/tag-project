@@ -361,7 +361,15 @@ const BasicTutorial = () => {
 const InlineCodeView = ({text}: {
     text: string
 }) => {
-    return <label className="cm-inline-code" spellCheck="false">{text}</label>
+    return <span style={{
+        color: "var(--code-normal)",
+        backgroundColor: "var(--code-background)",
+        fontSize: "var(--code-size)",
+        fontFamily: "var(--font-monospace)",
+        verticalAlign: "baseline",
+        borderRadius: "var(--code-radius)",
+        padding: "0.25em",
+    }} spellCheck="false">{text}</span>
 }
 const UserManual = () => {
     const stepStateStyle = {fontWeight: "bold"};
