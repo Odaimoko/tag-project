@@ -1,7 +1,7 @@
 import {App, ItemView, Modal, WorkspaceLeaf} from "obsidian";
 import {createRoot, Root} from "react-dom/client";
 import React, {JSX, useContext, useState} from "react";
-import {I_Stylable, ObsidianIconView} from "../react-view/view-template/icon-view";
+import {ObsidianIconView} from "../react-view/view-template/icon-view";
 import OdaPmToolPlugin, {
     CmdPal_JumpToManagePage,
     CmdPal_OpenManagePage,
@@ -11,7 +11,6 @@ import OdaPmToolPlugin, {
 import {Tag_Prefix_Step, Tag_Prefix_Tag, Tag_Prefix_TaskType, Tag_Prefix_Workflow} from "../../data-model/workflow-def";
 import {Icon_ManagePage, PluginContext} from "./manage-page-view";
 import {getTemplateHtml, ManagePageForTemplate, templateMd} from "../tpm-template-md";
-import {IRenderable} from "../common/i-renderable";
 import {setSettingsValueAndSave} from "../../Settings";
 import {HStack} from "../react-view/view-template/h-stack";
 import {StrictModeWrapper} from "../react-view/view-template/strict-mode-wrapper";
@@ -19,6 +18,7 @@ import {DataTable} from "../react-view/view-template/data-table";
 import {WorkflowTypeLegend} from "../react-view/workflow-filter";
 import {Frontmatter_FileProject, Frontmatter_FolderProject, Tag_Prefix_Project} from "../../data-model/OdaPmProject";
 import {FileNavView} from "../common/file-nav-view";
+import {ExternalToggleView} from "../react-view/view-template/toggle-view";
 
 export const PmHelpPageViewId = "tpm-help-view";
 export const Desc_ManagePage = "Manage Page";
@@ -670,38 +670,6 @@ const HashTagView = ({tagWithoutHash}: {
         <span
             className="cm-hashtag cm-hashtag-end cm-list-1 cm-meta ">{tagWithoutHash}</span>
         <label> </label>
-    </>
-}
-const ToggleView = ({
-                        content, onChange, onLabelClicked, initialState = false, style,
-                    }: {
-    content?: string | JSX.Element,
-    onChange?: (nextChecked: boolean) => void,
-    onLabelClicked?: () => void,
-    initialState?: boolean,
-} & I_Stylable) => {
-    const [isChecked, setIsChecked] = useState(initialState);
-    const handleCheckboxChange = () => {
-        const nextToggle = !isChecked;
-        setIsChecked(nextToggle);
-        onChange?.(nextToggle);
-    };
-    return <ExternalToggleView externalControl={isChecked} content={content} onChange={handleCheckboxChange}
-                               onLabelClicked={onLabelClicked} style={style}
-    />
-}
-const ExternalToggleView = ({externalControl, onChange, onLabelClicked, content, style}:
-                                {
-                                    externalControl: boolean,
-                                    onChange: () => void,
-                                    onLabelClicked?: () => void,
-                                    content?: IRenderable,
-
-                                } & I_Stylable) => {
-    const className = externalControl ? "checkbox-container  is-enabled" : "checkbox-container";
-    return <><span style={style} className={className} onClick={onChange}><input type="checkbox"/>
-    </span><span
-        onClick={onLabelClicked}>{content}</span>
     </>
 }
 const MarkdownFrontMatterView = (props: {

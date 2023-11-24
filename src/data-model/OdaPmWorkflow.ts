@@ -68,7 +68,7 @@ class OdaPmWorkflow implements I_OdaPmWorkflow {
         // - workflow in sub -> not in main
         const inProject = this.projects.filter(k => {
             const isInUnclassified =
-                getSettings()?.show_unclassified_workflows_in_filter && k.name === ProjectName_Unclassified
+                getSettings()?.unclassified_workflows_available_to_all_projects && k.name === ProjectName_Unclassified
 
             const isInParentProject = includeSubProjects && k.isParentProjectOf(name);
             return k.name === name || isInParentProject || isInUnclassified;

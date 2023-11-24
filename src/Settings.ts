@@ -30,7 +30,8 @@ export function getNextFilterMethod(method: number) {
 export interface TPMSettings {
     report_malformed_task: SerializedType;
     capitalize_table_row_initial: SerializedType;
-    show_unclassified_workflows_in_filter: SerializedType;
+    unclassified_workflows_available_to_all_projects: SerializedType;
+    show_subproject_workflows: SerializedType;
     // must be a valid tag prefix
     // custom_tag_prefix_step: SerializedType;
     // custom_tag_prefix_workflow: SerializedType;
@@ -50,7 +51,8 @@ export interface TPMSettings {
 export const TPM_DEFAULT_SETTINGS: Partial<TPMSettings> = {
     report_malformed_task: true,
     capitalize_table_row_initial: true,
-    show_unclassified_workflows_in_filter: true,
+    unclassified_workflows_available_to_all_projects: true,
+    show_subproject_workflows: true, // default can see all subprojects' workflows
     // custom_tag_prefix_step: Tag_Prefix_Step,
     // custom_tag_prefix_workflow: Tag_Prefix_Workflow,
     // custom_tag_prefix_tag: Tag_Prefix_Tag,
@@ -105,7 +107,7 @@ export class TPMSettingsTab extends PluginSettingTab {
         new Setting(containerEl)
             .setName('Unclassified workflows available for all projects')
             .setDesc("If ON, unclassified workflows will be available to any projects. If OFF, only workflows in that project are available.")
-            .addToggle(this.setValueAndSave("show_unclassified_workflows_in_filter"));
+            .addToggle(this.setValueAndSave("unclassified_workflows_available_to_all_projects"));
 
     }
 

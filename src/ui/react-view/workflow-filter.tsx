@@ -11,6 +11,8 @@ import {initialToUpper} from "../../utils/format-util";
 import {NameableFilterHeading} from "./nameable-filter-heading";
 import {I_Nameable} from "../../data-model/I_Nameable";
 import {taskCheckBoxMargin} from "./task-table-view";
+import {setSettingsValueAndSave} from "../../Settings";
+import {ExternalToggleView} from "./view-template/toggle-view";
 
 /**
  * Accept children as a HStack with a unified style
@@ -37,7 +39,7 @@ export function WorkflowTypeLegend({type, style}: { type: WorkflowType } & I_Sty
     </span>;
 }
 
-export function WorkflowTypeLegendView() {
+function WorkflowTypeLegendView() {
     return <HStack spacing={10}>
         {Workflow_Type_Enum_Array.map((type: WorkflowType) => {
             return <WorkflowTypeLegend key={type}
@@ -49,19 +51,34 @@ export function WorkflowTypeLegendView() {
 
 // endregion
 // region Workflow Filter
-export const WorkflowFilter = ({workflows, displayNames, handleSetDisplayNames}: {
+export const WorkflowFilter = (props: {
     workflows: I_OdaPmWorkflow[],
     displayNames: string[],
-    handleSetDisplayNames: (names: string[]) => void
-}) => <div>
+    handleSetDisplayNames: (names: string[]) => void,
+    showSubProjectWorkflows: boolean,
+    setShowSubProjectWorkflows: (v: boolean) => void
+}) => {
+    const {
+        showSubProjectWorkflows, setShowSubProjectWorkflows,
+        workflows, displayNames, handleSetDisplayNames
+    } = props;
+    const plugin = useContext(PluginContext);
+    return <div>
 
-    <NameableFilterHeading nameableTypeName={"Workflow"} nameables={workflows} displayNames={displayNames}
-                           handleSetDisplayNames={handleSetDisplayNames}>
-        <WorkflowTypeLegendView/>
-    </NameableFilterHeading>
-    <WorkflowCheckboxes nameables={workflows} displayNames={displayNames}
-                        handleSetDisplayNames={handleSetDisplayNames}/>
-</div>
+        <NameableFilterHeading nameableTypeName={"Workflow"} nameables={workflows} displayNames={displayNames}
+                               handleSetDisplayNames={handleSetDisplayNames}>
+            <WorkflowTypeLegendView/>
+        </NameableFilterHeading>
+
+        <ExternalToggleView externalControl={showSubProjectWorkflows} onChange={() => {
+            const nextValue = !showSubProjectWorkflows;
+            setShowSubProjectWorkflows(nextValue)
+            setSettingsValueAndSave(plugin, "show_subproject_workflows", nextValue)
+        }} content={<label>{"Show Subprojects' workflows"}</label>}/>
+        <WorkflowCheckboxes nameables={workflows} displayNames={displayNames}
+                            handleSetDisplayNames={handleSetDisplayNames}/>
+    </div>;
+}
 
 const WorkflowCheckboxes = ({nameables, displayNames, handleSetDisplayNames}: {
     nameables: I_Nameable[],

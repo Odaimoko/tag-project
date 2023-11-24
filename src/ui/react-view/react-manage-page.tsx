@@ -14,11 +14,11 @@ import {ProjectFilter, ProjectFilterOptionValue_All} from "./project-filter";
 import {HStack} from "./view-template/h-stack";
 import {FixOrphanTasks} from "./fix-orphan-tasks";
 
-function isInAnyProject(projectNames: string[], projectTask: I_OdaPmProjectTask) {
+function isInAnyProject(projectTask: I_OdaPmProjectTask, displayPrjNames: string[]) {
     // TODO Performance
-    if (projectNames.length === 0) return true;
-    if (projectNames.includes(ProjectFilterOptionValue_All)) return true;
-    const b = projectNames.some(k => projectTask.isInProject(k));
+    if (displayPrjNames.length === 0) return true;
+    if (displayPrjNames.includes(ProjectFilterOptionValue_All)) return true;
+    const b = displayPrjNames.some(k => projectTask.isInProject(k));
     return b;
 }
 
@@ -76,6 +76,7 @@ export function ReactManagePage({eventCenter}: {
     const [displayTags, setDisplayTags] = useState(getSettings()?.manage_page_display_tags as string[]);
     const [excludedTags, setExcludedTags] = useState(getSettings()?.manage_page_excluded_tags as string[]);
     const [settingsDisplayProjectOptionValues, setDisplayProjectOptionValues] = useState(initDisplayProjectOptionValues);
+    const [showSubProjectWorkflows, setShowSubProjectWorkflows] = useState(false)
 
     function initDisplayProjectOptionValues() {
         const settingsValue = getSettings()?.manage_page_display_projects as string[];
@@ -130,8 +131,12 @@ export function ReactManagePage({eventCenter}: {
     // Show only this project's workflows
     workflows = workflows.filter(isWorkflowShownInPage);
 
-    function isWorkflowShownInPage(k: I_OdaPmWorkflow) {
-        return isInAnyProject(displayProjectOptionValues, k) 
+    function isWorkflowShownInPage(workflow: I_OdaPmWorkflow) {
+        // workflow's isInAnyProject checks if the workflow is in a project's parent.
+        return isInAnyProject(workflow, displayProjectOptionValues)
+            || (showSubProjectWorkflows &&
+                displayProjectOptionValues.some(m => workflow.getFirstProject()?.isSubProjectOfName(m))
+            );
     }
 
     // settingsDisplayWorkflowNames may contain workflows from other projects. We filter them out.
@@ -141,7 +146,7 @@ export function ReactManagePage({eventCenter}: {
     });
 
     const filteredTasks = db.getFilteredTasks(displayWorkflows, rectifiedDisplayTags, rectifiedExcludedTags)
-        .filter(k => isInAnyProject(displayProjectOptionValues, k))
+        .filter(k => isInAnyProject(k, displayProjectOptionValues))
 
     const pmTags = db.pmTags || [];
     // It is undefined how saved tags will behave after we switch projects.
@@ -164,7 +169,10 @@ export function ReactManagePage({eventCenter}: {
             <FixOrphanTasks db={db}/>
 
             <WorkflowFilter workflows={workflows} displayNames={displayWorkflowNames}
-                            handleSetDisplayNames={handleSetDisplayWorkflows}/>
+                            handleSetDisplayNames={handleSetDisplayWorkflows}
+                            showSubProjectWorkflows={showSubProjectWorkflows}
+                            setShowSubProjectWorkflows={setShowSubProjectWorkflows}
+            />
             <TagFilter
                 pmTags={pmTags}
                 rectifiedExcludedTags={rectifiedExcludedTags}
