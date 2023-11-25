@@ -3,10 +3,11 @@
 /**
  * Convert a Jsx Element to a Markdown string.
  */
-import React from "react";
+import {createContext} from "react";
 import {renderToStaticMarkup} from "react-dom/server";
+import {IRenderable} from "../ui/common/i-renderable";
 
-export function jsxToMarkdown(jsx: React.JSX.Element): string {
+export function jsxToMarkdown(jsx: IRenderable): string {
     const html = renderToStaticMarkup(
         <MarkdownConvertContext.Provider value={true}>
             {jsx}
@@ -18,5 +19,5 @@ export function jsxToMarkdown(jsx: React.JSX.Element): string {
 }
 
 // used when we want to convert jsx to markdown for quartz
-export const MarkdownConvertContext = React.createContext(false);
+export const MarkdownConvertContext = createContext(false);
 //#endif
