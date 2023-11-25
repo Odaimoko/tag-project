@@ -360,7 +360,7 @@ const BasicTutorial = () => {
         <h3 style={blockTldrOmitStyle}>Group your workflows and tasks</h3>
         <p style={blockTldrOmitStyle}>
             You can set a folder as a project root, and all the workflows and tasks under this folder will be grouped
-            into this project. To do this, you can use the obsidian file <LinkView text={"property"}/> <InlineCodeView
+            into this project. To do this, you can use the obsidian file property <InlineCodeView
             text={Frontmatter_FolderProject}/>.
         </p>
         <MarkdownFrontMatterView keyString={Frontmatter_FolderProject}
@@ -378,7 +378,7 @@ const BasicTutorial = () => {
             },
         ]}/>
         <p style={blockTldrOmitStyle}>
-            You can also set a file as a project with <LinkView text={"property"}/> <InlineCodeView
+            You can also set a file as a project with property <InlineCodeView
             text={Frontmatter_FileProject}/>. It will override the folder project. For example, tasks in the fodler <i>My
             Project
             3</i> will be in the project <i>Another Project</i>.
