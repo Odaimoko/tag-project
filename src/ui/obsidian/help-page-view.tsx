@@ -33,6 +33,8 @@ import {HashTagView} from "../common/hash-tag-view";
 import {MarkdownFrontMatterView} from "../common/markdown-front-matter-view";
 import {InlineCodeView} from "../common/inline-code-view";
 import {getStickyHeaderStyle, varBackgroundPrimary} from "../react-view/view-template/style-helper";
+import {jsxToMarkdown} from "../../utils/markdown-converter";
+import {H1, H2, H3} from "../common/heading";
 
 export const PmHelpPageViewId = "tpm-help-view";
 export const Desc_ManagePage = "Manage Page";
@@ -125,7 +127,7 @@ const CommonHelpViewInModalAndLeaf = ({plugin, container}: {
         <PluginContext.Provider value={plugin}>
             <div>
                 <div style={centerChildrenVertStyle}>
-                    <h1 style={{}}>{PLUGIN_NAME}: Help Page</h1>
+                    <H1 style={{}}>{PLUGIN_NAME}: Help Page</H1>
                 </div>
                 <div style={centerChildrenVertStyle}>
                     <HStack spacing={30}>
@@ -173,16 +175,16 @@ const BasicTutorial = () => {
             background: varBackgroundPrimary,
             ...getStickyHeaderStyle()
         }} spacing={10}>
-            <h1 style={{}}>Tutorial</h1>
+            <H1 style={{}}>Tutorial</H1>
             <ExternalToggleView externalControl={isTlDr} onChange={() => {
                 const nextValue = !isTlDr;
                 setIsTlDr(nextValue)
             }} content={<label style={{padding: 5}}>{"TL;DR - Use when you understand the concepts"}</label>}/>
         </HStack>
 
-        <h2 style={blockTldrOmitStyle}>
+        <H2 style={blockTldrOmitStyle}>
             {PLUGIN_NAME} is?
-        </h2>
+        </H2>
 
         <p style={blockTldrOmitStyle}>
             A project management plugin for Obsidian.
@@ -196,7 +198,7 @@ const BasicTutorial = () => {
         </p>
 
 
-        <h2>Open {Desc_ManagePage}</h2>
+        <H2>Open {Desc_ManagePage}</H2>
         <p style={blockTldrOmitStyle}>
             You can open {Desc_ManagePage} directly using the ribbon icon (<ObsidianIconView
             iconName={Icon_ManagePage}/>) on the leftmost bar, or use the command palette
@@ -225,7 +227,7 @@ const BasicTutorial = () => {
         </ul>
 
 
-        <h2>A workflow is?</h2>
+        <H2>A workflow is?</H2>
         <p style={blockTldrOmitStyle}>
             When you are working on a task, you may break it down into several steps. Sometimes, these steps are
             independent, while sometimes they have to be done in a certain order.
@@ -257,7 +259,7 @@ const BasicTutorial = () => {
 
         </div>
 
-        <h3>Use tags to define workflows</h3>
+        <H3>Use tags to define workflows</H3>
         <div>
             A <b>chain</b> workflow is defined by a task marked with <HashTagView
             tagWithoutHash={`${Tag_Prefix_Workflow}chain`}/>.<span style={inlineTldrOmitStyle}> The steps in the workflow is defined by tags with
@@ -291,7 +293,7 @@ const BasicTutorial = () => {
             data before drawing the art, and vice versa.
         </div>
         <p/>
-        <h2>Use tags to define managed tasks</h2>
+        <H2>Use tags to define managed tasks</H2>
         <label style={blockTldrOmitStyle}>
             A normal markdown task is not managed in {PLUGIN_NAME}. You can use workflow tags to define a managed task.
             Suppose we have a task to write the preface of the book. We may have a task
@@ -319,7 +321,7 @@ const BasicTutorial = () => {
         <TaggedTaskView content={"card: warlock, normal attack"} tags={[`${Tag_Prefix_TaskType}card_design`]}/>
         <TaggedTaskView content={"card: warlock, fire magic"} tags={[`${Tag_Prefix_TaskType}card_design`]}/>
 
-        <h3>Use tags to add steps</h3>
+        <H3>Use tags to add steps</H3>
         <div style={blockTldrOmitStyle}>
             Remember we define some steps for each workflow. Now we finish the writing work for preface. It goes to the
             revise phase. So we mark it as:
@@ -336,15 +338,15 @@ const BasicTutorial = () => {
             details.</span>
         </p>
 
-        <h2>
+        <H2>
             A project <label style={inlineTldrOmitStyle}>is?</label>
-        </h2>
+        </H2>
         <p style={blockTldrOmitStyle}>
             A project is a collection of workflows and tasks. You can use project to group related workflows and tasks,
             manage project version, so that you have a nice and clean {Desc_ManagePage}.
         </p>
 
-        <h3 style={blockTldrShowStyle}>Define a project</h3>
+        <H3 style={blockTldrShowStyle}>Define a project</H3>
         A project can be defined by
         <ul style={blockTldrShowStyle}>
             <li> a <b>project tag</b> (a tag with prefix <HashTagView tagWithoutHash={Tag_Prefix_Project}/>)</li>
@@ -357,7 +359,7 @@ const BasicTutorial = () => {
         </ul>
 
 
-        <h3 style={blockTldrOmitStyle}>Group your workflows and tasks</h3>
+        <H3 style={blockTldrOmitStyle}>Group your workflows and tasks</H3>
         <p style={blockTldrOmitStyle}>
             You can set a folder as a project root, and all the workflows and tasks under this folder will be grouped
             into this project. To do this, you can use the obsidian file property <InlineCodeView
@@ -409,7 +411,7 @@ const BasicTutorial = () => {
         </p>
 
 
-        <h2>Subprojects</h2>
+        <H2>Subprojects</H2>
         <p style={blockTldrOmitStyle}>
             When a project grows larger and larger, it is important to keep it manageable.
             You can use subprojects to split a large project into smaller ones.
@@ -430,8 +432,8 @@ const BasicTutorial = () => {
             breaking down projects, either by version, by module or by assignee.
         </p>
 
-        <h2>Project, workflow and tasks' Relationships</h2>
-        <h3>Orphan tasks</h3>
+        <H2>Project, workflow and tasks' Relationships</H2>
+        <H3>Orphan tasks</H3>
         <p style={blockTldrOmitStyle}>
             A workflow or a task will always be assigned to a certain project. In {Desc_ManagePage}, only the workflows
             in the chosen project will be displayed. Tasks will only be displayed if they are in the shown
@@ -453,7 +455,7 @@ const BasicTutorial = () => {
         <OrphanTaskButtonAndPanel orphanTasks={[]}/>
 
 
-        <h3>Unclassified workflows</h3>
+        <H3>Unclassified workflows</H3>
         <p>
             By default, all workflows and tasks are under <i>{ProjectName_Unclassified}</i>.
             <label style={inlineTldrOmitStyle}>This is designed to share workflows across all projects. If you do not
@@ -461,7 +463,7 @@ const BasicTutorial = () => {
                 it in settings.</label>
         </p>
 
-        <h3>Share workflows via subprojects</h3>
+        <H3>Share workflows via subprojects</H3>
 
         <p>
             Simply put, a task belongs not only to its project, but also to all its parent projects.
@@ -477,7 +479,7 @@ const BasicTutorial = () => {
         </p>
 
 
-        <h2>Use tags to add, well, tags</h2>
+        <H2>Use tags to add, well, tags</H2>
 
         <p style={blockTldrOmitStyle}>
             Sometimes you want to give a task a property, but you don't want to make it a workflow step. For example,
@@ -508,7 +510,7 @@ const BasicTutorial = () => {
         </p>
 
 
-        <h2>Best Practices</h2>
+        <H2>Best Practices</H2>
         <p style={blockTldrOmitStyle}>Since the step tag is already defined, they can be auto completed.
             Note that adding a step tag represents we have done the step. It is more natural for me and the meaning
             stays
@@ -561,12 +563,12 @@ const CommandTutorialView = ({}) => {
     } = useSharedTlDr();
 
     return <>
-        <h2>Commands and Context Menu</h2>
+        <H2>Commands and Context Menu</H2>
 
         It is suggested that you set a hotkey for your most used commands. You can do this in Obsidian's Settings -
         Hotkeys - Search for "{PLUGIN_NAME}".
 
-        <h3>{CmdPal_JumpToManagePage}</h3>
+        <H3>{CmdPal_JumpToManagePage}</H3>
 
         <p style={blockTldrOmitStyle}>When your cursor is at a task or workflow, you
             can do the following things
@@ -584,9 +586,9 @@ const CommandTutorialView = ({}) => {
             Jump to workflow or task in {Desc_ManagePage} when the cursor is at a workflow or a managed task.
         </p>
 
-        <h3>{CmdPal_SetWorkflowToTask}</h3>
+        <H3>{CmdPal_SetWorkflowToTask}</H3>
         Choose the workflows available in the current task's project, and set the workflow.
-        <h3>{CmdPal_SetProject}</h3>
+        <H3>{CmdPal_SetProject}</H3>
         From all the defined projects, choose one to assign to the workflow or task.
 
     </>
@@ -597,10 +599,10 @@ const UserManual = () => {
     const stepStateStyle = {fontWeight: "bold"};
 
     return <>
-        <h1>User Manual</h1>
+        <H1>User Manual</H1>
 
 
-        <h2>Projects</h2>
+        <H2>Projects</H2>
 
 
         <p>A project</p>
@@ -630,8 +632,8 @@ const UserManual = () => {
             <li>belongs to all parent projects</li>
             <li>is in <i>{ProjectName_Unclassified}</i> if not in any other project</li>
         </ul>
-        
-        <h2>Rules for workflows and tasks</h2>
+
+        <H2>Rules for workflows and tasks</H2>
         A workflow definition or a managed task has to obey the following rules.
         <ul>
             <li>
@@ -654,7 +656,7 @@ const UserManual = () => {
 
         You need to put your cursor at a valid task to for the command <i>{CmdPal_JumpToManagePage}</i> work.
 
-        <h2>Task Completion</h2>
+        <H2>Task Completion</H2>
         In Obsidian, you may have various symbol to put into the checkbox, such as <InlineCodeView text={"*, /, -, x"}/>,
         etc.
         Any status will be recognized as completion in {PLUGIN_NAME}.

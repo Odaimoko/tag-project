@@ -14,7 +14,7 @@ function getSpacingStyle(spacing: number | undefined, isHorizontal = true) {
     return isHorizontal ? {width: spacing} : {height: spacing}
 }
 
-function wrapChildrenWithArray(
+export function wrapChildrenWithArray(
     children: React.ReactNode
 ): React.ReactNode[] {
     if (children === undefined) return [];
