@@ -4,17 +4,16 @@
  * Convert a Jsx Element to a Markdown string.
  */
 import {createContext} from "react";
-import {renderToStaticMarkup} from "react-dom/server";
+import {renderToString} from "react-dom/server";
 import {IRenderable} from "../ui/common/i-renderable";
 
 export function jsxToMarkdown(jsx: IRenderable): string {
-    const html = renderToStaticMarkup(
+    const html = renderToString(
         <MarkdownConvertContext.Provider value={true}>
             {jsx}
         </MarkdownConvertContext.Provider>
     )
 
-    console.log(html)
     return html
 }
 

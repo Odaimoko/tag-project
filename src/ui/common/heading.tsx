@@ -4,7 +4,11 @@ import {MarkdownConvertContext} from "../../utils/markdown-converter";
 import {IRenderable} from "./i-renderable";
 import {wrapChildrenWithArray} from "../react-view/view-template/h-stack";
 
-export function getMdHeadingByString(layer: 1 | 2 | 3 | 4 | 5 | 6, content: string) {
+export function getMdHeadingByString({layer, content, style}: {
+    layer: 1 | 2 | 3 | 4 | 5 | 6,
+    content: string
+} & I_Stylable) {
+    if (style && style?.display === "none") return null;
     return `\n\n${'#'.repeat(layer)} ${content}\n\n`;
 }
 
@@ -32,7 +36,7 @@ const Heading = (props: React.PropsWithChildren<I_Stylable> & {
     // console.log(getChildrenAsString(props.children))
     // when we use `{PLUGIN_NAME} is` under headings, prop.children is an array ["Tag Project", "is"]. We need to join them.
     if (mcc) {
-        const mdHeading = getMdHeadingByString(props.layer, content);
+        const mdHeading = getMdHeadingByString({layer: props.layer, content: content, style: props.style});
         return mdHeading as IRenderable
     }
     switch (props.layer) {

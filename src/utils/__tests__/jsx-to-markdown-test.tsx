@@ -6,7 +6,10 @@ import React from "react";
 describe("jsx-to-md-heading", () => {
     test("simple heading", () => {
         const jsx = <H1>hello world</H1>
-        const md = getMdHeadingByString(1, "hello world");
+        const md = getMdHeadingByString({
+            layer: 1,
+            content: "hello world",
+        });
         expect(jsxToMarkdown(jsx)).toEqual(md)
     })
     test("heading with nested children", () => {
@@ -15,7 +18,14 @@ describe("jsx-to-md-heading", () => {
             color: "red"
         }}>is?</label>
         </H2></H1>
-        const md = getMdHeadingByString(1, "A project is?");
+        const md = getMdHeadingByString({
+            layer: 1,
+            content: "A project is?",
+        });
         expect(jsxToMarkdown(jsx)).toEqual(md)
+    })
+    test("display none", () => {
+        const jsx = <H1 style={{display: "none"}}>hello world</H1>
+        expect(jsxToMarkdown(jsx)).toEqual("")
     })
 })  
