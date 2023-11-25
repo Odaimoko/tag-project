@@ -144,11 +144,14 @@ export function getSettings() {
  */
 export function usePluginSettings<T extends SettingName>(name: SettingName) {
     const plugin = useContext(PluginContext);
-    const [value, setValue] = React.useState(plugin.settings[name] as T);
+    // @ts-ignore
+    const [value, setValue] = React.useState(getSettings()[name] as T);
 
     function setValueAndSave(newValue: T) {
-        devLog(`DirectSetValue: ${name}, Old value: ${plugin.settings[name]}`)
-        setSettingsValueAndSave(plugin, name, newValue)
+        // @ts-ignore
+        devLog(`DirectSetValue: ${name}, Old value: ${getSettings()[name]}`)
+        if (plugin)
+            setSettingsValueAndSave(plugin, name, newValue)
     }
 
     // really set value after settings change
@@ -160,9 +163,9 @@ export function usePluginSettings<T extends SettingName>(name: SettingName) {
         }, [name]);
 
     React.useEffect(() => {
-        plugin.getEmitter().on(Evt_SettingsChanged, handler);
+        plugin?.getEmitter().on(Evt_SettingsChanged, handler);
         return () => {
-            plugin.getEmitter().off(Evt_SettingsChanged, handler);
+            plugin?.getEmitter().off(Evt_SettingsChanged, handler);
         };
     }, [name, plugin, handler]);
     return [value, setValueAndSave];
