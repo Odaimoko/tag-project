@@ -95,7 +95,7 @@ export class PmHelpModal extends Modal {
 
 const OutputButton = ({app}: { app: App }) => {
 //#ifdef DEVELOPMENT_BUILD
-    const quartz_folder = "TagProject/hidden";
+    const quartz_folder = "TagProject";
     const outputBtn = <button onClick={async () => {
         for (const {jsx, title} of QuartzPath) {
             try {
