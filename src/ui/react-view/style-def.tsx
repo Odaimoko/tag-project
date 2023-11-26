@@ -36,5 +36,6 @@ export const getStickyHeaderStyle = () => {
     return {
         position: "sticky", top: -16,
         zIndex: 1,
+        background: varBackgroundSecondary,
     } as React.CSSProperties;
 }

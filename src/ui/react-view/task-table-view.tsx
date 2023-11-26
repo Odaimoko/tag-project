@@ -23,7 +23,7 @@ import {MarkdownRenderer} from "obsidian";
 import {HtmlStringComponent} from "./view-template/html-string-component";
 import {appendBoldText} from "../common/html-template";
 import {notify} from "../../utils/o-notice";
-import {getIconByWorkflow, getStickyHeaderStyle, varBackgroundSecondary} from "./style-def";
+import {getIconByWorkflow, getStickyHeaderStyle} from "./style-def";
 
 export const taskCheckBoxMargin = {marginLeft: 3};
 
@@ -174,7 +174,6 @@ export function getDefaultTableStyleGetters(minSummaryWidth: number | string = 5
     function headStyleGetter(columnIndex: number): React.CSSProperties {
         const style = {
             ...getStickyHeaderStyle(),
-            backgroundColor: varBackgroundSecondary,
             padding: 10,
             minWidth: (columnIndex === summaryColumn ? minSummaryWidth : "unset"),
             maxWidth: (columnIndex === summaryColumn ? maxSummaryWidth : "unset")
