@@ -14,6 +14,6 @@ echo "Bumping version to $targetVersion"
 
 git add manifest.json package.json versions.json
 git commit -m "Bump version to $targetVersion"
-git push
+#git push
 git tag -a "$targetVersion" -m "Bump version tag to $targetVersion"
-git push --tags
+#git push --tags
