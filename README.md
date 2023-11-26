@@ -1,61 +1,58 @@
+
 <h1 align="center">Tag Project</h1>
 <p align="center">Tag tasks everywhere, Manage in One page</p>
 
-*Tag Project* extends [Dataview](https://github.com/blacksmithgu/obsidian-dataview), gives you freedom to manage
+*Tag Project* extends [Dataview](https://github.com/blacksmithgu/obsidian-dataview), giving you freedom to manage
 projects and track progress anywhere in your [Obsidian](https://obsidian.md/) vault.
 
 *Tag Project* is developed with *Tag Project*!
 
+For a better introduction, visit the [official website](https://imoko.cc/blog/imk/TagProject/TagProject---Introduction).
 
+# Write left, Get right
 
-<p align="center"><a href="http://htmlpreview.github.io/?https://github.com/Odaimoko/tag-project/blob/master/docs/tutorial-short.md">Tutorial (Short)</a> | <a href="http://htmlpreview.github.io/?https://github.com/Odaimoko/tag-project/blob/master/docs/tutorial-long.md">Tutorial (Long)</a> | <a href="/docs/user_manual.md">User Manual</a> | <a href="http://htmlpreview.github.io/?https://github.com/Odaimoko/tag-project/blob/master/docs/template.md">Template</a></p>
+![Pasted image 20231123153252.png](docs%2FPasted%20image%2020231123153252.png)
+
+# Tutorials
 
 The tutorials and template are also available in the plugin's Help Page, directly accessible in Obsidian.
 
-Github will not render these pages correctly. Please visit Help Page in Obsidian for readability.
+- [Tutorial](https://imoko.cc/blog/imk/TagProject/Tutorial)
 
-## An example of Manage Page
+## Features
 
-![Alt text](docs/manage-page-example.png)
+- Create **Projects** with front matters and tags
+- Manage **Subprojects** in a main project
+- Create **Workflows** and **tasks** with tags
+- Support any Obsidian **theme**
+- Fully featured **Commands** to speed up your management
+- **Unit Tested**
+
 
 ## Installation
 
 1. In Obsidian, open Settings > Community plugins > Browse.
 1. Search for "Tag Project" by Odaimoko.
-1. Select Install.
+1. Select `Install`.
 
-## In the Future
+> You need to install another Obsidian plugin, [Dataview](https://github.com/blacksmithgu/obsidian-dataview), in order
+> to use Tag Project.
+>
+> Although it's a brilliant plugin, I am planning to remove this dependency in the future.
 
-- Task linking to each other (jira)?
-- Date and time track?
-- Multiple workflows for one task?
-- White list or black list of folders?
-- [x] Better render in Manage Page table row
+# Change log and Roadmap
 
-## Inspiration / Design Philosophy
+## Change log
 
-When I was working on my indie game, I usually found that there are a whole lot of things to track:
+Here's the latest features and bug-fixes.
 
-- 20 monsters
-- 12 chapters
-- 21 game features
-- ...
+[0.2.0 (Current)](https://imoko.cc/blog/imk/TagProject/TagProject---Change-log-and-Roadmap#020-current)
 
-For every monster, I need to design it's
+## Roadmap
 
-- skills
-- action patterns
-- art
-- ...
+[Roadmap](https://imoko.cc/blog/imk/TagProject/TagProject---Change-log-and-Roadmap#roadmap)
 
-For every newly added feature, I need to work on its
-
-- implementation
-- playtest
-- unit test
-
-Yep, gamedev is this pipelined.
-And I write them everywhere in my vault. My ideas float a lot.
+# Inspiration / Design Philosophy
 
 No Obsidian plugin solves the combination of the following problems
 
@@ -69,9 +66,7 @@ Fine, I'll do it myself.
 
 Here's a screenshot of the tasks I created with *Tag Project* when developing it.
 
-![Tag Project Development](docs/image.png)
-
-
+![Pasted image 20231124193458.png](docs%2FPasted%20image%2020231124193458.png)
 
 # License
 
