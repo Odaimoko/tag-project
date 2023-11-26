@@ -3,7 +3,6 @@ import {createRoot, Root} from "react-dom/client";
 import React, {useState} from "react";
 import OdaPmToolPlugin, {PLUGIN_NAME} from "../../../main";
 import {PluginContext} from "../manage-page-view";
-import {templateMd} from "../../tpm-template-md";
 import {HStack} from "../../react-view/view-template/h-stack";
 import {StrictModeWrapper} from "../../react-view/view-template/strict-mode-wrapper";
 import {HelpPanelSwitcher} from "../../common/link-view";
@@ -11,7 +10,8 @@ import {H1} from "../../common/heading";
 import {jsxToMarkdown} from "../../../utils/markdown-converter";
 import {BasicTutorial} from "./basic-tutorial";
 import {UserManual} from "./user-manual";
-import {ExampleManagePage, templateTargetFilePath} from "./example-manage-page";
+import {ExampleManagePage} from "./example-manage-page";
+import {devLog} from "../../../utils/env-util";
 
 export const PmHelpPageViewId = "tpm-help-view";
 export const Desc_ManagePage = "Manage Page";
@@ -93,31 +93,49 @@ export class PmHelpModal extends Modal {
 
 const OutputButton = ({app}: { app: App }) => {
 //#ifdef DEVELOPMENT_BUILD
-    const outputBtn = <button onClick={() => {
-        const html = jsxToMarkdown(<BasicTutorial/>);
-        // fs.writeFileSync("TagProject_Template.md", templateMd)
-        app.vault.adapter.write(templateTargetFilePath, templateMd)
-        console.log(html);
+    const quartz_folder = "Quartz";
+    const outputBtn = <button onClick={async () => {
+        for (const {jsx, title} of QuartzPath) {
+            try {
+
+                await app.vault.createFolder(quartz_folder).then(
+                    () => {
+                        devLog(`create folder ${quartz_folder} success`)
+                    }
+                )
+            } catch {
+                devLog(`Folder exists: ${quartz_folder}.`)
+            }
+            const quartzFilePath = `${quartz_folder}/${title + ".md"}`;
+            const html = jsxToMarkdown(jsx);
+            // console.log(html)
+            await app.vault.adapter.write(quartzFilePath, html).then(
+                () => {
+                    devLog(`write ${quartzFilePath} success`)
+                }
+            )
+        }
     }}>output
     </button>
-    console.log("DEVBu")
     return outputBtn;
 //#endif
 }
 export const centerChildrenVertStyle = {display: "flex", justifyContent: "center"}
+export const HelpPage_Tutorial = "Tutorial";
 export const HelpPage_Template = "Template";
-export const HelpViewTabsNames = ["Tutorial", "User manual", HelpPage_Template]
+export const HelpPage_UserManual = "User Manual";
+export const HelpViewTabsNames = [HelpPage_Tutorial, HelpPage_UserManual, HelpPage_Template]
 
 const QuartzPath = [
-    {jsx: <BasicTutorial/>, title: "Tutorial"},
-    {jsx: <UserManual/>, title: "User Manual"},
+    {jsx: <BasicTutorial/>, title: HelpPage_Tutorial},
+    {jsx: <UserManual/>, title: HelpPage_UserManual},
 ]
 
 const CommonHelpViewInModalAndLeaf = ({plugin, container}: {
     plugin: OdaPmToolPlugin,
     container: Element
 }) => {
-    const [tab, setTab] = useState(HelpViewTabsNames[0]);
+    const [tab, setTab] = useState(HelpPage_Tutorial);
     const exContainer = container.createEl("div")
     return <StrictModeWrapper>
         <PluginContext.Provider value={plugin}>
@@ -137,9 +155,9 @@ const CommonHelpViewInModalAndLeaf = ({plugin, container}: {
                 </div>
                 <div>
                     {
-                        tab === HelpViewTabsNames[0] ? <BasicTutorial setTab={setTab}/> :
-                            tab === HelpViewTabsNames[1] ? <UserManual/> :
-                                tab === HelpViewTabsNames[2] ?
+                        tab === HelpPage_Tutorial ? <BasicTutorial setTab={setTab}/> :
+                            tab === HelpPage_UserManual ? <UserManual/> :
+                                tab === HelpPage_Template ?
                                     <ExampleManagePage app={plugin.app} container={exContainer}/> : <></>
                     }
                 </div>

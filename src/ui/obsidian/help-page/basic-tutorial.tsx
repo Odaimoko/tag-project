@@ -35,7 +35,7 @@ import {MarkdownFrontMatterView} from "../../common/markdown-front-matter-view";
 import {FileNavView} from "../../common/file-nav-view";
 import {ProjectFilterName_All} from "../../react-view/project-filter";
 import {OrphanTaskButtonAndPanel} from "../../react-view/fix-orphan-tasks";
-import {centerChildrenVertStyle, Desc_ManagePage, HelpPage_Template, HelpViewTabsNames} from "./help-page-view";
+import {centerChildrenVertStyle, Desc_ManagePage, HelpPage_Template, HelpPage_UserManual} from "./help-page-view";
 
 function useSharedTlDr() {
     const [isTlDr, setIsTlDr] = usePluginSettings("help_page_tutorial_tldr")
@@ -226,7 +226,7 @@ export const BasicTutorial = (props: {
             <span
                 style={inlineTldrOmitStyle}> See <i>{`Task Completion`}</i> section under <HelpPanelSwitcher
                 setPanelName={props.setTab}
-                panelName={HelpViewTabsNames[1]}/> tab for more
+                panelName={HelpPage_UserManual}/> tab for more
             details.</span>
         </P>
 
