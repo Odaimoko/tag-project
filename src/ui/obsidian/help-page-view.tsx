@@ -32,9 +32,9 @@ import {TaggedTaskView} from "../common/tagged-task-view";
 import {HashTagView} from "../common/hash-tag-view";
 import {MarkdownFrontMatterView} from "../common/markdown-front-matter-view";
 import {InlineCodeView} from "../common/inline-code-view";
-import {jsxToMarkdown} from "../../utils/markdown-converter";
 import {H1, H2, H3, P} from "../common/heading";
 import {getStickyHeaderStyle, varBackgroundPrimary} from "../react-view/style-def";
+import {jsxToMarkdown} from "../../utils/markdown-converter";
 
 export const PmHelpPageViewId = "tpm-help-view";
 export const Desc_ManagePage = "Manage Page";
@@ -114,6 +114,17 @@ export class PmHelpModal extends Modal {
     }
 }
 
+const OutputButton = () => {
+//#ifdef DEVELOPMENT_BUILD
+    const outputBtn = <button onClick={() => {
+        const html = jsxToMarkdown(<BasicTutorial/>);
+        console.log(html);
+    }}>output
+    </button>
+    console.log("DEVBu")
+    return outputBtn;
+//#endif
+}
 const centerChildrenVertStyle = {display: "flex", justifyContent: "center"}
 const HelpPage_Template = "Template";
 const HelpViewTabsNames = ["Tutorial", "User manual", HelpPage_Template]
@@ -128,6 +139,7 @@ const CommonHelpViewInModalAndLeaf = ({plugin, container}: {
             <div>
                 <div style={centerChildrenVertStyle}>
                     <H1 style={{}}>{PLUGIN_NAME}: Help Page</H1>
+                    <OutputButton/>
                 </div>
                 <div style={centerChildrenVertStyle}>
                     <HStack spacing={30}>
@@ -138,11 +150,6 @@ const CommonHelpViewInModalAndLeaf = ({plugin, container}: {
                         })}
                     </HStack>
                 </div>
-                <button onClick={() => {
-                    const html = jsxToMarkdown(<BasicTutorial/>);
-                    console.log(html);
-                }}>output
-                </button>
                 <div>
                     {
                         tab === HelpViewTabsNames[0] ? <BasicTutorial setTab={setTab}/> :
