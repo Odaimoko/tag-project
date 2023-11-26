@@ -8,9 +8,6 @@ import {
 } from "../../../main";
 import React from "react";
 import {usePluginSettings} from "../../../Settings";
-import {HStack} from "../../react-view/view-template/h-stack";
-import {getStickyHeaderStyle, varBackgroundPrimary} from "../../react-view/style-def";
-import {ExternalToggleView} from "../../react-view/view-template/toggle-view";
 import {ObsidianIconView} from "../../react-view/view-template/icon-view";
 import {Icon_ManagePage} from "../manage-page-view";
 import {DataTable} from "../../react-view/view-template/data-table";
@@ -37,7 +34,7 @@ import {ProjectFilterName_All} from "../../react-view/project-filter";
 import {OrphanTaskButtonAndPanel} from "../../react-view/fix-orphan-tasks";
 import {centerChildrenVertStyle, Desc_ManagePage, HelpPage_Template, HelpPage_UserManual} from "./help-page-view";
 
-function useSharedTlDr() {
+export function useSharedTlDr() {
     const [isTlDr, setIsTlDr] = usePluginSettings("help_page_tutorial_tldr")
     // hidden when tldr mode is on.
     const blockTldrOmitStyle: React.CSSProperties = {display: isTlDr ? "none" : "block"} //  visibility:"hidden" will still take space. So we use display instead
@@ -47,31 +44,19 @@ function useSharedTlDr() {
     return {isTlDr, setIsTlDr, blockTldrOmitStyle, blockTldrShowStyle, inlineTldrOmitStyle, inlineTldrShowStyle};
 }
 
+type TldrProps = ReturnType<typeof useSharedTlDr>;
 export const BasicTutorial = (props: {
-    setTab?: (tab: string) => void
+    setTab?: (tab: string) => void, tldrProps?: TldrProps
 }) => {
-    const {
-        isTlDr,
-        setIsTlDr,
-        blockTldrOmitStyle,
-        blockTldrShowStyle,
-        inlineTldrOmitStyle,
-        inlineTldrShowStyle
-    } = useSharedTlDr();
-
+    const blockTldrOmitStyle = props.tldrProps?.blockTldrOmitStyle;
+    const blockTldrShowStyle = props.tldrProps?.blockTldrShowStyle;
+    const inlineTldrOmitStyle = props.tldrProps?.inlineTldrOmitStyle;
+    const inlineTldrShowStyle = props.tldrProps?.inlineTldrShowStyle;
+    console.log(props.tldrProps)
     return <>
-        <HStack style={{
-            alignItems: "center",
-            background: varBackgroundPrimary,
-            ...getStickyHeaderStyle()
-        }} spacing={10}>
-            <H1 style={{}}>Tutorial</H1>
-            <ExternalToggleView externalControl={isTlDr} onChange={() => {
-                const nextValue = !isTlDr;
-                setIsTlDr(nextValue)
-            }} content={<label style={{padding: 5}}>{"TL;DR - Use when you understand the concepts"}</label>}/>
-        </HStack>
 
+
+        <H1 style={{}}>Tutorial</H1>
         <H2 style={blockTldrOmitStyle}>
             {PLUGIN_NAME} is?
         </H2>

@@ -8,10 +8,12 @@ import {StrictModeWrapper} from "../../react-view/view-template/strict-mode-wrap
 import {HelpPanelSwitcher} from "../../common/link-view";
 import {H1} from "../../common/heading";
 import {jsxToMarkdown} from "../../../utils/markdown-converter";
-import {BasicTutorial} from "./basic-tutorial";
+import {BasicTutorial, useSharedTlDr} from "./basic-tutorial";
 import {UserManual} from "./user-manual";
 import {ExampleManagePage} from "./example-manage-page";
 import {devLog} from "../../../utils/env-util";
+import {ExternalToggleView} from "../../react-view/view-template/toggle-view";
+import {getStickyHeaderStyle} from "../../react-view/style-def";
 
 export const PmHelpPageViewId = "tpm-help-view";
 export const Desc_ManagePage = "Manage Page";
@@ -50,7 +52,7 @@ export class PmHelpPageView extends ItemView {
 
         // React
         this.root = createRoot(this.containerEl.children[1]); // Override the previous container
-        this.root.render(<CommonHelpViewInModalAndLeaf plugin={this.plugin} container={contentEl}/>);
+        this.root.render(<HelpViewRoot plugin={this.plugin} container={contentEl}/>);
     }
 
     async onClose() {
@@ -82,7 +84,7 @@ export class PmHelpModal extends Modal {
         contentEl.empty();
         // React
         this.root = createRoot(contentEl); // Override the previous container
-        this.root.render(<CommonHelpViewInModalAndLeaf plugin={this.plugin} container={contentEl}/>)
+        this.root.render(<HelpViewRoot plugin={this.plugin} container={contentEl}/>)
     }
 
     onClose() {
@@ -119,6 +121,7 @@ const OutputButton = ({app}: { app: App }) => {
     return outputBtn;
 //#endif
 }
+
 export const centerChildrenVertStyle = {display: "flex", justifyContent: "center"}
 export const HelpPage_Tutorial = "Tutorial";
 export const HelpPage_Template = "Template";
@@ -130,39 +133,63 @@ const QuartzPath = [
     {jsx: <UserManual/>, title: HelpPage_UserManual},
 ]
 
+const HelpViewRoot = ({plugin, container}: {
+    plugin: OdaPmToolPlugin,
+    container: Element
+}) => {
+    return <StrictModeWrapper>
+        <PluginContext.Provider value={plugin}>
+            <CommonHelpViewInModalAndLeaf plugin={plugin} container={container}/>
+        </PluginContext.Provider>
+    </StrictModeWrapper>
+}
+
 const CommonHelpViewInModalAndLeaf = ({plugin, container}: {
     plugin: OdaPmToolPlugin,
     container: Element
 }) => {
     const [tab, setTab] = useState(HelpPage_Tutorial);
     const exContainer = container.createEl("div")
-    return <StrictModeWrapper>
-        <PluginContext.Provider value={plugin}>
-            <div>
-                <div style={centerChildrenVertStyle}>
-                    <H1 style={{}}>{PLUGIN_NAME}: Help Page</H1>
-                    <OutputButton app={plugin.app}/>
-                </div>
-                <div style={centerChildrenVertStyle}>
-                    <HStack spacing={30}>
-                        {HelpViewTabsNames.map((name, index) => {
-                            return <span key={name}>
+    const tldr = useSharedTlDr();
+    const {
+        isTlDr,
+        setIsTlDr,
+    } = tldr;
+    return <div>
+        <div style={centerChildrenVertStyle}>
+            <H1 style={{}}>{PLUGIN_NAME}: Help Page</H1>
+            <OutputButton app={plugin.app}/>
+        </div>
+        <div style={centerChildrenVertStyle}>
+            <HStack spacing={30}>
+                {HelpViewTabsNames.map((name, index) => {
+                    return <span key={name}>
                                 <HelpPanelSwitcher currentPanelName={tab} panelName={name} setPanelName={setTab}/>
                             </span>;
-                        })}
-                    </HStack>
-                </div>
-                <div>
-                    {
-                        tab === HelpPage_Tutorial ? <BasicTutorial setTab={setTab}/> :
-                            tab === HelpPage_UserManual ? <UserManual/> :
-                                tab === HelpPage_Template ?
-                                    <ExampleManagePage app={plugin.app} container={exContainer}/> : <></>
-                    }
-                </div>
-            </div>
-        </PluginContext.Provider>
-    </StrictModeWrapper>
+                })}
+            </HStack>
+        </div>
+        {tab === HelpPage_Tutorial ? <HStack style={{
+                alignItems: "center",
+                ...getStickyHeaderStyle(),
+                padding: 10
+            }} spacing={10}> <ExternalToggleView externalControl={isTlDr} onChange={() => {
+                const nextValue = !isTlDr;
+                setIsTlDr(nextValue)
+            }} content={<label style={{padding: 5}}>{"TL;DR - When you understand the concepts"}</label>}/>
+            </HStack>
+            : null
+        }
+
+        <div>
+            {
+                tab === HelpPage_Tutorial ? <BasicTutorial tldrProps={tldr} setTab={setTab}/> :
+                    tab === HelpPage_UserManual ? <UserManual/> :
+                        tab === HelpPage_Template ?
+                            <ExampleManagePage app={plugin.app} container={exContainer}/> : <></>
+            }
+        </div>
+    </div>
 }
 
 
