@@ -1,167 +1,41 @@
-import {App, ItemView, Modal, WorkspaceLeaf} from "obsidian";
-import {createRoot, Root} from "react-dom/client";
-import React, {JSX, useState} from "react";
-import {ObsidianIconView} from "../react-view/view-template/icon-view";
-import OdaPmToolPlugin, {
+import {H1, H2, H3, P} from "../../common/heading";
+import {
     CmdPal_JumpToManagePage,
     CmdPal_OpenManagePage,
     CmdPal_SetProject,
     CmdPal_SetWorkflowToTask,
     PLUGIN_NAME
-} from "../../main";
-import {Tag_Prefix_Step, Tag_Prefix_Tag, Tag_Prefix_TaskType, Tag_Prefix_Workflow} from "../../data-model/workflow-def";
-import {Icon_ManagePage, PluginContext} from "./manage-page-view";
-import {getTemplateHtml, ManagePageForTemplate, templateMd} from "../tpm-template-md";
-import {usePluginSettings} from "../../Settings";
-import {HStack} from "../react-view/view-template/h-stack";
-import {StrictModeWrapper} from "../react-view/view-template/strict-mode-wrapper";
-import {DataTable} from "../react-view/view-template/data-table";
-import {WorkflowTypeLegend} from "../react-view/workflow-filter";
+} from "../../../main";
+import React from "react";
+import {usePluginSettings} from "../../../Settings";
+import {HStack} from "../../react-view/view-template/h-stack";
+import {getStickyHeaderStyle, varBackgroundPrimary} from "../../react-view/style-def";
+import {ExternalToggleView} from "../../react-view/view-template/toggle-view";
+import {ObsidianIconView} from "../../react-view/view-template/icon-view";
+import {Icon_ManagePage} from "../manage-page-view";
+import {DataTable} from "../../react-view/view-template/data-table";
+import {WorkflowTypeLegend} from "../../react-view/workflow-filter";
+import {HashTagView} from "../../common/hash-tag-view";
+import {
+    Tag_Prefix_Step,
+    Tag_Prefix_Tag,
+    Tag_Prefix_TaskType,
+    Tag_Prefix_Workflow
+} from "../../../data-model/workflow-def";
+import {TaggedTaskView} from "../../common/tagged-task-view";
+import {HelpPanelSwitcher, LinkView} from "../../common/link-view";
 import {
     Frontmatter_FileProject,
     Frontmatter_FolderProject,
     ProjectName_Unclassified,
     Tag_Prefix_Project
-} from "../../data-model/OdaPmProject";
-import {FileNavView} from "../common/file-nav-view";
-import {ExternalToggleView} from "../react-view/view-template/toggle-view";
-import {ProjectFilterName_All} from "../react-view/project-filter";
-import {OrphanTaskButtonAndPanel} from "../react-view/fix-orphan-tasks";
-import {HelpPanelSwitcher, LinkView} from "../common/link-view";
-import {TaggedTaskView} from "../common/tagged-task-view";
-import {HashTagView} from "../common/hash-tag-view";
-import {MarkdownFrontMatterView} from "../common/markdown-front-matter-view";
-import {InlineCodeView} from "../common/inline-code-view";
-import {H1, H2, H3, P} from "../common/heading";
-import {getStickyHeaderStyle, varBackgroundPrimary} from "../react-view/style-def";
-import {jsxToMarkdown} from "../../utils/markdown-converter";
-
-export const PmHelpPageViewId = "tpm-help-view";
-export const Desc_ManagePage = "Manage Page";
-export const Icon_HelpPage = "info";
-
-export class PmHelpPageView extends ItemView {
-    root: Root | null = null;
-    plugin: OdaPmToolPlugin;
-
-    constructor(leaf: WorkspaceLeaf, plugin: OdaPmToolPlugin) {
-        super(leaf);
-        this.plugin = plugin;
-    }
-
-    getViewType() {
-        return PmHelpPageViewId;
-    }
-
-    getDisplayText() {
-        return `${PLUGIN_NAME} Help Page`;
-    }
-
-    getIcon(): string {
-        return Icon_HelpPage;
-    }
-
-    async onOpen() {
-        this.renderPage();
-    }
-
-
-    private renderPage() {
-
-        const contentEl = this.containerEl.children[1];
-        contentEl.empty();
-
-        // React
-        this.root = createRoot(this.containerEl.children[1]); // Override the previous container
-        this.root.render(<CommonHelpViewInModalAndLeaf plugin={this.plugin} container={contentEl}/>);
-    }
-
-    async onClose() {
-        this.unmountReactRoot();
-    }
-
-
-    private unmountReactRoot() {
-        this.root?.unmount();
-        this.root = null;
-    }
-
-    emitter() {
-        return this.plugin.getEmitter()
-    }
-}
-
-export class PmHelpModal extends Modal {
-    root: Root | null = null;
-    plugin: OdaPmToolPlugin;
-
-    constructor(plugin: OdaPmToolPlugin) {
-        super(plugin.app);
-        this.plugin = plugin;
-    }
-
-    onOpen() {
-        const {contentEl} = this;
-        contentEl.empty();
-        // React
-        this.root = createRoot(contentEl); // Override the previous container
-        this.root.render(<CommonHelpViewInModalAndLeaf plugin={this.plugin} container={contentEl}/>)
-    }
-
-    onClose() {
-        this.root?.unmount();
-        this.root = null;
-    }
-}
-
-const OutputButton = () => {
-//#ifdef DEVELOPMENT_BUILD
-    const outputBtn = <button onClick={() => {
-        const html = jsxToMarkdown(<BasicTutorial/>);
-        console.log(html);
-    }}>output
-    </button>
-    console.log("DEVBu")
-    return outputBtn;
-//#endif
-}
-const centerChildrenVertStyle = {display: "flex", justifyContent: "center"}
-const HelpPage_Template = "Template";
-const HelpViewTabsNames = ["Tutorial", "User manual", HelpPage_Template]
-const CommonHelpViewInModalAndLeaf = ({plugin, container}: {
-    plugin: OdaPmToolPlugin,
-    container: Element
-}) => {
-    const [tab, setTab] = useState(HelpViewTabsNames[0]);
-    const exContainer = container.createEl("div")
-    return <StrictModeWrapper>
-        <PluginContext.Provider value={plugin}>
-            <div>
-                <div style={centerChildrenVertStyle}>
-                    <H1 style={{}}>{PLUGIN_NAME}: Help Page</H1>
-                    <OutputButton/>
-                </div>
-                <div style={centerChildrenVertStyle}>
-                    <HStack spacing={30}>
-                        {HelpViewTabsNames.map((name, index) => {
-                            return <span key={name}>
-                                <HelpPanelSwitcher currentPanelName={tab} panelName={name} setPanelName={setTab}/>
-                            </span>;
-                        })}
-                    </HStack>
-                </div>
-                <div>
-                    {
-                        tab === HelpViewTabsNames[0] ? <BasicTutorial setTab={setTab}/> :
-                            tab === HelpViewTabsNames[1] ? <UserManual/> :
-                                tab === HelpViewTabsNames[2] ?
-                                    <ExampleManagePage app={plugin.app} container={exContainer}/> : <></>
-                    }
-                </div>
-            </div>
-        </PluginContext.Provider>
-    </StrictModeWrapper>
-}
+} from "../../../data-model/OdaPmProject";
+import {InlineCodeView} from "../../common/inline-code-view";
+import {MarkdownFrontMatterView} from "../../common/markdown-front-matter-view";
+import {FileNavView} from "../../common/file-nav-view";
+import {ProjectFilterName_All} from "../../react-view/project-filter";
+import {OrphanTaskButtonAndPanel} from "../../react-view/fix-orphan-tasks";
+import {centerChildrenVertStyle, Desc_ManagePage, HelpPage_Template, HelpViewTabsNames} from "./help-page-view";
 
 function useSharedTlDr() {
     const [isTlDr, setIsTlDr] = usePluginSettings("help_page_tutorial_tldr")
@@ -173,7 +47,7 @@ function useSharedTlDr() {
     return {isTlDr, setIsTlDr, blockTldrOmitStyle, blockTldrShowStyle, inlineTldrOmitStyle, inlineTldrShowStyle};
 }
 
-const BasicTutorial = (props: {
+export const BasicTutorial = (props: {
     setTab?: (tab: string) => void
 }) => {
     const {
@@ -571,7 +445,6 @@ const BasicTutorial = (props: {
 
     </>
 }
-
 const CommandTutorialView = () => {
 
     const {
@@ -610,188 +483,3 @@ const CommandTutorialView = () => {
 
     </>
 }
-
-
-const UserManual = () => {
-    const stepStateStyle = {fontWeight: "bold"};
-
-    return <>
-        <H1>User Manual</H1>
-
-
-        <H2>Projects</H2>
-
-
-        <P>A project</P>
-        <ul>
-            <li>
-                can have many subprojects
-            </li>
-            <li>can have many workflows and tasks</li>
-        </ul>
-        <P>
-            A workflow
-        </P>
-        <ul>
-            <li>can have many tasks</li>
-            <li>can have one project</li>
-            <li>belongs to all subprojects</li>
-            <li>is in <i>{ProjectName_Unclassified}</i> if not in any other project</li>
-            <li>belongs to all projects if it is in the <i>{ProjectName_Unclassified}</i> project, if the user want</li>
-        </ul>
-
-        <P>
-            A task
-        </P>
-        <ul>
-            <li>can have one project</li>
-            <li>can have one workflow</li>
-            <li>belongs to all parent projects</li>
-            <li>is in <i>{ProjectName_Unclassified}</i> if not in any other project</li>
-        </ul>
-
-        <H2>Rules for workflows and tasks</H2>
-        A workflow definition or a managed task has to obey the following rules.
-        <ul>
-            <li>
-                A workflow name should be a valid obsidian tag name, since it will be a part of another tag.
-            </li>
-            <li> A workflow must has at least one step</li>
-            <li>Empty names are not allowed for either workflows or tasks.</li>
-            <li>
-                If multiple workflows have the same name, the latter one will override the previous one.
-            </li>
-            <li>
-                Tasks can have the same name.
-            </li>
-            <li>If a task has multiple workflows, only the first workflow is recognized.</li>
-
-            <li> The task should occupy only one line. This means a task should not have trailing texts in the next
-                line, or having indentation after a non-list item.
-            </li>
-        </ul>
-
-        You need to put your cursor at a valid task to for the command <i>{CmdPal_JumpToManagePage}</i> work.
-
-        <H2>Task Completion</H2>
-        In Obsidian, you may have various symbol to put into the checkbox, such as <InlineCodeView text={"*, /, -, x"}/>,
-        etc.
-        Any status will be recognized as completion in {PLUGIN_NAME}.
-        The behaviour in {Desc_ManagePage} for each workflow is different. We call the task in the markdown page as <i>main
-        task</i>, and the steps defined in the workflow as <i>steps</i>.
-        <P>
-            <b>Checkbox workflow</b>: When all the steps defined are completed.
-        </P>
-        <ul>
-            <li>
-                <div style={stepStateStyle}>Main Task: Unticked. Steps: Partially or fully unticked.</div>
-                Ticking the main task in {Desc_ManagePage} causes all the steps to be
-                ticked, and tags will be automatically added to markdown.
-            </li>
-            <li>
-                <div style={stepStateStyle}>Main Task: Unticked. Steps: Partially or fully unticked.</div>
-                Ticking any step will add the according tag to
-                markdown, and if all the steps are ticked, the main task will be ticked.
-            </li>
-            <li>
-                <div style={stepStateStyle}>Main Task: Unticked. Steps: Fully ticked.</div>
-                Opening {Desc_ManagePage} will tick the main task. This happens if you untick the main task in markdown.
-            </li>
-            <li>
-                <div style={stepStateStyle}>Main Task: Ticked. Steps: Partially or fully unticked.</div>
-                Opening {Desc_ManagePage} will tick all the steps. This happens if you tick the main task in markdown.
-            </li>
-            <li>
-                <div style={stepStateStyle}>Main Task: Ticked. Steps: Fully ticked.</div>
-                Unticking the main task in {Desc_ManagePage} will cause all the steps to
-                be unticked.
-            </li>
-            <li>
-                <div style={stepStateStyle}>Main Task: Ticked. Steps: Fully ticked.</div>
-                Unticking any step in {Desc_ManagePage} will cause the main task to be
-                unticked.
-            </li>
-        </ul>
-
-        <b>Chain workflow</b>: When the last step defined is completed.
-
-        <ul>
-            <li>
-                <div style={stepStateStyle}>Main Task: Unticked. Steps: Any step but the last ticked.</div>
-                Ticking the main task in {Desc_ManagePage} causes all but the steps to be
-                unticked, and the last one ticked. Tags will be automatically added or removed in markdown.
-            </li>
-            <li>
-                <div style={stepStateStyle}>Main Task: Unticked. Steps: Partially or fully unticked.</div>
-                Ticking any step removes other steps and keeps only the ticked one. If the last is ticked, the main task
-                will be ticked.
-            </li>
-            <li>
-                <div style={stepStateStyle}>Main Task: Unticked. Steps: Last step ticked.</div>
-                Opening {Desc_ManagePage} will tick the main task. This happens if you untick the main task in markdown.
-            </li>
-            <li>
-                <div style={stepStateStyle}>Main Task: Ticked. Steps: Any step but the last ticked.</div>
-                Opening {Desc_ManagePage} will untick all but the last step. This happens if you tick the main task in
-                markdown.
-            </li>
-            <li>
-                <div style={stepStateStyle}>Main Task: Ticked. Steps: Last step ticked.</div>
-                Unticking the main task in {Desc_ManagePage} will cause all the steps to
-                be unticked.
-            </li>
-            <li>
-                <div style={stepStateStyle}>Main Task: Ticked. Steps: Last step ticked.</div>
-                Ticking any unticked step in {Desc_ManagePage} will cause the main task to be
-                unticked.
-            </li>
-            <li>
-                <div style={stepStateStyle}>Main Task: Ticked or Unticked. Steps: Multiple steps ticked.</div>
-                Opening {Desc_ManagePage} will keep only the last tag in markdown. This happens if you add a step tag in
-                markdown but do not remove the others. This means adding a step tag overrides the previous step no
-                matter the relationship in the chain between the step tags.
-
-            </li>
-        </ul>
-
-    </>
-}
-const templateTargetFilePath = "TagProject_Template.md";
-
-const ExampleManagePage = ({app, container}: {
-    app: App,
-    container: Element
-}) => {
-    const [templateView, setTemplateView] = useState<JSX.Element>();
-    container.empty()
-    if (!templateView)
-        getTemplateHtml(app, container).then((v) => {
-            setTemplateView(v)
-        })
-    return <>
-        <P style={centerChildrenVertStyle}>
-            This is a template for {PLUGIN_NAME}. You can use it as a starting point.
-        </P>
-        <P style={centerChildrenVertStyle}>
-            This can be created with one click in the plugin.
-        </P>
-        <P style={centerChildrenVertStyle}>
-            <button onClick={() => {
-                if (templateView) {
-                    // fs.writeFileSync("TagProject_Template.md", templateMd)
-                    app.vault.adapter.write(templateTargetFilePath, templateMd)
-                }
-            }}>Create this template at <label style={{padding: 3, fontStyle: "italic"}}>{templateTargetFilePath}</label>
-            </button>
-        </P>
-        <P>
-            A {Desc_ManagePage} showcase
-        </P>
-        <ManagePageForTemplate/>
-        <P>
-            The source markdown
-        </P>
-        {templateView}
-    </>
-}
-

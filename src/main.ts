@@ -14,7 +14,7 @@ import {OdaPmDb, OdaPmDbProvider} from "./data-model/odaPmDb";
 import {addTagText, getWorkflowNameFromRawText, I_OdaPmWorkflow} from "./data-model/workflow-def";
 import {rewriteTask, setProjectTagAtPath} from "./utils/io-util";
 import {WorkflowSuggestionModal} from "./ui/obsidian/workflow-suggestion-modal";
-import {Icon_HelpPage, PmHelpPageView, PmHelpPageViewId} from "./ui/obsidian/help-page-view";
+import {Icon_HelpPage, PmHelpPageView, PmHelpPageViewId} from "./ui/obsidian/help-page/help-page-view";
 import {devLog, initPluginEnv, removePluginEnv, setVaultName} from "./utils/env-util";
 import {OdaPmTask} from "./data-model/OdaPmTask";
 import {ProjectSuggestionModal} from "./ui/obsidian/project-suggestion-modal";
