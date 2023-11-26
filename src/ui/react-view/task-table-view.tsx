@@ -23,15 +23,13 @@ import {MarkdownRenderer} from "obsidian";
 import {HtmlStringComponent} from "./view-template/html-string-component";
 import {appendBoldText} from "../common/html-template";
 import {notify} from "../../utils/o-notice";
-import {getIconByWorkflow} from "./style-def";
-import {getStickyHeaderStyle} from "./view-template/style-helper";
+import {getIconByWorkflow, getStickyHeaderStyle, varBackgroundSecondary} from "./style-def";
 
 export const taskCheckBoxMargin = {marginLeft: 3};
 
 function getIconByTask(oTask: OdaPmTask) {
     return getIconByWorkflow(oTask.type)
 }
-
 
 function notifyTask(oTask: OdaPmTask, reason: string) {
     const doc = new DocumentFragment();
@@ -176,7 +174,7 @@ export function getDefaultTableStyleGetters(minSummaryWidth: number | string = 5
     function headStyleGetter(columnIndex: number): React.CSSProperties {
         const style = {
             ...getStickyHeaderStyle(),
-            backgroundColor: "var(--background-secondary)",
+            backgroundColor: varBackgroundSecondary,
             padding: 10,
             minWidth: (columnIndex === summaryColumn ? minSummaryWidth : "unset"),
             maxWidth: (columnIndex === summaryColumn ? maxSummaryWidth : "unset")
@@ -319,7 +317,7 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
             </HStack>
             <p/>
             {
-               
+
                 displayWorkflows.length === 0 ? <label>No Workflow selected.</label> : (
                     taskRows.length > 0 ? <DataTable
                         tableTitle={curWfName}

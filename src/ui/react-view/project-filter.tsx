@@ -8,7 +8,8 @@ import {devLog} from "../../utils/env-util";
 import {ProjectView} from "./project-view";
 import {usePopup} from "./view-template/hovering-popup";
 
-import {varBackgroundPrimary} from "./view-template/style-helper";
+
+import {varBackgroundPrimary} from "./style-def";
 
 export const ProjectFilterName_All = "All Projects";
 export const ProjectFilterOptionValue_All = "###ALL###";

@@ -28,3 +28,13 @@ export function getIconViewByWorkflowType(type: WorkflowType) {
 export function getIconByWorkflow(workflow: I_OdaPmWorkflow) {
     return getIconViewByWorkflowType(workflow.type);
 }
+
+export const varBackgroundPrimary = "var(--background-primary)";
+export const varBackgroundSecondary = "var(--background-secondary)"; // -16 is the padding of the obsidian leaf view container. The content will overflow the container's box.
+// sticky header see: https://css-tricks.com/position-sticky-and-table-headers/
+export const getStickyHeaderStyle = () => {
+    return {
+        position: "sticky", top: -16,
+        zIndex: 1,
+    } as React.CSSProperties;
+}

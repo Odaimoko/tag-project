@@ -27,14 +27,14 @@ import {FileNavView} from "../common/file-nav-view";
 import {ExternalToggleView} from "../react-view/view-template/toggle-view";
 import {ProjectFilterName_All} from "../react-view/project-filter";
 import {OrphanTaskButtonAndPanel} from "../react-view/fix-orphan-tasks";
-import {LinkView} from "../common/link-view";
+import {HelpPanelSwitcher, LinkView} from "../common/link-view";
 import {TaggedTaskView} from "../common/tagged-task-view";
 import {HashTagView} from "../common/hash-tag-view";
 import {MarkdownFrontMatterView} from "../common/markdown-front-matter-view";
 import {InlineCodeView} from "../common/inline-code-view";
-import {getStickyHeaderStyle, varBackgroundPrimary} from "../react-view/view-template/style-helper";
 import {jsxToMarkdown} from "../../utils/markdown-converter";
 import {H1, H2, H3} from "../common/heading";
+import {getStickyHeaderStyle, varBackgroundPrimary} from "../react-view/style-def";
 
 export const PmHelpPageViewId = "tpm-help-view";
 export const Desc_ManagePage = "Manage Page";
@@ -132,13 +132,15 @@ const CommonHelpViewInModalAndLeaf = ({plugin, container}: {
                 <div style={centerChildrenVertStyle}>
                     <HStack spacing={30}>
                         {HelpViewTabsNames.map((name, index) => {
-                            return <button key={name} onClick={() => setTab(name)}>{name}</button>
+                            return <span key={name}>
+                                <HelpPanelSwitcher currentPanelName={tab} panelName={name} setPanelName={setTab}/>
+                            </span>;
                         })}
                     </HStack>
                 </div>
                 <div>
                     {
-                        tab === HelpViewTabsNames[0] ? <BasicTutorial/> :
+                        tab === HelpViewTabsNames[0] ? <BasicTutorial setTab={setTab}/> :
                             tab === HelpViewTabsNames[1] ? <UserManual/> :
                                 tab === HelpViewTabsNames[2] ?
                                     <ExampleManagePage app={plugin.app} container={exContainer}/> : <></>
@@ -159,7 +161,9 @@ function useSharedTlDr() {
     return {isTlDr, setIsTlDr, blockTldrOmitStyle, blockTldrShowStyle, inlineTldrOmitStyle, inlineTldrShowStyle};
 }
 
-const BasicTutorial = () => {
+const BasicTutorial = (props: {
+    setTab?: (tab: string) => void
+}) => {
     const {
         isTlDr,
         setIsTlDr,
@@ -347,7 +351,9 @@ const BasicTutorial = () => {
         </p>
 
         <H3 style={blockTldrShowStyle}>Define a project</H3>
-        A project can be defined by
+        <p style={blockTldrShowStyle}>
+            A project can be defined by
+        </p>
         <ul style={blockTldrShowStyle}>
             <li> a <b>project tag</b> (a tag with prefix <HashTagView tagWithoutHash={Tag_Prefix_Project}/>)</li>
             <li><label>obsidian file <LinkView text={"property"}
@@ -373,25 +379,25 @@ const BasicTutorial = () => {
         </p>
         <FileNavView style={blockTldrOmitStyle} pathHierarchy={[
             {
-                name: "Example: MyProject - Root", isFolder: true, children: [
-                    {name: "MyProject 1 (Contains property `tpm_project_root: MyProject`)", isFolder: false},
-                    {name: "MyProject 2 (Tasks in this file will be in [MyProject])", isFolder: false},
+                name: "Example Folder: MyProject - Root", isFolder: true, children: [
+                    {name: "MyProject 1.md (Contains property `tpm_project_root: MyProject`)", isFolder: false},
+                    {name: "MyProject 2.md (Tasks in this file will be in [MyProject])", isFolder: false},
                 ]
             },
         ]}/>
         <p style={blockTldrOmitStyle}>
             You can also set a file as a project with property <InlineCodeView
-            text={Frontmatter_FileProject}/>. It will override the folder project. For example, tasks in the fodler <i>My
+            text={Frontmatter_FileProject}/>. It will override the folder project. For example, tasks in the folder <i>My
             Project
             3</i> will be in the project <i>Another Project</i>.
 
         </p>
         <FileNavView style={blockTldrOmitStyle} pathHierarchy={[
             {
-                name: "Example: MyProject - Root", isFolder: true, children: [
-                    {name: "MyProject 1 (Contains property `tpm_project_root: MyProject`)", isFolder: false},
-                    {name: "MyProject 2 (Tasks in this file will be in [MyProject])", isFolder: false},
-                    {name: "MyProject 3 (Contains property `tpm_project: Another Project`)", isFolder: false},
+                name: "Example Folder: MyProject - Root", isFolder: true, children: [
+                    {name: "MyProject 1.md (Contains property `tpm_project_root: MyProject`)", isFolder: false},
+                    {name: "MyProject 2.md (Tasks in this file will be in [MyProject])", isFolder: false},
+                    {name: "MyProject 3.md (Contains property `tpm_project: Another Project`)", isFolder: false},
                 ]
             },
         ]}/>
@@ -421,7 +427,7 @@ const BasicTutorial = () => {
             <label style={inlineTldrOmitStyle}>Subprojects can be added with <InlineCodeView text={"/"}/> in the project
                 name. </label>
             <i>MyProject/MySubproject</i> is a subproject of <i>MyProject</i>.
-            <label style={inlineTldrOmitStyle}>This naming method is consistent with the
+            <label style={inlineTldrOmitStyle}> This naming method is consistent with the
                 hierarchical tags. Thus, project tags is naturally supported.</label>
         </p>
 
@@ -458,7 +464,7 @@ const BasicTutorial = () => {
         <H3>Unclassified workflows</H3>
         <p>
             By default, all workflows and tasks are under <i>{ProjectName_Unclassified}</i>.
-            <label style={inlineTldrOmitStyle}>This is designed to share workflows across all projects. If you do not
+            <label style={inlineTldrOmitStyle}> This is designed to share workflows across all projects. If you do not
                 want this behavior, you can disable
                 it in settings.</label>
         </p>
@@ -472,7 +478,7 @@ const BasicTutorial = () => {
         <p style={blockTldrOmitStyle}>
             The reason is that when you are working on a subproject, you may want to reuse the workflows defined in the
             parent. But you may not want to share your subproject's workflows to the parent or other subprojects.
-            Also, when you select a project in {Desc_ManagePage}, you can see all the tasks in the subprojects.
+            For tasks, when you select a project in {Desc_ManagePage}, you can see all the tasks in the subprojects.
         </p>
         <p style={blockTldrOmitStyle}>
             There's also a toggle in {Desc_ManagePage} to show workflows in subprojects, in case you want to see them.
@@ -484,8 +490,7 @@ const BasicTutorial = () => {
         <p style={blockTldrOmitStyle}>
             Sometimes you want to give a task a property, but you don't want to make it a workflow step. For example,
             you
-            want to mark the task abandoned, or this task has high priority, or you want to group tasks into
-            different projects.
+            want to mark the task abandoned or high priority.
             You can use <i>managed tags</i> to do that.
         </p>
         <p style={blockTldrOmitStyle}>
@@ -504,62 +509,60 @@ const BasicTutorial = () => {
             included
             or excluded in the search on {Desc_ManagePage}.</p>
         <p style={blockTldrOmitStyle}>
-            If you want to define a workflow without any steps, it should not be called a workflow. The built-in
-            tag should suffice. If you want to manage that task in {PLUGIN_NAME}, you can always place a dummy step tag
-            in the workflow definition.
+            If you want to define a workflow without any steps, you can always place a dummy step tag
+            in the workflow definition, such as <HashTagView tagWithoutHash={`${Tag_Prefix_Step}done`}/>.
         </p>
 
+        <div style={{display: "none"}}>
+            <H2>Best Practices</H2>
+            <p style={blockTldrOmitStyle}>Since the step tag is already defined, they can be auto completed.
+                Note that adding a step tag represents we have done the step. It is more natural for me and the meaning
+                stays
+                the same with checkbox workflow. If you want to make a step representing the work you are doing, you can
+                add
+                a <b><i>done</i></b> step at the end of each chain workflow.
+            </p>
 
-        <H2>Best Practices</H2>
-        <p style={blockTldrOmitStyle}>Since the step tag is already defined, they can be auto completed.
-            Note that adding a step tag represents we have done the step. It is more natural for me and the meaning
-            stays
-            the same with checkbox workflow. If you want to make a step representing the work you are doing, you can add
-            a <b><i>done</i></b> step at the end of each chain workflow.
-        </p>
 
+            <p style={blockTldrOmitStyle}>
+                If you set the workflow for the very first time, it's tag is not available for auto-completion. Instead
+                of
+                manually typing the workflow tag, you can also use context menu or command palette
+                (<i>{CmdPal_SetWorkflowToTask}</i>) to do it. With a hotkey bound, this is as fast as auto-completion.
+            </p>
+            <div style={blockTldrShowStyle}>
+                Add a workflow tag to a task via:
+                <ul>
+                    <li>
+                        (Preferred) context menu or command palette
+                        (<i>{CmdPal_SetWorkflowToTask}</i>)
+                    </li>
+                    <li>
+                        Manually typing the workflow tag
+                    </li>
+                </ul>
 
-        <p style={blockTldrOmitStyle}>
-            If you set the workflow for the very first time, it's tag is not available for auto-completion. Instead of
-            manually typing the workflow tag, you can also use context menu or command palette
-            (<i>{CmdPal_SetWorkflowToTask}</i>) to do it. With a hotkey bound, this is as fast as auto-completion.
-        </p>
-        <div style={blockTldrShowStyle}>
-            Add a workflow tag to a task via:
-            <ul>
-                <li>
-                    (Preferred) context menu or command palette
-                    (<i>{CmdPal_SetWorkflowToTask}</i>)
-                </li>
-                <li>
-                    Manually typing the workflow tag
-                </li>
-            </ul>
-
+            </div>
+            <p style={blockTldrOmitStyle}>After typing the first workflow tag, you can use auto-completion.
+                But using the command palette is preferred, since it can replace an existing workflow tag with the new
+                one.
+                You don't have to remove the old one yourself.
+            </p>
+            <p style={blockTldrOmitStyle}>
+                You can choose whichever way is more convenient for you. Markdown is a
+                text file after all.
+            </p>
         </div>
-        <p style={blockTldrOmitStyle}>After typing the first workflow tag, you can use auto-completion.
-            But using the command palette is preferred, since it can replace an existing workflow tag with the new one.
-            You don't have to remove the old one yourself.
-        </p>
-        <p style={blockTldrOmitStyle}>
-            You can choose whichever way is more convenient for you. Markdown is a
-            text file after all.
-        </p>
-
         <CommandTutorialView/>
 
     </>
 }
 
-const CommandTutorialView = ({}) => {
+const CommandTutorialView = () => {
 
     const {
-        isTlDr,
-        setIsTlDr,
         blockTldrOmitStyle,
         blockTldrShowStyle,
-        inlineTldrOmitStyle,
-        inlineTldrShowStyle
     } = useSharedTlDr();
 
     return <>
