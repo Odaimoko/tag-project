@@ -93,11 +93,10 @@ export class PmHelpModal extends Modal {
 
 const OutputButton = ({app}: { app: App }) => {
 //#ifdef DEVELOPMENT_BUILD
-    const quartz_folder = "Quartz";
+    const quartz_folder = "TagProject/hidden";
     const outputBtn = <button onClick={async () => {
         for (const {jsx, title} of QuartzPath) {
             try {
-
                 await app.vault.createFolder(quartz_folder).then(
                     () => {
                         devLog(`create folder ${quartz_folder} success`)
