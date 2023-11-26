@@ -75,3 +75,17 @@ export const H5 = (props: React.PropsWithChildren<I_Stylable>) => {
 export const H6 = (props: React.PropsWithChildren<I_Stylable>) => {
     return <Heading layer={6} {...props}/>
 }
+export const P = (props: React.PropsWithChildren<I_Stylable>) => {
+    const mcc = useContext(MarkdownConvertContext);
+    if (!mcc) {
+        return <p {...props}>
+            {props.children}
+        </p>
+    } else {
+        return <>
+            {"\n\n"}
+            {props.children}
+            {"\n\n"}
+        </>
+    }
+}

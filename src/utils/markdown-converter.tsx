@@ -8,12 +8,14 @@ import {renderToString} from "react-dom/server";
 import {IRenderable} from "../ui/common/i-renderable";
 
 export function jsxToMarkdown(jsx: IRenderable): string {
-    const html = renderToString(
+    let html = renderToString(
         <MarkdownConvertContext.Provider value={true}>
             {jsx}
         </MarkdownConvertContext.Provider>
     )
-
+    // Sometimes we want to use a Markdown paragraph, but `renderToString` will place an empty comment at the beginning,
+    // making it a html element.
+    html = html.replace(/<!--.*-->/g, "")// remove comments. 
     return html
 }
 
