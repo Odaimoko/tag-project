@@ -1,6 +1,6 @@
 import {describe} from "@jest/globals";
 import {jsxToMarkdown} from "../markdown-converter";
-import {getMdHeadingByString, H1, H2} from "../../ui/common/heading";
+import {getMdHeadingByString, H1, H2, P} from "../../ui/common/heading";
 import React from "react";
 
 describe("jsx-to-md-heading", () => {
@@ -28,4 +28,23 @@ describe("jsx-to-md-heading", () => {
         const jsx = <H1 style={{display: "none"}}>hello world</H1>
         expect(jsxToMarkdown(jsx)).toEqual("")
     })
-})  
+})
+
+describe("jsx-to-md-paragraph", () => {
+    test("simple paragraph", () => {
+        const jsx = <P>hello world</P>
+        expect(jsxToMarkdown(jsx)).toEqual("\n\nhello world")
+    })
+    test("paragraph with nested children", () => {
+        const jsx = <P>
+            A project <label style={{
+            color: "red"
+        }}>is?</label>
+        </P>
+        expect(jsxToMarkdown(jsx)).toEqual("\n\nA project <label style=\"color:red\">is?</label>")
+    })
+    test("display none", () => {
+        const jsx = <P style={{display: "none"}}>hello world</P>
+        expect(jsxToMarkdown(jsx)).toEqual("")
+    })
+})

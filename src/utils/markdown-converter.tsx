@@ -7,14 +7,16 @@ import {renderToString} from "react-dom/server";
 import {IRenderable} from "../ui/common/i-renderable";
 
 export function jsxToMarkdown(jsx: IRenderable): string {
+    const element = <MarkdownConvertContext.Provider value={true}>
+        {jsx}
+    </MarkdownConvertContext.Provider>;
     let html = renderToString(
-        <MarkdownConvertContext.Provider value={true}>
-            {jsx}
-        </MarkdownConvertContext.Provider>
+        element
     )
     // Sometimes we want to use a Markdown paragraph, but `renderToString` will place an empty comment at the beginning,
     // making it a html element.
-    html = html.replace(/<!--.*-->/g, "")// remove comments. 
+    // There is another emtpy comment at the end of the html output by renderToString. So we use non-greedy regex.
+    html = html.replace(/<!--.*?-->/g, "")// remove comments. 
     return html
 }
 

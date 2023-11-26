@@ -83,11 +83,11 @@ export const P = (props: React.PropsWithChildren<I_Stylable>) => {
         </p>
     } else {
         const style = props.style;
+
         if (style && style?.display === "none") return null;
         return <>
-            {"\n11\n"}
+            {"\n\n"}
             {props.children}
-            {"\n12\n"}
         </>
     }
 }
