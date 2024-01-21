@@ -52,7 +52,7 @@ const isCharacterInput = (event: KeyboardEvent) => {
     );
 };
 
-function loopIndex(nextIdx: number, len: number) {
+export function loopIndex(nextIdx: number, len: number) {
     if (nextIdx < 0) {
         nextIdx = len - 1;
     } else if (nextIdx >= len) {

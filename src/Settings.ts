@@ -17,10 +17,25 @@ type SerializedType =
     | SerializedType[]
     | { [key: string]: SerializedType };
 
+export enum TableSortBy {
+    Name,
+    Step,
+}
+
+
+export enum TableSortMethod {
+    Appearance, // For column, Do not sort
+    Ascending, // For column, ticked will be placed at front
+    Descending, // For column, unticked will be placed at front
+}
+
+export interface TableSortData {
+    sortBy: TableSortBy,
+    column?: number,
+    method: TableSortMethod
+}
+
 export const totalSortMethods = 3;
-export const SortMethod_Appearance = 0;
-export const SortMethod_Ascending = 1;
-export const SortMethod_Descending = 2;
 
 export const totalFilterMethods = 3;
 export const FilterMethod_NotFiltering = 0;
@@ -62,7 +77,7 @@ export const TPM_DEFAULT_SETTINGS: Partial<TPMSettings> = {
     // custom_tag_prefix_tag: Tag_Prefix_Tag,
     // personalized settings, not exposed in settings tab
     show_completed_tasks: true,
-    table_column_sorting: SortMethod_Appearance,
+    table_column_sorting: TableSortMethod.Appearance,
     table_steps_shown: true,
     display_workflow_names: [] as SerializedType[],
     manage_page_display_tags: [] as SerializedType[],

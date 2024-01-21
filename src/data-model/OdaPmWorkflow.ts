@@ -36,7 +36,7 @@ class OdaPmWorkflow implements I_OdaPmWorkflow {
         this.stepsDef.push(step);
     }
 
-    includesStep(tag: string): boolean {
+    includesStepTag(tag: string): boolean {
         // TODO performance
         return this.stepsDef.map(k => k.tag).includes(tag);
     }

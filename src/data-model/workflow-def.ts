@@ -106,7 +106,7 @@ export interface I_OdaPmWorkflow extends I_OdaPmTaskble, I_Nameable {
 
     clearSteps: () => void
     addStep: (tag: string) => void
-    includesStep: (tag: string) => boolean
+    includesStepTag: (tag: string) => boolean
 
     /**
      * If this task has a project tag, return the project tag. Otherwise return null.

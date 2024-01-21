@@ -22,7 +22,7 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
     text: string;
     type: I_OdaPmWorkflow;
     // One for chain. Many for checkbox
-    currentSteps: I_OdaPmStep[];
+    tickedSteps: I_OdaPmStep[];
     // 0.2.0
     projects: OdaPmProject[];
 
@@ -32,12 +32,12 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
         this.text = task.text;
         this.type = type;
         this.summary = trimTagsFromTask(task)
-        this.currentSteps = [];
+        this.tickedSteps = [];
         for (const tag of task.tags) {
-            if (type.includesStep(tag)) {
+            if (type.includesStepTag(tag)) {
                 const step = getOrCreateStep(tag);
                 if (step !== null)
-                    this.currentSteps.push(step)
+                    this.tickedSteps.push(step)
             }
         }
         this.projects = []
@@ -48,7 +48,7 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
             summary: this.summary,
             text: this.text,
             type: this.type,
-            currentSteps: this.currentSteps.map(k => k.toObject()),
+            currentSteps: this.tickedSteps.map(k => k.toObject()),
         }
     }
 
@@ -61,7 +61,7 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
             case "chain": {
                 const tagStep = getOrCreateStep(this.type.stepsDef.last()?.tag);
                 if (tagStep === null) return false;
-                return this.currentSteps.includes(tagStep)
+                return this.tickedSteps.includes(tagStep)
             }
             case "checkbox":
                 return this.allStepsCompleted()
@@ -69,7 +69,7 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
     }
 
     getLastStep(): I_OdaPmStep | undefined {
-        return this.currentSteps.last();
+        return this.tickedSteps.last();
     }
 
     /**
@@ -77,14 +77,14 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
      */
     private getFurthestStep() {
         for (let i = this.type.stepsDef.length - 1; i >= 0; i--) {
-            if (this.currentSteps.includes(this.type.stepsDef[i]))
+            if (this.tickedSteps.includes(this.type.stepsDef[i]))
                 return this.type.stepsDef[i];
         }
         return null;
     }
 
     private allStepsCompleted(): boolean {
-        return this.currentSteps.length == this.type.stepsDef.length
+        return this.tickedSteps.length == this.type.stepsDef.length
     }
 
     lackOnlyOneStep(stepTag: string | undefined): boolean {
@@ -94,15 +94,15 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
                 // This is the last step, ofc we lack this.
                 return this.type.stepsDef.last()?.tag === stepTag
             case "checkbox": {
-                const hasTag = this.currentSteps.filter(k => k.tag == stepTag).length > 0;
-                return this.currentSteps.length == this.type.stepsDef.length - 1 && !hasTag
+                const hasTag = this.tickedSteps.filter(k => k.tag == stepTag).length > 0;
+                return this.tickedSteps.length == this.type.stepsDef.length - 1 && !hasTag
             }
         }
     }
 
     hasStepName(stepName: string) {
         // TODO Performance
-        return this.currentSteps.filter(k => k.name == stepName).length > 0;
+        return this.tickedSteps.filter(k => k.name == stepName).length > 0;
     }
 
     addStepTag(stepTag: string): string {
@@ -117,7 +117,7 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
     removeAllStepTags() {
         let oriText = this.text;
         for (const step of this.type.stepsDef) {
-            if (this.currentSteps.includes(step)) {
+            if (this.tickedSteps.includes(step)) {
                 oriText = removeTagText(oriText, step.tag)
             }
         }
@@ -126,7 +126,7 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
 
     private addAllStepTags(oriText: string) {
         for (const step of this.type.stepsDef) {
-            if (this.currentSteps.includes(step)) {
+            if (this.tickedSteps.includes(step)) {
                 continue;
             }
             oriText = addTagText(oriText, step.tag)

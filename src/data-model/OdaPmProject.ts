@@ -147,7 +147,7 @@ export class OdaPmProject extends BaseDatabaseObject implements I_Nameable {
 
     private static getOrCreateProject(name: string) {
         if (name.startsWith('/')) {
-            new ONotice(`Project namecannot with \`/\`:\n - ${name}.`)
+            new ONotice(`Project name cannot with \`/\`:\n - ${name}.`)
             return null;
         }
 
