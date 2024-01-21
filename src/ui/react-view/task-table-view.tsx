@@ -26,6 +26,9 @@ import {appendBoldText} from "../common/html-template";
 import {notify} from "../../utils/o-notice";
 import {getIconByWorkflow, getStickyHeaderStyle} from "./style-def";
 import {loopIndex} from "./project-filter";
+import {Minus} from "./icon/Minus";
+import {DownAZ, UpAZ} from "./icon/DownAZ";
+import {Down01, Up01} from "./icon/Down01";
 
 export const taskCheckBoxMargin = {marginLeft: 3};
 
@@ -188,9 +191,15 @@ export function getDefaultTableStyleGetters(minSummaryWidth: number | string = 5
     return {cellStyleGetter, headStyleGetter};
 }
 
-function getSortSymbol(method: TableSortMethod) {
-    return method === TableSortMethod.Ascending ? "↑" :
-        method === TableSortMethod.Descending ? "↓" : "-";
+function getNameSortSymbol(method: TableSortMethod) {
+    return method === TableSortMethod.Ascending ? <UpAZ/> :
+        method === TableSortMethod.Descending ? <DownAZ/> : <Minus/>;
+}
+
+function getColumnSortSymbol(method: TableSortMethod) {
+    return method === TableSortMethod.Ascending ? <Up01/> :
+        method === TableSortMethod.Descending ? <Down01/> : <Minus/>;
+
 }
 
 export function TaskTableView({displayWorkflows, filteredTasks}: {
@@ -298,20 +307,24 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
         <div>
             <WorkflowOverviewView filteredTasks={filteredTasks}/>
             <div>
-                {columnSort.sortBy === TableSortBy.Name ? getSortSymbol(columnSort.method) : getSortSymbol(TableSortMethod.Appearance)}
+                {columnSort.sortBy === TableSortBy.Name ? getNameSortSymbol(columnSort.method) : getNameSortSymbol(TableSortMethod.Appearance)}
             </div>
         </div>
         , ...(getSettings()?.table_steps_shown ? displayStepNames.map(
-            (k, index) => <div>
+            (k, index) => <div key={k + index}>
                 <div>
                     {k}
                 </div>
-                <div>
+                <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                }}>
                     <label>({displayedTasks.filter((m: OdaPmTask) => m.hasStepName(k)).length})</label>
                     {
                         columnSort.sortBy === TableSortBy.Step && columnSort.column === index + 1 ?
-                            getSortSymbol(columnSort.method)
-                            : getSortSymbol(TableSortMethod.Appearance)
+                            getColumnSortSymbol(columnSort.method)
+                            : getColumnSortSymbol(TableSortMethod.Appearance)
                     }
                 </div>
             </div>
@@ -353,13 +366,7 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
                                            setSearchText("")
                                        }} iconName={"x-circle"}/>
                 </span>
-                {/*<HStack style={{alignItems: "center"}} spacing={4}>*/}
-                {/*    <label> Sort </label>*/}
-                {/*    <button onClick={setSortTo}*/}
-                {/*    >*/}
-                {/*        {nameSortMethod === TableSortMethod.Appearance ? "By Appearance" : ascending ? "Ascending" : "Descending"}*/}
-                {/*    </button>*/}
-                {/*</HStack>*/}
+
             </HStack>
             <p/>
             <HStack spacing={10}>
@@ -392,15 +399,21 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
         </>
     )
 
+
     function setSortToName() {
         const prevMethod = columnSort.sortBy;
         // Loop
+        const nextNameSortMethod = loopIndex(columnSort.method + 1, totalSortMethods);
         setColumnSort({
             sortBy: TableSortBy.Name,
             column: undefined,
-            method: prevMethod === TableSortBy.Name ? loopIndex(columnSort.method + 1, totalSortMethods) : TableSortMethod.Ascending
+            method: prevMethod === TableSortBy.Name ? nextNameSortMethod : TableSortMethod.Ascending
         })
-        setSettingsValueAndSave(plugin, "table_column_sorting", columnSort.method + 1)
+        setSettingsValueAndSave(plugin, "table_column_sorting", nextNameSortMethod)
+    }
+
+    function resetNameSortMethod() {
+        setSettingsValueAndSave(plugin, "table_column_sorting", TableSortMethod.Appearance)
     }
 
     function setSortToColumn(index: number) {
@@ -412,6 +425,7 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
             method: prevMethod === TableSortBy.Name || columnSort.column !== index
                 ? TableSortMethod.Ascending : loopIndex(columnSort.method + 1, totalSortMethods)
         })
+        resetNameSortMethod()
     }
 
     function handleShowCompletedChange() {

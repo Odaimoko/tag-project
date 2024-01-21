@@ -52,7 +52,7 @@ export const BasicTutorial = (props: {
     const blockTldrShowStyle = props.tldrProps?.blockTldrShowStyle;
     const inlineTldrOmitStyle = props.tldrProps?.inlineTldrOmitStyle;
     const inlineTldrShowStyle = props.tldrProps?.inlineTldrShowStyle;
-    console.log(props.tldrProps)
+    // console.log(props.tldrProps)
     return <>
 
 

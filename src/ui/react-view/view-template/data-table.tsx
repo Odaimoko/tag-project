@@ -55,9 +55,9 @@ export const DataTable = ({
                 {/*Draw header at the end, so it can cover body view. Or else the body content will be rendered above headers. */}
                 <thead>
                 <tr>
-                    {headers.map((header: string, index) => {
+                    {headers.map((header: IRenderable, index) => {
                         const headerStyle = thStyleGetter ? thStyleGetter(index) : thStyle;
-                        return <th style={headerStyle} key={header}>
+                        return <th style={headerStyle} key={index}>
                             <div onClick={() => {
                                 onHeaderClicked?.(index)
                             }}>{header}</div>
