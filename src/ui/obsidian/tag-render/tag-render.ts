@@ -36,30 +36,40 @@ import {
     ViewUpdate,
     WidgetType,
 } from "@codemirror/view";
+import {devLog} from "../../../utils/env-util";
+import {
+    Tag_Prefix_Step,
+    Tag_Prefix_Tag,
+    Tag_Prefix_TaskType,
+    Tag_Prefix_Workflow
+} from "../../../data-model/workflow-def";
+import {Tag_Prefix_Project} from "../../../data-model/OdaPmProject";
 
-const tag_class = "basename-tag--2233";
+const tag_class = "basename-tag";
 
 /** Get the current vault name. */
 const getVaultName = () => window.app.vault.getName();
 
 /** Create a custom tag node from text content (can include #). */
-const createTagNode = (text: string | null, readingMode: boolean) => {
+const createTagNode = (tag: string | null, readingMode: boolean) => {
     const node = document.createElement("a");
-    if (!text) return node;
+    // devLog("[Tag]", tag // the full tag, including #
+    if (!tag)
+        return node;
 
     // Keep the 'tag' class for consistent css styles.
     node.className = `tag ${tag_class}`;
     node.target = "_blank";
     node.rel = "noopener";
     // To comply with colorful-tag css seletor
-    node.href = readingMode ? `${text}` : `#${text}`;
+    node.href = readingMode ? `${tag}` : `#${tag}`;
 
     const vaultStr = encodeURIComponent(getVaultName());
-    const queryStr = `tag:${encodeURIComponent(text)}`;
+    const queryStr = `tag:${encodeURIComponent(tag)}`;
     node.dataset.uri = `obsidian://search?vault=${vaultStr}&query=${queryStr}`;
 
     // Remove the hash tags to conform to the same style.
-    node.textContent = text.slice(text.lastIndexOf("/") + 1).replaceAll("#", "");
+    node.textContent = tag.slice(tag.lastIndexOf("/") + 1).replace("#", "");
 
     node.onclick = () => window.open(node.dataset.uri);
 
@@ -68,13 +78,24 @@ const createTagNode = (text: string | null, readingMode: boolean) => {
 
 /** Create a tag node in the type of widget from text content. */
 class TagWidget extends WidgetType {
-    constructor(private text: string, private readingMode: boolean) {
+    constructor(private tag: string, private readingMode: boolean) {
         super();
     }
 
     toDOM(view: EditorView): HTMLElement {
-        return createTagNode(this.text, this.readingMode);
+        return createTagNode(this.tag, this.readingMode);
     }
+}
+
+// the only external function, otherwise this plugin is self-contained
+function shouldTagBeAbbr(tag: string) {
+    const lowerTag = tag.toLowerCase();
+    return lowerTag.startsWith(Tag_Prefix_Tag)
+        || lowerTag.startsWith(Tag_Prefix_Project)
+        || lowerTag.startsWith(Tag_Prefix_Workflow)
+        || lowerTag.startsWith(Tag_Prefix_Step)
+        || lowerTag.startsWith(Tag_Prefix_Tag)
+        || lowerTag.startsWith(Tag_Prefix_TaskType);
 }
 
 class editorPlugin implements PluginValue {
@@ -98,91 +119,128 @@ class editorPlugin implements PluginValue {
     private buildDecorations(view: EditorView): DecorationSet {
         const builder = new RangeSetBuilder<Decoration>();
 
+        // console.log(view.visibleRanges) // a subset that is drawn.
+
         for (const {from, to} of view.visibleRanges) {
+            let curHashtagStart = -1; // uninitialized
+            let status = 0; // 0 unstarted, 1 started.
+            let tag = "";
             syntaxTree(view.state).iterate({
                 from,
                 to,
                 enter: (node) => {
-                    // Handle tags in the text region.
-                    if (node.name.contains("hashtag-end")) {
+
+                    // accumulate the full hash tag between hashtag-begin and hashtag-end
+                    if (node.name.contains("hashtag")) {
+
+                        // inside some tag `#x/y/_z` 
+
                         // Do not render if falls under selection (cursor) range.
                         const extendedFrom = node.from - 1;
                         const extendedTo = node.to + 1;
 
                         for (const range of view.state.selection.ranges) {
                             if (extendedFrom <= range.to && range.from < extendedTo) {
+                                curHashtagStart = -1;
+                                status = 0;
+                                tag = "";
                                 return;
                             }
                         }
 
                         const text = view.state.sliceDoc(node.from, node.to);
+                        switch (status) {
+                            case 0:
+                                // not started
+                                if (node.name.contains("hashtag-begin")) {
+                                    // without `cm-` prefix, split by `_`
+                                    curHashtagStart = node.from;
+                                    tag = "" + text;
+                                    devLog("[Hashtag] begin", text, node.name.split("_"))
+                                    status = 1;
+                                }
+                                break;
+                            case 1:
+                                // Handle tags in the text region.
+                                if (node.name.contains("hashtag-end")) {
+                                    if (curHashtagStart == -1)
+                                        return;
+                                    tag += text;
+                                    status = 0;
+                                    if (shouldTagBeAbbr(tag)) {
+                                        builder.add(
+                                            // To include the "#".
+                                            curHashtagStart - 1,
+                                            node.to,
+                                            Decoration.replace({
+                                                widget: new TagWidget(tag, false),
+                                            }),
+                                        );
+                                    }
+                                } else {
+                                    tag += text;
+                                }
+                                break;
+                        }
 
-                        builder.add(
-                            // To include the "#".
-                            node.from - 1,
-                            node.to,
-                            Decoration.replace({
-                                widget: new TagWidget(text, false),
-                            }),
-                        );
                     }
 
                     // Handle tags in frontmatter.
-                    if (node.name === "hmd-frontmatter") {
-                        // Do not render if falls under selection (cursor) range.
-                        const extendedFrom = node.from;
-                        const extendedTo = node.to + 1;
-
-                        for (const range of view.state.selection.ranges) {
-                            if (extendedFrom <= range.to && range.from < extendedTo) {
-                                return;
-                            }
-                        }
-
-                        let frontmatterName = "";
-                        let currentNode = node.node;
-
-                        // Go up the nodes to find the name for frontmatter, max 20.
-                        for (let i = 0; i < 20; i++) {
-                            currentNode = currentNode.prevSibling ?? node.node;
-                            if (currentNode?.name.contains("atom")) {
-                                frontmatterName = view.state.sliceDoc(
-                                    currentNode.from,
-                                    currentNode.to,
-                                );
-                                break;
-                            }
-                        }
-
-                        // Ignore if it's not frontmatter for tags.
-                        if (
-                            frontmatterName.toLowerCase() !== "tags" &&
-                            frontmatterName.toLowerCase() !== "tag"
-                        )
-                            return;
-
-                        const contentNode = node.node;
-                        const content = view.state.sliceDoc(
-                            contentNode.from,
-                            contentNode.to,
-                        );
-                        const tagsArray = content.split(" ").filter((tag) => tag !== "");
-
-                        // Loop through the array of tags.
-                        let currentIndex = contentNode.from;
-                        for (let i = 0; i < tagsArray.length; i++) {
-                            builder.add(
-                                currentIndex,
-                                currentIndex + tagsArray[i].length,
-                                Decoration.replace({
-                                    widget: new TagWidget(tagsArray[i], false),
-                                }),
-                            );
-
-                            // Length and the space char.
-                            currentIndex += tagsArray[i].length + 1;
-                        }
-                    }
+                    // if (node.name === "hmd-frontmatter") {
+                    //     // Do not render if falls under selection (cursor) range.
+                    //     const extendedFrom = node.from;
+                    //     const extendedTo = node.to + 1;
+                    //
+                    //     for (const range of view.state.selection.ranges) {
+                    //         if (extendedFrom <= range.to && range.from < extendedTo) {
+                    //             return;
+                    //         }
+                    //     }
+                    //
+                    //     let frontmatterName = "";
+                    //     let currentNode = node.node;
+                    //
+                    //     // Go up the nodes to find the name for frontmatter, max 20.
+                    //     for (let i = 0; i < 20; i++) {
+                    //         currentNode = currentNode.prevSibling ?? node.node;
+                    //         if (currentNode?.name.contains("atom")) {
+                    //             frontmatterName = view.state.sliceDoc(
+                    //                 currentNode.from,
+                    //                 currentNode.to,
+                    //             );
+                    //             break;
+                    //         }
+                    //     }
+                    //
+                    //     // Ignore if it's not frontmatter for tags.
+                    //     if (
+                    //         frontmatterName.toLowerCase() !== "tags" &&
+                    //         frontmatterName.toLowerCase() !== "tag"
+                    //     )
+                    //         return;
+                    //
+                    //     const contentNode = node.node;
+                    //     const content = view.state.sliceDoc(
+                    //         contentNode.from,
+                    //         contentNode.to,
+                    //     );
+                    //     const tagsArray = content.split(" ").filter((tag) => tag !== "");
+                    //
+                    //     // Loop through the array of tags.
+                    //     let currentIndex = contentNode.from;
+                    //     for (let i = 0; i < tagsArray.length; i++) {
+                    //         builder.add(
+                    //             currentIndex,
+                    //             currentIndex + tagsArray[i].length,
+                    //             Decoration.replace({
+                    //                 widget: new TagWidget(tagsArray[i], false),
+                    //             }),
+                    //         );
+                    //
+                    //         // Length and the space char.
+                    //         currentIndex += tagsArray[i].length + 1;
+                    //     }
+                    // }
                 },
             });
         }

@@ -19,6 +19,7 @@ import {devLog, initPluginEnv, removePluginEnv, setVaultName} from "./utils/env-
 import {OdaPmTask} from "./data-model/OdaPmTask";
 import {ProjectSuggestionModal} from "./ui/obsidian/project-suggestion-modal";
 import {assertOnPluginInit} from "./test_runtime/assertDatabase";
+import TagRenderer from "./ui/obsidian/tag-render/tag-render";
 
 export const PLUGIN_NAME = 'Tag Project';
 export const CmdPal_OpenManagePage = `Open Manage Page`; // `Open ${Desc_ManagePage}`
@@ -30,7 +31,8 @@ export default class OdaPmToolPlugin extends Plugin {
     settings: TPMSettings;
     private emitter: EventEmitter;
     pmDb: OdaPmDb
-    inited: boolean
+    inited: boolean;
+    tagRenderer: TagRenderer;
 
     async onload() {
         await this.initSettings();
@@ -63,7 +65,8 @@ export default class OdaPmToolPlugin extends Plugin {
         this.emitter = new EventEmitter();
         this.pmDb = new OdaPmDb(this.emitter);
         OdaPmDbProvider.add(this.pmDb);
-
+        this.tagRenderer = new TagRenderer(this.app, this.manifest);
+        await this.tagRenderer.onload();
         this.regPluginListener()
 
         this.initCommands();
