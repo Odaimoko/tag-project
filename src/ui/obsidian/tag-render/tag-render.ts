@@ -267,7 +267,7 @@ export default class TagRenderer extends Plugin {
     public settings: SettingParams = DEFAULT_SETTING;
 
     async onload() {
-        await this.loadSettings();
+        // await this.loadSettings();
         this.registerEditorExtension(
             ViewPlugin.fromClass(editorPlugin, {
                 decorations: (value) =>
@@ -303,7 +303,7 @@ export default class TagRenderer extends Plugin {
             this.app.workspace.on("file-open", rerenderProperty)
         );
 
-        this.addSettingTab(new SettingTab(this.app, this));
+        // this.addSettingTab(new SettingTab(this.app, this));
     }
 
     async loadSettings() {
