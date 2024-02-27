@@ -52,28 +52,28 @@ const getVaultName = () => window.app.vault.getName();
 
 /** Create a custom tag node from text content (can include #). */
 const createTagNode = (tag: string | null, readingMode: boolean) => {
-    const node = document.createElement("a");
+    const tagNode = document.createElement("a");
     // devLog("[Tag]", tag // the full tag, including #
     if (!tag)
-        return node;
+        return tagNode;
 
     // Keep the 'tag' class for consistent css styles.
-    node.className = `tag ${tag_class}`;
-    node.target = "_blank";
-    node.rel = "noopener";
+    tagNode.className = `tag ${tag_class}`;
+    tagNode.target = "_blank";
+    tagNode.rel = "noopener";
     // To comply with colorful-tag css seletor
-    node.href = readingMode ? `${tag}` : `#${tag}`;
+    tagNode.href = readingMode ? `${tag}` : `#${tag}`;
 
     const vaultStr = encodeURIComponent(getVaultName());
     const queryStr = `tag:${encodeURIComponent(tag)}`;
-    node.dataset.uri = `obsidian://search?vault=${vaultStr}&query=${queryStr}`;
+    tagNode.dataset.uri = `obsidian://search?vault=${vaultStr}&query=${queryStr}`;
 
     // Remove the hash tags to conform to the same style.
-    node.textContent = tag.slice(tag.lastIndexOf("/") + 1).replace("#", "");
+    tagNode.textContent = tag.slice(tag.lastIndexOf("/") + 1).replace("#", "");
 
-    node.onclick = () => window.open(node.dataset.uri);
+    tagNode.onclick = () => window.open(tagNode.dataset.uri);
 
-    return node;
+    return tagNode;
 };
 
 /** Create a tag node in the type of widget from text content. */
