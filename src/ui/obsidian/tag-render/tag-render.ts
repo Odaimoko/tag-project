@@ -36,7 +36,6 @@ import {
     ViewUpdate,
     WidgetType,
 } from "@codemirror/view";
-import {devLog} from "../../../utils/env-util";
 import {
     Tag_Prefix_Step,
     Tag_Prefix_Tag,
@@ -156,7 +155,7 @@ class editorPlugin implements PluginValue {
                                     // without `cm-` prefix, split by `_`
                                     curHashtagStart = node.from;
                                     tag = "" + text;
-                                    devLog("[Hashtag] begin", text, node.name.split("_"))
+                                    // devLog("[Hashtag] begin", text, node.name.split("_"))
                                     status = 1;
                                 }
                                 break;
