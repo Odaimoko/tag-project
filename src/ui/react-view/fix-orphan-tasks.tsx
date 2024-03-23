@@ -5,7 +5,7 @@ import {TwiceConfirmButton} from "./view-template/twice-confirm-button";
 import {obsidianIconOffsetCenteredStyle, obsidianIconOffsetStyle, ObsidianIconView} from "./view-template/icon-view";
 import {getDefaultTableStyleGetters, OdaTaskSummaryCell} from "./task-table-view";
 import {ProjectView} from "./project-view";
-import {WorkflowFilterCheckbox} from "./workflow-filter";
+import {ClickableWorkflowView} from "./workflow-filter";
 import {DataTable} from "./view-template/data-table";
 import React, {useState} from "react";
 import {ProjectFilterName_All} from "./project-filter";
@@ -47,7 +47,7 @@ function OrphanTasksFixPanel({orphanTasks}: { orphanTasks: OdaPmTask[] }) {
             <ProjectView project={task.getFirstProject()}/>
 
         </VStack>, <VStack spacing={2}>
-            <WorkflowFilterCheckbox workflow={task.type} showCheckBox={false} showWorkflowIcon={false}/> <HStack
+            <ClickableWorkflowView workflow={task.type} showCheckBox={false} showWorkflowIcon={false}/> <HStack
             style={{alignItems: "center"}} spacing={10}>
             {/*<button>Assign to</button>*/}
             <ProjectView project={wfProject}/>

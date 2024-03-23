@@ -7,7 +7,7 @@ import {ProjectView} from "./project-view";
 
 
 import {varBackgroundSecondary} from "./style-def";
-import {OptionValueType, SearchDropdown} from "./view-template/search-dropdown";
+import {OptionValueType, SearchableDropdown} from "./view-template/searchable-dropdown";
 
 export const ProjectFilterName_All = "All Projects";
 export const ProjectFilterOptionValue_All = "###ALL###";
@@ -76,8 +76,9 @@ export function ProjectFilter(props: {
         <div style={headingStyle}>
 
             <FilterHeadHStack>
-                <SearchDropdown data={projectsAndAll}
-                                handleSetOptionValues={props.handleSetDisplayNames}/>
+                <SearchableDropdown dropdownId={"project"} data={projectsAndAll}
+                                    handleSetOptionValues={props.handleSetDisplayNames}
+                                    placeholder={"Search/Select Project"}/>
                 <h2><HStack spacing={5}>
                     Project: {displayingProject ? displayingProject &&
                     <ProjectView project={displayingProject}/> : projectDisplayName}

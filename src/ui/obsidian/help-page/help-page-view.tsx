@@ -121,7 +121,7 @@ const OutputButton = ({app}: { app: App }) => {
     return outputBtn;
 //#endif
 }
-
+export const centerChildren = {display: "flex", alignItems: "center"}
 export const centerChildrenVertStyle = {display: "flex", justifyContent: "center"}
 export const HelpPage_Tutorial = "Tutorial";
 export const HelpPage_Template = "Template";

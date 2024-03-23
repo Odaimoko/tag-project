@@ -39,3 +39,4 @@ export const getStickyHeaderStyle = () => {
         background: varBackgroundSecondary,
     } as React.CSSProperties;
 }
+export const dropdownSelectedColor = "rgba(255,99,179,0.74)";

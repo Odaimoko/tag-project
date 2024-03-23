@@ -1,21 +1,36 @@
 import {I_Nameable} from "../../data-model/I_Nameable";
-import React from "react";
+import React, {Fragment} from "react";
 import {FilterHeadHStack} from "./workflow-filter";
 
-export const NameableFilterHeading = (props: {
+export function SelectAndDeselectAllView({handleSetDisplayNames, nameables}: {
+    handleSetDisplayNames: (s: string[]) => void,
+    nameables: I_Nameable[]
+}) {
+    return <Fragment>
+        <button onClick={() => handleSetDisplayNames(nameables.map((k: I_Nameable) => {
+            return k.name;
+        }))}>All
+        </button>
+        <button onClick={() => handleSetDisplayNames([])}>Unselect All
+        </button>
+    </Fragment>;
+}
+
+export const NameableFilterHeading = ({
+                                          children, displayNames, handleSetDisplayNames, nameableTypeName, nameables,
+                                          showSelectAll
+                                      }: {
     nameableTypeName: string,
     displayNames: string[],
     nameables: I_Nameable[],
     handleSetDisplayNames: (s: string[]) => void,
+    showSelectAll?: boolean
 } & React.PropsWithChildren<any>) => {
+    showSelectAll = showSelectAll ?? true;
     return <FilterHeadHStack>
-        <h2>{props.displayNames.length}/{props.nameables.length} {props.nameableTypeName}(s)</h2>
-        <button onClick={() => props.handleSetDisplayNames(props.nameables.map((k: I_Nameable) => {
-            return k.name;
-        }))}>Select All
-        </button>
-        <button onClick={() => props.handleSetDisplayNames([])}>Unselect All
-        </button>
-        {props.children}
+        <h2>{displayNames.length}/{nameables.length} {nameableTypeName}(s)</h2>
+        {showSelectAll &&
+            <SelectAndDeselectAllView handleSetDisplayNames={handleSetDisplayNames} nameables={nameables}/>}
+        {children}
     </FilterHeadHStack>
 }

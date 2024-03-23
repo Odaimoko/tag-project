@@ -12,6 +12,9 @@ import {NameableFilterHeading} from "./nameable-filter-heading";
 import {I_Nameable} from "../../data-model/I_Nameable";
 import {taskCheckBoxMargin} from "./task-table-view";
 import {ExternalToggleView} from "./view-template/toggle-view";
+import {OptionValueType, SearchableDropdown} from "./view-template/searchable-dropdown";
+import {devLog} from "../../utils/env-util";
+import {centerChildren} from "../obsidian/help-page/help-page-view";
 
 /**
  * Accept children as a HStack with a unified style
@@ -48,6 +51,19 @@ function WorkflowTypeLegendView() {
     </HStack>;
 }
 
+function DropdownWorkflowView(props: {
+    item: OptionValueType,
+    displayNames: string[],
+    workflow: I_OdaPmWorkflow,
+    handleSetDisplayNames: (names: string[]) => void
+}) {
+    const name = props.item.name;
+    const {displayNames, handleSetDisplayNames, workflow} = props;
+    return <div>
+        <ClickableWorkflowView key={name} workflow={workflow} showCheckBox={false}/>
+    </div>
+}
+
 // endregion
 // region Workflow Filter
 export const WorkflowFilter = (props: {
@@ -64,29 +80,66 @@ export const WorkflowFilter = (props: {
         showUnclassifiedWorkflows, setShowUnclassifiedWorkflows,
         workflows, displayNames, handleSetDisplayNames
     } = props;
+    const workflowDropdownOptions = workflows.map(k => {
+        return {
+            name: k.name,
+            optionValue: k.name
+        }
+    });
     return <div>
-
         <NameableFilterHeading nameableTypeName={"Workflow"} nameables={workflows} displayNames={displayNames}
+                               showSelectAll={false}
                                handleSetDisplayNames={handleSetDisplayNames}>
-            <WorkflowTypeLegendView/>
-        </NameableFilterHeading>
-        <HStack spacing={10}>
+            {/*<WorkflowTypeLegendView/>*/}
 
-            <ExternalToggleView style={{marginBottom: 10}} externalControl={showSubprojectWorkflows} onChange={() => {
+            <HStack spacing={5}>
+                <SearchableDropdown dropdownId={"workflow"}
+                                    data={workflowDropdownOptions}
+                                    handleSetOptionValues={handleSetDisplayNames}
+                                    placeholder={"Workflows"}
+                                    singleSelect={false}
+                                    currentOptionValues={workflowDropdownOptions
+                                        .filter(k => displayNames.includes(k.name))}
+                                    RenderView={(props: { item: OptionValueType }) => {
+
+                                        return <DropdownWorkflowView item={props.item} displayNames={displayNames}
+                                                                     workflow={workflows.find(k => k.name === props.item.name)!}
+                                                                     handleSetDisplayNames={handleSetDisplayNames}/>
+                                    }}/>
+                <button onClick={() => handleSetDisplayNames(workflows.map((k: I_Nameable) => {
+                    return k.name;
+                }))}>All
+                </button>
+                <button onClick={() => handleSetDisplayNames([])}>Unselect All
+                </button>
+            </HStack>
+        </NameableFilterHeading>
+
+
+        <HStack style={{...centerChildren, marginBottom: 10,}} spacing={10}>
+
+            <ExternalToggleView externalControl={showSubprojectWorkflows} onChange={() => {
                 const nextValue = !showSubprojectWorkflows;
                 setShowSubprojectWorkflows(nextValue)
             }} content={<label>{"Subproject Workflows"}</label>}/>
 
-            <ExternalToggleView style={{marginBottom: 10}} externalControl={showUnclassifiedWorkflows} onChange={() => {
+            <ExternalToggleView externalControl={showUnclassifiedWorkflows} onChange={() => {
                 const nextValue = !showUnclassifiedWorkflows;
                 setShowUnclassifiedWorkflows(nextValue)
             }} content={<label>{"Unclassified Workflows"}</label>}/>
+
         </HStack>
         <WorkflowCheckboxes nameables={workflows} displayNames={displayNames}
                             handleSetDisplayNames={handleSetDisplayNames}/>
+
     </div>;
 }
-
+/**
+ * @param nameables
+ * @param displayNames
+ * @param handleSetDisplayNames
+ * @constructor
+ */
 const WorkflowCheckboxes = ({nameables, displayNames, handleSetDisplayNames}: {
     nameables: I_Nameable[],
     displayNames: string[],
@@ -94,16 +147,36 @@ const WorkflowCheckboxes = ({nameables, displayNames, handleSetDisplayNames}: {
 }) => {
     return <div>
         {nameables.map((workflow: I_OdaPmWorkflow) => {
+            if (!displayNames.includes(workflow.name))
+                return null
             return (
-                <WorkflowFilterCheckbox key={workflow.name} displayNames={displayNames}
-                                        workflow={workflow}
-                                        setDisplayNames={handleSetDisplayNames}/>
+                <ClickableWorkflowView key={workflow.name} showCheckBox={false}
+                                       workflow={workflow}/>
             )
         })}
     </div>;
 };
 
-export const WorkflowFilterCheckbox = ({workflow, displayNames, setDisplayNames, showCheckBox, showWorkflowIcon}: {
+/**
+ * Toggle the value in the array. If the value is in the array, remove it. If not, add it.
+ * @param value
+ * @param valueArray
+ * @param setValueArray
+ */
+export function toggleValueInArray(value: string, valueArray: string[], setValueArray: (value: (((prevState: string[]) => string[]) | string[])) => void) {
+    if (!setValueArray || !valueArray) return;
+    // invert the checkbox
+    const v = !valueArray.includes(value)
+    const newArr = v ? [...valueArray, value] : valueArray.filter(k => k != value)
+    devLog(`Setting ${value} to ${v}, resulting in array: ${newArr}`)
+    setValueArray(newArr)
+}
+
+/**
+ * A clickable view that can be used to jump to its definition.
+ * If showCheckBox is true, it will also show a checkbox that can be used to select the workflow, in which case displayNames and setDisplayNames must be defined.
+ */
+export const ClickableWorkflowView = ({workflow, displayNames, setDisplayNames, showCheckBox, showWorkflowIcon}: {
     workflow: I_OdaPmWorkflow,
     displayNames?: string[],
     setDisplayNames?: React.Dispatch<React.SetStateAction<string[]>>,
@@ -118,11 +191,7 @@ export const WorkflowFilterCheckbox = ({workflow, displayNames, setDisplayNames,
     const wfName = workflow.name;
 
     function tickCheckbox() {
-        if (!setDisplayNames || !displayNames) return;
-        // invert the checkbox
-        const v = !displayNames.includes(wfName)
-        const newArr = v ? [...displayNames, wfName] : displayNames.filter(k => k != wfName)
-        setDisplayNames(newArr)
+        toggleValueInArray(wfName, displayNames, setDisplayNames);
     }
 
     // inline-block: make this check box a whole element. It won't be split into multiple sub-elements when layout.

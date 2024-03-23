@@ -148,7 +148,9 @@ export function ReactManagePage({eventCenter}: {
 
     const filteredTasks = db.getFilteredTasks(displayWorkflows, rectifiedDisplayTags, rectifiedExcludedTags)
         .filter(k => isInAnyProject(k, displayProjectOptionValues))
-
+    // for (const task of filteredTasks) {
+    //     console.log(`Task Section`, task.boundTask.section)
+    // }
     const pmTags = db.pmTags || [];
     // It is undefined how saved tags will behave after we switch projects.
     // So we prevent tags from being filtered by tasks.
