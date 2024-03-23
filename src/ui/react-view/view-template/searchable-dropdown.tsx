@@ -125,6 +125,7 @@ export const SearchableDropdown = (props: {
                                     } else {
                                         // toggle the option
                                         devLog(`Toggle Option Value ${option.name}`)
+                                        // @ts-ignore
                                         toggleValueInArray(getProjectOptionValue(option), props.currentOptionValues.map(k => getProjectOptionValue(k)), props.handleSetOptionValues,)
                                     }
 
