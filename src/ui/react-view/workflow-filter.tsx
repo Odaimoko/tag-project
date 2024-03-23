@@ -191,6 +191,7 @@ export const ClickableWorkflowView = ({workflow, displayNames, setDisplayNames, 
     const wfName = workflow.name;
 
     function tickCheckbox() {
+        if (displayNames === undefined || setDisplayNames === undefined) return;
         toggleValueInArray(wfName, displayNames, setDisplayNames);
     }
 
