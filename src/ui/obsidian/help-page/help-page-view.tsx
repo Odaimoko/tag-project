@@ -171,7 +171,7 @@ const CommonHelpViewInModalAndLeaf = ({plugin, container}: {
         </div>
         {tab === HelpPage_Tutorial ? <HStack style={{
                 alignItems: "center",
-                ...getStickyHeaderStyle(),
+                ...(getStickyHeaderStyle()),
                 padding: 10
             }} spacing={10}> <ExternalToggleView externalControl={isTlDr} onChange={() => {
                 const nextValue = !isTlDr;

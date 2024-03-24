@@ -41,12 +41,12 @@ export function loopIndex(nextIdx: number, len: number) {
  * A style that will show or hide the dropdown.
  * @param dropDownDisplay
  */
-export function getDropdownStyle(dropDownDisplay: string | undefined) {
+export function getDropdownStyle(dropDownDisplay: string | undefined, zIndex = 10) {
     dropDownDisplay ??= "none";
     const dropdownStyle = {
         display: dropDownDisplay,
         position: "absolute",
-        zIndex: 1,
+        zIndex: zIndex,
         background: varBackgroundSecondary
     } as React.CSSProperties;
     return dropdownStyle;

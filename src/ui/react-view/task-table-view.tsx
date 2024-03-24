@@ -179,7 +179,7 @@ export function getDefaultTableStyleGetters(minSummaryWidth: number | string = 5
 
     function headStyleGetter(columnIndex: number): React.CSSProperties {
         const style = {
-            ...getStickyHeaderStyle(),
+            ...(getStickyHeaderStyle()),
             padding: 10,
             minWidth: (columnIndex === summaryColumn ? minSummaryWidth : "unset"),
             maxWidth: (columnIndex === summaryColumn ? maxSummaryWidth : "unset")
