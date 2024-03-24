@@ -24,6 +24,7 @@ import {OdaPmTask} from "./OdaPmTask";
 import {getOrCreateWorkflow, removeWorkflow} from "./OdaPmWorkflow";
 import {OdaProjectTree} from "./OdaProjectTree";
 import {assertDatabase} from "../test_runtime";
+import {OdaPmModule} from "./OdaPmModule";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
 
@@ -202,6 +203,8 @@ export class OdaPmDb implements I_EvtListener {
     pmProjects: OdaPmProject[]
     projectTree: OdaProjectTree;
     orphanTasks: OdaPmTask[]
+    // 0.3.0 
+    pmModules: Record<string, OdaPmModule>
 
     constructor(emitter: EventEmitter) {
         this.emitter = emitter;
@@ -226,7 +229,7 @@ export class OdaPmDb implements I_EvtListener {
         this.stepTags = this.initStepTags(this.workflows);
 
         this.pmTasks = getAllPmTasks(this.workflows)
-
+        this.pmModules = this.initModulesFromTasks(this.pmTasks)
         this.pmTags = this.initManagedTags(this.pmTasks)
 
         this.pmProjects = getAllProjectsAndLinkTasks(this.pmTasks, this.workflows);
@@ -364,6 +367,22 @@ export class OdaPmDb implements I_EvtListener {
                 // Some tags chosen: combination or.
                 return rectifiedExcludedTags.length === 0 ? true : !k.hasAnyTag(rectifiedExcludedTags);
             });
+    }
+
+    private initModulesFromTasks(pmTasks: OdaPmTask[]) {
+        const modules: Record<string, OdaPmModule> = {}
+        for (const pmTask of pmTasks) {
+            const module = pmTask.getModuleId();
+            if (!modules[module]) {
+                modules[module] = new OdaPmModule(module);
+            }
+            modules[module].tasks.push(pmTask);
+        }
+        return modules;
+    }
+
+    public getTaskModule(pmTask: OdaPmTask) {
+        return this.pmModules[pmTask.getModuleId()];
     }
 }
 
