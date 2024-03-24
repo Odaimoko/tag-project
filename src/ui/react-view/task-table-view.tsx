@@ -367,15 +367,13 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
                                        }} iconName={"x-circle"}/>
                 </span>
 
-            </HStack>
-            <p/>
-            <HStack spacing={10}>
                 <ExternalControlledCheckbox content={"Show Completed"} onChange={handleShowCompletedChange}
                                             externalControl={showCompleted} onLabelClicked={handleShowCompletedChange}/>
                 <ExternalControlledCheckbox content={"Show Steps"} onChange={handleShowStepsChange}
                                             onLabelClicked={handleShowStepsChange}
                                             externalControl={showSteps}/>
             </HStack>
+
             <p/>
             {
 

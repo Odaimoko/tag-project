@@ -11,6 +11,10 @@ import {iconViewAsAWholeStyle} from "./style-def";
 import {Tag_Prefix_Tag} from "../../data-model/workflow-def";
 import {FilterHeadHStack} from "./workflow-filter";
 
+const tagIncludedIcon = "check"
+const tagExcludedIcon = "x"
+const noTagIcon = "scan"
+
 export function TagFilter({
                               pmTags,
                               rectifiedExcludedTags,
@@ -99,9 +103,6 @@ const TagFilterCheckbox = ({tag, displayed, setDisplayed, excludeTags, setExclud
     setDisplayed: React.Dispatch<React.SetStateAction<string[]>>,
     setExcludedTags: React.Dispatch<React.SetStateAction<string[]>>
 }) => {
-    const tagIncludedIcon = "check"
-    const tagExcludedIcon = "x"
-    const noTagIcon = "scan"
 
     // Remove display from excluded and vice versa
     function tickCheckbox() {
