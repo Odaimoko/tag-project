@@ -13,7 +13,7 @@ import {
 import {BaseDatabaseObject} from "./BaseDatabaseObject";
 import {getOrCreateStep} from "./OdaPmStep";
 import {setProjectTagToTask} from "../utils/io-util";
-import {UNCLASSIFIED_MODULE_ID} from "./OdaPmModule";
+import {ModuleId_Unclassified} from "./OdaPmModule";
 
 export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
     boundTask: STask;
@@ -236,7 +236,7 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
             return link.subpath;
         } else {
             // file
-            return UNCLASSIFIED_MODULE_ID;
+            return ModuleId_Unclassified;
         }
     }
 }

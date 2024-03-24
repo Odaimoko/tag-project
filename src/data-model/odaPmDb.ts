@@ -24,7 +24,8 @@ import {OdaPmTask} from "./OdaPmTask";
 import {getOrCreateWorkflow, removeWorkflow} from "./OdaPmWorkflow";
 import {OdaProjectTree} from "./OdaProjectTree";
 import {assertDatabase} from "../test_runtime";
-import {OdaPmModule} from "./OdaPmModule";
+import {ModuleId_Unclassified, OdaPmModule} from "./OdaPmModule";
+import {Simulate} from "react-dom/test-utils";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
 
@@ -371,6 +372,8 @@ export class OdaPmDb implements I_EvtListener {
 
     private initModulesFromTasks(pmTasks: OdaPmTask[]) {
         const modules: Record<string, OdaPmModule> = {}
+        modules[ModuleId_Unclassified] = new OdaPmModule(ModuleId_Unclassified);
+        modules[ModuleId_Unclassified].name = "Unclassified"
         for (const pmTask of pmTasks) {
             const module = pmTask.getModuleId();
             if (!modules[module]) {

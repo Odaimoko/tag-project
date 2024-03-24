@@ -13,12 +13,24 @@ import {TagFilter} from "./tag-filter";
 import {ProjectFilter, ProjectFilterOptionValue_All} from "./project-filter";
 import {HStack} from "./view-template/h-stack";
 import {FixOrphanTasks} from "./fix-orphan-tasks";
+import {ModuleFilter} from "./module-filter";
 
 function isInAnyProject(projectTask: I_OdaPmProjectTask, displayPrjNames: string[]) {
     // TODO Performance
     if (displayPrjNames.length === 0) return true;
     if (displayPrjNames.includes(ProjectFilterOptionValue_All)) return true;
     const b = displayPrjNames.some(k => projectTask.isInProject(k));
+    return b;
+}
+
+function isInAnyModule(projectTask: OdaPmTask, displayModuleIds: string[]) {
+    if (getSettings()?.manage_page_header_as_module === false) {
+        return true;
+    }
+    if (displayModuleIds.length === 0)
+        return false;
+
+    const b = displayModuleIds.some(k => projectTask.getModuleId() === k);
     return b;
 }
 
@@ -66,16 +78,23 @@ export function ReactManagePage({eventCenter}: {
     const db = OdaPmDbProvider.get();
     let workflows = db?.workflows || [];
     const projects = db?.pmProjects || [];
+    const modules = db?.pmModules || {};
 
     //region Display Variables
     // Use workflow names as filters' state instead. previously we use workflows themselves as state, but this requires dataview to be initialized.
     // However, this component might render before dataview is ready. The partially ready workflows will be used as the initial value, which is incorrect.
     // This is to fix the bug: On open Obsidian, the filter may not work.
     // Load from settings. settingsDisplayWorkflowNames is not directly used. It is also filtered against projects.
-    const [settingsDisplayWorkflowNames, setDisplayWorkflowNames] = useState(getSettings()?.display_workflow_names as string[]);
-    const [displayTags, setDisplayTags] = useState(getSettings()?.manage_page_display_tags as string[]);
-    const [excludedTags, setExcludedTags] = useState(getSettings()?.manage_page_excluded_tags as string[]);
-    const [settingsDisplayProjectOptionValues, setDisplayProjectOptionValues] = useState(initDisplayProjectOptionValues);
+    const [settingsDisplayWorkflowNames, setDisplayWorkflowNames]
+        = useState(getSettings()?.display_workflow_names as string[]);
+    const [settingsDisplayModuleIds, setDisplyModuleIds]
+        = useState(getSettings()?.display_module_names as string[]);
+    const [displayTags, setDisplayTags]
+        = useState(getSettings()?.manage_page_display_tags as string[]);
+    const [excludedTags, setExcludedTags]
+        = useState(getSettings()?.manage_page_excluded_tags as string[]);
+    const [settingsDisplayProjectOptionValues, setDisplayProjectOptionValues]
+        = useState(initDisplayProjectOptionValues);
     const [showSubprojectWorkflows, setShowSubprojectWorkflows] = usePluginSettings("show_subproject_workflows")
     const [showUnclassified, setShowUnclassified] = usePluginSettings("unclassified_workflows_available_to_all_projects");
 
@@ -87,9 +106,16 @@ export function ReactManagePage({eventCenter}: {
         return settingsValue;
     }
 
+    // region Set wrapper
     function handleSetDisplayWorkflows(names: string[]) {
         setSettingsValueAndSave(plugin, "display_workflow_names", [...names])
         setDisplayWorkflowNames(names)
+    }
+
+    function handleSetDisplayModuleIds(names: string[]) {
+        devLog(`Setting display modules to ${names}`)
+        setSettingsValueAndSave(plugin, "display_module_names", [...names])
+        setDisplyModuleIds(names)
     }
 
     function handleSetDisplayTags(names: string[]) {
@@ -126,6 +152,12 @@ export function ReactManagePage({eventCenter}: {
     if (displayProjectOptionValues.length === 0) {
         displayProjectOptionValues.push(ProjectFilterOptionValue_All)
     }
+
+    // if a module is deleted while being displayed, use all modules instead.
+    const displayModuleIds = settingsDisplayModuleIds.filter(k => {
+        return modules[k] !== undefined
+    })
+
     // endregion
 
     // Filter
@@ -141,16 +173,21 @@ export function ReactManagePage({eventCenter}: {
     }
 
     // settingsDisplayWorkflowNames may contain workflows from other projects. We filter them out.
-    const displayWorkflowNames = settingsDisplayWorkflowNames.filter(k => workflows.some(wf => wf.name === k));
+    const displayWorkflowNames = settingsDisplayWorkflowNames
+        .filter(k => workflows.some(wf => wf.name === k));
     const displayWorkflows = workflows.filter(k => {
         return displayWorkflowNames.includes(k.name);
     });
 
-    const filteredTasks = db.getFilteredTasks(displayWorkflows, rectifiedDisplayTags, rectifiedExcludedTags)
-        .filter(k => isInAnyProject(k, displayProjectOptionValues))
-    // for (const task of filteredTasks) {
-    //     console.log(`Task Section`, task.boundTask.section)
-    // }
+    const filteredTasks = db
+        .getFilteredTasks(displayWorkflows, rectifiedDisplayTags, rectifiedExcludedTags)
+        .filter(k =>
+            isInAnyProject(k, displayProjectOptionValues)
+            && isInAnyModule(k, displayModuleIds)
+        )
+    for (const task of filteredTasks) {
+        console.log(`Task Module`, db.getTaskModule(task))
+    }
     const pmTags = db.pmTags || [];
     // It is undefined how saved tags will behave after we switch projects.
     // So we prevent tags from being filtered by tasks.
@@ -164,7 +201,6 @@ export function ReactManagePage({eventCenter}: {
     return (
         <div>
             <HStack>
-
                 <ProjectFilter projects={projects} displayNames={displayProjectOptionValues}
                                handleSetDisplayNames={handleSetDisplayProjects}
                 />
@@ -178,6 +214,10 @@ export function ReactManagePage({eventCenter}: {
                             showUnclassifiedWorkflows={showUnclassified}
                             setShowUnclassifiedWorkflows={setShowUnclassified}
             />
+
+            {getSettings()?.manage_page_header_as_module &&
+                <ModuleFilter modules={modules} displayModuleIds={displayModuleIds}
+                              handleSetDisplayModuleIds={handleSetDisplayModuleIds}/>}
             <TagFilter
                 pmTags={pmTags}
                 rectifiedExcludedTags={rectifiedExcludedTags}

@@ -1,11 +1,16 @@
 import {OdaPmTask} from "./OdaPmTask";
+import {I_Nameable} from "./I_Nameable";
 
-export const UNCLASSIFIED_MODULE_ID = "#UNCLASSIFIED#";
+/**
+ * @deprecated
+ */
+export const ModuleId_All = "###ALL###";
+export const ModuleId_Unclassified = "###UNCLASSIFIED###";
 
 /**
  * A module is a collection of tasks under headers with the same name.
  */
-export class OdaPmModule {
+export class OdaPmModule implements I_Nameable {
     // Built-in module will start with `#`.
     // User-defined module has the same name as the header.
     id: string;

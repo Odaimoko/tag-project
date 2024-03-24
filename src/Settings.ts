@@ -64,6 +64,8 @@ export interface TPMSettings {
     manage_page_display_tags: SerializedType[],
     manage_page_excluded_tags: SerializedType[],
     manage_page_display_projects: SerializedType[], // 0.2.0
+    manage_page_header_as_module: boolean, // 0.3.0
+    display_module_names: SerializedType[], // 0.3.0
     help_page_tutorial_tldr: SerializedType,
 }
 
@@ -83,6 +85,8 @@ export const TPM_DEFAULT_SETTINGS: Partial<TPMSettings> = {
     manage_page_display_tags: [] as SerializedType[],
     manage_page_excluded_tags: [] as SerializedType[],
     manage_page_display_projects: [] as SerializedType[], // 0.2.0
+    manage_page_header_as_module: true, // 0.3.0
+    display_module_names: [] as SerializedType[], // 0.3.0
     help_page_tutorial_tldr: false,
 }
 
@@ -128,6 +132,9 @@ export class TPMSettingsTab extends PluginSettingTab {
             .setName('Unclassified workflows available for all projects')
             .setDesc("If ON, unclassified workflows will be available to any projects. If OFF, only workflows in that project are available.")
             .addToggle(this.setValueAndSave("unclassified_workflows_available_to_all_projects"));
+        new Setting(containerEl).setName("Header as module")
+            .setDesc("If ON, the tasks under headers with the same name can be grouped together.")
+            .addToggle(this.setValueAndSave("manage_page_header_as_module"));
 
     }
 

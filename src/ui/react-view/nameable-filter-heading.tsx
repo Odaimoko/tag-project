@@ -23,7 +23,7 @@ export const NameableFilterHeading = ({
     nameableTypeName: string,
     displayNames: string[],
     nameables: I_Nameable[],
-    handleSetDisplayNames: (s: string[]) => void,
+    handleSetDisplayNames?: (s: string[]) => void, // if showSelectAll is false, this is not required
     showSelectAll?: boolean
 } & React.PropsWithChildren<any>) => {
     showSelectAll = showSelectAll ?? true;

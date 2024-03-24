@@ -20,12 +20,12 @@ interface I_OptionItem {
 export type OptionValueType = I_Nameable | I_OptionItem;
 
 /**
- * If the project is I_OptionItem, return its optionValue, otherwise return its name.
- * @param project
+ * If the op is I_OptionItem, return its optionValue, otherwise return its name.
+ * @param op
  */
-function getProjectOptionValue(project: OptionValueType) {
+function getProjectOptionValue(op: OptionValueType) {
     // @ts-ignore
-    return Object.keys(project).includes("optionValue") ? project['optionValue'] : project.name;
+    return Object.keys(op).includes("optionValue") ? op['optionValue'] : op.name;
 }
 
 function DefaultSearchableOptionView(props: { item: OptionValueType }) {
@@ -124,7 +124,7 @@ export const SearchableDropdown = (props: {
                                         handleSetSearchText("");
                                     } else {
                                         // toggle the option
-                                        devLog(`Toggle Option Value ${option.name}`)
+                                        devLog(`Toggle Option Value ${getProjectOptionValue(option)}`)
                                         // @ts-ignore
                                         toggleValueInArray(getProjectOptionValue(option), props.currentOptionValues.map(k => getProjectOptionValue(k)), props.handleSetOptionValues,)
                                     }
