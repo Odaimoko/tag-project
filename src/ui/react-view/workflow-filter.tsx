@@ -129,8 +129,7 @@ export const WorkflowFilter = (props: {
             }} content={<label>{"Unclassified Workflows"}</label>}/>
 
         </HStack>
-        <WorkflowCheckboxes nameables={workflows} displayNames={displayNames}
-                            handleSetDisplayNames={handleSetDisplayNames}/>
+        <WorkflowCheckboxes nameables={workflows} displayNames={displayNames}/>
 
     </div>;
 }
@@ -140,10 +139,9 @@ export const WorkflowFilter = (props: {
  * @param handleSetDisplayNames
  * @constructor
  */
-const WorkflowCheckboxes = ({nameables, displayNames, handleSetDisplayNames}: {
-    nameables: I_Nameable[],
+const WorkflowCheckboxes = ({nameables, displayNames}: {
+    nameables: I_OdaPmWorkflow[],
     displayNames: string[],
-    handleSetDisplayNames: (names: string[]) => void
 }) => {
     return <div>
         {nameables.map((workflow: I_OdaPmWorkflow) => {

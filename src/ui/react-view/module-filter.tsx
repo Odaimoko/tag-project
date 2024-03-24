@@ -6,35 +6,53 @@ import {HStack} from "./view-template/h-stack";
 
 
 export function ModuleFilter({modules, displayModuleIds, handleSetDisplayModuleIds}: {
-    modules: Record<string, OdaPmModule>, // already includes all and unclassified
+    modules: OdaPmModule[], // already includes all and unclassified
     displayModuleIds: string[],
     handleSetDisplayModuleIds: (names: string[]) => void,
 }) {
-    const moduleOptions = Object.values(modules).map(k => {
+    const allModules = modules;
+    const moduleOptions = allModules.map(k => {
         return {name: k.name, optionValue: k.id}
     })
-    return <NameableFilterHeading nameableTypeName={"Module"}
-                                  nameables={Object.values(modules)} displayNames={displayModuleIds}
-                                  showSelectAll={false}>
-        <HStack spacing={5}>
-            <SearchableDropdown
-                dropdownId={"module"}
-                data={moduleOptions}
-                handleSetOptionValues={handleSetDisplayModuleIds}
-                placeholder={"Modules"}
-                singleSelect={false}
-                currentOptionValues={moduleOptions
-                    .filter(k => displayModuleIds.includes(k.optionValue))}
-                RenderView={(props: { item: OptionValueType }) => {
+    return <div>
+        <NameableFilterHeading nameableTypeName={"Module"}
+                               nameables={allModules} displayNames={displayModuleIds}
+                               showSelectAll={false}>
+            <HStack spacing={5}>
+                <SearchableDropdown
+                    dropdownId={"module"}
+                    data={moduleOptions}
+                    handleSetOptionValues={handleSetDisplayModuleIds}
+                    placeholder={"Modules"}
+                    singleSelect={false}
+                    currentOptionValues={moduleOptions
+                        .filter(k => displayModuleIds.includes(k.optionValue))}
+                    RenderView={(props: { item: OptionValueType }) => {
 
-                    return props.item.name
-                }}/>
-            <button onClick={() => handleSetDisplayModuleIds(Object.values(modules).map((k: OdaPmModule) => {
-                return k.id;
-            }))}>All
-            </button>
-            <button onClick={() => handleSetDisplayModuleIds([])}>Unselect All
-            </button>
+                        return props.item.name
+                    }}/>
+                <button onClick={() => handleSetDisplayModuleIds(allModules.map((k: OdaPmModule) => {
+                    return k.id;
+                }))}>All
+                </button>
+                <button onClick={() => handleSetDisplayModuleIds([])}>Unselect All
+                </button>
+            </HStack>
+
+
+        </NameableFilterHeading>
+        <HStack spacing={5}>
+            {allModules.map((module: OdaPmModule) => {
+                if (!displayModuleIds.includes(module.id))
+                    return null
+                return (
+                    <div style={{padding: 5, borderWidth: 1, borderStyle: "solid", borderColor: "#bcddff"}}>
+                        <label>{module.name}</label>
+                    </div>
+
+                )
+            })}
         </HStack>
-    </NameableFilterHeading>;
+    </div>
+        ;
 }

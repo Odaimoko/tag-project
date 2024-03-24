@@ -153,9 +153,13 @@ export function ReactManagePage({eventCenter}: {
         displayProjectOptionValues.push(ProjectFilterOptionValue_All)
     }
 
+    // only show modules under current project
+    const filteredModules = Object.values(modules)
+        .filter(k =>
+            k.tasks.some(m => isInAnyProject(m, displayProjectOptionValues)))
     // if a module is deleted while being displayed, use all modules instead.
     const displayModuleIds = settingsDisplayModuleIds.filter(k => {
-        return modules[k] !== undefined
+        return filteredModules.some(m => m.id === k)
     })
 
     // endregion
@@ -216,7 +220,7 @@ export function ReactManagePage({eventCenter}: {
             />
 
             {getSettings()?.manage_page_header_as_module &&
-                <ModuleFilter modules={modules} displayModuleIds={displayModuleIds}
+                <ModuleFilter modules={filteredModules} displayModuleIds={displayModuleIds}
                               handleSetDisplayModuleIds={handleSetDisplayModuleIds}/>}
             <TagFilter
                 pmTags={pmTags}
