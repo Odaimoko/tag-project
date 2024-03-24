@@ -254,12 +254,14 @@ export class OdaPmDb implements I_EvtListener {
 
     private initManagedTags(pmTasks: OdaPmTask[]) {
         // TODO performance. linq is easy, but performance is not good.
-        return (pmTasks.flatMap(k => {
+        const tags = (pmTasks.flatMap(k => {
             const validPmTag = k.boundTask.tags.filter((m: string) => m.startsWith(Tag_Prefix_Tag));
             return validPmTag;
         })
             .filter(k => !this.workflowTags.includes(k) && !this.stepTags.includes(k)))
             .unique();
+        tags.sort();
+        return tags;
     }
 
     /**
