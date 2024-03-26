@@ -13,11 +13,58 @@ For a better introduction, visit the [official website](https://imoko.cc/blog/im
 
 ![Pasted image 20231123153252.png](docs%2FPasted%20image%2020231123153252.png)
 
+# Quick start
+
+## Installation
+
+1. In Obsidian, open Settings > Community plugins > Browse.
+1. Search for "Tag Project" by Odaimoko.
+1. Select `Install`.
+
+> You need to also install another Obsidian plugin, [Dataview](https://github.com/blacksmithgu/obsidian-dataview), in
+> order to use Tag Project.
+>
+> Although it's a brilliant plugin, I am planning to remove this dependency in the future.
+
+## Usage
+
+Define a workflow
+
+```
+- [ ] my_workflow #tpm/workflow_type/chain 
+```
+
+Assign a task to this workflow
+
+```
+- [ ] A task with my workflow. #tpm/workflow/my_workflow 
+```
+
+Open the Manage Page, and you will see the tasks.
+
+- Command Palatte > Open Manage Page
+
+![CommandPalatte_ManagePage.png](docs%2FCommandPalatte_ManagePage.png)
+
+or
+
+- On the Ribbon bar
+
+![](./docs/Pasted%20image%2020240326124433.png)
+
+## Set Hotkeys
+
+Open Obsidian Settings > Hotkeys > Tag Project
+
+![HotKey_Settings.png](docs%2FHotKey_Settings.png)
+I use `Meta+Shift+W`, `W` stands for workflow.
+
 # Tutorials
+
+The tutorial is presented here: [Tutorial](https://imoko.cc/blog/imk/TagProject/Tutorial).
 
 The tutorials and template are also available in the plugin's Help Page, directly accessible in Obsidian.
 
-- [Tutorial](https://imoko.cc/blog/imk/TagProject/Tutorial)
 
 ## Features
 
@@ -28,17 +75,6 @@ The tutorials and template are also available in the plugin's Help Page, directl
 - Fully featured **Commands** to speed up your management
 - **Unit Tested**
 
-
-## Installation
-
-1. In Obsidian, open Settings > Community plugins > Browse.
-1. Search for "Tag Project" by Odaimoko.
-1. Select `Install`.
-
-> You need to install another Obsidian plugin, [Dataview](https://github.com/blacksmithgu/obsidian-dataview), in order
-> to use Tag Project.
->
-> Although it's a brilliant plugin, I am planning to remove this dependency in the future.
 
 # Change log and Roadmap
 
