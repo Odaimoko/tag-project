@@ -28,7 +28,7 @@ function isInAnyModule(projectTask: OdaPmTask, displayModuleIds: string[]) {
         return true;
     }
     if (displayModuleIds.length === 0)
-        return false;
+        return true; // default show all
 
     const b = displayModuleIds.some(k => projectTask.getModuleId() === k);
     return b;
