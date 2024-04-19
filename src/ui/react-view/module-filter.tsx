@@ -52,6 +52,11 @@ export function ModuleFilter({modules, displayModuleIds, handleSetDisplayModuleI
 
                 )
             })}
+            {displayModuleIds.length == 0 &&
+                <label>
+                    No modules chosen. Display all modules.
+                </label>
+            }
         </HStack>
     </div>
         ;
