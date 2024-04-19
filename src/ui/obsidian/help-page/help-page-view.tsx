@@ -1,4 +1,4 @@
-import {App, ItemView, Modal, WorkspaceLeaf} from "obsidian";
+import {App, ItemView, WorkspaceLeaf} from "obsidian";
 import {createRoot, Root} from "react-dom/client";
 import React, {useState} from "react";
 import OdaPmToolPlugin, {PLUGIN_NAME} from "../../../main";
@@ -13,7 +13,7 @@ import {UserManual} from "./user-manual";
 import {ExampleManagePage} from "./example-manage-page";
 import {devLog} from "../../../utils/env-util";
 import {ExternalToggleView} from "../../react-view/view-template/toggle-view";
-import {getStickyHeaderStyle} from "../../react-view/style-def";
+import {centerChildrenVertStyle, getStickyHeaderStyle} from "../../react-view/style-def";
 
 export const PmHelpPageViewId = "tpm-help-view";
 export const Desc_ManagePage = "Manage Page";
@@ -70,29 +70,6 @@ export class PmHelpPageView extends ItemView {
     }
 }
 
-export class PmHelpModal extends Modal {
-    root: Root | null = null;
-    plugin: OdaPmToolPlugin;
-
-    constructor(plugin: OdaPmToolPlugin) {
-        super(plugin.app);
-        this.plugin = plugin;
-    }
-
-    onOpen() {
-        const {contentEl} = this;
-        contentEl.empty();
-        // React
-        this.root = createRoot(contentEl); // Override the previous container
-        this.root.render(<HelpViewRoot plugin={this.plugin} container={contentEl}/>)
-    }
-
-    onClose() {
-        this.root?.unmount();
-        this.root = null;
-    }
-}
-
 const OutputButton = ({app}: { app: App }) => {
 //#ifdef DEVELOPMENT_BUILD
     const quartz_folder = "TagProject";
@@ -121,8 +98,6 @@ const OutputButton = ({app}: { app: App }) => {
     return outputBtn;
 //#endif
 }
-export const centerChildren = {display: "flex", alignItems: "center"}
-export const centerChildrenVertStyle = {display: "flex", justifyContent: "center"}
 export const HelpPage_Tutorial = "Tutorial";
 export const HelpPage_Template = "Template";
 export const HelpPage_UserManual = "User Manual";
@@ -132,8 +107,7 @@ const QuartzPath = [
     {jsx: <BasicTutorial/>, title: HelpPage_Tutorial},
     {jsx: <UserManual/>, title: HelpPage_UserManual},
 ]
-
-const HelpViewRoot = ({plugin, container}: {
+export const HelpViewRoot = ({plugin, container}: {
     plugin: OdaPmToolPlugin,
     container: Element
 }) => {

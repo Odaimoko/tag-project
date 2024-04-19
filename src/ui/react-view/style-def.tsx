@@ -40,3 +40,5 @@ export const getStickyHeaderStyle = (zIndex = 1) => {
     } as React.CSSProperties;
 }
 export const dropdownSelectedColor = "rgba(255,99,179,0.74)";
+export const centerChildren = {display: "flex", alignItems: "center"}
+export const centerChildrenVertStyle = {display: "flex", justifyContent: "center"}

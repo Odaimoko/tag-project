@@ -32,7 +32,8 @@ import {MarkdownFrontMatterView} from "../../common/markdown-front-matter-view";
 import {FileNavView} from "../../common/file-nav-view";
 import {ProjectFilterName_All} from "../../react-view/project-filter";
 import {OrphanTaskButtonAndPanel} from "../../react-view/fix-orphan-tasks";
-import {centerChildrenVertStyle, Desc_ManagePage, HelpPage_Template, HelpPage_UserManual} from "./help-page-view";
+import {Desc_ManagePage, HelpPage_Template, HelpPage_UserManual} from "./help-page-view";
+import {centerChildrenVertStyle} from "../../react-view/style-def";
 
 export function useSharedTlDr() {
     const [isTlDr, setIsTlDr] = usePluginSettings("help_page_tutorial_tldr")

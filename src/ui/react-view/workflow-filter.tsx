@@ -5,7 +5,7 @@ import React, {useContext} from "react";
 import {PluginContext} from "../obsidian/manage-page-view";
 import {ExternalControlledCheckbox} from "./view-template/checkbox";
 import {I_Stylable, InternalLinkView} from "./view-template/icon-view";
-import {getIconByWorkflow, getIconViewByWorkflowType, iconViewAsAWholeStyle} from "./style-def";
+import {centerChildren, getIconByWorkflow, getIconViewByWorkflowType, iconViewAsAWholeStyle} from "./style-def";
 import {openTaskPrecisely} from "../../utils/io-util";
 import {initialToUpper} from "../../utils/format-util";
 import {NameableFilterHeading} from "./nameable-filter-heading";
@@ -14,7 +14,6 @@ import {taskCheckBoxMargin} from "./task-table-view";
 import {ExternalToggleView} from "./view-template/toggle-view";
 import {OptionValueType, SearchableDropdown} from "./view-template/searchable-dropdown";
 import {devLog} from "../../utils/env-util";
-import {centerChildren} from "../obsidian/help-page/help-page-view";
 
 /**
  * Accept children as a HStack with a unified style
