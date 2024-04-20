@@ -183,11 +183,16 @@ export function ReactManagePage({eventCenter}: {
     workflows = workflows.filter(isWorkflowShownInPage);
 
     function isWorkflowShownInPage(workflow: I_OdaPmWorkflow) {
-        // workflow's isInAnyProject checks if the workflow is in a project's parent.
-        return isInAnyProject(workflow, displayProjectOptionValues)
-            || (showSubprojectWorkflows &&
-                displayProjectOptionValues.some(m => workflow.getFirstProject()?.isSubprojectOfName(m))
-            );
+        // workflow's isInAnyProject checks if the workflow is in a project's parent. 
+        const inAnyProject = isInAnyProject(workflow, displayProjectOptionValues);
+        // if the workflow's project is completed, don't show
+        const isParentProjectCompleted = isInAnyProject(workflow, settingsCompletedProjects);
+        return (inAnyProject
+                || (showSubprojectWorkflows && // if showSubprojectWorkflows is true, show subprojects' workflows
+                    displayProjectOptionValues.some(m => workflow.getFirstProject()?.isSubprojectOfName(m))
+                ))
+            && !isParentProjectCompleted
+            ;
     }
 
     // settingsDisplayWorkflowNames may contain workflows from other allProjects. We filter them out.

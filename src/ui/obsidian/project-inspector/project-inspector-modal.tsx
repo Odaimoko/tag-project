@@ -90,7 +90,9 @@ export const ProjectInspectorView = (props: {
             <label>
                 If completed, the project will be hidden from the manage page.
             </label>
-
+            <label>
+                Its workflows and tasks are also hidden.
+            </label>
         </div>
 
         <DataTable tableTitle={"PP"}
