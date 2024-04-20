@@ -61,22 +61,31 @@ class OdaPmWorkflow implements I_OdaPmWorkflow {
         }
     }
 
-
-    isInProject(name: string, includeSubprojects = true): boolean {
+    /**
+     * A workflow is in a project if it is in the againstPrjName itself
+     * or in any of againstPrjName's parent projects.
+     * @param againstPrjName
+     * @param includeSubprojects
+     */
+    isInProject(againstPrjName: string, includeSubprojects = true): boolean {
         // TODO performance
-        // - A workflow in main project -> in sub
+        // - isInParentProject: A workflow in main project -> in sub: if includeSubprojects, else false
         // - workflow in sub -> not in main
-        const inProject = this.projects.filter(k => {
-            const isInUnclassified =
-                getSettings()?.unclassified_workflows_available_to_all_projects && k.name === ProjectName_Unclassified
+        // devLog(`[Workflow] ${this.name} in ${againstPrjName}? =====`)
+        const inProject = this.projects.filter(myPrj => {
 
-            const isInParentProject = includeSubprojects && k.isParentProjectOf(name);
-            return k.name === name || isInParentProject || isInUnclassified;
-        })
-            .length > 0;
+            const isInUnclassified = getSettings()?.unclassified_workflows_available_to_all_projects
+                && myPrj.name === ProjectName_Unclassified
 
+            const isInParentProject = includeSubprojects && myPrj.isParentProjectOf(againstPrjName);
+            const isNameEqual = myPrj.name === againstPrjName;
+            // devLog(`[Workflow] ${this.name} in ${againstPrjName}? myPrj ${myPrj.name} isNameEqual ${isNameEqual} isInParentProject ${isInParentProject} isInUnclassified ${isInUnclassified}`)
+            return isNameEqual || isInParentProject || isInUnclassified;
+        }).length > 0;
+        // devLog(`[Workflow] ${this.name} in  final ${inProject}: ${againstPrjName}?`)
         return inProject;
     }
+
 
     getProjectPath(): string {
         return getProjectPathFromSTask(this.boundTask);

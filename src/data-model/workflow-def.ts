@@ -74,7 +74,10 @@ export interface I_OdaPmBoundTask {
 
 export interface I_OdaPmProjectTask {
 
-    // 0.2.0
+    // 0.2.0. A task and workflow can only belong to one project. We use array to support future multiple projects.
+    // But isInProject defines differently if a task or workflow is in a subproject or parent project.
+    // If a workflow is in a project, it is also in all its subprojects (if a setting item is toggled on).
+    // If a task is in a project, it is also in all its parent projects.
     projects: OdaPmProject[];
     addProject: (project: OdaPmProject) => void;
     isInProject: (name: string, includeSubprojects?: boolean) => boolean;
