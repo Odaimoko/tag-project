@@ -27,6 +27,10 @@ function isInAnyProject(projectTask: I_OdaPmProjectTask, displayPrjNames: string
     return b;
 }
 
+function isInCompletedProjects(projectTask: I_OdaPmProjectTask, completedPrjNames: string[]) {
+    return projectTask.projects.some(m => m.isCompleted(completedPrjNames));
+}
+
 function isInAnyModule(projectTask: OdaPmTask, displayModuleIds: string[]) {
     if (getSettings()?.manage_page_header_as_module === false) {
         return true;
@@ -185,13 +189,15 @@ export function ReactManagePage({eventCenter}: {
     function isWorkflowShownInPage(workflow: I_OdaPmWorkflow) {
         // workflow's isInAnyProject checks if the workflow is in a project's parent. 
         const inAnyProject = isInAnyProject(workflow, displayProjectOptionValues);
+        const isSubProjectWorkflow = showSubprojectWorkflows && // if showSubprojectWorkflows is true, show subprojects' workflows
+            displayProjectOptionValues.some(m => workflow.getFirstProject()?.isSubprojectOfName(m));
         // if the workflow's project is completed, don't show
-        const isParentProjectCompleted = isInAnyProject(workflow, settingsCompletedProjects);
-        return (inAnyProject
-                || (showSubprojectWorkflows && // if showSubprojectWorkflows is true, show subprojects' workflows
-                    displayProjectOptionValues.some(m => workflow.getFirstProject()?.isSubprojectOfName(m))
-                ))
-            && !isParentProjectCompleted
+        const isParentProjectCompleted = isInCompletedProjects(workflow, settingsCompletedProjects);
+        const isShown = (inAnyProject || isSubProjectWorkflow)
+            && !isParentProjectCompleted;
+        // devLog(`Workflow ${workflow.name} is shown: ${isShown}. inAnyProject: ${inAnyProject}, 
+        // isSubProjectWorkflow: ${isSubProjectWorkflow}, isParentProjectCompleted: ${isParentProjectCompleted}. Completed projects: ${settingsCompletedProjects}`)
+        return isShown
             ;
     }
 
@@ -208,6 +214,7 @@ export function ReactManagePage({eventCenter}: {
         .filter(k =>
             isInAnyProject(k, displayProjectOptionValues)
             && isInAnyModule(k, displayModuleIds)
+            && !isInCompletedProjects(k, settingsCompletedProjects)
         )
     for (const task of filteredTasks) {
         console.log(`Task Module`, db.getTaskModule(task))
