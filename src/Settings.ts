@@ -3,7 +3,7 @@ import TPMPlugin from "./main";
 import OdaPmToolPlugin from "./main";
 import {GenericProvider} from "./utils/GenericProvider";
 import {Evt_SettingsChanged} from "./typing/dataview-event";
-import React, {useContext} from "react";
+import React, {Dispatch, SetStateAction, useContext} from "react";
 import {PluginContext} from "./ui/obsidian/manage-page-view";
 import {devLog} from "./utils/env-util";
 
@@ -66,6 +66,8 @@ export interface TPMSettings {
     manage_page_display_projects: SerializedType[], // 0.2.0
     manage_page_header_as_module: boolean, // 0.3.0
     display_module_names: SerializedType[], // 0.3.0
+    do_not_show_completed_projects_in_manage_page: boolean, // 0.3.3
+    completed_project_names: SerializedType[], // 0.3.3 
     help_page_tutorial_tldr: SerializedType,
 }
 
@@ -86,7 +88,9 @@ export const TPM_DEFAULT_SETTINGS: Partial<TPMSettings> = {
     manage_page_excluded_tags: [] as SerializedType[],
     manage_page_display_projects: [] as SerializedType[], // 0.2.0
     manage_page_header_as_module: true, // 0.3.0
-    display_module_names: [] as SerializedType[], // 0.3.0
+    display_module_names: [] as SerializedType[], // 0.3.0,
+    do_not_show_completed_projects_in_manage_page: true, // 0.3.3
+    completed_project_names: [] as SerializedType[], // 0.3.3
     help_page_tutorial_tldr: false,
 }
 
@@ -96,7 +100,7 @@ export
 async function setSettingsValueAndSave<T extends SerializedType>(plugin: OdaPmToolPlugin, settingName: SettingName, value: T) {
     // @ts-ignore
     plugin.settings[settingName] = value;
-    devLog(`Going to emit ${Evt_SettingsChanged} ${settingName} = ${value}...`);
+    devLog(`[Settings] Emit ${Evt_SettingsChanged} ${settingName} = ${value}...`);
     plugin.getEmitter().emit(Evt_SettingsChanged, settingName, value);
     await plugin.saveSettings();
 }
@@ -164,7 +168,7 @@ export function getSettings() {
  * This is to ensure that when a value is changed in settings, the `handler` will receive the event, and update the value in the ui.
  * @param name
  */
-export function usePluginSettings<T extends SettingName>(name: SettingName) {
+export function usePluginSettings<T extends SerializedType>(name: SettingName): [T, Dispatch<SetStateAction<T>>] {
     const plugin = useContext(PluginContext);
     // @ts-ignore
     const [value, setValue] = React.useState(getSettings()[name] as T);
