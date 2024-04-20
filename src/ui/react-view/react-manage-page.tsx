@@ -4,7 +4,7 @@ import {PluginContext} from "../obsidian/manage-page-view";
 import {EventEmitter} from "events";
 import {getSettings, setSettingsValueAndSave, usePluginSettings} from "../../Settings";
 import {OdaPmDbProvider} from "../../data-model/odaPmDb";
-import {Evt_DbReloaded, Evt_JumpTask, Evt_JumpWorkflow} from "../../typing/dataview-event";
+import {Evt_DbReloaded, Evt_JumpTask, Evt_JumpWorkflow, Evt_ManagePageReRender} from "../../typing/dataview-event";
 import {devLog} from "../../utils/env-util";
 import {OdaPmTask} from "../../data-model/OdaPmTask";
 import {TaskTableView} from "./task-table-view";
@@ -17,8 +17,12 @@ import {ModuleFilter} from "./module-filter";
 
 function isInAnyProject(projectTask: I_OdaPmProjectTask, displayPrjNames: string[]) {
     // TODO Performance
-    if (displayPrjNames.length === 0) return true;
-    if (displayPrjNames.includes(ProjectFilterOptionValue_All)) return true;
+    if (displayPrjNames.length === 0)
+        return true;
+
+    if (displayPrjNames.includes(ProjectFilterOptionValue_All))
+        return true;
+
     const b = displayPrjNames.some(k => projectTask.isInProject(k));
     return b;
 }
@@ -37,7 +41,7 @@ function isInAnyModule(projectTask: OdaPmTask, displayModuleIds: string[]) {
 export function ReactManagePage({eventCenter}: {
     eventCenter?: EventEmitter
 }) {
-    devLog("ReactManagePage rendered.")
+    devLog("ReactManagePage rendered.",)
     // region Re-render trigger
     // only for re-render
     const [rerenderState, setRerenderState] = useState(0);
@@ -65,11 +69,13 @@ export function ReactManagePage({eventCenter}: {
         eventCenter?.addListener(Evt_DbReloaded, triggerRerender)
         eventCenter?.addListener(Evt_JumpTask, jumpTask)
         eventCenter?.addListener(Evt_JumpWorkflow, jumpWf)
+        eventCenter?.addListener(Evt_ManagePageReRender, triggerRerender)
 
         return () => {
             eventCenter?.removeListener(Evt_DbReloaded, triggerRerender)
             eventCenter?.removeListener(Evt_JumpTask, jumpTask)
             eventCenter?.removeListener(Evt_JumpWorkflow, jumpWf)
+            eventCenter?.removeListener(Evt_ManagePageReRender, triggerRerender)
         }
     }, [rerenderState]);
     // endregion
@@ -77,14 +83,15 @@ export function ReactManagePage({eventCenter}: {
 
     const db = OdaPmDbProvider.get();
     let workflows = db?.workflows || [];
-    const projects = db?.pmProjects || [];
+    const allProjects = db?.pmProjects || [];
     const modules = db?.pmModules || {};
+    const settingsCompletedProjects = getSettings()?.completed_project_names as string[];
 
     //region Display Variables
     // Use workflow names as filters' state instead. previously we use workflows themselves as state, but this requires dataview to be initialized.
     // However, this component might render before dataview is ready. The partially ready workflows will be used as the initial value, which is incorrect.
     // This is to fix the bug: On open Obsidian, the filter may not work.
-    // Load from settings. settingsDisplayWorkflowNames is not directly used. It is also filtered against projects.
+    // Load from settings. settingsDisplayWorkflowNames is not directly used. It is also filtered against allProjects.
     const [settingsDisplayWorkflowNames, setDisplayWorkflowNames]
         = useState(getSettings()?.display_workflow_names as string[]);
     const [settingsDisplayModuleIds, setDisplyModuleIds]
@@ -93,10 +100,14 @@ export function ReactManagePage({eventCenter}: {
         = useState(getSettings()?.manage_page_display_tags as string[]);
     const [excludedTags, setExcludedTags]
         = useState(getSettings()?.manage_page_excluded_tags as string[]);
+    // Current project displayed
     const [settingsDisplayProjectOptionValues, setDisplayProjectOptionValues]
         = useState(initDisplayProjectOptionValues);
-    const [showSubprojectWorkflows, setShowSubprojectWorkflows] = usePluginSettings("show_subproject_workflows")
-    const [showUnclassified, setShowUnclassified] = usePluginSettings("unclassified_workflows_available_to_all_projects");
+    // endregion
+    const [showSubprojectWorkflows, setShowSubprojectWorkflows]
+        = usePluginSettings<boolean>("show_subproject_workflows")
+    const [showUnclassified, setShowUnclassified]
+        = usePluginSettings<boolean>("unclassified_workflows_available_to_all_projects");
 
     function initDisplayProjectOptionValues() {
         const settingsValue = getSettings()?.manage_page_display_projects as string[];
@@ -145,13 +156,16 @@ export function ReactManagePage({eventCenter}: {
 
     // region Rectify
 
-    // if a project is deleted while being displayed, use all projects instead.
+    // if a project is deleted while being displayed, use all allProjects instead.
     const displayProjectOptionValues = settingsDisplayProjectOptionValues.filter(k => {
-        return projects.some(p => p.name === k)
+        return allProjects.some(p => p.name === k)
     })
     if (displayProjectOptionValues.length === 0) {
         displayProjectOptionValues.push(ProjectFilterOptionValue_All)
     }
+    // Don't show completed allProjects in the dropdown
+    const dropdownProjects = allProjects.filter(k =>
+        !settingsCompletedProjects.some(m => m === k.name))
 
     // only show modules under current project
     const filteredModules = Object.values(modules)
@@ -176,12 +190,13 @@ export function ReactManagePage({eventCenter}: {
             );
     }
 
-    // settingsDisplayWorkflowNames may contain workflows from other projects. We filter them out.
+    // settingsDisplayWorkflowNames may contain workflows from other allProjects. We filter them out.
     const displayWorkflowNames = settingsDisplayWorkflowNames
         .filter(k => workflows.some(wf => wf.name === k));
     const displayWorkflows = workflows.filter(k => {
         return displayWorkflowNames.includes(k.name);
     });
+
 
     const filteredTasks = db
         .getFilteredTasks(displayWorkflows, rectifiedDisplayTags, rectifiedExcludedTags)
@@ -193,7 +208,7 @@ export function ReactManagePage({eventCenter}: {
         console.log(`Task Module`, db.getTaskModule(task))
     }
     const pmTags = db.pmTags || [];
-    // It is undefined how saved tags will behave after we switch projects.
+    // It is undefined how saved tags will behave after we switch allProjects.
     // So we prevent tags from being filtered by tasks.
     // pmTags = pmTags.filter(k => {
     //     for (const pmTask of filteredTasks) {
@@ -205,7 +220,8 @@ export function ReactManagePage({eventCenter}: {
     return (
         <div>
             <HStack>
-                <ProjectFilter projects={projects} displayNames={displayProjectOptionValues}
+                <ProjectFilter allProjects={allProjects} dropdownProjects={dropdownProjects}
+                               displayNames={displayProjectOptionValues}
                                handleSetDisplayNames={handleSetDisplayProjects}
                 />
             </HStack>

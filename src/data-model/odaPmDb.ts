@@ -25,7 +25,6 @@ import {getOrCreateWorkflow, removeWorkflow} from "./OdaPmWorkflow";
 import {OdaProjectTree} from "./OdaProjectTree";
 import {assertDatabase} from "../test_runtime";
 import {ModuleId_Unclassified, OdaPmModule} from "./OdaPmModule";
-import {Simulate} from "react-dom/test-utils";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
 
@@ -237,7 +236,7 @@ export class OdaPmDb implements I_EvtListener {
 
         this.linkProject(this.pmProjects, this.pmTasks, this.workflows);
         this.orphanTasks = this.initOrphanTasks(this.pmTasks);
-        this.emitter.emit(Evt_DbReloaded)
+        this.emit(Evt_DbReloaded)
         this.inited = true;
         assertDatabase(this);
         devLog("Database Reloaded.")
@@ -387,6 +386,13 @@ export class OdaPmDb implements I_EvtListener {
     public getTaskModule(pmTask: OdaPmTask) {
         return this.pmModules[pmTask.getModuleId()];
     }
+
+    //region Emit
+    public emit(evt: string) {
+        this.emitter.emit(evt);
+    }
+
+    // endregion
 }
 
 export const OdaPmDbProvider = new GenericProvider<OdaPmDb>();

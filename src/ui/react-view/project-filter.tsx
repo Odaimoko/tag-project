@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useContext} from "react";
 import {OdaPmProject} from "../../data-model/OdaPmProject";
 import {FilterHeadHStack} from "./workflow-filter";
 import {HStack} from "./view-template/h-stack";
@@ -8,13 +8,18 @@ import {ProjectView} from "./project-view";
 
 import {varBackgroundSecondary} from "./style-def";
 import {OptionValueType, SearchableDropdown} from "./view-template/searchable-dropdown";
+import {PluginContext} from "../obsidian/manage-page-view";
+import {ProjectInspectorModal} from "../obsidian/project-inspector/project-inspector-modal";
+import {notify} from "../../utils/o-notice";
 
 export const ProjectFilterName_All = "All Projects";
 export const ProjectFilterOptionValue_All = "###ALL###";
 
+// If optionValue is not defined, use name as optionValue
 
 function getOptionValueName(opValue: string | undefined, listOpValues: OptionValueType[]) {
-    if (opValue === undefined) return null;
+    if (opValue === undefined)
+        return null;
 
     for (const project of listOpValues) {
         // @ts-ignore
@@ -52,45 +57,58 @@ export function getDropdownStyle(dropDownDisplay: string | undefined, zIndex = 1
     return dropdownStyle;
 }
 
+const headingStyle = {
+    display: "flex",
+    justifyContent: "flex-start" // 横向居中
+};
+const AllProjectsOption = {
+    name: ProjectFilterName_All,
+    optionValue: ProjectFilterOptionValue_All
+} as OptionValueType;
+
 export function ProjectFilter(props: {
-    projects: OdaPmProject[],
+    allProjects: OdaPmProject[],
+    dropdownProjects: OdaPmProject[],
     handleSetDisplayNames: (names: string[]) => void,
     displayNames: string[]
 }) {
-    const headingStyle = {
-        display: "flex",
-        justifyContent: "flex-start" // 横向居中
-    };
-    const sortedProjects = [...props.projects].sort(
+    const plugin = useContext(PluginContext);
+
+    const nonCompletedSortedProjects = [...props.dropdownProjects].sort(
         (a, b) => a.name.localeCompare(b.name))
-    const projectsAndAll = [
-        {
-            name: ProjectFilterName_All,
-            optionValue: ProjectFilterOptionValue_All
-        }, ...sortedProjects
-    ]
-    // If optionValue is not defined, use name as optionValue
-    const projectDisplayName = getOptionValueName(props.displayNames.first(), projectsAndAll);
-    const displayingProject = props.projects.filter(k => k.name === projectDisplayName).first();
+    const projectsAndAll = [AllProjectsOption, ...nonCompletedSortedProjects]
+    // Decide the project name shown at the top. If the project is completed, we show all.
+    const firstProjectName = props.displayNames.first();
+    const projectDisplayName = getOptionValueName(firstProjectName, projectsAndAll)
+    if (projectDisplayName === null) {
+        props.handleSetDisplayNames([ProjectFilterOptionValue_All])
+        notify(`Project ${firstProjectName} not found or completed, showing all projects.`)
+        return null;
+    }
+    
+    const displayingProject = props.allProjects.filter(k => k.name === projectDisplayName).first();
+
     return <div>
         <div style={headingStyle}>
 
             <FilterHeadHStack>
+                <button
+                    onClick={() => new ProjectInspectorModal(plugin).open()}>Manage
+                </button>
+                <label>or</label>
                 <SearchableDropdown dropdownId={"project"} data={projectsAndAll}
                                     handleSetOptionValues={props.handleSetDisplayNames}
                                     placeholder={"Search/Select Project"}/>
-                <h2><HStack spacing={5}>
-                    Project: {displayingProject ? displayingProject &&
-                    <ProjectView project={displayingProject}/> : projectDisplayName}
-                </HStack>
+                <h2>
+                    <HStack spacing={5}>
+                        Project: {displayingProject ? displayingProject &&
+                        <ProjectView project={displayingProject}/> : projectDisplayName}
+                    </HStack>
                 </h2>
-
             </FilterHeadHStack>
+
         </div>
 
-        {/*<label style={headingStyle}>*/}
-        {/*    Only shows workflows and tasks in this project.*/}
-        {/*</label>*/}
-
+        {/*<ProjectInspectorView plugin={plugin}/>*/}
     </div>
 }
