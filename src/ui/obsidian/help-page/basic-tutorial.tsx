@@ -36,7 +36,7 @@ import {Desc_ManagePage, HelpPage_Template, HelpPage_UserManual} from "./help-pa
 import {centerChildrenVertStyle} from "../../react-view/style-def";
 
 export function useSharedTlDr() {
-    const [isTlDr, setIsTlDr] = usePluginSettings("help_page_tutorial_tldr")
+    const [isTlDr, setIsTlDr] = usePluginSettings<boolean>("help_page_tutorial_tldr")
     // hidden when tldr mode is on.
     const blockTldrOmitStyle: React.CSSProperties = {display: isTlDr ? "none" : "block"} //  visibility:"hidden" will still take space. So we use display instead
     const blockTldrShowStyle: React.CSSProperties = {display: isTlDr ? "block" : "none"}
