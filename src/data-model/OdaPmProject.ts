@@ -201,4 +201,10 @@ export class OdaPmProject extends BaseDatabaseObject implements I_Nameable {
     isParentProjectOf(name: string) {
         return path.dirname(name).startsWith(this.name);
     }
+
+    // 0.3.3
+    isCompleted(completedPrjNames: string[]): boolean {
+        return completedPrjNames.some(completedPrjName => this.name === completedPrjName
+            || this.isSubprojectOfName(completedPrjName))
+    }
 }
