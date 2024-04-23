@@ -29,6 +29,8 @@ import {loopIndex} from "./project-filter";
 import {Minus} from "./icon/Minus";
 import {DownAZ, UpAZ} from "./icon/DownAZ";
 import {Down01, Up01} from "./icon/Down01";
+import {ArrowBigDownDash, ArrowBigUpDash} from "./icon/ArrowBigUpDash";
+import {OdaPmDbProvider} from "../../data-model/OdaPmDb";
 
 export const taskCheckBoxMargin = {marginLeft: 3};
 
@@ -52,17 +54,21 @@ function notifyTask(oTask: OdaPmTask, reason: string) {
  * @param taskFirstColumn
  * @constructor
  */
-export const OdaTaskSummaryCell = ({oTask, taskFirstColumn, showCheckBox, showWorkflowIcon}: {
+export const OdaTaskSummaryCell = ({oTask, taskFirstColumn, showCheckBox, showPriority, showWorkflowIcon}: {
     oTask: OdaPmTask,
     taskFirstColumn: IRenderable,
+    showPriority?: boolean
     showCheckBox?: boolean
     showWorkflowIcon?: boolean
 }) => {
     showCheckBox = showCheckBox ?? true // backward compatibility
     showWorkflowIcon = showWorkflowIcon ?? true
+    showPriority = showPriority ?? true
+
     const plugin = useContext(PluginContext);
     const workspace = plugin.app.workspace;
     const [summaryView, setSummaryView] = useState<ReactElement>();
+    const priIcon = useTaskSortIcon(oTask);
 
     function tickSummary() {
         // Automatically add tags when checking in manage page 
@@ -104,6 +110,7 @@ export const OdaTaskSummaryCell = ({oTask, taskFirstColumn, showCheckBox, showWo
     </span>;
     return <HStack spacing={5}>
         {showWorkflowIcon ? getIconByTask(oTask) : null}
+        {showPriority && priIcon}
         {showCheckBox ? <ExternalControlledCheckbox
             content={checkBoxContent}
             onChange={tickSummary}
@@ -191,16 +198,43 @@ export function getDefaultTableStyleGetters(minSummaryWidth: number | string = 5
     return {cellStyleGetter, headStyleGetter};
 }
 
-function getNameSortSymbol(method: TableSortMethod) {
+function getNameSortIcon(method: TableSortMethod) {
     return method === TableSortMethod.Ascending ? <UpAZ/> :
         method === TableSortMethod.Descending ? <DownAZ/> : <Minus/>;
 }
 
-function getColumnSortSymbol(method: TableSortMethod) {
+function getStepSortIcon(method: TableSortMethod) {
     return method === TableSortMethod.Ascending ? <Up01/> :
         method === TableSortMethod.Descending ? <Down01/> : <Minus/>;
 
 }
+
+function getPrioritySortIcon(method: TableSortMethod) {
+    // Ascending: high to low
+    return method === TableSortMethod.Ascending ? <ArrowBigUpDash/> :
+        method === TableSortMethod.Descending ? <ArrowBigDownDash/> : <Minus/>;
+}
+
+function getPriorityIcon(pri: number) {
+    switch (pri) {
+        case 0:
+            return <ArrowBigUpDash/>
+        case 1:
+            return <Minus/>
+        case 2:
+            return <ArrowBigDownDash/>
+        default:
+            return <Minus/>
+    }
+
+}
+
+function useTaskSortIcon(oTask: OdaPmTask) {
+    const db = OdaPmDbProvider.get();
+    const pri = oTask.getPriority(db?.pmPriorityTags)
+    return getPriorityIcon(pri)
+}
+
 
 export function TaskTableView({displayWorkflows, filteredTasks}: {
     displayWorkflows: I_OdaPmWorkflow[],
@@ -211,7 +245,7 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
     // sort
     const [columnSort, setColumnSort] = useState<TableSortData>({
         sortBy: TableSortBy.Name,
-        method: getSettings()?.table_column_sorting as TableSortMethod
+        method: getSettings()?.cached_table_column_sorting as TableSortMethod
     })
     // show completed
     const [showCompleted, setShowCompleted] = useState(getSettings()?.show_completed_tasks as boolean);
@@ -259,7 +293,7 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
     // region sort
 
     switch (columnSort.sortBy) {
-        case TableSortBy.Name:
+        case TableSortBy.Name: {
             const nameSortMethod = columnSort.method;
             const ascending = nameSortMethod === TableSortMethod.Ascending;
             if (nameSortMethod !== TableSortMethod.Appearance) {
@@ -273,8 +307,9 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
                     }
                 )
             }
+        }
             break;
-        case TableSortBy.Step:
+        case TableSortBy.Step: {
             const stepSortMethod = columnSort.method;
             if (stepSortMethod !== TableSortMethod.Appearance) {
                 const stepAscending = stepSortMethod === TableSortMethod.Ascending;
@@ -298,16 +333,19 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
                     )
                 }
             }
+        }
             break
     }
 
     // endregion
-    const curWfName = "Tasks";// displayWorkflows.map(k => k.name).join(", ")
+    const curWfName = "Tasks";
     const headers = [
         <div>
             <WorkflowOverviewView filteredTasks={filteredTasks}/>
             <div>
-                {columnSort.sortBy === TableSortBy.Name ? getNameSortSymbol(columnSort.method) : getNameSortSymbol(TableSortMethod.Appearance)}
+                {columnSort.sortBy === TableSortBy.Name
+                    ? getNameSortIcon(columnSort.method)
+                    : getNameSortIcon(TableSortMethod.Appearance)}
             </div>
         </div>
         , ...(getSettings()?.table_steps_shown ? displayStepNames.map(
@@ -323,8 +361,8 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
                     <label>({displayedTasks.filter((m: OdaPmTask) => m.hasStepName(k)).length})</label>
                     {
                         columnSort.sortBy === TableSortBy.Step && columnSort.column === index + 1 ?
-                            getColumnSortSymbol(columnSort.method)
-                            : getColumnSortSymbol(TableSortMethod.Appearance)
+                            getStepSortIcon(columnSort.method)
+                            : getStepSortIcon(TableSortMethod.Appearance)
                     }
                 </div>
             </div>
@@ -397,7 +435,7 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
         </>
     )
 
-
+    //region Sort   
     function setSortToName() {
         const prevMethod = columnSort.sortBy;
         // Loop
@@ -407,12 +445,9 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
             column: undefined,
             method: prevMethod === TableSortBy.Name ? nextNameSortMethod : TableSortMethod.Ascending
         })
-        setSettingsValueAndSave(plugin, "table_column_sorting", nextNameSortMethod)
+        setSettingsValueAndSave(plugin, "cached_table_column_sorting", nextNameSortMethod)
     }
 
-    function resetNameSortMethod() {
-        setSettingsValueAndSave(plugin, "table_column_sorting", TableSortMethod.Appearance)
-    }
 
     function setSortToColumn(index: number) {
         const prevMethod = columnSort.sortBy;
@@ -426,6 +461,13 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
         resetNameSortMethod()
     }
 
+    function resetNameSortMethod() {
+        setSettingsValueAndSave(plugin, "cached_table_column_sorting", TableSortMethod.Appearance)
+    }
+
+    //endregion
+
+    // region Show columns
     function handleShowCompletedChange() {
         const nextChecked = !showCompleted;
         setShowCompleted(nextChecked)
@@ -437,6 +479,8 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
         setShowSteps(nextChecked)
         setSettingsValueAndSave(plugin, "table_steps_shown", nextChecked)
     }
+
+    // endregion
 
 }
 

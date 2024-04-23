@@ -10,13 +10,14 @@ import {SerializedType} from "./SerializedType";
 export enum TableSortBy {
     Name,
     Step,
+    Priority,
 }
 
 
 export enum TableSortMethod {
-    Appearance, // For column, Do not sort
-    Ascending, // For column, ticked will be placed at front
-    Descending, // For column, unticked will be placed at front
+    Appearance, // For non-Name, Do not sort
+    Ascending, // For non-Name, ticked will be placed at front
+    Descending, // For non-Name, unticked will be placed at front
 }
 
 export interface TableSortData {
@@ -36,6 +37,9 @@ export function getNextFilterMethod(method: number) {
     return (method + 1) % totalFilterMethods;
 }
 
+/**
+ * cached: not in settings tab, nor explicitly in any ui.
+ */
 export interface TPMSettings {
     report_malformed_task: SerializedType;
     capitalize_table_row_initial: SerializedType;
@@ -48,7 +52,7 @@ export interface TPMSettings {
 
     // personalized settings, not exposed in settings tab
     show_completed_tasks: SerializedType;
-    table_column_sorting: SerializedType;
+    cached_table_column_sorting: SerializedType;
     table_steps_shown: SerializedType;
     display_workflow_names: SerializedType[],
     manage_page_display_tags: SerializedType[],
@@ -72,7 +76,7 @@ export const TPM_DEFAULT_SETTINGS: Partial<TPMSettings> = {
     // custom_tag_prefix_tag: Tag_Prefix_Tag,
     // personalized settings, not exposed in settings tab
     show_completed_tasks: true,
-    table_column_sorting: TableSortMethod.Appearance,
+    cached_table_column_sorting: TableSortMethod.Appearance,
     table_steps_shown: true,
     display_workflow_names: [] as SerializedType[],
     manage_page_display_tags: [] as SerializedType[],
@@ -88,9 +92,11 @@ export const TPM_DEFAULT_SETTINGS: Partial<TPMSettings> = {
 export type SettingName = keyof TPMSettings;
 export const maxPriorityTags = 3;
 
-export function getDefaultPriority() {
+function getDefaultPriority() {
     return Math.floor(maxPriorityTags / 2); // 1 -> medium's index
 }
+
+export const DefaultTaskPriority = getDefaultPriority();
 
 export
 async function setSettingsValueAndSave<T extends SerializedType>(plugin: OdaPmToolPlugin, settingName: SettingName, value: T) {

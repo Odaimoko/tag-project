@@ -14,8 +14,7 @@ import {BaseDatabaseObject} from "./BaseDatabaseObject";
 import {getOrCreateStep} from "./OdaPmStep";
 import {setProjectTagToTask} from "../utils/io-util";
 import {ModuleId_Unclassified} from "./OdaPmModule";
-import {devLog} from "../utils/env-util";
-import {getDefaultPriority, maxPriorityTags} from "../settings/settings";
+import {DefaultTaskPriority} from "../settings/settings";
 
 export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
     boundTask: STask;
@@ -256,15 +255,18 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
      * 0.5.0 Priority
      * @returns less is higher
      */
-    getPriority(priorityTags: string[]): number {
+    getPriority(priorityTags: string[] | undefined): number {
+        if (!priorityTags)
+            return DefaultTaskPriority;
+        
         // priorityTags leng must equal maxPriorityTags
-        devLog(`priorityTags leng must equal maxPriorityTags: ${priorityTags.length === maxPriorityTags}`)
+        // devLog(`priorityTags leng must equal maxPriorityTags: ${priorityTags.length === maxPriorityTags}`)
         for (let i = 0; i < priorityTags.length; i++) {
             if (this.hasTag(priorityTags[i])) {
                 return i;
             }
         }
-        return getDefaultPriority()
+        return DefaultTaskPriority;
     }
 }
 
