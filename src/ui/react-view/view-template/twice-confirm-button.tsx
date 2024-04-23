@@ -16,6 +16,7 @@ export function TwiceConfirmButton(props: {
     }} onClick={() => {
         if (clicked) {
             props.onConfirm();
+            setClicked(false);
         } else {
             setClicked(true);
         }

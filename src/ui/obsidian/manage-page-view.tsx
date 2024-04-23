@@ -2,7 +2,7 @@
 import {ItemView, WorkspaceLeaf} from "obsidian";
 import {ReactManagePage} from "../react-view/react-manage-page";
 import {createRoot, Root} from "react-dom/client";
-import {createContext} from "react";
+import React, {createContext} from "react";
 import OdaPmToolPlugin, {PLUGIN_NAME} from "../../main";
 import {ClickableIconView} from "../react-view/view-template/icon-view";
 import {HStack} from "../react-view/view-template/h-stack";

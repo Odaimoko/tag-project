@@ -1,18 +1,20 @@
 import {App, PluginSettingTab, Setting, ValueComponent} from "obsidian";
 import TPMPlugin from "../main";
 import {createRoot, Root} from "react-dom/client";
-import React from "react";
-import {setSettingsValueAndSave, SettingName, usePluginSettings} from "./settings";
+import React, {useState} from "react";
+import {getSettings, setSettingsValueAndSave, SettingName} from "./settings";
 import {SerializedType} from "./SerializedType";
-import {appendBoldText} from "src/ui/common/html-template";
 import {ONotice} from "../utils/o-notice";
 import {POTENTIAL_TAG_MATCHER} from "../data-model/markdown-parse";
 import {HStack} from "../ui/react-view/view-template/h-stack";
 import {PluginContext} from "../ui/obsidian/manage-page-view";
-import {centerChildrenHoriVertStyle} from "../ui/react-view/style-def";
+import {centerChildren, centerChildrenHoriVertStyle} from "../ui/react-view/style-def";
 import {DataTable} from "../ui/react-view/view-template/data-table";
 import {Tag_Prefix_Tag} from "../data-model/workflow-def";
 import {getPriorityIcon} from "../ui/react-view/task-table-view";
+import {TwiceConfirmButton} from "../ui/react-view/view-template/twice-confirm-button";
+import {ObsidianIconView} from "../ui/react-view/view-template/icon-view";
+import {Evt_ReqDbReload} from "../typing/dataview-event";
 
 export class TPMSettingsTab extends PluginSettingTab {
     plugin: TPMPlugin;
@@ -52,11 +54,6 @@ export class TPMSettingsTab extends PluginSettingTab {
             .setDesc("If ON, the tasks under headers with the same name can be grouped together.")
             .addToggle(this.setValueAndSave("manage_page_header_as_module"));
 
-        const doc = new DocumentFragment();
-        doc.appendText("Customize your priority tags, split by line break. The tags will be prefixed with `tpm/tag/`.")
-        doc.appendText("\n")
-        appendBoldText(doc, `Current tags are: ${this.plugin.settings.priority_tags.join(", ")}`)
-
         const priTagDiv = containerEl.createDiv();
         priTagDiv.className = "setting-item";
 
@@ -82,10 +79,10 @@ export class TPMSettingsTab extends PluginSettingTab {
 
 } // Singleton!
 
-export function PriorityTags(props: {}) {
+export function PriorityTags() {
     const plugin = React.useContext(PluginContext);
     const labels = ["High", "Medium", "Low"]
-    const [priorityTags, setPriorityTags] = usePluginSettings<string[]>("priority_tags")
+    const [priorityTags, setPriorityTags] = useState<string[]>(getSettings()?.priority_tags as string[])
 
     const headers: string[] = []
 
@@ -100,7 +97,7 @@ export function PriorityTags(props: {}) {
             </HStack>,
             <HStack style={centerChildrenHoriVertStyle}>
                 <label>{Tag_Prefix_Tag}</label>
-                <input type={"text"}
+                <input style={{width: 60}} type={"text"}
                        placeholder={oriTag}
                        value={oriTag}
                        onChange={(e) => {
@@ -111,8 +108,7 @@ export function PriorityTags(props: {}) {
                                return;
                            }
                            priorityTags[idx] = tag;
-                           setPriorityTags([...priorityTags]);
-                           // TODO Trigger database refresh
+                           setPriorityTags([...priorityTags])
 
                        }}
                 />
@@ -120,19 +116,44 @@ export function PriorityTags(props: {}) {
         ]
     })
     return <div>
-        <HStack style={{}} spacing={10}>
+        <HStack style={{justifyContent: "space-between"}} spacing={10}>
             <div>
 
                 <div className={"setting-item-name"}>Priority tags</div>
                 <div className={"setting-item-description"}>
 
                     <p>
-                        Customize your priority tags, split by line break. The tags will be prefixed with `tpm/tag/`.
-                    </p>
-                    <label>
+                        Customize your priority tags.
                         Current tags are: <b>{plugin.settings.priority_tags.join(", ")}.</b>
-                    </label>
+                    </p>
+                    <HStack style={centerChildren}>
+                        <label>
+                            The priority tags will be replaced in all tasks.
+                            This is NOT undoable.
+                        </label>
+                        <TwiceConfirmButton
+                            onConfirm={() => {
+                                setSettingsValueAndSave(plugin, "priority_tags", [...priorityTags]).then(() => {
+                                    setPriorityTags([...priorityTags]) // re-render
+                                    // TODO replace tags in all tasks
+                                    // Trigger database refresh
+                                    plugin.getEmitter().emit(Evt_ReqDbReload)
+                                })
+                            }}
+                            confirmView={
+                                <HStack style={centerChildren} spacing={5}>
+
+                                    <ObsidianIconView style={{color: "var(--text-warning)"}}
+                                                      iconName={"alert-circle"}/>
+                                    <label>Save</label>
+                                </HStack>
+
+                            }
+                            twiceConfirmView={<label>Confirm</label>}
+                        />
+                    </HStack>
                 </div>
+
             </div>
             <DataTable tableTitle={"Pri"} headers={headers} rows={rows}/>
 

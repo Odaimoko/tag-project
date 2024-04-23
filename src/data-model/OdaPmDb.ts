@@ -13,7 +13,7 @@ import {
     Workflow_Type_Enum_Array
 } from "./workflow-def";
 import {EventEmitter} from "events";
-import {DataviewMetadataChangeEvent, Evt_DbReloaded} from "../typing/dataview-event";
+import {DataviewMetadataChangeEvent, Evt_DbReloaded, Evt_ReqDbReload} from "../typing/dataview-event";
 import {getAPI, STask} from "obsidian-dataview";
 import {ONotice} from "../utils/o-notice";
 import {getSettings} from "../settings/settings";
@@ -220,10 +220,12 @@ export class OdaPmDb implements I_EvtListener {
     // bind: https://fettblog.eu/this-in-javascript-and-typescript/
     regListener(): void {
         this.emitter.on(DataviewMetadataChangeEvent, this.boundReloadWorkflows)
+        this.emitter.on(Evt_ReqDbReload, this.boundReloadWorkflows)
     }
 
     rmListener(): void {
         this.emitter.off(DataviewMetadataChangeEvent, this.boundReloadWorkflows)
+        this.emitter.off(Evt_ReqDbReload, this.boundReloadWorkflows)
     }
 
 // region Init
