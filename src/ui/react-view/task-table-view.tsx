@@ -237,8 +237,7 @@ function getStepSortIcon(method: TableSortMethod) {
 
 }
 
-
-function getPriorityIcon(idx: number) {
+export function getPriorityIcon(idx: number) {
     switch (idx) {
         case 0:
             return <ArrowBigUpDash/>

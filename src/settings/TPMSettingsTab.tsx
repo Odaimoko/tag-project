@@ -12,6 +12,7 @@ import {PluginContext} from "../ui/obsidian/manage-page-view";
 import {centerChildrenHoriVertStyle} from "../ui/react-view/style-def";
 import {DataTable} from "../ui/react-view/view-template/data-table";
 import {Tag_Prefix_Tag} from "../data-model/workflow-def";
+import {getPriorityIcon} from "../ui/react-view/task-table-view";
 
 export class TPMSettingsTab extends PluginSettingTab {
     plugin: TPMPlugin;
@@ -90,13 +91,18 @@ export function PriorityTags(props: {}) {
 
 
     const rows = labels.map(k => {
+        const idx = labels.indexOf(k);
+        const oriTag = priorityTags[idx];
         return [
-            <label>{k}</label>,
+            <HStack>
+                {getPriorityIcon(idx)}
+                <label>{k}</label>
+            </HStack>,
             <HStack style={centerChildrenHoriVertStyle}>
                 <label>{Tag_Prefix_Tag}</label>
                 <input type={"text"}
-                       placeholder={priorityTags[labels.indexOf(k)]}
-                       value={priorityTags[labels.indexOf(k)]}
+                       placeholder={oriTag}
+                       value={oriTag}
                        onChange={(e) => {
                            const tag = e.target.value;
                            const match = tag.match(POTENTIAL_TAG_MATCHER);
@@ -104,7 +110,7 @@ export function PriorityTags(props: {}) {
                                new ONotice(`Invalid tag: ${tag}.`);
                                return;
                            }
-                           priorityTags[labels.indexOf(k)] = tag;
+                           priorityTags[idx] = tag;
                            setPriorityTags([...priorityTags]);
                            // TODO Trigger database refresh
 
