@@ -88,6 +88,10 @@ export const TPM_DEFAULT_SETTINGS: Partial<TPMSettings> = {
 export type SettingName = keyof TPMSettings;
 export const maxPriorityTags = 3;
 
+export function getDefaultPriority() {
+    return Math.floor(maxPriorityTags / 2); // 1 -> medium's index
+}
+
 export
 async function setSettingsValueAndSave<T extends SerializedType>(plugin: OdaPmToolPlugin, settingName: SettingName, value: T) {
     // @ts-ignore

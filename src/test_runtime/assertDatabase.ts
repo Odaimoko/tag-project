@@ -16,6 +16,7 @@ interface AssertFunctions {
     expectWorkflowInProject: (workflowName: string, projectName: string) => void;
     expectWorkflowNotInProject: (workflowName: string, projectName: string) => void;
     // expectProject: (projectName: string, definedType?: ProjectDefinedType) => void;
+    expectTaskHasPriority: (taskName: string, priority: number, priorityTags: string[]) => void;
 }
 
 const dbAssertFunctions: AssertFunctions = {
@@ -34,7 +35,10 @@ const dbAssertFunctions: AssertFunctions = {
     },
     expectWorkflowNotInProject: () => {
         throw new Error("Not Implemented.")
-    }
+    },
+    expectTaskHasPriority: () => {
+        throw new Error("Not Implemented.")
+    },
 }
 
 function expect_project(prj: OdaPmProject | null, projectName: string, definedType?: ProjectDefinedType) {
@@ -183,6 +187,13 @@ function initAssertFunctions(pmDb: OdaPmDb) {
                 .false;
         }
     )
+    dbAssertFunctions.expectTaskHasPriority = (taskName: string, priority: number, priorityTags: string[]) => expectTaskAbstract(pmDb, taskName,
+        (task) => {
+            expect(task.getPriority(priorityTags),
+                `Task ${task.summary} 's priority not matched.`)
+                .equal(priority);
+        })
+
 }
 
 async function test_UT_020_4(pmDb: OdaPmDb) {
@@ -231,7 +242,21 @@ async function test_UT_020_6(pmDb: OdaPmDb) {
     devLog("Test PASSED: Subproject Inclusion.")
 }
 
+/**
+ * Priority Tags
+ * @param pmDb
+ */
+function test_UT_050(pmDb: OdaPmDb) {
+    dbAssertFunctions.expectTaskHasPriority("UT_050_Hi", 0, pmDb.pmPriorityTags);
+    dbAssertFunctions.expectTaskHasPriority("UT_050_med_default", 1, pmDb.pmPriorityTags);
+    dbAssertFunctions.expectTaskHasPriority("UT_050_med", 1, pmDb.pmPriorityTags);
+    dbAssertFunctions.expectTaskHasPriority("UT_050_lo", 2, pmDb.pmPriorityTags);
+    devLog("Test PASSED: Priority Tags.")
+}
+
 //#endif
+
+
 /**
  * The following functions wrapped inside prodWrapper will not be called,
  * so it's ok that the transpiler cannot resolve references.
@@ -264,6 +289,7 @@ export const assertDatabase = prodWrapper(async (pmDb: OdaPmDb) => {
     test_UT_020_3(pmDb);
     test_UT_020_4(pmDb);
     test_UT_020_6(pmDb);
+    test_UT_050(pmDb)
     devLog("Assert end: on db refreshed...")
 //#endif
 });

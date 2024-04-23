@@ -64,7 +64,7 @@ export default class OdaPmToolPlugin extends Plugin {
         initPluginEnv();
         setVaultName(this.app.vault.getName());
         this.emitter = new EventEmitter();
-        this.pmDb = new OdaPmDb(this.emitter);
+        this.pmDb = new OdaPmDb(this.emitter, this);
         OdaPmDbProvider.add(this.pmDb);
         this.tagRenderer = new TagRenderer(this.app, this.manifest);
         await this.tagRenderer.onload();

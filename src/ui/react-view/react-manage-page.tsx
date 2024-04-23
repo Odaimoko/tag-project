@@ -216,9 +216,7 @@ export function ReactManagePage({eventCenter}: {
             && isInAnyModule(k, displayModuleIds)
             && !isInCompletedProjects(k, settingsCompletedProjects)
         )
-    for (const task of filteredTasks) {
-        console.log(`Task Module`, db.getTaskModule(task))
-    }
+
     const pmTags = db.pmTags || [];
     // It is undefined how saved tags will behave after we switch allProjects.
     // So we prevent tags from being filtered by tasks.
@@ -229,6 +227,7 @@ export function ReactManagePage({eventCenter}: {
     //     }
     // })
     // endregion
+
     return (
         <div>
             <HStack>

@@ -25,6 +25,7 @@ import {getOrCreateWorkflow, removeWorkflow} from "./OdaPmWorkflow";
 import {OdaProjectTree} from "./OdaProjectTree";
 import {assertDatabase} from "../test_runtime";
 import {ModuleId_Unclassified, OdaPmModule} from "./OdaPmModule";
+import OdaPmToolPlugin from "../main";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
 
@@ -205,9 +206,13 @@ export class OdaPmDb implements I_EvtListener {
     orphanTasks: OdaPmTask[]
     // 0.3.0 
     pmModules: Record<string, OdaPmModule>
+    // 0.5.0
+    pmPriorityTags: string[]
+    private plugin: OdaPmToolPlugin;
 
-    constructor(emitter: EventEmitter) {
+    constructor(emitter: EventEmitter, plugin: OdaPmToolPlugin) {
         this.emitter = emitter;
+        this.plugin = plugin;
         this.boundReloadWorkflows = this.reloadDb.bind(this)
         this.reloadDb()
     }
@@ -231,7 +236,7 @@ export class OdaPmDb implements I_EvtListener {
         this.pmTasks = getAllPmTasks(this.workflows)
         this.pmModules = this.initModulesFromTasks(this.pmTasks)
         this.pmTags = this.initManagedTags(this.pmTasks)
-
+        this.pmPriorityTags = this.initPriorityTags()
         this.pmProjects = getAllProjectsAndLinkTasks(this.pmTasks, this.workflows);
 
         this.linkProject(this.pmProjects, this.pmTasks, this.workflows);
@@ -393,6 +398,11 @@ export class OdaPmDb implements I_EvtListener {
     }
 
     // endregion
+    private initPriorityTags() {
+        const tags = this.plugin.settings.priority_tags.map(k => `${Tag_Prefix_Tag}${k}`);
+        devLog(`Init Priority Tags`, tags)
+        return tags;
+    }
 }
 
 export const OdaPmDbProvider = new GenericProvider<OdaPmDb>();

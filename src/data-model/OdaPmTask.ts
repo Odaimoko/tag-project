@@ -14,6 +14,8 @@ import {BaseDatabaseObject} from "./BaseDatabaseObject";
 import {getOrCreateStep} from "./OdaPmStep";
 import {setProjectTagToTask} from "../utils/io-util";
 import {ModuleId_Unclassified} from "./OdaPmModule";
+import {devLog} from "../utils/env-util";
+import {getDefaultPriority, maxPriorityTags} from "../settings/settings";
 
 export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
     boundTask: STask;
@@ -156,6 +158,15 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
         return addTagText(cleanText, stepTag)
     }
 
+
+    hasTag(tag: string) {
+        for (const t of this.boundTask.tags) {
+            if (tag == t) return true;
+        }
+        return false;
+    }
+
+
     /**
      * Union > 0
      * @param displayTags
@@ -228,7 +239,7 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
     }
 
     /**
-     *
+     * 0.3.0 Header
      */
     getModuleId(): string {
         const link = this.boundTask.section; // Link
@@ -240,4 +251,20 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
             return ModuleId_Unclassified;
         }
     }
+
+    /**
+     * 0.5.0 Priority
+     * @returns less is higher
+     */
+    getPriority(priorityTags: string[]): number {
+        // priorityTags leng must equal maxPriorityTags
+        devLog(`priorityTags leng must equal maxPriorityTags: ${priorityTags.length === maxPriorityTags}`)
+        for (let i = 0; i < priorityTags.length; i++) {
+            if (this.hasTag(priorityTags[i])) {
+                return i;
+            }
+        }
+        return getDefaultPriority()
+    }
 }
+
