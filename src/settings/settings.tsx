@@ -1,21 +1,11 @@
-import {App, PluginSettingTab, Setting, ValueComponent} from "obsidian";
-import TPMPlugin from "./main";
-import OdaPmToolPlugin from "./main";
-import {GenericProvider} from "./utils/GenericProvider";
-import {Evt_SettingsChanged} from "./typing/dataview-event";
+import OdaPmToolPlugin from "../main";
+import {GenericProvider} from "../utils/GenericProvider";
+import {Evt_SettingsChanged} from "../typing/dataview-event";
 import React, {Dispatch, SetStateAction, useContext} from "react";
-import {PluginContext} from "./ui/obsidian/manage-page-view";
-import {devLog} from "./utils/env-util";
+import {PluginContext} from "../ui/obsidian/manage-page-view";
+import {devLog} from "../utils/env-util";
+import {SerializedType} from "./SerializedType";
 
-
-type SerializedType =
-    string
-    | number
-    | boolean
-    | null
-    | undefined
-    | SerializedType[]
-    | { [key: string]: SerializedType };
 
 export enum TableSortBy {
     Name,
@@ -68,6 +58,7 @@ export interface TPMSettings {
     display_module_names: SerializedType[], // 0.3.0
     do_not_show_completed_projects_in_manage_page: boolean, // 0.3.3
     completed_project_names: SerializedType[], // 0.3.3 
+    priority_tags: SerializedType[], // 0.5.0, from high to low, prefixed with `tpm/tag/`
     help_page_tutorial_tldr: SerializedType,
 }
 
@@ -91,10 +82,11 @@ export const TPM_DEFAULT_SETTINGS: Partial<TPMSettings> = {
     display_module_names: [] as SerializedType[], // 0.3.0,
     do_not_show_completed_projects_in_manage_page: true, // 0.3.3
     completed_project_names: [] as SerializedType[], // 0.3.3
+    priority_tags: ["hi", "med", "lo"] as SerializedType[], // 0.5.0
     help_page_tutorial_tldr: false,
 }
-
-type SettingName = keyof TPMSettings;
+export type SettingName = keyof TPMSettings;
+export const maxPriorityTags = 3;
 
 export
 async function setSettingsValueAndSave<T extends SerializedType>(plugin: OdaPmToolPlugin, settingName: SettingName, value: T) {
@@ -105,56 +97,6 @@ async function setSettingsValueAndSave<T extends SerializedType>(plugin: OdaPmTo
     await plugin.saveSettings();
 }
 
-export class TPMSettingsTab extends PluginSettingTab {
-    plugin: TPMPlugin;
-
-    constructor(app: App, plugin: TPMPlugin) {
-        super(app, plugin);
-        this.plugin = plugin;
-    }
-
-    display(): void {
-        const {containerEl} = this;
-
-        containerEl.empty(); // This is settings page, after clicking the tab.
-
-        // const header = containerEl.createEl("div");
-        // header.createEl("h1", {text: this.plugin.manifest.name});
-        // header.createEl("h2", {text: "by Odaimoko"});
-        // containerEl.createEl("h3", {text: "Plugin Behaviours"});
-        new Setting(containerEl)
-            .setName('Notify when a task is malformed')
-            .setDesc('A task or workflow definition is malformed if it contains multiple lines, or the text is empty. Try adding blank line before or after the task.')
-            .addToggle(this.setValueAndSave("report_malformed_task"));
-        new Setting(containerEl)
-            .setName('Capitalized the first letter in table row')
-            .addToggle(this.setValueAndSave("capitalize_table_row_initial"));
-
-        const projectHeader = containerEl.createEl("h2", {text: "Projects"})
-
-        new Setting(containerEl)
-            .setName('Unclassified workflows available for all projects')
-            .setDesc("If ON, unclassified workflows will be available to any projects. If OFF, only workflows in that project are available.")
-            .addToggle(this.setValueAndSave("unclassified_workflows_available_to_all_projects"));
-        new Setting(containerEl).setName("Header as module")
-            .setDesc("If ON, the tasks under headers with the same name can be grouped together.")
-            .addToggle(this.setValueAndSave("manage_page_header_as_module"));
-
-    }
-
-    setValueAndSave<T extends SerializedType>(settingName: SettingName) {
-        return (vc: ValueComponent<T>) =>
-            // @ts-ignore
-            vc.setValue(this.plugin.settings[settingName])
-                // @ts-ignore
-                .onChange?.(async (value: T) => {
-                    await setSettingsValueAndSave(this.plugin, settingName, value)
-                }
-            );
-    }
-
-
-} // Singleton!
 export const SettingsProvider: GenericProvider<TPMSettings> = new GenericProvider<TPMSettings>();
 
 export function getSettings() {

@@ -27,6 +27,7 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
     // 0.2.0
     projects: OdaPmProject[];
 
+
     constructor(type: I_OdaPmWorkflow, task: STask) {
         super();
         this.boundTask = task;

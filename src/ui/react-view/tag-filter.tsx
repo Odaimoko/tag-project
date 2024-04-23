@@ -5,7 +5,7 @@ import {
     FilterMethod_Included,
     FilterMethod_NotFiltering,
     getNextFilterMethod
-} from "../../Settings";
+} from "../../settings/settings";
 import {ClickableIconView} from "./view-template/icon-view";
 import {iconViewAsAWholeStyle} from "./style-def";
 import {Tag_Prefix_Tag} from "../../data-model/workflow-def";

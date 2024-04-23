@@ -4,7 +4,7 @@ import OdaPmToolPlugin from "../../../main";
 import React, {useState} from "react";
 import {OdaPmDbProvider} from "../../../data-model/odaPmDb";
 import {DataTable} from "../../react-view/view-template/data-table";
-import {setSettingsValueAndSave, usePluginSettings} from "../../../Settings";
+import {setSettingsValueAndSave, usePluginSettings} from "../../../settings/settings";
 import {Checkbox} from "../../react-view/view-template/checkbox";
 import {getDefaultTableStyleGetters} from "../../react-view/task-table-view";
 import {ProjectView} from "../../react-view/project-view";

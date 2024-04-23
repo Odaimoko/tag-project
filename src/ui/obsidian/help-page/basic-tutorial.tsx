@@ -7,7 +7,7 @@ import {
     PLUGIN_NAME
 } from "../../../main";
 import React from "react";
-import {usePluginSettings} from "../../../Settings";
+import {usePluginSettings} from "../../../settings/settings";
 import {ObsidianIconView} from "../../react-view/view-template/icon-view";
 import {Icon_ManagePage} from "../manage-page-view";
 import {DataTable} from "../../react-view/view-template/data-table";

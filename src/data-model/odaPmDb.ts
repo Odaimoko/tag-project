@@ -16,7 +16,7 @@ import {EventEmitter} from "events";
 import {DataviewMetadataChangeEvent, Evt_DbReloaded} from "../typing/dataview-event";
 import {getAPI, STask} from "obsidian-dataview";
 import {ONotice} from "../utils/o-notice";
-import {getSettings} from "../Settings";
+import {getSettings} from "../settings/settings";
 import {GenericProvider} from "../utils/GenericProvider";
 import {clearGlobalProjectMap, OdaPmProject, ProjectName_Unclassified} from "./OdaPmProject";
 import {devLog} from "../utils/env-util";

@@ -11,7 +11,7 @@ import {
     TableSortData,
     TableSortMethod,
     totalSortMethods
-} from "../../Settings";
+} from "../../settings/settings";
 import {Evt_JumpTask, Evt_JumpWorkflow} from "../../typing/dataview-event";
 import {initialToUpper, isStringNullOrEmpty, simpleFilter} from "../../utils/format-util";
 import {HStack} from "./view-template/h-stack";

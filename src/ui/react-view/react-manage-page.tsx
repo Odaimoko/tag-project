@@ -2,7 +2,7 @@ import {I_OdaPmProjectTask, I_OdaPmWorkflow} from "../../data-model/workflow-def
 import React, {useContext, useEffect, useState} from "react";
 import {PluginContext} from "../obsidian/manage-page-view";
 import {EventEmitter} from "events";
-import {getSettings, setSettingsValueAndSave, usePluginSettings} from "../../Settings";
+import {getSettings, setSettingsValueAndSave, usePluginSettings} from "../../settings/settings";
 import {OdaPmDbProvider} from "../../data-model/odaPmDb";
 import {Evt_DbReloaded, Evt_JumpTask, Evt_JumpWorkflow, Evt_ManagePageReRender} from "../../typing/dataview-event";
 import {devLog} from "../../utils/env-util";

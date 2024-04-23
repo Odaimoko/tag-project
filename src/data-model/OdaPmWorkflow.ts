@@ -10,7 +10,7 @@ import {
 } from "./workflow-def";
 import {getOrCreateStep} from "./OdaPmStep";
 import {OdaPmProject, ProjectName_Unclassified} from "./OdaPmProject";
-import {getSettings} from "../Settings";
+import {getSettings} from "../settings/settings";
 
 class OdaPmWorkflow implements I_OdaPmWorkflow {
     boundTask: STask;
