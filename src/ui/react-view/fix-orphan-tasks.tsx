@@ -1,4 +1,4 @@
-import {OdaPmDb} from "../../data-model/odaPmDb";
+import {OdaPmDb} from "../../data-model/OdaPmDb";
 import {HStack, VStack} from "./view-template/h-stack";
 import {HoveringPopup} from "./view-template/hovering-popup";
 import {TwiceConfirmButton} from "./view-template/twice-confirm-button";

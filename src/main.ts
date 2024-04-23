@@ -10,7 +10,7 @@ import {
     Evt_JumpWorkflow
 } from "./typing/dataview-event";
 import {EventEmitter} from "events";
-import {OdaPmDb, OdaPmDbProvider} from "./data-model/odaPmDb";
+import {OdaPmDb, OdaPmDbProvider} from "./data-model/OdaPmDb";
 import {addTagText, getWorkflowNameFromRawText, I_OdaPmWorkflow} from "./data-model/workflow-def";
 import {rewriteTask, setProjectTagAtPath} from "./utils/io-util";
 import {WorkflowSuggestionModal} from "./ui/obsidian/workflow-suggestion-modal";

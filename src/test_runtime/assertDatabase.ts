@@ -4,7 +4,7 @@ import {OdaPmTask} from "../data-model/OdaPmTask";
 import {OdaPmProject, ProjectDefinedType, ProjectName_Unclassified} from "../data-model/OdaPmProject";
 import {I_OdaPmWorkflow} from "../data-model/workflow-def";
 import OdaPmToolPlugin from "../main";
-import {OdaPmDb} from "../data-model/odaPmDb";
+import {OdaPmDb} from "../data-model/OdaPmDb";
 //#ifdef DEVELOPMENT_BUILD
 import {expect} from "chai";
 

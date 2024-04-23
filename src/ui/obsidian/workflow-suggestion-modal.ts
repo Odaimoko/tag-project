@@ -1,6 +1,6 @@
 import {App, FuzzySuggestModal} from "obsidian";
 import {getProjectPathFromFilePath, I_OdaPmWorkflow} from "../../data-model/workflow-def";
-import {OdaPmDbProvider} from "../../data-model/odaPmDb";
+import {OdaPmDbProvider} from "../../data-model/OdaPmDb";
 import {OdaPmTask} from "../../data-model/OdaPmTask";
 import {devLog} from "../../utils/env-util";
 import {ProjectName_Unclassified} from "../../data-model/OdaPmProject";

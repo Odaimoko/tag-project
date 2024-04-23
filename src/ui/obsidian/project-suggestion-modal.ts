@@ -1,5 +1,5 @@
 import {App, FuzzySuggestModal} from "obsidian";
-import {OdaPmDbProvider} from "../../data-model/odaPmDb";
+import {OdaPmDbProvider} from "../../data-model/OdaPmDb";
 import {OdaPmProject} from "../../data-model/OdaPmProject";
 
 export class ProjectSuggestionModal extends FuzzySuggestModal<OdaPmProject> {

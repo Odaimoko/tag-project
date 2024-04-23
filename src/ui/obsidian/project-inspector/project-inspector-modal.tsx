@@ -2,7 +2,7 @@ import {Modal} from "obsidian";
 import {createRoot, Root} from "react-dom/client";
 import OdaPmToolPlugin from "../../../main";
 import React, {useState} from "react";
-import {OdaPmDbProvider} from "../../../data-model/odaPmDb";
+import {OdaPmDbProvider} from "../../../data-model/OdaPmDb";
 import {DataTable} from "../../react-view/view-template/data-table";
 import {setSettingsValueAndSave, usePluginSettings} from "../../../settings/settings";
 import {Checkbox} from "../../react-view/view-template/checkbox";
