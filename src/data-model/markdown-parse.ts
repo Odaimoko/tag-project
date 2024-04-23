@@ -1,4 +1,4 @@
-export const POTENTIAL_TAG_MATCHER = /[^+@\s,;.:!&*?'"`()\[\]{}]+/giu;
+export const POTENTIAL_TAG_MATCHER = /[^+@\s,;.:!&*?'"`()\[\]{}#]+/giu;
 // With hashtag and spaces before
 const POTENTIAL_FULLTAG_MATCHER = /[*\s]+#[^+@\s,;.:!&*?'"`()\[\]{}]+/giu;
 
