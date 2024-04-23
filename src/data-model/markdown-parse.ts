@@ -1,6 +1,6 @@
 export const POTENTIAL_TAG_MATCHER = /[^+@\s,;.:!&*?'"`()\[\]{}#$]+/giu;
 // With hashtag and spaces before
-const POTENTIAL_FULLTAG_MATCHER = /[*\s]+#[^+@\s,;.:!&*?'"`()\[\]{}]+/giu;
+const POTENTIAL_FULLTAG_MATCHER = /[*\s]+#[^+@\s,;.:!&*?'"`()\[\]{}#$]+/giu;
 
 export function matchTags(text: string): string[] {
     // TPM-0.2.0-1-9, remove tags in codeblocks.
