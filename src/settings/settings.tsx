@@ -52,7 +52,8 @@ export interface TPMSettings {
 
     // personalized settings, not exposed in settings tab
     show_completed_tasks: SerializedType;
-    cached_table_column_sorting: SerializedType;
+    cached_table_task_sorting_by: TableSortBy;
+    cached_table_task_sorting_method: SerializedType;
     table_steps_shown: SerializedType;
     display_workflow_names: SerializedType[],
     manage_page_display_tags: SerializedType[],
@@ -76,7 +77,8 @@ export const TPM_DEFAULT_SETTINGS: Partial<TPMSettings> = {
     // custom_tag_prefix_tag: Tag_Prefix_Tag,
     // personalized settings, not exposed in settings tab
     show_completed_tasks: true,
-    cached_table_column_sorting: TableSortMethod.Appearance,
+    cached_table_task_sorting_by: TableSortBy.Name,
+    cached_table_task_sorting_method: TableSortMethod.Appearance,
     table_steps_shown: true,
     display_workflow_names: [] as SerializedType[],
     manage_page_display_tags: [] as SerializedType[],

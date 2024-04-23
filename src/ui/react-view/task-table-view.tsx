@@ -21,7 +21,7 @@ import {
 } from "../../settings/settings";
 import {Evt_JumpTask, Evt_JumpWorkflow} from "../../typing/dataview-event";
 import {initialToUpper, isStringNullOrEmpty, simpleFilter} from "../../utils/format-util";
-import {HStack} from "./view-template/h-stack";
+import {HStack, VStack} from "./view-template/h-stack";
 import {ClickableIconView, ClickableView, I_Stylable, InternalLinkView} from "./view-template/icon-view";
 import {ExternalControlledCheckbox} from "./view-template/checkbox";
 import {DataTable} from "./view-template/data-table";
@@ -31,7 +31,7 @@ import {MarkdownRenderer} from "obsidian";
 import {HtmlStringComponent} from "./view-template/html-string-component";
 import {appendBoldText} from "../common/html-template";
 import {notify} from "../../utils/o-notice";
-import {centerChildren, getIconByWorkflow, getStickyHeaderStyle} from "./style-def";
+import {centerChildren, centerChildrenVertStyle, getIconByWorkflow, getStickyHeaderStyle} from "./style-def";
 import {loopIndex} from "./project-filter";
 import {Minus} from "./icon/Minus";
 import {DownAZ, UpAZ} from "./icon/DownAZ";
@@ -206,9 +206,29 @@ export function getDefaultTableStyleGetters(minSummaryWidth: number | string = 5
     return {cellStyleGetter, headStyleGetter};
 }
 
-function getNameSortIcon(method: TableSortMethod) {
-    return method === TableSortMethod.Ascending ? <UpAZ/> :
-        method === TableSortMethod.Descending ? <DownAZ/> : <Minus/>;
+
+function getNameSortIcon(columnSort: TableSortData) {
+
+    switch (columnSort.sortBy) {
+        case TableSortBy.Name:
+            return getNameSortIcon(columnSort.method)
+        case TableSortBy.Priority:
+            return getPrioritySortIcon(columnSort.method);
+        case TableSortBy.Step:
+        default:
+            return getNameSortIcon(TableSortMethod.Appearance)
+    }
+
+    function getNameSortIcon(method: TableSortMethod) {
+        return method === TableSortMethod.Ascending ? <UpAZ/> :
+            method === TableSortMethod.Descending ? <DownAZ/> : <Minus/>;
+    }
+
+    function getPrioritySortIcon(method: TableSortMethod) {
+        // Ascending: high to low
+        return method === TableSortMethod.Ascending ? <ArrowBigUpDash/> :
+            method === TableSortMethod.Descending ? <ArrowBigDownDash/> : <Minus/>;
+    }
 }
 
 function getStepSortIcon(method: TableSortMethod) {
@@ -217,11 +237,6 @@ function getStepSortIcon(method: TableSortMethod) {
 
 }
 
-function getPrioritySortIcon(method: TableSortMethod) {
-    // Ascending: high to low
-    return method === TableSortMethod.Ascending ? <ArrowBigUpDash/> :
-        method === TableSortMethod.Descending ? <ArrowBigDownDash/> : <Minus/>;
-}
 
 function getPriorityIcon(idx: number) {
     switch (idx) {
@@ -266,7 +281,6 @@ function TaskPriorityIcon({oTask}: { oTask: OdaPmTask }): React.JSX.Element {
     </div>} title={"Choose priority..."}/>;
 }
 
-
 export function TaskTableView({displayWorkflows, filteredTasks}: {
     displayWorkflows: I_OdaPmWorkflow[],
     filteredTasks: OdaPmTask[]
@@ -275,8 +289,8 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
     const [searchText, setSearchText] = useState("");
     // sort
     const [columnSort, setColumnSort] = useState<TableSortData>({
-        sortBy: TableSortBy.Name,
-        method: getSettings()?.cached_table_column_sorting as TableSortMethod
+        sortBy: getSettings()?.cached_table_task_sorting_by as TableSortBy,
+        method: getSettings()?.cached_table_task_sorting_method as TableSortMethod
     })
     // show completed
     const [showCompleted, setShowCompleted] = useState(getSettings()?.show_completed_tasks as boolean);
@@ -366,19 +380,56 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
             }
         }
             break
+        case TableSortBy.Priority: {
+            const prioritySortMethod = columnSort.method;
+            const ascending = prioritySortMethod === TableSortMethod.Ascending;
+            if (prioritySortMethod !== TableSortMethod.Appearance) {
+                const priorityTags = OdaPmDbProvider.get()?.pmPriorityTags;
+                displayedTasks.sort(
+                    function (a: OdaPmTask, b: OdaPmTask) {
+                        const aPriority = a.getPriority(priorityTags);
+                        const bPriority = b.getPriority(priorityTags);
+                        if (ascending)
+                            return aPriority - bPriority
+                        else
+                            return bPriority - aPriority
+                    }
+                )
+            }
+        }
     }
 
     // endregion
     const curWfName = "Tasks";
     const headers = [
-        <div>
+        <VStack style={centerChildrenVertStyle}>
             <WorkflowOverviewView filteredTasks={filteredTasks}/>
-            <div>
-                {columnSort.sortBy === TableSortBy.Name
-                    ? getNameSortIcon(columnSort.method)
-                    : getNameSortIcon(TableSortMethod.Appearance)}
+            <div style={centerChildrenVertStyle}>
+                <HoveringPopup hoveredContent={
+                    <HStack style={centerChildren} spacing={5}>
+                        <label>
+                            Sort:
+                        </label>
+                        {getNameSortIcon(columnSort)}
+                    </HStack>
+                }
+                               title={"Sort by..."}
+                               popupContent={<VStack spacing={5}>
+                                   <HStack>
+                                       <label>Name</label>
+                                       <ClickableView onIconClicked={setSortToName}
+                                                      icon={<UpAZ/>}/>
+                                   </HStack>
+                                   <HStack>
+                                       <label>Priority</label>
+                                       <ClickableView onIconClicked={setSortToPriority}
+                                                      icon={<ArrowBigUpDash/>}/>
+                                   </HStack>
+                               </VStack>}
+                />
+
             </div>
-        </div>
+        </VStack>
         , ...(getSettings()?.table_steps_shown ? displayStepNames.map(
             (k, index) => <div key={k + index}>
                 <div>
@@ -453,7 +504,7 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
                         rows={taskRows}
                         onHeaderClicked={(arg0) => {
                             if (arg0 === 0) {
-                                setSortToName()
+                                // setSortToName()
                             } else {
                                 setSortToColumn(arg0)
                             }
@@ -470,15 +521,28 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
     function setSortToName() {
         const prevMethod = columnSort.sortBy;
         // Loop
-        const nextNameSortMethod = loopIndex(columnSort.method + 1, totalSortMethods);
+        const nextSortMethod = loopIndex(columnSort.method + 1, totalSortMethods);
         setColumnSort({
             sortBy: TableSortBy.Name,
             column: undefined,
-            method: prevMethod === TableSortBy.Name ? nextNameSortMethod : TableSortMethod.Ascending
+            method: prevMethod === TableSortBy.Name ? nextSortMethod : TableSortMethod.Ascending
         })
-        setSettingsValueAndSave(plugin, "cached_table_column_sorting", nextNameSortMethod)
+        setSettingsValueAndSave(plugin, "cached_table_task_sorting_by", TableSortBy.Name)
+        setSettingsValueAndSave(plugin, "cached_table_task_sorting_method", nextSortMethod)
     }
 
+    function setSortToPriority() {
+        const prevMethod = columnSort.sortBy;
+        const nextSortMethod = loopIndex(columnSort.method + 1, totalSortMethods);
+        setColumnSort({
+            sortBy: TableSortBy.Priority,
+            column: undefined,
+            method: prevMethod === TableSortBy.Priority ? nextSortMethod : TableSortMethod.Ascending
+        })
+
+        setSettingsValueAndSave(plugin, "cached_table_task_sorting_by", TableSortBy.Priority)
+        setSettingsValueAndSave(plugin, "cached_table_task_sorting_method", nextSortMethod)
+    }
 
     function setSortToColumn(index: number) {
         const prevMethod = columnSort.sortBy;
@@ -493,7 +557,8 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
     }
 
     function resetNameSortMethod() {
-        setSettingsValueAndSave(plugin, "cached_table_column_sorting", TableSortMethod.Appearance)
+        setSettingsValueAndSave(plugin, "cached_table_task_sorting_by", TableSortBy.Name)
+        setSettingsValueAndSave(plugin, "cached_table_task_sorting_method", TableSortMethod.Appearance)
     }
 
     //endregion
