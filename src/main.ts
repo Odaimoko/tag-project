@@ -1,7 +1,7 @@
 import {Editor, EditorPosition, MarkdownFileInfo, MarkdownView, Plugin} from 'obsidian';
 import {Icon_ManagePage, ManagePageView, ManagePageViewId} from "./ui/obsidian/manage-page-view";
 import {ONotice} from "./utils/o-notice";
-import {SettingsProvider, TPM_DEFAULT_SETTINGS, TPMSettings, TPMSettingsTab} from "./Settings";
+import {SettingsProvider, TPM_DEFAULT_SETTINGS, TPMSettings} from "./settings/settings";
 
 import {
     DataviewIndexReadyEvent,
@@ -20,6 +20,7 @@ import {OdaPmTask} from "./data-model/OdaPmTask";
 import {ProjectSuggestionModal} from "./ui/obsidian/project-suggestion-modal";
 import {assertOnPluginInit} from "./test_runtime/assertDatabase";
 import TagRenderer from "./ui/obsidian/tag-render/tag-render";
+import {TPMSettingsTab} from "./settings/TPMSettingsTab";
 
 export const PLUGIN_NAME = 'Tag Project';
 export const CmdPal_OpenManagePage = `Open Manage Page`; // `Open ${Desc_ManagePage}`

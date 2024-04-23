@@ -42,3 +42,4 @@ export const getStickyHeaderStyle = (zIndex = 1) => {
 export const dropdownSelectedColor = "rgba(255,99,179,0.74)";
 export const centerChildren = {display: "flex", alignItems: "center"}
 export const centerChildrenVertStyle = {display: "flex", justifyContent: "center"}
+export const centerChildrenHoriVertStyle = {display: "flex", justifyContent: "center", alignItems: "center"}
