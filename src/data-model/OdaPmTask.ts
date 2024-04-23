@@ -14,7 +14,7 @@ import {BaseDatabaseObject} from "./BaseDatabaseObject";
 import {getOrCreateStep} from "./OdaPmStep";
 import {setProjectTagToTask} from "../utils/io-util";
 import {ModuleId_Unclassified} from "./OdaPmModule";
-import {DefaultTaskPriority} from "../settings/settings";
+import {DefaultTaskPriority, MoreThanOnePriority} from "../settings/settings";
 
 export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
     boundTask: STask;
@@ -252,20 +252,29 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
     }
 
     /**
-     * 0.5.0 Priority
-     * @returns less is higher
+     * 0.5.0 Priority.
+     * @returns less is higher. Some error code is returned if more than one priority tags are found.
      */
     getPriority(priorityTags: string[] | undefined): number {
         if (!priorityTags)
             return DefaultTaskPriority;
-        
+
         // priorityTags leng must equal maxPriorityTags
         // devLog(`priorityTags leng must equal maxPriorityTags: ${priorityTags.length === maxPriorityTags}`)
+        let found = false;
+        let foundIndex = -1;
         for (let i = 0; i < priorityTags.length; i++) {
             if (this.hasTag(priorityTags[i])) {
-                return i;
+                if (found) {
+                    return MoreThanOnePriority; // we have more than one priority tags
+                }
+                found = true;
+                foundIndex = i;
             }
         }
+        if (found)
+            return foundIndex;
+        
         return DefaultTaskPriority;
     }
 }

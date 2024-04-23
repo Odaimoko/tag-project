@@ -1,6 +1,13 @@
 import {OdaPmTask} from "../../data-model/OdaPmTask";
 import OdaPmToolPlugin from "../../main";
-import {I_OdaPmStep, I_OdaPmWorkflow, TaskStatus_checked, TaskStatus_unchecked} from "../../data-model/workflow-def";
+import {
+    addTagText,
+    I_OdaPmStep,
+    I_OdaPmWorkflow,
+    removeTagText,
+    TaskStatus_checked,
+    TaskStatus_unchecked
+} from "../../data-model/workflow-def";
 import {openTaskPrecisely, rewriteTask} from "../../utils/io-util";
 import React, {ReactElement, useContext, useEffect, useState} from "react";
 import {PluginContext} from "../obsidian/manage-page-view";
@@ -15,7 +22,7 @@ import {
 import {Evt_JumpTask, Evt_JumpWorkflow} from "../../typing/dataview-event";
 import {initialToUpper, isStringNullOrEmpty, simpleFilter} from "../../utils/format-util";
 import {HStack} from "./view-template/h-stack";
-import {ClickableIconView, I_Stylable, InternalLinkView} from "./view-template/icon-view";
+import {ClickableIconView, ClickableView, I_Stylable, InternalLinkView} from "./view-template/icon-view";
 import {ExternalControlledCheckbox} from "./view-template/checkbox";
 import {DataTable} from "./view-template/data-table";
 import {IRenderable} from "../common/i-renderable";
@@ -24,13 +31,15 @@ import {MarkdownRenderer} from "obsidian";
 import {HtmlStringComponent} from "./view-template/html-string-component";
 import {appendBoldText} from "../common/html-template";
 import {notify} from "../../utils/o-notice";
-import {getIconByWorkflow, getStickyHeaderStyle} from "./style-def";
+import {centerChildren, getIconByWorkflow, getStickyHeaderStyle} from "./style-def";
 import {loopIndex} from "./project-filter";
 import {Minus} from "./icon/Minus";
 import {DownAZ, UpAZ} from "./icon/DownAZ";
 import {Down01, Up01} from "./icon/Down01";
 import {ArrowBigDownDash, ArrowBigUpDash} from "./icon/ArrowBigUpDash";
 import {OdaPmDbProvider} from "../../data-model/OdaPmDb";
+import {HoveringPopup} from "./view-template/hovering-popup";
+import {CircleHelp} from "./icon/CircleHelp";
 
 export const taskCheckBoxMargin = {marginLeft: 3};
 
@@ -68,7 +77,6 @@ export const OdaTaskSummaryCell = ({oTask, taskFirstColumn, showCheckBox, showPr
     const plugin = useContext(PluginContext);
     const workspace = plugin.app.workspace;
     const [summaryView, setSummaryView] = useState<ReactElement>();
-    const priIcon = useTaskSortIcon(oTask);
 
     function tickSummary() {
         // Automatically add tags when checking in manage page 
@@ -108,9 +116,9 @@ export const OdaTaskSummaryCell = ({oTask, taskFirstColumn, showCheckBox, showPr
     const checkBoxContent = <span>
         <InternalLinkView content={summaryView} onIconClicked={openThisTask} onContentClicked={openThisTask}/>
     </span>;
-    return <HStack spacing={5}>
+    return <HStack style={centerChildren} spacing={5}>
         {showWorkflowIcon ? getIconByTask(oTask) : null}
-        {showPriority && priIcon}
+        {showPriority && <TaskPriorityIcon oTask={oTask}/>}
         {showCheckBox ? <ExternalControlledCheckbox
             content={checkBoxContent}
             onChange={tickSummary}
@@ -215,24 +223,47 @@ function getPrioritySortIcon(method: TableSortMethod) {
         method === TableSortMethod.Descending ? <ArrowBigDownDash/> : <Minus/>;
 }
 
-function getPriorityIcon(pri: number) {
-    switch (pri) {
+function getPriorityIcon(idx: number) {
+    switch (idx) {
         case 0:
             return <ArrowBigUpDash/>
         case 1:
             return <Minus/>
         case 2:
             return <ArrowBigDownDash/>
-        default:
-            return <Minus/>
+        default: // Exception
+            return <CircleHelp/>
     }
-
 }
 
-function useTaskSortIcon(oTask: OdaPmTask) {
+
+function TaskPriorityIcon({oTask}: { oTask: OdaPmTask }): React.JSX.Element {
     const db = OdaPmDbProvider.get();
+    const plugin = useContext(PluginContext);
+    const priorityTags = db?.pmPriorityTags ?? [];
     const pri = oTask.getPriority(db?.pmPriorityTags)
-    return getPriorityIcon(pri)
+    return <HoveringPopup hoveredContent={
+        <ClickableView icon={getPriorityIcon(pri)}/>
+    } popupContent={<div>
+        <HStack>
+            {
+                priorityTags.map((k: string, i) => {
+                    const priorityIcon = getPriorityIcon(i);
+                    return <div key={k}>
+                        <ClickableView icon={priorityIcon} onIconClicked={() => {
+                            let oriText = oTask.text
+                            for (const priorityTag of priorityTags) {
+                                oriText = removeTagText(oriText, priorityTag);
+                            }
+                            oriText = addTagText(oriText, k);
+                            rewriteTask(plugin.app.vault, oTask.boundTask, oTask.boundTask.status, oriText);
+                        }}/>
+                    </div>;
+                })
+            }
+
+        </HStack>
+    </div>} title={"Choose priority..."}/>;
 }
 
 

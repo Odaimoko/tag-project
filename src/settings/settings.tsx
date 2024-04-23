@@ -96,6 +96,7 @@ function getDefaultPriority() {
     return Math.floor(maxPriorityTags / 2); // 1 -> medium's index
 }
 
+export const MoreThanOnePriority = -1;
 export const DefaultTaskPriority = getDefaultPriority();
 
 export
