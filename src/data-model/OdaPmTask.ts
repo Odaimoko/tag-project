@@ -259,8 +259,6 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
         if (!priorityTags)
             return DefaultTaskPriority;
 
-        // priorityTags leng must equal maxPriorityTags
-        // devLog(`priorityTags leng must equal maxPriorityTags: ${priorityTags.length === maxPriorityTags}`)
         let found = false;
         let foundIndex = -1;
         for (let i = 0; i < priorityTags.length; i++) {

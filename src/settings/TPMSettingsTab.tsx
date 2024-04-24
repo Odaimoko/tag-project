@@ -2,13 +2,18 @@ import {App, PluginSettingTab, Setting, ValueComponent} from "obsidian";
 import TPMPlugin from "../main";
 import {createRoot, Root} from "react-dom/client";
 import React, {useState} from "react";
-import {getSettings, setSettingsValueAndSave, SettingName} from "./settings";
+import {getSettings, setSettingsValueAndSave, SettingName, usePluginSettings} from "./settings";
 import {SerializedType} from "./SerializedType";
 import {ONotice} from "../utils/o-notice";
-import {POTENTIAL_TAG_MATCHER} from "../data-model/markdown-parse";
+import {isTagNameValid, POTENTIAL_TAG_MATCHER} from "../data-model/markdown-parse";
 import {HStack} from "../ui/react-view/view-template/h-stack";
 import {PluginContext} from "../ui/obsidian/manage-page-view";
-import {centerChildren, centerChildrenHoriVertStyle} from "../ui/react-view/style-def";
+import {
+    centerChildren,
+    centerChildrenHoriVertStyle,
+    diffGroupSpacing,
+    sameGroupSpacing
+} from "../ui/react-view/style-def";
 import {DataTable} from "../ui/react-view/view-template/data-table";
 import {Tag_Prefix_Tag} from "../data-model/workflow-def";
 import {getPriorityIcon} from "../ui/react-view/task-table-view";
@@ -60,7 +65,7 @@ export class TPMSettingsTab extends PluginSettingTab {
         this.root = createRoot(priTagDiv); // Override the previous container
         this.root.render(
             <PluginContext.Provider value={this.plugin}>
-                <PriorityTags/>
+                <PriorityTagsEditView/>
             </PluginContext.Provider>
         )
 
@@ -79,17 +84,17 @@ export class TPMSettingsTab extends PluginSettingTab {
 
 } // Singleton!
 
-export function PriorityTags() {
+export function PriorityTagsEditView() {
     const plugin = React.useContext(PluginContext);
-    const labels = ["High", "Medium", "Low"]
-    const [priorityTags, setPriorityTags] = useState<string[]>(getSettings()?.priority_tags as string[])
-
+    const labels = ["High", "Med High", "Medium", "Med Low", "Low"]
+    const [editingTags, setEditingTags] = useState<string[]>(getSettings()?.priority_tags as string[])
+    const [settingsTags, setSettingsTags] = usePluginSettings<string[]>("priority_tags")
     const headers: string[] = []
 
 
     const rows = labels.map(k => {
         const idx = labels.indexOf(k);
-        const oriTag = priorityTags[idx];
+        const oriTag = editingTags[idx];
         return [
             <HStack>
                 {getPriorityIcon(idx)}
@@ -107,8 +112,8 @@ export function PriorityTags() {
                                new ONotice(`Invalid tag: ${tag}.`);
                                return;
                            }
-                           priorityTags[idx] = tag;
-                           setPriorityTags([...priorityTags])
+                           editingTags[idx] = tag;
+                           setEditingTags([...editingTags])
 
                        }}
                 />
@@ -116,7 +121,7 @@ export function PriorityTags() {
         ]
     })
     return <div>
-        <HStack style={{justifyContent: "space-between"}} spacing={10}>
+        <HStack style={{justifyContent: "space-between"}} spacing={diffGroupSpacing}>
             <div>
 
                 <div className={"setting-item-name"}>Priority tags</div>
@@ -124,24 +129,33 @@ export function PriorityTags() {
 
                     <p>
                         Customize your priority tags.
-                        Current tags are: <b>{plugin.settings.priority_tags.join(", ")}.</b>
+                    </p>
+                    <p>
+                        Current tags are: <b>{settingsTags.join(", ")}.</b>
                     </p>
                     <HStack style={centerChildren}>
                         <label>
-                            The priority tags will be replaced in all tasks.
+                            On save, the priority tags will be replaced in all tasks.
                             This is NOT undoable.
                         </label>
                         <TwiceConfirmButton
                             onConfirm={() => {
-                                setSettingsValueAndSave(plugin, "priority_tags", [...priorityTags]).then(() => {
-                                    setPriorityTags([...priorityTags]) // re-render
+                                // Do not save if any tag is invalid
+                                for (const tag of editingTags) {
+                                    if (!isTagNameValid(tag)) {
+                                        new ONotice(`Priority tags not saved. Invalid tag: ${tag}.`);
+                                        return;
+                                    }
+                                }
+                                setSettingsTags([...editingTags]).then(() => {
+                                    setEditingTags([...editingTags]) // re-render
                                     // TODO replace tags in all tasks
                                     // Trigger database refresh
                                     plugin.getEmitter().emit(Evt_ReqDbReload)
                                 })
                             }}
                             confirmView={
-                                <HStack style={centerChildren} spacing={5}>
+                                <HStack style={centerChildren} spacing={sameGroupSpacing}>
 
                                     <ObsidianIconView style={{color: "var(--text-warning)"}}
                                                       iconName={"alert-circle"}/>

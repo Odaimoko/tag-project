@@ -17,6 +17,7 @@ import {
     TableSortBy,
     TableSortData,
     TableSortMethod,
+    TaskPriority,
     totalSortMethods
 } from "../../settings/settings";
 import {Evt_JumpTask, Evt_JumpWorkflow} from "../../typing/dataview-event";
@@ -36,7 +37,7 @@ import {loopIndex} from "./project-filter";
 import {Minus} from "./icon/Minus";
 import {DownAZ, UpAZ} from "./icon/DownAZ";
 import {Down01, Up01} from "./icon/Down01";
-import {ArrowBigDownDash, ArrowBigUpDash} from "./icon/ArrowBigUpDash";
+import {ArrowBigDown, ArrowBigDownDash, ArrowBigUp, ArrowBigUpDash} from "./icon/ArrowBigUpDash";
 import {OdaPmDbProvider} from "../../data-model/OdaPmDb";
 import {HoveringPopup} from "./view-template/hovering-popup";
 import {CircleHelp} from "./icon/CircleHelp";
@@ -239,11 +240,15 @@ function getStepSortIcon(method: TableSortMethod) {
 
 export function getPriorityIcon(idx: number) {
     switch (idx) {
-        case 0:
+        case TaskPriority.High:
             return <ArrowBigUpDash/>
-        case 1:
+        case TaskPriority.MedHi:
+            return <ArrowBigUp/>
+        case TaskPriority.Medium:
             return <Minus/>
-        case 2:
+        case TaskPriority.MedLo:
+            return <ArrowBigDown/>
+        case TaskPriority.Low:
             return <ArrowBigDownDash/>
         default: // Exception
             return <CircleHelp/>

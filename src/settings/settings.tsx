@@ -1,7 +1,7 @@
 import OdaPmToolPlugin from "../main";
 import {GenericProvider} from "../utils/GenericProvider";
 import {Evt_SettingsChanged} from "../typing/dataview-event";
-import React, {Dispatch, SetStateAction, useContext} from "react";
+import React, {SetStateAction, useContext} from "react";
 import {PluginContext} from "../ui/obsidian/manage-page-view";
 import {devLog} from "../utils/env-util";
 import {SerializedType} from "./SerializedType";
@@ -36,6 +36,27 @@ export const FilterMethod_Excluded = 2;
 export function getNextFilterMethod(method: number) {
     return (method + 1) % totalFilterMethods;
 }
+
+// region Priority
+export const maxPriorityTags = 5;
+
+export enum TaskPriority {
+    High = 0,
+    MedHi = 1,
+    Medium = 2,
+    MedLo = 3,
+    Low = 4,
+}
+
+function getDefaultPriority() {
+    return Math.floor(maxPriorityTags / 2); // 1 -> medium's index
+}
+
+export const MoreThanOnePriority = -1;
+export const DefaultTaskPriority = getDefaultPriority();
+
+// endregion
+
 
 /**
  * cached: not in settings tab, nor explicitly in any ui.
@@ -88,18 +109,10 @@ export const TPM_DEFAULT_SETTINGS: Partial<TPMSettings> = {
     display_module_names: [] as SerializedType[], // 0.3.0,
     do_not_show_completed_projects_in_manage_page: true, // 0.3.3
     completed_project_names: [] as SerializedType[], // 0.3.3
-    priority_tags: ["hi", "med", "lo"] as SerializedType[], // 0.5.0
+    priority_tags: ["hi", "med_hi", "med", "med_lo", "lo"] as SerializedType[], // 0.5.0
     help_page_tutorial_tldr: false,
 }
 export type SettingName = keyof TPMSettings;
-export const maxPriorityTags = 3;
-
-function getDefaultPriority() {
-    return Math.floor(maxPriorityTags / 2); // 1 -> medium's index
-}
-
-export const MoreThanOnePriority = -1;
-export const DefaultTaskPriority = getDefaultPriority();
 
 export
 async function setSettingsValueAndSave<T extends SerializedType>(plugin: OdaPmToolPlugin, settingName: SettingName, value: T) {
@@ -123,16 +136,16 @@ export function getSettings() {
  * This is to ensure that when a value is changed in settings, the `handler` will receive the event, and update the value in the ui.
  * @param name
  */
-export function usePluginSettings<T extends SerializedType>(name: SettingName): [T, Dispatch<SetStateAction<T>>] {
+export function usePluginSettings<T extends SerializedType>(name: SettingName): [T, (v: SetStateAction<T>) => Promise<void>] {
     const plugin = useContext(PluginContext);
     // @ts-ignore
     const [value, setValue] = React.useState(getSettings()[name] as T);
 
-    function setValueAndSave(newValue: T) {
+    async function setValueAndSave(newValue: T) {
         // @ts-ignore
         devLog(`DirectSetValue: ${name}, Old value: ${getSettings()[name]}`)
         if (plugin)
-            setSettingsValueAndSave(plugin, name, newValue)
+            await setSettingsValueAndSave(plugin, name, newValue)
     }
 
     // really set value after settings change

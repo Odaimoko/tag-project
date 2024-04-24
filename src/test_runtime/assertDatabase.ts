@@ -7,6 +7,7 @@ import OdaPmToolPlugin from "../main";
 import {OdaPmDb} from "../data-model/OdaPmDb";
 //#ifdef DEVELOPMENT_BUILD
 import {expect} from "chai";
+import {maxPriorityTags, TaskPriority} from "../settings/settings";
 
 
 interface AssertFunctions {
@@ -247,10 +248,13 @@ async function test_UT_020_6(pmDb: OdaPmDb) {
  * @param pmDb
  */
 function test_UT_050(pmDb: OdaPmDb) {
-    dbAssertFunctions.expectTaskHasPriority("UT_050_Hi", 0, pmDb.pmPriorityTags);
-    dbAssertFunctions.expectTaskHasPriority("UT_050_med_default", 1, pmDb.pmPriorityTags);
-    dbAssertFunctions.expectTaskHasPriority("UT_050_med", 1, pmDb.pmPriorityTags);
-    dbAssertFunctions.expectTaskHasPriority("UT_050_lo", 2, pmDb.pmPriorityTags);
+    expect(pmDb.pmPriorityTags.length, `Priority tags not matched.`).equal(maxPriorityTags);
+    dbAssertFunctions.expectTaskHasPriority("UT_050_Hi", TaskPriority.High, pmDb.pmPriorityTags);
+    dbAssertFunctions.expectTaskHasPriority("UT_050_med_hi", TaskPriority.MedHi, pmDb.pmPriorityTags);
+    dbAssertFunctions.expectTaskHasPriority("UT_050_med_default", TaskPriority.Medium, pmDb.pmPriorityTags);
+    dbAssertFunctions.expectTaskHasPriority("UT_050_med", TaskPriority.Medium, pmDb.pmPriorityTags);
+    dbAssertFunctions.expectTaskHasPriority("UT_050_med_lo", TaskPriority.MedLo, pmDb.pmPriorityTags);
+    dbAssertFunctions.expectTaskHasPriority("UT_050_lo", TaskPriority.Low, pmDb.pmPriorityTags);
     devLog("Test PASSED: Priority Tags.")
 }
 

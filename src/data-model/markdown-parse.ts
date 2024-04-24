@@ -25,3 +25,9 @@ export function matchCodeInline(text: string) {
     const match = text.match(/`.*?`/g);
     return match;
 }
+
+export function isTagNameValid(tag: string) {
+    const match = tag.match(POTENTIAL_TAG_MATCHER);
+    return match && match.length != 0 && match[0].length == tag.length;
+
+}
