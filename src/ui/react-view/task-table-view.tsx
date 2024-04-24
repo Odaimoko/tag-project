@@ -269,6 +269,9 @@ function TaskPriorityIcon({oTask}: { oTask: OdaPmTask }): React.JSX.Element {
             }
 
         </HStack>
+        <label>
+            Customize priority tags in settings.
+        </label>
     </div>} title={"Choose priority..."}/>;
 }
 
