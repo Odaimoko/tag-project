@@ -175,6 +175,32 @@ export function PriorityTagsEditView() {
     const affectedTasks = tasks.filter(t => t.hasAnyTag(diffTags)); // include those have multiple priority tags
     // devLog("Affected count: " + affectedTasks.length, affectedTasks.map(k => k.summary).join(", "))
     const wronglyAssignedTasks = affectedTasks.filter(k => k.getPriority(oldPriTags) < 0)
+
+    function getValidNewTags() {
+        if (wronglyAssignedTasks.length > 0) {
+            setNotiText("[Err] Priority tags not saved. Some tasks have multiple priority tags.")
+            return null;
+        }
+        // Do not save if any tag is invalid
+        const newTags: string[] = []
+        for (let i = 0; i < editingTagNames.length; i++) {
+            const tag = editingTagNames[i];
+            if (newTags.contains(tag)) {
+                setNotiText(`[Err] Duplicate tag: ${tag}`)
+                return null;
+            }
+            if (isStringEmpty(tag)) {
+                newTags.push(TPM_DEFAULT_SETTINGS.priority_tags?.at(i) as string)
+            } else if (!isTagNameValid(tag)) {
+                setNotiText(`[Err] Invalid tag: ${tag}`)
+                return null;
+            } else {
+                newTags.push(tag);
+            }
+        }
+        return newTags;
+    }
+
     return <div>
         <HStack style={{justifyContent: "space-between"}} spacing={diffGroupSpacing}>
             <div>
@@ -199,23 +225,9 @@ export function PriorityTagsEditView() {
                     <HStack spacing={sameGroupSpacing}>
                         <TwiceConfirmButton
                             onConfirm={() => {
-                                if (wronglyAssignedTasks.length > 0) {
-                                    setNotiText("[Err] Priority tags not saved. Some tasks have multiple priority tags.")
+                                const newTags = getValidNewTags();
+                                if (!newTags)
                                     return;
-                                }
-                                // Do not save if any tag is invalid
-                                const newTags: string[] = []
-                                for (let i = 0; i < editingTagNames.length; i++) {
-                                    const tag = editingTagNames[i];
-                                    if (isStringEmpty(tag)) {
-                                        newTags.push(TPM_DEFAULT_SETTINGS.priority_tags?.at(i) as string)
-                                    } else if (!isTagNameValid(tag)) {
-                                        setNotiText(`[Err] Invalid tag: ${tag}`)
-                                        return;
-                                    } else {
-                                        newTags.push(tag);
-                                    }
-                                }
                                 setSettingsTags(newTags).then(async () => {
                                     setEditingTagNames([...newTags]) // re-render
                                     // replace tags in all tasks
