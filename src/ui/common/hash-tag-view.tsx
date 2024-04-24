@@ -1,11 +1,13 @@
 import React, {useContext} from "react";
 import {MarkdownConvertContext} from "../../utils/markdown-converter";
+import {IRenderable} from "./i-renderable";
 
 export const HashTagView = ({tagWithoutHash}: {
-    tagWithoutHash: string
+    tagWithoutHash: IRenderable
 }) => {
     const mcc = useContext(MarkdownConvertContext);
-    tagWithoutHash = tagWithoutHash.startsWith("#") ? tagWithoutHash.substring(1) : tagWithoutHash
+    if (typeof tagWithoutHash === "string")
+        tagWithoutHash = tagWithoutHash.startsWith("#") ? tagWithoutHash.substring(1) : tagWithoutHash
     return !mcc ?
         <>
             <span

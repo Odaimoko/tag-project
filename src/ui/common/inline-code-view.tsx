@@ -1,7 +1,8 @@
 import React from "react";
+import {IRenderable} from "./i-renderable";
 
 export const InlineCodeView = ({text}: {
-    text: string
+    text: IRenderable
 }) => {
     return <span style={{
         color: "var(--code-normal)",
