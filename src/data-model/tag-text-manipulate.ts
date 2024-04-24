@@ -19,7 +19,6 @@ export function addTagText(text: string, tag: string) {
         return `${textCleanAtRight} ${tag} ${hasTrailingEol ? "\n" : ""}`;
 }
 
-// TODO wont remove the space before or after the tag
 export function removeTagText(text: string, tag: string) {
     // only remove the tag and the space before it
     // match the tag with whole word

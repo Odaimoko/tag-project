@@ -2,7 +2,7 @@ import {App, PluginSettingTab, Setting, ValueComponent} from "obsidian";
 import TPMPlugin from "../main";
 import {createRoot, Root} from "react-dom/client";
 import React, {useState} from "react";
-import {getSettings, setSettingsValueAndSave, SettingName, usePluginSettings} from "./settings";
+import {getSettings, setSettingsValueAndSave, SettingName, TPM_DEFAULT_SETTINGS, usePluginSettings} from "./settings";
 import {SerializedType} from "./SerializedType";
 import {ONotice} from "../utils/o-notice";
 import {isTagNameValid} from "../data-model/markdown-parse";
@@ -87,23 +87,32 @@ export class TPMSettingsTab extends PluginSettingTab {
 
 } // Singleton!
 
+function isStringEmpty(oriTag: string) {
+    return oriTag === "" || oriTag === undefined || oriTag === null;
+}
+
 function TagInputWidget({editingTags, idx, setEditingTags}: {
     editingTags: string[],
     idx: number,
     setEditingTags: (value: (((prevState: string[]) => string[]) | string[])) => void
 }) {
+    const oriTag = editingTags[idx];
+
     return <InlineCodeView text={<input style={{width: 100}} type={"text"}
-                                        placeholder={editingTags[idx]}
-                                        value={editingTags[idx]}
+                                        placeholder={
+                                            TPM_DEFAULT_SETTINGS.priority_tags?.at(idx) as string ?? oriTag
+                                            // if no default, use the oriTag as placeholder
+                                        }
+                                        value={oriTag}
                                         onChange={(e) => {
                                             const tag = e.target.value;
-                                            if (!isTagNameValid(tag)) {
+                                            // empty input will be replaced by placeholder
+                                            if (!isStringEmpty(tag) && !isTagNameValid(tag)) {
                                                 new ONotice(`Invalid tag: ${tag}`);
                                                 return;
                                             }
                                             editingTags[idx] = tag;
                                             setEditingTags([...editingTags])
-
                                         }}
     />}/>;
 }
@@ -112,7 +121,8 @@ export const PriorityLabels = ["High", "Med_High", "Medium", "Med_Low", "Low"]
 
 export function PriorityTagsEditView() {
     const plugin = React.useContext(PluginContext);
-    const [editingTags, setEditingTags] = useState<string[]>(getSettings()?.priority_tags as string[])
+    const [editingTags, setEditingTags] = useState<string[]>(
+        [...getSettings()?.priority_tags as string[]]) // make a copy so that we won't change the settings directly
     const [settingsTags, setSettingsTags] = usePluginSettings<string[]>("priority_tags")
     const headers: string[] = []
 
