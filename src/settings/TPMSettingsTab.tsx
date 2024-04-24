@@ -163,14 +163,20 @@ export function PriorityTagsEditView() {
                         <TwiceConfirmButton
                             onConfirm={() => {
                                 // Do not save if any tag is invalid
-                                for (const tag of editingTags) {
-                                    if (!isTagNameValid(tag)) {
+                                const newTags: string[] = []
+                                for (let i = 0; i < editingTags.length; i++) {
+                                    const tag = editingTags[i];
+                                    if (isStringEmpty(tag)) {
+                                        newTags.push(TPM_DEFAULT_SETTINGS.priority_tags?.at(i) as string)
+                                    } else if (!isTagNameValid(tag)) {
                                         new ONotice(`Priority tags not saved. Invalid tag: ${tag}`);
                                         return;
+                                    } else {
+                                        newTags.push(tag);
                                     }
                                 }
-                                setSettingsTags([...editingTags]).then(() => {
-                                    setEditingTags([...editingTags]) // re-render
+                                setSettingsTags(newTags).then(() => {
+                                    setEditingTags([...newTags]) // re-render
                                     // TODO replace tags in all tasks
                                     // Trigger database refresh
                                     plugin.getEmitter().emit(Evt_ReqDbReload)
