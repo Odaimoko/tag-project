@@ -1,12 +1,11 @@
 import {App, PluginSettingTab, Setting, ValueComponent} from "obsidian";
 import TPMPlugin from "../main";
 import {createRoot, Root} from "react-dom/client";
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {getSettings, setSettingsValueAndSave, SettingName, TPM_DEFAULT_SETTINGS, usePluginSettings} from "./settings";
 import {SerializedType} from "./SerializedType";
-import {ONotice} from "../utils/o-notice";
 import {isTagNameValid} from "../data-model/markdown-parse";
-import {HStack} from "../ui/react-view/view-template/h-stack";
+import {HStack, VStack} from "../ui/react-view/view-template/h-stack";
 import {PluginContext} from "../ui/obsidian/manage-page-view";
 import {
     centerChildren,
@@ -17,12 +16,15 @@ import {
 } from "../ui/react-view/style-def";
 import {DataTable} from "../ui/react-view/view-template/data-table";
 import {Tag_Prefix_Tag} from "../data-model/workflow-def";
-import {getPriorityIcon} from "../ui/react-view/task-table-view";
+import {getPriorityIcon, OdaTaskSummaryCell} from "../ui/react-view/task-table-view";
 import {TwiceConfirmButton} from "../ui/react-view/view-template/twice-confirm-button";
 import {ObsidianIconView} from "../ui/react-view/view-template/icon-view";
-import {Evt_ReqDbReload} from "../typing/dataview-event";
+import {Evt_DbReloaded, Evt_SettingsChanged} from "../typing/dataview-event";
 import {InlineCodeView} from "../ui/common/inline-code-view";
 import {HashTagView} from "../ui/common/hash-tag-view";
+import {OdaPmDbProvider} from "../data-model/OdaPmDb";
+import {devLog} from "../utils/env-util";
+import {setTaskPriority} from "../data-model/OdaPmTask";
 
 export class TPMSettingsTab extends PluginSettingTab {
     plugin: TPMPlugin;
@@ -91,10 +93,11 @@ function isStringEmpty(oriTag: string) {
     return oriTag === "" || oriTag === undefined || oriTag === null;
 }
 
-function TagInputWidget({editingTags, idx, setEditingTags}: {
+function TagInputWidget({editingTags, idx, setEditingTags, setNotiText}: {
     editingTags: string[],
     idx: number,
-    setEditingTags: (value: (((prevState: string[]) => string[]) | string[])) => void
+    setEditingTags: (value: (((prevState: string[]) => string[]) | string[])) => void,
+    setNotiText: (value: (((prevState: string) => string) | string)) => void
 }) {
     const oriTag = editingTags[idx];
 
@@ -108,7 +111,7 @@ function TagInputWidget({editingTags, idx, setEditingTags}: {
                                             const tag = e.target.value;
                                             // empty input will be replaced by placeholder
                                             if (!isStringEmpty(tag) && !isTagNameValid(tag)) {
-                                                new ONotice(`Invalid tag: ${tag}`);
+                                                setNotiText(`[Err] Invalid tag: ${tag}`)
                                                 return;
                                             }
                                             editingTags[idx] = tag;
@@ -120,10 +123,34 @@ function TagInputWidget({editingTags, idx, setEditingTags}: {
 export const PriorityLabels = ["High", "Med_High", "Medium", "Med_Low", "Low"]
 
 export function PriorityTagsEditView() {
+
     const plugin = React.useContext(PluginContext);
-    const [editingTags, setEditingTags] = useState<string[]>(
+    const db = OdaPmDbProvider.get();
+    // region Re-render trigger
+    const [rerenderState, setRerenderState] = useState(0);
+
+    function triggerRerender() {
+        // console.log(`ReactManagePage rerender triggered. ${rerenderState + 1}`)
+        setRerenderState((prevState) => prevState + 1)
+    }
+
+    useEffect(() => {
+        db?.emitter?.addListener(Evt_DbReloaded, triggerRerender)
+        db?.emitter?.addListener(Evt_SettingsChanged, triggerRerender)
+
+        return () => {
+            db?.emitter?.removeListener(Evt_DbReloaded, triggerRerender)
+            db?.emitter?.addListener(Evt_SettingsChanged, triggerRerender)
+        }
+    }, [rerenderState]);
+    // endregion
+
+    // no prefix
+    const [editingTagNames, setEditingTagNames] = useState<string[]>(
         [...getSettings()?.priority_tags as string[]]) // make a copy so that we won't change the settings directly
-    const [settingsTags, setSettingsTags] = usePluginSettings<string[]>("priority_tags")
+    const [settingsTagNames, setSettingsTags] = usePluginSettings<string[]>("priority_tags")
+    const [notiText, setNotiText] = useState("")
+    const oldPriTags = db?.pmPriorityTags ?? [];
     const headers: string[] = []
 
     const rows = PriorityLabels.map(label => {
@@ -138,48 +165,69 @@ export function PriorityTagsEditView() {
             </HStack>,
             <HStack style={centerChildrenHoriVertStyle}>
                 <HashTagView tagWithoutHash={Tag_Prefix_Tag}/>
-                <TagInputWidget editingTags={editingTags} idx={idx} setEditingTags={setEditingTags}/>
+                <TagInputWidget setNotiText={setNotiText} editingTags={editingTagNames} idx={idx}
+                                setEditingTags={setEditingTagNames}/>
             </HStack>,
         ]
     })
+    const tasks = db?.pmTasks ?? [];
+    const diffTags = settingsTagNames.filter(k => !editingTagNames.includes(k)).map(k => `${Tag_Prefix_Tag}${k}`)
+    const affectedTasks = tasks.filter(t => t.hasAnyTag(diffTags)); // include those have multiple priority tags
+    // devLog("Affected count: " + affectedTasks.length, affectedTasks.map(k => k.summary).join(", "))
+    const wronglyAssignedTasks = affectedTasks.filter(k => k.getPriority(oldPriTags) < 0)
     return <div>
         <HStack style={{justifyContent: "space-between"}} spacing={diffGroupSpacing}>
             <div>
 
                 <div className={"setting-item-name"}>Priority tags</div>
                 <div className={"setting-item-description"}>
-
                     <p>
                         Customize your priority tags.
                     </p>
                     <p>
-                        Current tags are: <b>{settingsTags.join(", ")}.</b>
+                        Current tags are: <b>{settingsTagNames.join(", ")}.</b>
                     </p>
-                    <HStack style={centerChildren}>
-                        <label>
-                            On save, the priority tags will be replaced in all tasks.
-                            This is NOT undoable.
-                        </label>
+                    <p>
+                        On save, the priority tags will be replaced in all tasks.
+                        This is NOT undoable.
+                    </p>
+                    <p>
+                        <label style={{fontSize: 16, fontWeight: "bold"}}>{affectedTasks.length}</label> managed tasks
+                        will be affected.
+                    </p>
+
+                    <HStack spacing={sameGroupSpacing}>
                         <TwiceConfirmButton
                             onConfirm={() => {
+                                if (wronglyAssignedTasks.length > 0) {
+                                    setNotiText("[Err] Priority tags not saved. Some tasks have multiple priority tags.")
+                                    return;
+                                }
                                 // Do not save if any tag is invalid
                                 const newTags: string[] = []
-                                for (let i = 0; i < editingTags.length; i++) {
-                                    const tag = editingTags[i];
+                                for (let i = 0; i < editingTagNames.length; i++) {
+                                    const tag = editingTagNames[i];
                                     if (isStringEmpty(tag)) {
                                         newTags.push(TPM_DEFAULT_SETTINGS.priority_tags?.at(i) as string)
                                     } else if (!isTagNameValid(tag)) {
-                                        new ONotice(`Priority tags not saved. Invalid tag: ${tag}`);
+                                        setNotiText(`[Err] Invalid tag: ${tag}`)
                                         return;
                                     } else {
                                         newTags.push(tag);
                                     }
                                 }
-                                setSettingsTags(newTags).then(() => {
-                                    setEditingTags([...newTags]) // re-render
-                                    // TODO replace tags in all tasks
-                                    // Trigger database refresh
-                                    plugin.getEmitter().emit(Evt_ReqDbReload)
+                                setSettingsTags(newTags).then(async () => {
+                                    setEditingTagNames([...newTags]) // re-render
+                                    // replace tags in all tasks
+                                    for (const affectedTask of affectedTasks) {
+                                        const pri = affectedTask.getPriority(oldPriTags); // keep the old priority
+                                        devLog(`on save ${affectedTask.boundTask.tags} (pri ${pri}) to ${newTags[pri]}`, "settingTags", settingsTagNames)
+                                        await setTaskPriority(affectedTask.boundTask, plugin,
+                                            oldPriTags, `${Tag_Prefix_Tag}${newTags[pri]}`)
+                                    }
+                                    // replace tags in text will automatically trigger a db reload
+
+                                    setNotiText("[OK] Saved.");
                                 })
                             }}
                             confirmView={
@@ -193,7 +241,20 @@ export function PriorityTagsEditView() {
                             }
                             twiceConfirmView={<label>Confirm</label>}
                         />
+                        <DisappearableErrText color={notiText.startsWith("[Err]") ? "var(--text-error)" : "green"}
+                                              text={notiText} setText={setNotiText}/>
                     </HStack>
+                    {
+                        wronglyAssignedTasks.length > 0 && <p>
+                            The follow tasks' priority tags are not correctly assigned:
+                            <VStack>
+                                {
+                                    wronglyAssignedTasks.map(k => <OdaTaskSummaryCell oTask={k}
+                                                                                      taskFirstColumn={k.summary}/>)
+                                }
+                            </VStack>
+                        </p>
+                    }
                 </div>
 
             </div>
@@ -201,4 +262,21 @@ export function PriorityTagsEditView() {
 
         </HStack>
     </div>
+}
+
+
+function DisappearableErrText(props: {
+    color: string;
+    text: string,
+    setText: (value: (((prevState: string) => string) | string)) => void,
+}) {
+    useEffect(() => {
+        // after 3 seconds, clear the text
+        setTimeout(() => {
+            props.setText("")
+        }, 5000)
+    }, [props.text]);
+    return <label style={{
+        color: props.color
+    }}>{props.text}</label>
 }

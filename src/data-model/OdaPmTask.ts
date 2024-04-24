@@ -108,13 +108,13 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
         return this.tickedSteps.filter(k => k.name == stepName).length > 0;
     }
 
-    addStepTag(stepTag: string): string {
+    addStepTagText(stepTag: string): string {
         const text = this.boundTask.text;
         return addTagText(text, stepTag);
     }
 
-    removeStepTag(stepTag: string) {
-        return removeTagText(this.boundTask.text, stepTag);
+    removeStepTagText(tag: string) {
+        return removeTagText(this.boundTask.text, tag);
     }
 
     removeAllStepTags() {
@@ -256,8 +256,9 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
      * @returns less is higher. Some error code is returned if more than one priority tags are found.
      */
     getPriority(priorityTags: string[] | undefined): number {
-        if (!priorityTags)
+        if (!priorityTags) {
             return DefaultTaskPriority;
+        }
 
         let found = false;
         let foundIndex = -1;
@@ -277,11 +278,11 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
     }
 }
 
-export async function setTaskPriority(sTask: STask, plugin: Plugin, allPriorityTags: string[], targetPriorityTag: string) {
+export async function setTaskPriority(sTask: STask, plugin: Plugin, oldPriTags: string[], newPriTag: string) {
     let oriText = sTask.text
-    for (const priorityTag of allPriorityTags) {
+    for (const priorityTag of oldPriTags) {
         oriText = removeTagText(oriText, priorityTag);
     }
-    oriText = addTagText(oriText, targetPriorityTag);
+    oriText = addTagText(oriText, newPriTag);
     await rewriteTask(plugin.app.vault, sTask, sTask.status, oriText);
 }

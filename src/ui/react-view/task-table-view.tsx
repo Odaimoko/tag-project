@@ -617,8 +617,8 @@ function tickStepCheckbox(includes: boolean, oTask: OdaPmTask, stepTag: string, 
         case "checkbox": { // use curly braces to avoid scope conflict
             // remove the tag when untick the checkbox, or add the tag when tick the checkbox
             const next_text = !nextChecked ?
-                oTask.removeStepTag(stepTag) :
-                oTask.addStepTag(stepTag)
+                oTask.removeStepTagText(stepTag) :
+                oTask.addStepTagText(stepTag)
 
             const fromTickedToUnticked = oTask.stepCompleted() && !nextChecked; // State: all ticked. Behaviour: untick step. Outcome: untick the summary.
             const nextStatus = fromTickedToUnticked ? TaskStatus_unchecked : (

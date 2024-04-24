@@ -84,7 +84,7 @@ export interface TPMSettings {
     display_module_names: SerializedType[], // 0.3.0
     do_not_show_completed_projects_in_manage_page: boolean, // 0.3.3
     completed_project_names: SerializedType[], // 0.3.3 
-    priority_tags: SerializedType[], // 0.5.0, from high to low, prefixed with `tpm/tag/`
+    priority_tags: SerializedType[], // 0.5.0, from high to low, should add the prefix `tpm/tag/`
     help_page_tutorial_tldr: SerializedType,
 }
 
