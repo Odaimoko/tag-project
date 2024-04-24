@@ -1,8 +1,9 @@
 import {EditorPosition, Vault, Workspace} from "obsidian";
 import {STask} from "obsidian-dataview";
 import {OdaPmProject, OdaPmProjectDefinition, Tag_Prefix_Project} from "../data-model/OdaPmProject";
-import {addTagText, I_OdaPmTaskble} from "../data-model/workflow-def";
+import {I_OdaPmTaskble} from "../data-model/workflow-def";
 import {ONotice} from "./o-notice";
+import {addTagText} from "../data-model/tag-text-manipulate";
 
 // region Copied from dataview
 
@@ -119,7 +120,7 @@ export function setProjectTagToTask(task: I_OdaPmTaskble, tag: string) {
     rewriteTask(this.app.vault, sTask, sTask.status, desiredText)
 }
 
-// need to bind to the plugin instance
+// need to bind to the plugin instance to `this`
 // setProjectToTaskOrWorkflow.call(this, prj, filePath, cursor, editor);
 export function setProjectTagAtPath(prj: OdaPmProject, filePath: string, cursor: EditorPosition) {
     const targetTag = `${Tag_Prefix_Project}${prj.name}`; // project tag
