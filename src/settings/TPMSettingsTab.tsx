@@ -5,12 +5,13 @@ import React, {useState} from "react";
 import {getSettings, setSettingsValueAndSave, SettingName, usePluginSettings} from "./settings";
 import {SerializedType} from "./SerializedType";
 import {ONotice} from "../utils/o-notice";
-import {isTagNameValid, POTENTIAL_TAG_MATCHER} from "../data-model/markdown-parse";
+import {isTagNameValid} from "../data-model/markdown-parse";
 import {HStack} from "../ui/react-view/view-template/h-stack";
 import {PluginContext} from "../ui/obsidian/manage-page-view";
 import {
     centerChildren,
     centerChildrenHoriVertStyle,
+    centerChildrenVertStyle,
     diffGroupSpacing,
     sameGroupSpacing
 } from "../ui/react-view/style-def";
@@ -20,6 +21,8 @@ import {getPriorityIcon} from "../ui/react-view/task-table-view";
 import {TwiceConfirmButton} from "../ui/react-view/view-template/twice-confirm-button";
 import {ObsidianIconView} from "../ui/react-view/view-template/icon-view";
 import {Evt_ReqDbReload} from "../typing/dataview-event";
+import {InlineCodeView} from "../ui/common/inline-code-view";
+import {HashTagView} from "../ui/common/hash-tag-view";
 
 export class TPMSettingsTab extends PluginSettingTab {
     plugin: TPMPlugin;
@@ -84,40 +87,49 @@ export class TPMSettingsTab extends PluginSettingTab {
 
 } // Singleton!
 
+function TagInputWidget({editingTags, idx, setEditingTags}: {
+    editingTags: string[],
+    idx: number,
+    setEditingTags: (value: (((prevState: string[]) => string[]) | string[])) => void
+}) {
+    return <InlineCodeView text={<input style={{width: 100}} type={"text"}
+                                        placeholder={editingTags[idx]}
+                                        value={editingTags[idx]}
+                                        onChange={(e) => {
+                                            const tag = e.target.value;
+                                            if (!isTagNameValid(tag)) {
+                                                new ONotice(`Invalid tag: ${tag}`);
+                                                return;
+                                            }
+                                            editingTags[idx] = tag;
+                                            setEditingTags([...editingTags])
+
+                                        }}
+    />}/>;
+}
+
+const labels = ["High", "Med_High", "Medium", "Med_Low", "Low"]
+
 export function PriorityTagsEditView() {
     const plugin = React.useContext(PluginContext);
-    const labels = ["High", "Med High", "Medium", "Med Low", "Low"]
     const [editingTags, setEditingTags] = useState<string[]>(getSettings()?.priority_tags as string[])
     const [settingsTags, setSettingsTags] = usePluginSettings<string[]>("priority_tags")
     const headers: string[] = []
 
-
-    const rows = labels.map(k => {
-        const idx = labels.indexOf(k);
-        const oriTag = editingTags[idx];
+    const rows = labels.map(label => {
+        const idx = labels.indexOf(label);
         return [
             <HStack>
                 {getPriorityIcon(idx)}
-                <label>{k}</label>
+                <div style={{flex: 1, ...centerChildrenVertStyle}}>
+                    {/* span the rest space and put child at the center */}
+                    <label>{label}</label>
+                </div>
             </HStack>,
             <HStack style={centerChildrenHoriVertStyle}>
-                <label>{Tag_Prefix_Tag}</label>
-                <input style={{width: 60}} type={"text"}
-                       placeholder={oriTag}
-                       value={oriTag}
-                       onChange={(e) => {
-                           const tag = e.target.value;
-                           const match = tag.match(POTENTIAL_TAG_MATCHER);
-                           if (!match || match.length == 0 || match[0].length != tag.length) {
-                               new ONotice(`Invalid tag: ${tag}.`);
-                               return;
-                           }
-                           editingTags[idx] = tag;
-                           setEditingTags([...editingTags])
-
-                       }}
-                />
-            </HStack>
+                <HashTagView tagWithoutHash={Tag_Prefix_Tag}/>
+                <TagInputWidget editingTags={editingTags} idx={idx} setEditingTags={setEditingTags}/>
+            </HStack>,
         ]
     })
     return <div>
@@ -143,7 +155,7 @@ export function PriorityTagsEditView() {
                                 // Do not save if any tag is invalid
                                 for (const tag of editingTags) {
                                     if (!isTagNameValid(tag)) {
-                                        new ONotice(`Priority tags not saved. Invalid tag: ${tag}.`);
+                                        new ONotice(`Priority tags not saved. Invalid tag: ${tag}`);
                                         return;
                                     }
                                 }
