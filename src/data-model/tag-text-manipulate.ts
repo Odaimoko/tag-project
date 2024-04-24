@@ -24,7 +24,6 @@ export function removeTagText(text: string, tag: string) {
     // only remove the tag and the space before it
     // match the tag with whole word
     const pattern = new RegExp(`\\s+${tag}\\b`, "u");
-    console.log("[Match]", pattern.toString(), text.match(pattern));
     return text.replace(pattern, "");
 }
 
