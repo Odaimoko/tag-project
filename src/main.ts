@@ -11,21 +11,24 @@ import {
 } from "./typing/dataview-event";
 import {EventEmitter} from "events";
 import {OdaPmDb, OdaPmDbProvider} from "./data-model/OdaPmDb";
-import {addTagText, getWorkflowNameFromRawText, I_OdaPmWorkflow} from "./data-model/workflow-def";
+import {getWorkflowNameFromRawText, I_OdaPmWorkflow} from "./data-model/workflow-def";
 import {rewriteTask, setProjectTagAtPath} from "./utils/io-util";
 import {WorkflowSuggestionModal} from "./ui/obsidian/workflow-suggestion-modal";
 import {Icon_HelpPage, PmHelpPageView, PmHelpPageViewId} from "./ui/obsidian/help-page/help-page-view";
 import {devLog, initPluginEnv, removePluginEnv, setVaultName} from "./utils/env-util";
-import {OdaPmTask} from "./data-model/OdaPmTask";
+import {OdaPmTask, setTaskPriority} from "./data-model/OdaPmTask";
 import {ProjectSuggestionModal} from "./ui/obsidian/project-suggestion-modal";
 import {assertOnPluginInit} from "./test_runtime/assertDatabase";
 import TagRenderer from "./ui/obsidian/tag-render/tag-render";
 import {TPMSettingsTab} from "./settings/TPMSettingsTab";
+import {PrioritySuggestionModal} from "./ui/obsidian/priority-suggestion-modal";
+import {addTagText} from "./data-model/tag-text-manipulate";
 
 export const PLUGIN_NAME = 'Tag Project';
 export const CmdPal_OpenManagePage = `Open Manage Page`; // `Open ${Desc_ManagePage}`
 export const CmdPal_SetWorkflowToTask = 'Set workflow';
 export const CmdPal_SetProject = 'Set Project';
+export const CmdPal_SetPriority = 'Set Priority';
 export const CmdPal_JumpToManagePage = `Jump To Manage Page`;
 
 export default class OdaPmToolPlugin extends Plugin {
@@ -120,9 +123,16 @@ export default class OdaPmToolPlugin extends Plugin {
             id: 'set-project',
             name: CmdPal_SetProject,
             editorCallback: (editor: Editor, view: MarkdownView) => {
-                this.addProjectToMdTask(editor, view);
+                this.addPriorityToMdTask(editor, view);
             }
         });
+        this.addCommand({
+            id: 'set-priority',
+            name: CmdPal_SetPriority,
+            editorCallback: (editor: Editor, view: MarkdownView) => {
+                this.addPriorityToMdTask(editor, view);
+            }
+        })
         // endregion
 
         this.registerEvent(
@@ -161,6 +171,19 @@ export default class OdaPmToolPlugin extends Plugin {
                         .setIcon(Icon_ManagePage)
                         .onClick(async () => {
                             this.addProjectToMdTask(editor, view);
+                        });
+
+                });
+            })
+        )
+        this.registerEvent(
+            this.app.workspace.on("editor-menu", (menu, editor, view) => {
+                menu.addItem((item) => {
+                    item
+                        .setTitle(CmdPal_SetPriority)
+                        .setIcon(Icon_ManagePage)
+                        .onClick(async () => {
+                            this.addPriorityToMdTask(editor, view);
                         });
 
                 });
@@ -259,6 +282,37 @@ export default class OdaPmToolPlugin extends Plugin {
                 return;
             }
             setProjectTagAtPath.call(this, prj, filePath, cursor);
+        }).open();
+    }
+
+    private addPriorityToMdTask(editor: Editor, view: MarkdownView | MarkdownFileInfo) {
+        const filePath = view.file?.path;
+        if (!filePath) {
+            new ONotice("Not a markdown file.")
+            return; // no file
+        }
+        const cursor = editor.getCursor();
+        if (!this.checkValidMdTask(filePath, cursor)) return;
+
+        // console.log(`line: ${editor.getLine(cursor.line)}`)
+        const workflow = this.pmDb.getWorkflow(filePath, cursor.line);
+        if (workflow) {
+            new ONotice("This is a workflow definition, not a task.")
+            return; // skip if the task is a workflow def
+        }
+        const pmTask = this.pmDb.getPmTask(filePath, cursor.line);
+
+        if (!pmTask) {
+            new ONotice("Not a managed task.")
+            return;
+        }
+
+        new PrioritySuggestionModal(this.app, (priorityTag, evt) => {
+
+            const targetTag = priorityTag;
+            // set priority
+            setTaskPriority(pmTask.boundTask, this, this.pmDb.pmPriorityTags, targetTag)
+            return;
         }).open();
     }
 

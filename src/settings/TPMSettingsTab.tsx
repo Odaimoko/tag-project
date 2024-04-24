@@ -108,7 +108,7 @@ function TagInputWidget({editingTags, idx, setEditingTags}: {
     />}/>;
 }
 
-const labels = ["High", "Med_High", "Medium", "Med_Low", "Low"]
+export const PriorityLabels = ["High", "Med_High", "Medium", "Med_Low", "Low"]
 
 export function PriorityTagsEditView() {
     const plugin = React.useContext(PluginContext);
@@ -116,8 +116,8 @@ export function PriorityTagsEditView() {
     const [settingsTags, setSettingsTags] = usePluginSettings<string[]>("priority_tags")
     const headers: string[] = []
 
-    const rows = labels.map(label => {
-        const idx = labels.indexOf(label);
+    const rows = PriorityLabels.map(label => {
+        const idx = PriorityLabels.indexOf(label);
         return [
             <HStack>
                 {getPriorityIcon(idx)}

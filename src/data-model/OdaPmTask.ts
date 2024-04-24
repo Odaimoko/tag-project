@@ -1,20 +1,20 @@
 import {STask} from "obsidian-dataview";
 import {OdaPmProject, ProjectName_Unclassified, Tag_Prefix_Project} from "./OdaPmProject";
 import {
-    addTagText,
     getProjectPathFromSTask,
     getProjectTagFromSTask,
     I_OdaPmStep,
     I_OdaPmTaskble,
     I_OdaPmWorkflow,
-    removeTagText,
     trimTagsFromTask
 } from "./workflow-def";
 import {BaseDatabaseObject} from "./BaseDatabaseObject";
 import {getOrCreateStep} from "./OdaPmStep";
-import {setProjectTagToTask} from "../utils/io-util";
+import {rewriteTask, setProjectTagToTask} from "../utils/io-util";
 import {ModuleId_Unclassified} from "./OdaPmModule";
 import {DefaultTaskPriority, MoreThanOnePriority} from "../settings/settings";
+import {Plugin} from "obsidian";
+import {addTagText, removeTagText} from "./tag-text-manipulate";
 
 export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
     boundTask: STask;
@@ -272,8 +272,16 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
         }
         if (found)
             return foundIndex;
-        
+
         return DefaultTaskPriority;
     }
 }
 
+export async function setTaskPriority(sTask: STask, plugin: Plugin, allPriorityTags: string[], targetPriorityTag: string) {
+    let oriText = sTask.text
+    for (const priorityTag of allPriorityTags) {
+        oriText = removeTagText(oriText, priorityTag);
+    }
+    oriText = addTagText(oriText, targetPriorityTag);
+    await rewriteTask(plugin.app.vault, sTask, sTask.status, oriText);
+}

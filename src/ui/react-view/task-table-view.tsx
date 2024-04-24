@@ -1,13 +1,6 @@
-import {OdaPmTask} from "../../data-model/OdaPmTask";
+import {OdaPmTask, setTaskPriority} from "../../data-model/OdaPmTask";
 import OdaPmToolPlugin from "../../main";
-import {
-    addTagText,
-    I_OdaPmStep,
-    I_OdaPmWorkflow,
-    removeTagText,
-    TaskStatus_checked,
-    TaskStatus_unchecked
-} from "../../data-model/workflow-def";
+import {I_OdaPmStep, I_OdaPmWorkflow, TaskStatus_checked, TaskStatus_unchecked} from "../../data-model/workflow-def";
 import {openTaskPrecisely, rewriteTask} from "../../utils/io-util";
 import React, {ReactElement, useContext, useEffect, useState} from "react";
 import {PluginContext} from "../obsidian/manage-page-view";
@@ -255,7 +248,6 @@ export function getPriorityIcon(idx: number) {
     }
 }
 
-
 function TaskPriorityIcon({oTask}: { oTask: OdaPmTask }): React.JSX.Element {
     const db = OdaPmDbProvider.get();
     const plugin = useContext(PluginContext);
@@ -266,16 +258,11 @@ function TaskPriorityIcon({oTask}: { oTask: OdaPmTask }): React.JSX.Element {
     } popupContent={<div>
         <HStack>
             {
-                priorityTags.map((k: string, i) => {
+                priorityTags.map((priTag: string, i) => {
                     const priorityIcon = getPriorityIcon(i);
-                    return <div key={k}>
+                    return <div key={priTag}>
                         <ClickableView icon={priorityIcon} onIconClicked={() => {
-                            let oriText = oTask.text
-                            for (const priorityTag of priorityTags) {
-                                oriText = removeTagText(oriText, priorityTag);
-                            }
-                            oriText = addTagText(oriText, k);
-                            rewriteTask(plugin.app.vault, oTask.boundTask, oTask.boundTask.status, oriText);
+                            setTaskPriority(oTask.boundTask, plugin, priorityTags, priTag);
                         }}/>
                     </div>;
                 })
@@ -521,7 +508,7 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
         </>
     )
 
-    //region Sort   
+    //region sort method
     function setSortToName() {
         const prevMethod = columnSort.sortBy;
         // Loop
