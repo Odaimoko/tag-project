@@ -8,6 +8,7 @@ import {isCharacterInput} from "../../../utils/react-user-input";
 import {IRenderable} from "../../common/i-renderable";
 import {toggleValueInArray} from "../workflow-filter";
 import {dropdownSelectedColor} from "../style-def";
+import {ClickableIconView} from "./icon-view";
 
 
 interface I_OptionItem {
@@ -40,7 +41,7 @@ export const SearchableDropdown = (props: {
     RenderView?: (props: { item: OptionValueType }) => IRenderable;
     singleSelect?: boolean;
     currentOptionValues?: OptionValueType[]; // Current selected option values. If singleSelect, we don't need to pass this.
-    dropdownId: string;
+    dropdownId: string; // used to check if we clicked outside the dropdown. The direct interactable element should have a prefix of this id.
 } & StyleProps) => {
     const singleSelect = props.singleSelect ?? true; // Default to single select
     if (!singleSelect) {
@@ -50,7 +51,7 @@ export const SearchableDropdown = (props: {
             console.error("Multiple Select Dropdown must pass currentOptionValues. Data are ", props.data)
         }
     }
-    const searchString = props.dropdownId;
+    const dropdownId = props.dropdownId;
     const [searchText, setSearchText] = useState("")
     const {dropDownDisplay, setDropDownDisplay, showDropdown} = usePopup();
     const filtered = props.data.filter(k => k.name.toLowerCase().includes(searchText.toLowerCase()))
@@ -73,7 +74,9 @@ export const SearchableDropdown = (props: {
                 onKeyDown={handleBaseKeyboard}
                 onBlur={(event) => {
                     // Hide Dropdown if we lose focus
-                    if (event.relatedTarget && event.relatedTarget.id.startsWith(searchString)) {
+                    // target is the element that lost focus (input), relatedTarget is the element that gains focus
+                    devLog(event.relatedTarget?.id)
+                    if (event.relatedTarget?.id?.startsWith(dropdownId)) {
                         // Let the project_choice button handle the click event
                         // Otherwise when we lose focus and hide the dropdown, the button will not be triggered.
                     } else {
@@ -83,39 +86,51 @@ export const SearchableDropdown = (props: {
                     }
                 }}
     >
-        <input ref={inputRef}
-               type="text" placeholder={props.placeholder}
-               value={searchText}
-               onChange={(event) => {
-                   const text = event.target.value;
-                   // when there is text, show the dropdown
-                   if (text && text.length > 0) {
-                       showDropdown()
-                   } else {
-                       hideDropdown()
-                   }
-                   handleSetSearchText(text)
-               }}
+        <span id={`${dropdownId}_input`} style={{display: "flex", alignItems: "center"}}>
+            <input ref={inputRef}
+                   type="text" placeholder={props.placeholder}
+                   value={searchText}
+                   onChange={(event) => {
+                       const text = event.target.value;
+                       // when there is text, show the dropdown
+                       if (text && text.length > 0) {
+                           showDropdown()
+                       } else {
+                           hideDropdown()
+                       }
+                       handleSetSearchText(text)
+                   }}
 
-               onFocus={() => {
-                   // show when click search input box
+                   onFocus={() => {
+                       // show when click search input box
 
-                   devLog("Input Focused");
-                   showDropdown();
-               }}
-        />
+                       devLog("Input Focused");
+                       showDropdown();
+                   }}
+            />
+        <ClickableIconView style={{marginLeft: -25, paddingTop: 5}}
+                           onIconClicked={() => {
+                               setSearchText("")
+                               // input's focus is already lost onclick, so we need to 
+                               // 1. show the already hidden dropdown.
+                               //    a. must. merely focusing on the input box will show the dropdown on the next event loop, which causes blinking dropdown.
+                               // 2. focus on it again, so that user can input text immediately.
+                               showDropdown()
+                               inputRef.current?.focus()
+                           }} iconName={"x-circle"}/>
+        </span>
         {/*Add background so it won't be transparent. */}
-        <div id={`${searchString}s`} style={getDropdownStyle(dropDownDisplay)}
+        <div id={`${dropdownId}s`} style={getDropdownStyle(dropDownDisplay)}
         >
             <VStack spacing={2}>
                 {filtered.map((option: OptionValueType) => {
-                    const childId = `${searchString}_${option.name}`;
+                    const childId = `${dropdownId}_${option.name}`;
                     // @ts-ignore
                     const has = !singleSelect ? props.currentOptionValues.includes(option) : false;
                     return (
                         <button style={{background: has ? dropdownSelectedColor : "none"}} id={childId}
                                 onClick={(event) => {
-                            // console.log(event.target) // html element
+                                    // console.log(event.target) // html element
                                     if (singleSelect) {
                                         devLog(`Single Select Option Value ${option.name}`)
                                         props.handleSetOptionValues([getProjectOptionValue(option)])
@@ -141,6 +156,7 @@ export const SearchableDropdown = (props: {
             </VStack>
 
         </div>
+
     </div>
 
     function handleBaseKeyboard(event: KeyboardEvent) {
