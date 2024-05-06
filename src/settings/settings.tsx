@@ -85,7 +85,10 @@ export interface TPMSettings {
     do_not_show_completed_projects_in_manage_page: boolean, // 0.3.3
     completed_project_names: SerializedType[], // 0.3.3 
     priority_tags: SerializedType[], // 0.5.0, from high to low, should add the prefix `tpm/tag/`
-    help_page_tutorial_tldr: SerializedType,
+    search_opened_tabs_before_navigating_tasks: boolean, // 0.6.0, if true, look for the existing tabs first, if not found, open a new tab; if false, always open in current tab
+    open_new_tab_if_task_tab_not_found: boolean, // 0.6.0, if true, when the task file is not found in existing tabs, open a new tab; if false, open in current editor,
+    always_open_task_in_new_tab_modify_key: SerializedType, // 0.6.0. Key stroke enum. If click the task with this key pressed, always open a new tab.
+    cached_help_page_tutorial_tldr: SerializedType,
 }
 
 export const TPM_DEFAULT_SETTINGS: Partial<TPMSettings> = {
@@ -110,7 +113,10 @@ export const TPM_DEFAULT_SETTINGS: Partial<TPMSettings> = {
     do_not_show_completed_projects_in_manage_page: true, // 0.3.3
     completed_project_names: [] as SerializedType[], // 0.3.3
     priority_tags: ["hi", "med_hi", "med", "med_lo", "lo"] as SerializedType[], // 0.5.0
-    help_page_tutorial_tldr: false,
+    search_opened_tabs_before_navigating_tasks: true, // 0.6.0
+    open_new_tab_if_task_tab_not_found: true, // 0.6.0
+    always_open_task_in_new_tab_modify_key: "Meta", // TODO
+    cached_help_page_tutorial_tldr: false,
 }
 export type SettingName = keyof TPMSettings;
 

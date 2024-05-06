@@ -25,6 +25,51 @@ import {HashTagView} from "../ui/common/hash-tag-view";
 import {OdaPmDbProvider} from "../data-model/OdaPmDb";
 import {devLog} from "../utils/env-util";
 import {setTaskPriority} from "../data-model/OdaPmTask";
+import {ExternalToggleView} from "../ui/react-view/view-template/toggle-view";
+
+function ObsidianSettingToggleView(props: {
+    name: string,
+    description: string,
+    externalControl: boolean,
+    onChange: () => void,
+}) {
+    return <div className={"setting-item mod-toggle"}>
+        <div className={"setting-item-info"}>
+            <div className={"setting-item-name"}>{props.name}</div>
+            {props.description.split("\n").map(k => {
+                return (
+                    <div key={k} className={"setting-item-description"}>{k}</div>
+                )
+            })}
+        </div>
+
+        <div className="setting-item-control">
+            <ExternalToggleView externalControl={props.externalControl} onChange={props.onChange}/>
+        </div>
+    </div>
+}
+
+function TaskNavigationPolicyView() {
+
+    const [searchOpened, setSearchOpened] = usePluginSettings<boolean>("search_opened_tabs_before_navigating_tasks");
+    const [openNewTabIfNotFound, setOpenNewTabIfNotFound] = usePluginSettings<boolean>("open_new_tab_if_task_tab_not_found");
+    return <>
+        <ObsidianSettingToggleView key={"searchOpened"} name={"Look among opened tabs before navigating tasks"}
+                                   description={"If ON, the plugin will look for the task in opened tabs before navigating to the task.\nIf OFF, open in current tab."}
+                                   externalControl={searchOpened}
+                                   onChange={() => setSearchOpened(!searchOpened)}/>
+        <div style={{
+            pointerEvents: searchOpened ? "auto" : "none", // if searchOpened is false, do not interact with this div
+            opacity: searchOpened ? 1 : 0.3, // if searchOpened is false, make it less visible
+        }}>
+            <ObsidianSettingToggleView key={"openNew"} name={"Open new tab if task tab not found"}
+                                       description={"If ON, when the task file is not found in existing tabs, open a new tab.\nIf OFF, open in current editor."}
+                                       externalControl={openNewTabIfNotFound}
+                                       onChange={() => setOpenNewTabIfNotFound(!openNewTabIfNotFound)}/>
+        </div>
+    </>;
+
+}
 
 export class TPMSettingsTab extends PluginSettingTab {
     plugin: TPMPlugin;
@@ -71,6 +116,15 @@ export class TPMSettingsTab extends PluginSettingTab {
         this.root.render(
             <PluginContext.Provider value={this.plugin}>
                 <PriorityTagsEditView/>
+            </PluginContext.Provider>
+        )
+
+        containerEl.createEl("h2", {text: "Task Navigation Policy"})
+        const navPolicyDiv = containerEl.createDiv();
+        this.root = createRoot(navPolicyDiv);
+        this.root.render(
+            <PluginContext.Provider value={this.plugin}>
+                <TaskNavigationPolicyView/>
             </PluginContext.Provider>
         )
 

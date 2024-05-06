@@ -1,9 +1,11 @@
-import {EditorPosition, Vault, Workspace} from "obsidian";
+import {EditorPosition, MarkdownView, Vault, Workspace, WorkspaceLeaf} from "obsidian";
 import {STask} from "obsidian-dataview";
 import {OdaPmProject, OdaPmProjectDefinition, Tag_Prefix_Project} from "../data-model/OdaPmProject";
 import {I_OdaPmTaskble} from "../data-model/workflow-def";
 import {ONotice} from "./o-notice";
 import {addTagText} from "../data-model/tag-text-manipulate";
+import {devLog} from "./env-util";
+import {getSettings} from "../settings/settings";
 
 // region Copied from dataview
 
@@ -64,12 +66,45 @@ function openFileAtStart(workspace: Workspace, path: string) {
 }
 
 // if we use workspace.openLinkText, a task without a block id will be opened with its section
-export function openTaskPrecisely(workspace: Workspace, task: STask) {
+export async function openTaskPrecisely(workspace: Workspace, task: STask) {
+    devLog(`openTaskPrecisely ${workspace.getLeavesOfType("markdown").length} tabs`)
+    const settings = getSettings();
+    let foundTabWithFile = false;
+    if (settings?.search_opened_tabs_before_navigating_tasks) {
+        const mdLeaf = workspace.getLeavesOfType("markdown").find((k: WorkspaceLeaf) => {
+            const mdView = k.view as MarkdownView;
+            // mdView can have no file (ie the file is not saved to disk)
+            return mdView.file?.path === task.path;
+        })
+        if (mdLeaf) {
+            // If found, set the active leaf to this view
+            foundTabWithFile = true;
+            await mdLeaf.open(mdLeaf.view);// ok
+            workspace.setActiveLeaf(mdLeaf); // set active so `openLinkText` would operate on this view
+            workspace.revealLeaf(mdLeaf); // this file might be hidden
+        }
+
+    }
+
+    let openInNewLeaf = false;
+    if (!settings?.search_opened_tabs_before_navigating_tasks) {
+        // if we don't search opened tabs, we always open in current tab
+        openInNewLeaf = false;
+    } else {
+        if (foundTabWithFile) {
+            openInNewLeaf = false;
+        } else {
+            openInNewLeaf = settings?.open_new_tab_if_task_tab_not_found ?? false;
+        }
+    }
+    
     // Copy from dataview. See TaskItem.
-    workspace.openLinkText(
+    // highlight cursor
+    devLog(`[OpenTask] Task ${task.path} openInNewLeaf ${openInNewLeaf}`)
+    await workspace.openLinkText(
         task.link.toFile().obsidianLink(),
         task.path,
-        false,
+        openInNewLeaf,
         {
             eState: {
                 cursor: {
