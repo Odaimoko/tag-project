@@ -1,6 +1,7 @@
 import React, {JSX, useState} from "react";
 import {I_Stylable} from "./icon-view";
 import {IRenderable} from "../../common/i-renderable";
+import {GeneralMouseEventHandler} from "../event-handling/general-mouse-event-handler";
 
 /**
  * A checkbox that is totally controlled by its parent.
@@ -15,7 +16,7 @@ export const ExternalControlledCheckbox = ({externalControl, onChange, onContent
                                                {
                                                    externalControl: boolean,
                                                    onChange: () => void,
-                                                   onContentClicked?: () => void,
+                                                   onContentClicked?: GeneralMouseEventHandler,
                                                    content?: IRenderable,
 
                                                } & I_Stylable) => {

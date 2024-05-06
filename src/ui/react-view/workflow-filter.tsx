@@ -1,7 +1,7 @@
 // region Legend
 import {HStack} from "./view-template/h-stack";
 import {I_OdaPmWorkflow, Workflow_Type_Enum_Array, WorkflowType} from "../../data-model/workflow-def";
-import React, {useContext} from "react";
+import React, {MouseEvent, useContext} from "react";
 import {PluginContext} from "../obsidian/manage-page-view";
 import {ExternalControlledCheckbox} from "./view-template/checkbox";
 import {I_Stylable, InternalLinkView} from "./view-template/icon-view";
@@ -14,6 +14,7 @@ import {taskCheckBoxMargin} from "./task-table-view";
 import {ExternalToggleView} from "./view-template/toggle-view";
 import {OptionValueType, SearchableDropdown} from "./view-template/searchable-dropdown";
 import {devLog} from "../../utils/env-util";
+import {getForceNewTabOnClick} from "../../settings/settings";
 
 /**
  * Accept children as a HStack with a unified style
@@ -200,11 +201,15 @@ export const ClickableWorkflowView = ({workflow, displayNames, setDisplayNames, 
                 {showWorkflowIcon ? getIconByWorkflow(workflow) : null}
                 <label style={taskCheckBoxMargin}>{wfName}</label>
             </span>}
-            onIconClicked={() =>
-                // Go to workflow def
-                openTaskPrecisely(plugin.app.workspace, workflow.boundTask)}
+            onIconClicked={openThisWorkflow}
             onContentClicked={tickCheckbox}/>
     </>;
+
+    function openThisWorkflow(e: MouseEvent) {
+        const forceNewTab = getForceNewTabOnClick(plugin, e);
+        return openTaskPrecisely(plugin.app.workspace, workflow.boundTask, forceNewTab);
+    }
+
     return <span style={{display: "inline-block", marginRight: 15}}>
         {showCheckBox ? <ExternalControlledCheckbox
             content={content}

@@ -3,6 +3,7 @@ import React from "react";
 import {getIcon} from "obsidian";
 import {HtmlStringComponent} from "./html-string-component";
 import {I_InteractableId} from "../props-typing/i-interactable-id";
+import {GeneralMouseEventHandler} from "../event-handling/general-mouse-event-handler";
 
 export const CssClass_Link = "cm-underline";
 export const obsidianIconTopOffset = 4;
@@ -33,8 +34,8 @@ export function ObsidianIconView({iconName, style}: { iconName: string } & I_Sty
  */
 export function InternalLinkView({content, onIconClicked, onContentClicked, style}: {
     content: IRenderable,
-    onIconClicked?: () => void,
-    onContentClicked?: () => void,
+    onIconClicked?: GeneralMouseEventHandler,
+    onContentClicked?: GeneralMouseEventHandler,
 } & I_Stylable) {
     return <ClickableIconView style={style} content={content} onIconClicked={onIconClicked}
                               onContentClicked={onContentClicked}
@@ -44,8 +45,8 @@ export function InternalLinkView({content, onIconClicked, onContentClicked, styl
 
 interface I_IconClickable {
     content?: IRenderable;
-    onIconClicked?: () => void;
-    onContentClicked?: () => void;
+    onIconClicked?: GeneralMouseEventHandler
+    onContentClicked?: GeneralMouseEventHandler
     clickable?: boolean;
 
 }

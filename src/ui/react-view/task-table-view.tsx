@@ -2,9 +2,10 @@ import {OdaPmTask, setTaskPriority} from "../../data-model/OdaPmTask";
 import OdaPmToolPlugin from "../../main";
 import {I_OdaPmStep, I_OdaPmWorkflow, TaskStatus_checked, TaskStatus_unchecked} from "../../data-model/workflow-def";
 import {openTaskPrecisely, rewriteTask} from "../../utils/io-util";
-import React, {ReactElement, useContext, useEffect, useState} from "react";
+import React, {MouseEvent, ReactElement, useContext, useEffect, useState} from "react";
 import {PluginContext} from "../obsidian/manage-page-view";
 import {
+    getForceNewTabOnClick,
     getSettings,
     setSettingsValueAndSave,
     TableSortBy,
@@ -120,18 +121,16 @@ export const OdaTaskSummaryCell = ({oTask, taskFirstColumn, showCheckBox, showPr
         {showCheckBox ? <ExternalControlledCheckbox
             content={checkBoxContent}
             onChange={tickSummary}
-            onContentClicked={() => {
-                devLog("[taskview] ExternalControlledCheckbox Clicked")
-                openThisTask();
-            }}
+            onContentClicked={openThisTask}
             externalControl={oTask.stepCompleted()}
         /> : checkBoxContent}
 
     </HStack>;
 
-    function openThisTask() {
-        devLog("[taskview] Open this task")
-        openTaskPrecisely(workspace, oTask.boundTask);
+    function openThisTask(event: MouseEvent) {
+        const forceNewTab = getForceNewTabOnClick(plugin, event);
+        devLog(`[taskview] Open this task alt: ${event.altKey} shift: ${event.shiftKey} ctrl: ${event.ctrlKey} meta: ${event.metaKey} forceNewTab: ${forceNewTab}`)
+        openTaskPrecisely(workspace, oTask.boundTask, forceNewTab);
     }
 
 

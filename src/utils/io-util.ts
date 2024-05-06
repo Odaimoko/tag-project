@@ -49,32 +49,16 @@ export const LIST_ITEM_REGEX = /^[\s>]*(\d+\.|\d+\)|\*|-|\+)\s*(\[.{0,1}\])?\s*(
 
 // endregion
 
-function openFileAtStart(workspace: Workspace, path: string) {
-    workspace.openLinkText(path, path, false, {
-        state: {
-            active: true
-        },
-        eState: {
-            line: 0,
-            cursor: {
-                from: {line: 0, ch: 0},
-                to: {line: 1, ch: 0},
-            },
-        },
-    });
-
-}
-
-// if we use workspace.openLinkText, a task without a block id will be opened with its section
-export async function openTaskPrecisely(workspace: Workspace, task: STask) {
-    devLog(`openTaskPrecisely ${workspace.getLeavesOfType("markdown").length} tabs`)
+async function getOpenInNewTab(forceNewTab: boolean, workspace: Workspace, path: string) {
     const settings = getSettings();
     let foundTabWithFile = false;
-    if (settings?.search_opened_tabs_before_navigating_tasks) {
+    if (
+        !forceNewTab && settings?.search_opened_tabs_before_navigating_tasks
+    ) {
         const mdLeaf = workspace.getLeavesOfType("markdown").find((k: WorkspaceLeaf) => {
             const mdView = k.view as MarkdownView;
             // mdView can have no file (ie the file is not saved to disk)
-            return mdView.file?.path === task.path;
+            return mdView.file?.path === path;
         })
         if (mdLeaf) {
             // If found, set the active leaf to this view
@@ -86,18 +70,44 @@ export async function openTaskPrecisely(workspace: Workspace, task: STask) {
 
     }
 
-    let openInNewLeaf = false;
-    if (!settings?.search_opened_tabs_before_navigating_tasks) {
-        // if we don't search opened tabs, we always open in current tab
-        openInNewLeaf = false;
-    } else {
-        if (foundTabWithFile) {
+    let openInNewLeaf = forceNewTab;
+    if (!forceNewTab) {
+        // if we do not force new tab, we need to check if we should open in new tab
+        if (!settings?.search_opened_tabs_before_navigating_tasks) {
+            // if we don't search opened tabs, we always open in current tab
             openInNewLeaf = false;
         } else {
-            openInNewLeaf = settings?.open_new_tab_if_task_tab_not_found ?? false;
+            if (foundTabWithFile) {
+                openInNewLeaf = false;
+            } else {
+                openInNewLeaf = settings?.open_new_tab_if_task_tab_not_found ?? false;
+            }
         }
     }
-    
+    return openInNewLeaf;
+}
+
+async function openFileAtStart(workspace: Workspace, path: string, forceNewTab = false) {
+    const openInNewLeaf = await getOpenInNewTab(forceNewTab, workspace, path);
+    workspace.openLinkText(path, path, openInNewLeaf, {
+        state: {
+            active: true
+        },
+        eState: {
+            line: 0,
+            cursor: {
+                from: {line: 0, ch: 0},
+                to: {line: 1, ch: 0},
+            },
+        },
+    });
+}
+
+
+// if we use workspace.openLinkText, a task without a block id will be opened with its section
+export async function openTaskPrecisely(workspace: Workspace, task: STask, forceNewTab = false) {
+    devLog(`[taskview] openTaskPrecisely ${workspace.getLeavesOfType("markdown").length} tabs. ForceNewTab ${forceNewTab}`)
+    const openInNewLeaf = await getOpenInNewTab(forceNewTab, workspace, task.path);
     // Copy from dataview. See TaskItem.
     // highlight cursor
     devLog(`[OpenTask] Task ${task.path} openInNewLeaf ${openInNewLeaf}`)
@@ -117,16 +127,16 @@ export async function openTaskPrecisely(workspace: Workspace, task: STask) {
     );
 }
 
-export function openProjectPrecisely(project: OdaPmProject, defType: OdaPmProjectDefinition, workspace: Workspace) {
+export function openProjectPrecisely(project: OdaPmProject, defType: OdaPmProjectDefinition, workspace: Workspace, forceNewTab = false) {
     switch (defType.type) {
         case "folder": // Project_FolderProject_Frontmatter
         case "file": // Project_FileProject_Frontmatter
-            openFileAtStart(workspace, defType.page?.path)
+            openFileAtStart(workspace, defType.page?.path, forceNewTab)
             console.log(defType.page?.path)
             break;
         case "tag_override": // task or wf override
             console.log(`openProjectPrecisely: tag_override. ${defType.taskable} ${defType.path}`)
-            openTaskPrecisely(workspace, defType.taskable?.boundTask)
+            openTaskPrecisely(workspace, defType.taskable?.boundTask, forceNewTab)
             break;
     }
 }

@@ -1,11 +1,12 @@
 import {OdaPmProject, OdaPmProjectDefinition} from "../../data-model/OdaPmProject";
-import React, {useContext} from "react";
+import React, {MouseEvent, useContext} from "react";
 import {PluginContext} from "../obsidian/manage-page-view";
 import {ClickableIconView, InternalLinkView} from "./view-template/icon-view";
 import {iconViewAsAWholeStyle} from "./style-def";
 import {openProjectPrecisely} from "../../utils/io-util";
 import {VStack} from "./view-template/h-stack";
 import {HoveringPopup, usePopup} from "./view-template/hovering-popup";
+import {getForceNewTabOnClick} from "../../settings/settings";
 
 export const IconName_Project = "folder";
 
@@ -18,8 +19,9 @@ function ProjectLinkView(props: {
                              onContentClicked={openProject}
                              content={<label style={{whiteSpace: "nowrap"}}>{props.def.getLinkText()}</label>}/>
 
-    function openProject() {
-        openProjectPrecisely(props.project, props.def, plugin.app.workspace);
+    function openProject(e: MouseEvent) {
+        const forceNewTab = getForceNewTabOnClick(plugin, e);
+        openProjectPrecisely(props.project, props.def, plugin.app.workspace, forceNewTab);
     }
 }
 

@@ -48,6 +48,14 @@ export enum TaskPriority {
     Low = 4,
 }
 
+export enum ModifierKeyOnClick {
+    None = "None", // never open a new tab
+    MetaOrCtrl = "MetaOrCtrl", // meta is command on mac, windows key on windows
+    // Ctrl = "Ctrl", // ctrl on windows. not detected on mac
+    Alt = "Alt", // alt on windows, option on mac
+    Shift = "Shift", // shift
+}
+
 function getDefaultPriority() {
     return Math.floor(maxPriorityTags / 2); // 1 -> medium's index
 }
@@ -87,7 +95,7 @@ export interface TPMSettings {
     priority_tags: SerializedType[], // 0.5.0, from high to low, should add the prefix `tpm/tag/`
     search_opened_tabs_before_navigating_tasks: boolean, // 0.6.0, if true, look for the existing tabs first, if not found, open a new tab; if false, always open in current tab
     open_new_tab_if_task_tab_not_found: boolean, // 0.6.0, if true, when the task file is not found in existing tabs, open a new tab; if false, open in current editor,
-    always_open_task_in_new_tab_modify_key: SerializedType, // 0.6.0. Key stroke enum. If click the task with this key pressed, always open a new tab.
+    always_open_task_in_new_tab_modify_key: ModifierKeyOnClick, // 0.6.0. Key stroke enum. If click the task with this key pressed, always open a new tab.
     cached_help_page_tutorial_tldr: SerializedType,
 }
 
@@ -115,7 +123,7 @@ export const TPM_DEFAULT_SETTINGS: Partial<TPMSettings> = {
     priority_tags: ["hi", "med_hi", "med", "med_lo", "lo"] as SerializedType[], // 0.5.0
     search_opened_tabs_before_navigating_tasks: true, // 0.6.0
     open_new_tab_if_task_tab_not_found: true, // 0.6.0
-    always_open_task_in_new_tab_modify_key: "Meta", // TODO
+    always_open_task_in_new_tab_modify_key: ModifierKeyOnClick.MetaOrCtrl, // 0.6.0
     cached_help_page_tutorial_tldr: false,
 }
 export type SettingName = keyof TPMSettings;
@@ -169,4 +177,21 @@ export function usePluginSettings<T extends SerializedType>(name: SettingName): 
         };
     }, [name, plugin, handler]);
     return [value, setValueAndSave];
+}
+
+
+export function getForceNewTabOnClick(plugin: OdaPmToolPlugin, event: React.MouseEvent) {
+    let forceNewTab = false;
+    switch (plugin.settings.always_open_task_in_new_tab_modify_key) {
+        case ModifierKeyOnClick.MetaOrCtrl:
+            forceNewTab = event.metaKey || event.ctrlKey;
+            break;
+        case ModifierKeyOnClick.Alt:
+            forceNewTab = event.altKey;
+            break;
+        case ModifierKeyOnClick.Shift:
+            forceNewTab = event.shiftKey;
+            break;
+    }
+    return forceNewTab;
 }

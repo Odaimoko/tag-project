@@ -2,7 +2,14 @@ import {App, PluginSettingTab, Setting, ValueComponent} from "obsidian";
 import TPMPlugin from "../main";
 import {createRoot, Root} from "react-dom/client";
 import React, {useEffect, useState} from "react";
-import {getSettings, setSettingsValueAndSave, SettingName, TPM_DEFAULT_SETTINGS, usePluginSettings} from "./settings";
+import {
+    getSettings,
+    ModifierKeyOnClick,
+    setSettingsValueAndSave,
+    SettingName,
+    TPM_DEFAULT_SETTINGS,
+    usePluginSettings
+} from "./settings";
 import {SerializedType} from "./SerializedType";
 import {isTagNameValid} from "../data-model/markdown-parse";
 import {HStack, VStack} from "../ui/react-view/view-template/h-stack";
@@ -128,6 +135,20 @@ export class TPMSettingsTab extends PluginSettingTab {
             </PluginContext.Provider>
         )
 
+        new Setting(containerEl).setName("Always open task in new tab modify key")
+            .setDesc("If the key is pressed when clicking the task, always open in a new tab. None for never apply modifier keys.")
+            .addDropdown(dropdown => {
+                dropdown.addOptions({
+                    [ModifierKeyOnClick.None]: "None",
+                    [ModifierKeyOnClick.Alt]: "Alt (Option)",
+                    [ModifierKeyOnClick.MetaOrCtrl]: "Ctrl (Cmd)",
+                    [ModifierKeyOnClick.Shift]: "Shift",
+                }).setValue(this.plugin.settings.always_open_task_in_new_tab_modify_key)
+                    .onChange(async (value) => {
+                        await setSettingsValueAndSave(this.plugin, "always_open_task_in_new_tab_modify_key", value)
+                    })
+
+            })
     }
 
     setValueAndSave<T extends SerializedType>(settingName: SettingName) {
