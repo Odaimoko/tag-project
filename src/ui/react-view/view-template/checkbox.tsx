@@ -11,11 +11,11 @@ import {IRenderable} from "../../common/i-renderable";
  * @param style
  * @constructor
  */
-export const ExternalControlledCheckbox = ({externalControl, onChange, onLabelClicked, content, style}:
+export const ExternalControlledCheckbox = ({externalControl, onChange, onContentClicked, content, style}:
                                                {
                                                    externalControl: boolean,
                                                    onChange: () => void,
-                                                   onLabelClicked?: () => void,
+                                                   onContentClicked?: () => void,
                                                    content?: IRenderable,
 
                                                } & I_Stylable) => {
@@ -27,7 +27,7 @@ export const ExternalControlledCheckbox = ({externalControl, onChange, onLabelCl
                 checked={externalControl}
                 onChange={onChange}
             />
-            <label onClick={onLabelClicked}>
+            <label onClick={onContentClicked}>
                 {content}
             </label>
         </span>
@@ -62,6 +62,6 @@ export const Checkbox = ({
         onChange?.(nextToggle);
     };
     return <ExternalControlledCheckbox style={style} externalControl={isChecked}
-                                       onChange={handleCheckboxChange} onLabelClicked={onLabelClicked}
+                                       onChange={handleCheckboxChange} onContentClicked={onLabelClicked}
                                        content={content}/>
 }

@@ -18,7 +18,7 @@ export const ToggleView = (props: {
         onChange?.(nextToggle);
     };
     return <ExternalToggleView externalControl={isChecked} content={content} onChange={handleCheckboxChange}
-                               onLabelClicked={onLabelClicked} style={props.style}
+                               onContentClicked={onLabelClicked} style={props.style}
     />
 }
 export const ExternalToggleView = (props:
@@ -29,7 +29,7 @@ export const ExternalToggleView = (props:
                                            content?: IRenderable,
 
                                        } & I_Stylable) => {
-    const {externalControl, onChange, onLabelClicked, content} = props;
+    const {externalControl, onChange, onContentClicked, content} = props;
     const className = externalControl ? "checkbox-container  is-enabled" : "checkbox-container";
     return <div style={{
         display: "flex",
@@ -42,7 +42,7 @@ export const ExternalToggleView = (props:
         {
             // if content is not null, render it. If no content, we do not want this marginLeft.
             !!content && <span style={{marginLeft: 5}}
-                               onClick={onLabelClicked}>
+                               onClick={onContentClicked}>
             {content}
         </span>
         }
