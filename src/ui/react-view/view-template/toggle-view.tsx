@@ -25,9 +25,8 @@ export const ExternalToggleView = (props:
                                        {
                                            externalControl: boolean,
                                            onChange: () => void,
-                                           onLabelClicked?: () => void,
+                                           onContentClicked?: () => void,
                                            content?: IRenderable,
-
                                        } & I_Stylable) => {
     const {externalControl, onChange, onContentClicked, content} = props;
     const className = externalControl ? "checkbox-container  is-enabled" : "checkbox-container";
