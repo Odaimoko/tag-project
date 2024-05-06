@@ -39,9 +39,13 @@ export const ExternalToggleView = (props:
         <span className={className} onClick={onChange}>
             <input type="checkbox"/>
         </span>
-        <span style={{marginLeft: 5}}
-              onClick={onLabelClicked}>
+        {
+            // if content is not null, render it. If no content, we do not want this marginLeft.
+            !!content && <span style={{marginLeft: 5}}
+                               onClick={onLabelClicked}>
             {content}
         </span>
+        }
+
     </div>
 }
