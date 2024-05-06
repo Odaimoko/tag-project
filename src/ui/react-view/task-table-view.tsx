@@ -34,6 +34,7 @@ import {ArrowBigDown, ArrowBigDownDash, ArrowBigUp, ArrowBigUpDash} from "./icon
 import {OdaPmDbProvider} from "../../data-model/OdaPmDb";
 import {HoveringPopup} from "./view-template/hovering-popup";
 import {CircleHelp} from "./icon/CircleHelp";
+import {devLog} from "../../utils/env-util";
 
 export const taskCheckBoxMargin = {marginLeft: 3};
 
@@ -107,22 +108,29 @@ export const OdaTaskSummaryCell = ({oTask, taskFirstColumn, showCheckBox, showPr
         })
     }, [oTask]);
 
-    const checkBoxContent = <span>
-        <InternalLinkView content={summaryView} onIconClicked={openThisTask} onContentClicked={openThisTask}/>
-    </span>;
+    const checkBoxContent = showCheckBox ? <span>
+        <InternalLinkView content={summaryView}/>
+    </span> // click event is handled in ExternalControlledCheckbox, so handling it here will cause double click.
+        : <span>
+            <InternalLinkView content={summaryView} onIconClicked={openThisTask} onContentClicked={openThisTask}/>
+        </span>;
     return <HStack style={centerChildren} spacing={5}>
         {showWorkflowIcon ? getIconByTask(oTask) : null}
         {showPriority && <TaskPriorityIcon oTask={oTask}/>}
         {showCheckBox ? <ExternalControlledCheckbox
             content={checkBoxContent}
             onChange={tickSummary}
-            onLabelClicked={openThisTask}
+            onContentClicked={() => {
+                devLog("[taskview] ExternalControlledCheckbox Clicked")
+                openThisTask();
+            }}
             externalControl={oTask.stepCompleted()}
         /> : checkBoxContent}
 
     </HStack>;
 
     function openThisTask() {
+        devLog("[taskview] Open this task")
         openTaskPrecisely(workspace, oTask.boundTask);
     }
 
@@ -482,9 +490,10 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
                 </span>
 
                 <ExternalControlledCheckbox content={"Show Completed"} onChange={handleShowCompletedChange}
-                                            externalControl={showCompleted} onLabelClicked={handleShowCompletedChange}/>
+                                            externalControl={showCompleted}
+                                            onContentClicked={handleShowCompletedChange}/>
                 <ExternalControlledCheckbox content={"Show Steps"} onChange={handleShowStepsChange}
-                                            onLabelClicked={handleShowStepsChange}
+                                            onContentClicked={handleShowStepsChange}
                                             externalControl={showSteps}/>
             </HStack>
 
