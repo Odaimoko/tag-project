@@ -2,7 +2,7 @@ import {OdaPmProject, OdaPmProjectDefinition} from "../../data-model/OdaPmProjec
 import React, {MouseEvent, useContext} from "react";
 import {PluginContext} from "../obsidian/manage-page-view";
 import {ClickableObsidianIconView, InternalLinkView} from "./obsidian-icon-view";
-import {iconViewAsAWholeStyle} from "./style-def";
+import {iconViewAsAWholeStyle} from "../pure-react/style-def";
 import {openProjectPrecisely} from "../../utils/io-util";
 import {VStack} from "../pure-react/view-template/h-stack";
 import {HoveringPopup, usePopup} from "../pure-react/view-template/hovering-popup";

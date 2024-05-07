@@ -9,7 +9,7 @@ import {Checkbox} from "../../pure-react/view-template/checkbox";
 import {getDefaultTableStyleGetters} from "../../react-view/task-table-view";
 import {ProjectView} from "../../react-view/project-view";
 import {HStack} from "../../pure-react/view-template/h-stack";
-import {centerChildren, centerChildrenVertStyle} from "../../react-view/style-def";
+import {centerChildren, centerChildrenVertStyle} from "../../pure-react/style-def";
 import {Evt_ManagePageReRender} from "../../../typing/dataview-event";
 
 export class ProjectInspectorModal extends Modal {

@@ -7,8 +7,6 @@ import {GeneralMouseEventHandler} from "../pure-react/view-template/event-handli
 import {I_Stylable} from "../pure-react/props-typing/i-stylable";
 import {ClickableView, I_IconClickable} from "../pure-react/view-template/clickable-view";
 
-export const CssClass_Link = "cm-underline";
-
 // const taskLinkHtmlString = getIcon("link")?.outerHTML;
 /**
  * https://lucide.dev/icons/

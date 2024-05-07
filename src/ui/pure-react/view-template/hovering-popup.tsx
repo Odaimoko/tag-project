@@ -2,7 +2,7 @@ import React, {useState} from "react";
 import {IRenderable} from "../props-typing/i-renderable";
 import {ClickableObsidianIconView} from "../../react-view/obsidian-icon-view";
 import {HStack} from "./h-stack";
-import {varBackgroundSecondary} from "../../react-view/style-def";
+import {varBackgroundSecondary} from "../style-def";
 
 function toggleDropDown(setDropDownDisplay: (value: (((prevState: string) => string) | string)) => void) {
     setDropDownDisplay((prevState) => {

@@ -6,7 +6,7 @@ import {INameable} from "../props-typing/i-nameable";
 import {isCharacterInput} from "../../../utils/react-user-input";
 import {IRenderable} from "../props-typing/i-renderable";
 import {toggleValueInArray} from "../../react-view/workflow-filter";
-import {dropdownSelectedColor} from "../../react-view/style-def";
+import {dropdownSelectedColor} from "../style-def";
 import {ClickableObsidianIconView} from "../../react-view/obsidian-icon-view";
 import {loopIndex} from "../../../utils/loop-index";
 

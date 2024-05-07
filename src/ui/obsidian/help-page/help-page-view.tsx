@@ -13,7 +13,7 @@ import {UserManual} from "./user-manual";
 import {ExampleManagePage} from "./example-manage-page";
 import {devLog} from "../../../utils/env-util";
 import {ExternalToggleView} from "../../pure-react/view-template/toggle-view";
-import {centerChildrenVertStyle, getStickyHeaderStyle} from "../../react-view/style-def";
+import {centerChildrenVertStyle, getStickyHeaderStyle} from "../../pure-react/style-def";
 
 export const PmHelpPageViewId = "tpm-help-view";
 export const Desc_ManagePage = "Manage Page";

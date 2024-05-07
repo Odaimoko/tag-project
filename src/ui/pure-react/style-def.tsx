@@ -23,3 +23,4 @@ export const miniGroupSpacing = 2;
 export const sameGroupSpacing = 5;
 export const diffGroupSpacing = 10;
 export const warningColor = "var(--text-warning)";
+export const CssClass_Link = "cm-underline";

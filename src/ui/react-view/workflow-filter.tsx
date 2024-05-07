@@ -5,7 +5,7 @@ import React, {MouseEvent, useContext} from "react";
 import {PluginContext} from "../obsidian/manage-page-view";
 import {ExternalControlledCheckbox} from "../pure-react/view-template/checkbox";
 import {InternalLinkView} from "./obsidian-icon-view";
-import {centerChildren, iconViewAsAWholeStyle} from "./style-def";
+import {centerChildren, iconViewAsAWholeStyle} from "../pure-react/style-def";
 import {openTaskPrecisely} from "../../utils/io-util";
 import {initialToUpper} from "../../utils/format-util";
 import {NameableFilterHeading} from "./nameable-filter-heading";

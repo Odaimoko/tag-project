@@ -7,7 +7,7 @@ import {
     getNextFilterMethod
 } from "../../settings/settings";
 import {ClickableObsidianIconView} from "./obsidian-icon-view";
-import {iconViewAsAWholeStyle} from "./style-def";
+import {iconViewAsAWholeStyle} from "../pure-react/style-def";
 import {Tag_Prefix_Tag} from "../../data-model/workflow-def";
 
 import {FilterHeadHStack} from "../pure-react/view-template/filter-head-h-stack";

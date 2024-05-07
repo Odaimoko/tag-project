@@ -2,7 +2,8 @@ import {IRenderable} from "../props-typing/i-renderable";
 import {I_Stylable} from "../props-typing/i-stylable";
 import {I_InteractableId} from "../props-typing/i-interactable-id";
 import {GeneralMouseEventHandler} from "./event-handling/general-mouse-event-handler";
-import {CssClass_Link} from "../../react-view/obsidian-icon-view";
+
+import {CssClass_Link} from "../style-def";
 
 export interface I_IconClickable {
     content?: IRenderable;

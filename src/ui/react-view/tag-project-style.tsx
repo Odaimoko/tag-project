@@ -1,7 +1,7 @@
 import {I_OdaPmWorkflow, WorkflowType} from "../../data-model/workflow-def";
 import {ObsidianIconView} from "./obsidian-icon-view";
 import React from "react";
-import {Color_Workflow_Checkbox, Color_WorkflowChain} from "./style-def";
+import {Color_Workflow_Checkbox, Color_WorkflowChain} from "../pure-react/style-def";
 
 function getColorByWorkflow(type: I_OdaPmWorkflow) {
     switch (type.type) {

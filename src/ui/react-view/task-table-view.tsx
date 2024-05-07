@@ -26,7 +26,7 @@ import {MarkdownRenderer} from "obsidian";
 import {HtmlStringComponent} from "../pure-react/view-template/html-string-component";
 import {appendBoldText} from "../common/html-template";
 import {notify} from "../../utils/o-notice";
-import {centerChildren, centerChildrenVertStyle, getStickyHeaderStyle} from "./style-def";
+import {centerChildren, centerChildrenVertStyle, getStickyHeaderStyle} from "../pure-react/style-def";
 import {Minus} from "../pure-react/icon/Minus";
 import {DownAZ, UpAZ} from "../pure-react/icon/DownAZ";
 import {Down01, Up01} from "../pure-react/icon/Down01";

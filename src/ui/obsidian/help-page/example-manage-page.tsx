@@ -4,7 +4,7 @@ import {getTemplateHtml, ManagePageForTemplate, templateMd} from "../../tpm-temp
 import {P} from "../../common/heading";
 import {PLUGIN_NAME} from "../../../main";
 import {Desc_ManagePage} from "./help-page-view";
-import {centerChildrenVertStyle} from "../../react-view/style-def";
+import {centerChildrenVertStyle} from "../../pure-react/style-def";
 
 export const templateTargetFilePath = "TagProject_Template.md";
 export const ExampleManagePage = ({app, container}: {

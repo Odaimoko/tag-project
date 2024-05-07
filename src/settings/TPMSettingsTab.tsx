@@ -20,7 +20,7 @@ import {
     centerChildrenVertStyle,
     diffGroupSpacing,
     sameGroupSpacing
-} from "../ui/react-view/style-def";
+} from "../ui/pure-react/style-def";
 import {DataTable} from "../ui/pure-react/view-template/data-table";
 import {Tag_Prefix_Tag} from "../data-model/workflow-def";
 import {getPriorityIcon, OdaTaskSummaryCell} from "../ui/react-view/task-table-view";

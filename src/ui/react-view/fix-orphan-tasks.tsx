@@ -10,7 +10,7 @@ import {DataTable} from "../pure-react/view-template/data-table";
 import React, {useState} from "react";
 import {ProjectFilterName_All} from "./project-filter";
 import {OdaPmTask} from "../../data-model/OdaPmTask";
-import {warningColor} from "./style-def";
+import {warningColor} from "../pure-react/style-def";
 
 import {obsidianIconOffsetCenteredStyle, obsidianIconOffsetStyle} from "./tag-project-style";
 
