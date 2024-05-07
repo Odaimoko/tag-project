@@ -1,5 +1,6 @@
 import React from "react";
-import {I_Stylable} from "../react-view/view-template/icon-view";
+
+import {I_Stylable} from "../pure-react/props-typing/i-stylable";
 
 interface I_PathHierarchy {
     name: string,

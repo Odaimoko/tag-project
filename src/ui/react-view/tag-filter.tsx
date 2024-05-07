@@ -6,10 +6,11 @@ import {
     FilterMethod_NotFiltering,
     getNextFilterMethod
 } from "../../settings/settings";
-import {ClickableIconView} from "./view-template/icon-view";
+import {ClickableIconView} from "../pure-react/view-template/icon-view";
 import {iconViewAsAWholeStyle} from "./style-def";
 import {Tag_Prefix_Tag} from "../../data-model/workflow-def";
-import {FilterHeadHStack} from "./workflow-filter";
+
+import {FilterHeadHStack} from "../pure-react/view-template/filter-head-h-stack";
 
 const tagIncludedIcon = "check"
 const tagExcludedIcon = "x"

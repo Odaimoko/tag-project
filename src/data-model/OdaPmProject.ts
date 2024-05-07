@@ -4,7 +4,7 @@ import {getProjectNameFromTag, getProjectPathFromFilePath, I_OdaPmTaskble, I_Oda
 import {BaseDatabaseObject} from "./BaseDatabaseObject";
 import {OdaPmTask} from "./OdaPmTask";
 import * as path from "path";
-import {I_Nameable} from "./I_Nameable";
+import {INameable} from "../ui/pure-react/props-typing/i-nameable";
 import {ONotice} from "../utils/o-notice";
 
 export const Frontmatter_FolderProject = "tpm_project_root";
@@ -64,7 +64,7 @@ export class OdaPmProjectDefinition {
     }
 }
 
-export class OdaPmProject extends BaseDatabaseObject implements I_Nameable {
+export class OdaPmProject extends BaseDatabaseObject implements INameable {
     name: string;
     workflows: I_OdaPmWorkflow[];
     pmTasks: OdaPmTask[];

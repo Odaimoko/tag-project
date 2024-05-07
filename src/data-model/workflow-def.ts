@@ -1,7 +1,7 @@
 import {STask} from "obsidian-dataview";
 import {OdaPmTask} from "./OdaPmTask";
 import {OdaPmProject, Tag_Prefix_Project} from "./OdaPmProject";
-import {I_Nameable} from "./I_Nameable";
+import {INameable} from "../ui/pure-react/props-typing/i-nameable";
 import {matchTags, POTENTIAL_TAG_MATCHER} from "./markdown-parse";
 
 export const Tag_Prefix_Step = "#tpm/step/";
@@ -100,7 +100,7 @@ export interface I_OdaPmStep {
 }
 
 
-export interface I_OdaPmWorkflow extends I_OdaPmTaskble, I_Nameable {
+export interface I_OdaPmWorkflow extends I_OdaPmTaskble, INameable {
     boundTask: STask;
     name: string;
     stepsDef: I_OdaPmStep[];

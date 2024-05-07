@@ -1,6 +1,6 @@
 import {App, Component, MarkdownRenderer} from "obsidian";
 import React from "react";
-import {HtmlStringComponent} from "./react-view/view-template/html-string-component";
+import {HtmlStringComponent} from "./pure-react/view-template/html-string-component";
 
 export const templateMd = `---
 tpm_project_root: Project Template

@@ -12,7 +12,7 @@ import {
 } from "./settings";
 import {SerializedType} from "./SerializedType";
 import {isTagNameValid} from "../data-model/markdown-parse";
-import {HStack, VStack} from "../ui/react-view/view-template/h-stack";
+import {HStack, VStack} from "../ui/pure-react/view-template/h-stack";
 import {PluginContext} from "../ui/obsidian/manage-page-view";
 import {
     centerChildren,
@@ -21,18 +21,18 @@ import {
     diffGroupSpacing,
     sameGroupSpacing
 } from "../ui/react-view/style-def";
-import {DataTable} from "../ui/react-view/view-template/data-table";
+import {DataTable} from "../ui/pure-react/view-template/data-table";
 import {Tag_Prefix_Tag} from "../data-model/workflow-def";
 import {getPriorityIcon, OdaTaskSummaryCell} from "../ui/react-view/task-table-view";
-import {TwiceConfirmButton} from "../ui/react-view/view-template/twice-confirm-button";
-import {ObsidianIconView} from "../ui/react-view/view-template/icon-view";
+import {TwiceConfirmButton} from "../ui/pure-react/view-template/twice-confirm-button";
+import {ObsidianIconView} from "../ui/pure-react/view-template/icon-view";
 import {Evt_DbReloaded, Evt_SettingsChanged} from "../typing/dataview-event";
 import {InlineCodeView} from "../ui/common/inline-code-view";
 import {HashTagView} from "../ui/common/hash-tag-view";
 import {OdaPmDbProvider} from "../data-model/OdaPmDb";
 import {devLog} from "../utils/env-util";
 import {setTaskPriority} from "../data-model/OdaPmTask";
-import {ExternalToggleView} from "../ui/react-view/view-template/toggle-view";
+import {ExternalToggleView} from "../ui/pure-react/view-template/toggle-view";
 
 function ObsidianSettingToggleView(props: {
     name: string,

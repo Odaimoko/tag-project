@@ -1,13 +1,14 @@
-import {I_Nameable} from "../../data-model/I_Nameable";
+import {INameable} from "../pure-react/props-typing/i-nameable";
 import React, {Fragment} from "react";
-import {FilterHeadHStack} from "./workflow-filter";
+
+import {FilterHeadHStack} from "../pure-react/view-template/filter-head-h-stack";
 
 export function SelectAndDeselectAllView({handleSetDisplayNames, nameables}: {
     handleSetDisplayNames: (s: string[]) => void,
-    nameables: I_Nameable[]
+    nameables: INameable[]
 }) {
     return <Fragment>
-        <button onClick={() => handleSetDisplayNames(nameables.map((k: I_Nameable) => {
+        <button onClick={() => handleSetDisplayNames(nameables.map((k: INameable) => {
             return k.name;
         }))}>All
         </button>
@@ -22,7 +23,7 @@ export const NameableFilterHeading = ({
                                       }: {
     nameableTypeName: string,
     displayNames: string[],
-    nameables: I_Nameable[],
+    nameables: INameable[],
     handleSetDisplayNames?: (s: string[]) => void, // if showSelectAll is false, this is not required
     showSelectAll?: boolean
 } & React.PropsWithChildren<any>) => {

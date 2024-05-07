@@ -16,26 +16,28 @@ import {
 } from "../../settings/settings";
 import {Evt_JumpTask, Evt_JumpWorkflow} from "../../typing/dataview-event";
 import {initialToUpper, isStringNullOrEmpty, simpleFilter} from "../../utils/format-util";
-import {HStack, VStack} from "./view-template/h-stack";
-import {ClickableIconView, ClickableView, I_Stylable, InternalLinkView} from "./view-template/icon-view";
-import {ExternalControlledCheckbox} from "./view-template/checkbox";
-import {DataTable} from "./view-template/data-table";
-import {IRenderable} from "../common/i-renderable";
+import {HStack, VStack} from "../pure-react/view-template/h-stack";
+import {ClickableIconView, ClickableView, InternalLinkView} from "../pure-react/view-template/icon-view";
+import {ExternalControlledCheckbox} from "../pure-react/view-template/checkbox";
+import {DataTable} from "../pure-react/view-template/data-table";
+import {IRenderable} from "../pure-react/props-typing/i-renderable";
 import {DataArray} from "obsidian-dataview";
 import {MarkdownRenderer} from "obsidian";
-import {HtmlStringComponent} from "./view-template/html-string-component";
+import {HtmlStringComponent} from "../pure-react/view-template/html-string-component";
 import {appendBoldText} from "../common/html-template";
 import {notify} from "../../utils/o-notice";
-import {centerChildren, centerChildrenVertStyle, getIconByWorkflow, getStickyHeaderStyle} from "./style-def";
-import {loopIndex} from "./project-filter";
+import {centerChildren, centerChildrenVertStyle, getStickyHeaderStyle} from "./style-def";
 import {Minus} from "./icon/Minus";
 import {DownAZ, UpAZ} from "./icon/DownAZ";
 import {Down01, Up01} from "./icon/Down01";
 import {ArrowBigDown, ArrowBigDownDash, ArrowBigUp, ArrowBigUpDash} from "./icon/ArrowBigUpDash";
 import {OdaPmDbProvider} from "../../data-model/OdaPmDb";
-import {HoveringPopup} from "./view-template/hovering-popup";
+import {HoveringPopup} from "../pure-react/view-template/hovering-popup";
 import {CircleHelp} from "./icon/CircleHelp";
 import {devLog} from "../../utils/env-util";
+import {I_Stylable} from "../pure-react/props-typing/i-stylable";
+import {loopIndex} from "../../utils/loop-index";
+import {getIconByWorkflow} from "./tag-project-style";
 
 export const taskCheckBoxMargin = {marginLeft: 3};
 

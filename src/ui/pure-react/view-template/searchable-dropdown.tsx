@@ -1,14 +1,14 @@
 import {StyleProps, VStack} from "./h-stack";
 import React, {KeyboardEvent, useRef, useState} from "react";
-import {usePopup} from "./hovering-popup";
+import {getDropdownStyle, usePopup} from "./hovering-popup";
 import {devLog} from "../../../utils/env-util";
-import {I_Nameable} from "../../../data-model/I_Nameable";
-import {getDropdownStyle, loopIndex} from "../project-filter";
+import {INameable} from "../props-typing/i-nameable";
 import {isCharacterInput} from "../../../utils/react-user-input";
-import {IRenderable} from "../../common/i-renderable";
-import {toggleValueInArray} from "../workflow-filter";
-import {dropdownSelectedColor} from "../style-def";
+import {IRenderable} from "../props-typing/i-renderable";
+import {toggleValueInArray} from "../../react-view/workflow-filter";
+import {dropdownSelectedColor} from "../../react-view/style-def";
 import {ClickableIconView} from "./icon-view";
+import {loopIndex} from "../../../utils/loop-index";
 
 
 interface I_OptionItem {
@@ -18,7 +18,7 @@ interface I_OptionItem {
     optionValue: string,
 }
 
-export type OptionValueType = I_Nameable | I_OptionItem;
+export type OptionValueType = INameable | I_OptionItem;
 
 /**
  * If the op is I_OptionItem, return its optionValue, otherwise return its name.

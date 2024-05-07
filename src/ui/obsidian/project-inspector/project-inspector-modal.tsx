@@ -3,12 +3,12 @@ import {createRoot, Root} from "react-dom/client";
 import OdaPmToolPlugin from "../../../main";
 import React, {useState} from "react";
 import {OdaPmDbProvider} from "../../../data-model/OdaPmDb";
-import {DataTable} from "../../react-view/view-template/data-table";
+import {DataTable} from "../../pure-react/view-template/data-table";
 import {setSettingsValueAndSave, usePluginSettings} from "../../../settings/settings";
-import {Checkbox} from "../../react-view/view-template/checkbox";
+import {Checkbox} from "../../pure-react/view-template/checkbox";
 import {getDefaultTableStyleGetters} from "../../react-view/task-table-view";
 import {ProjectView} from "../../react-view/project-view";
-import {HStack} from "../../react-view/view-template/h-stack";
+import {HStack} from "../../pure-react/view-template/h-stack";
 import {centerChildren, centerChildrenVertStyle} from "../../react-view/style-def";
 import {Evt_ManagePageReRender} from "../../../typing/dataview-event";
 

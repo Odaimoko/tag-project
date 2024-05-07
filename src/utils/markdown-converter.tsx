@@ -4,7 +4,7 @@ import {createContext} from "react";
  * Convert a Jsx Element to a Markdown string.
  */
 import {renderToString} from "react-dom/server";
-import {IRenderable} from "../ui/common/i-renderable";
+import {IRenderable} from "../ui/pure-react/props-typing/i-renderable";
 
 export function jsxToMarkdown(jsx: IRenderable): string {
     const element = <MarkdownConvertContext.Provider value={true}>

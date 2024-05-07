@@ -1,16 +1,13 @@
 import React, {useContext} from "react";
 import {OdaPmProject} from "../../data-model/OdaPmProject";
-import {FilterHeadHStack} from "./workflow-filter";
-import {HStack} from "./view-template/h-stack";
+import {HStack} from "../pure-react/view-template/h-stack";
 
 import {ProjectView} from "./project-view";
-
-
-import {varBackgroundSecondary} from "./style-def";
-import {OptionValueType, SearchableDropdown} from "./view-template/searchable-dropdown";
+import {OptionValueType, SearchableDropdown} from "../pure-react/view-template/searchable-dropdown";
 import {PluginContext} from "../obsidian/manage-page-view";
 import {ProjectInspectorModal} from "../obsidian/project-inspector/project-inspector-modal";
 import {notify} from "../../utils/o-notice";
+import {FilterHeadHStack} from "../pure-react/view-template/filter-head-h-stack";
 
 export const ProjectFilterName_All = "All Projects";
 export const ProjectFilterOptionValue_All = "###ALL###";
@@ -31,30 +28,6 @@ function getOptionValueName(opValue: string | undefined, listOpValues: OptionVal
             return project.name
     }
     return null;
-}
-
-export function loopIndex(nextIdx: number, len: number) {
-    if (nextIdx < 0) {
-        nextIdx = len - 1;
-    } else if (nextIdx >= len) {
-        nextIdx = 0;
-    }
-    return nextIdx;
-}
-
-/**
- * A style that will show or hide the dropdown.
- * @param dropDownDisplay
- */
-export function getDropdownStyle(dropDownDisplay: string | undefined, zIndex = 10) {
-    dropDownDisplay ??= "none";
-    const dropdownStyle = {
-        display: dropDownDisplay,
-        position: "absolute",
-        zIndex: zIndex,
-        background: varBackgroundSecondary
-    } as React.CSSProperties;
-    return dropdownStyle;
 }
 
 const headingStyle = {

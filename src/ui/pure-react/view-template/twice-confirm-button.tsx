@@ -1,8 +1,7 @@
-import {IRenderable} from "../../common/i-renderable";
+import {IRenderable} from "../props-typing/i-renderable";
 import React, {useState} from "react";
-import {warningColor} from "../fix-orphan-tasks";
 
-import {varBackgroundPrimary} from "../style-def";
+import {varBackgroundPrimary, warningColor} from "../../react-view/style-def";
 
 export function TwiceConfirmButton(props: {
     onConfirm: () => void,

@@ -1,9 +1,10 @@
-import {IRenderable} from "../../common/i-renderable";
+import {IRenderable} from "../props-typing/i-renderable";
 import React from "react";
 import {getIcon} from "obsidian";
 import {HtmlStringComponent} from "./html-string-component";
 import {I_InteractableId} from "../props-typing/i-interactable-id";
-import {GeneralMouseEventHandler} from "../event-handling/general-mouse-event-handler";
+import {GeneralMouseEventHandler} from "./event-handling/general-mouse-event-handler";
+import {I_Stylable} from "../props-typing/i-stylable";
 
 export const CssClass_Link = "cm-underline";
 export const obsidianIconTopOffset = 4;
@@ -12,10 +13,6 @@ export const obsidianIconOffsetCenteredStyle = {
     position: "relative",
     top: obsidianIconTopOffset / 2
 } as React.CSSProperties;
-
-export interface I_Stylable {
-    style?: React.CSSProperties;
-}
 
 // const taskLinkHtmlString = getIcon("link")?.outerHTML;
 /**

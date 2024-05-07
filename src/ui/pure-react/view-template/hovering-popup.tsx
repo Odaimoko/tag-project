@@ -1,8 +1,8 @@
 import React, {useState} from "react";
-import {IRenderable} from "../../common/i-renderable";
-import {getDropdownStyle} from "../project-filter";
+import {IRenderable} from "../props-typing/i-renderable";
 import {ClickableIconView} from "./icon-view";
 import {HStack} from "./h-stack";
+import {varBackgroundSecondary} from "../../react-view/style-def";
 
 function toggleDropDown(setDropDownDisplay: (value: (((prevState: string) => string) | string)) => void) {
     setDropDownDisplay((prevState) => {
@@ -34,6 +34,21 @@ export function usePopup(init = "none") {
 }
 
 type PopupProps = Partial<ReturnType<typeof usePopup>>;
+
+/**
+ * A style that will show or hide the dropdown.
+ * @param dropDownDisplay
+ */
+export function getDropdownStyle(dropDownDisplay: string | undefined, zIndex = 10) {
+    dropDownDisplay ??= "none";
+    const dropdownStyle = {
+        display: dropDownDisplay,
+        position: "absolute",
+        zIndex: zIndex,
+        background: varBackgroundSecondary
+    } as React.CSSProperties;
+    return dropdownStyle;
+}
 
 /**
  *

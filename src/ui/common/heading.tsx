@@ -1,8 +1,8 @@
-import {I_Stylable} from "../react-view/view-template/icon-view";
 import React, {useContext} from "react";
 import {MarkdownConvertContext} from "../../utils/markdown-converter";
-import {IRenderable} from "./i-renderable";
-import {wrapChildrenWithArray} from "../react-view/view-template/h-stack";
+import {IRenderable} from "../pure-react/props-typing/i-renderable";
+import {wrapChildrenWithArray} from "../pure-react/view-template/h-stack";
+import {I_Stylable} from "../pure-react/props-typing/i-stylable";
 
 export function getMdHeadingByString({layer, content, style}: {
     layer: 1 | 2 | 3 | 4 | 5 | 6,

@@ -1,5 +1,5 @@
 import {OdaPmTask} from "./OdaPmTask";
-import {I_Nameable} from "./I_Nameable";
+import {INameable} from "../ui/pure-react/props-typing/i-nameable";
 
 /**
  * @deprecated
@@ -10,7 +10,7 @@ export const ModuleId_Unclassified = "###UNCLASSIFIED###";
 /**
  * A module is a collection of tasks under headers with the same name.
  */
-export class OdaPmModule implements I_Nameable {
+export class OdaPmModule implements INameable {
     // Built-in module will start with `#`.
     // User-defined module has the same name as the header.
     id: string;

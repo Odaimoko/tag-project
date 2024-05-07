@@ -1,17 +1,20 @@
 import {OdaPmDb} from "../../data-model/OdaPmDb";
-import {HStack, VStack} from "./view-template/h-stack";
-import {HoveringPopup} from "./view-template/hovering-popup";
-import {TwiceConfirmButton} from "./view-template/twice-confirm-button";
-import {obsidianIconOffsetCenteredStyle, obsidianIconOffsetStyle, ObsidianIconView} from "./view-template/icon-view";
+import {HStack, VStack} from "../pure-react/view-template/h-stack";
+import {HoveringPopup} from "../pure-react/view-template/hovering-popup";
+import {TwiceConfirmButton} from "../pure-react/view-template/twice-confirm-button";
+import {
+    obsidianIconOffsetCenteredStyle,
+    obsidianIconOffsetStyle,
+    ObsidianIconView
+} from "../pure-react/view-template/icon-view";
 import {getDefaultTableStyleGetters, OdaTaskSummaryCell} from "./task-table-view";
 import {ProjectView} from "./project-view";
 import {ClickableWorkflowView} from "./workflow-filter";
-import {DataTable} from "./view-template/data-table";
+import {DataTable} from "../pure-react/view-template/data-table";
 import React, {useState} from "react";
 import {ProjectFilterName_All} from "./project-filter";
 import {OdaPmTask} from "../../data-model/OdaPmTask";
-
-export const warningColor = "var(--text-warning)";
+import {warningColor} from "./style-def";
 
 function OrphanTasksFixPanel({orphanTasks}: { orphanTasks: OdaPmTask[] }) {
     // Task\n Workflow

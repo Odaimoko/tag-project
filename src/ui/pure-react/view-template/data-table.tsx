@@ -1,4 +1,4 @@
-import {IRenderable} from "../../common/i-renderable";
+import {IRenderable} from "../props-typing/i-renderable";
 import React from "react";
 
 /**

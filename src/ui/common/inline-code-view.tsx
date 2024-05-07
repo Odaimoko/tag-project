@@ -1,5 +1,5 @@
 import React from "react";
-import {IRenderable} from "./i-renderable";
+import {IRenderable} from "../pure-react/props-typing/i-renderable";
 
 export const InlineCodeView = ({text}: {
     text: IRenderable

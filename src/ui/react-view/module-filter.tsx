@@ -1,8 +1,8 @@
 import {OdaPmModule} from "../../data-model/OdaPmModule";
 import {NameableFilterHeading} from "./nameable-filter-heading";
-import {OptionValueType, SearchableDropdown} from "./view-template/searchable-dropdown";
+import {OptionValueType, SearchableDropdown} from "../pure-react/view-template/searchable-dropdown";
 import React from "react";
-import {HStack} from "./view-template/h-stack";
+import {HStack} from "../pure-react/view-template/h-stack";
 
 
 export function ModuleFilter({modules, displayModuleIds, handleSetDisplayModuleIds}: {

@@ -2,7 +2,8 @@
 // https://reactjs.org/docs/dom-elements.html#dangerouslysetinnerhtml
 import parse from "html-react-parser";
 import React from "react";
-import {I_Stylable} from "./icon-view";
+
+import {I_Stylable} from "../props-typing/i-stylable";
 
 export function HtmlStringComponent({htmlString, useSpan = true, style}: {
     htmlString?: string,

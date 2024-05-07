@@ -1,6 +1,6 @@
 import React, {JSX, useState} from "react";
-import {I_Stylable} from "./icon-view";
-import {IRenderable} from "../../common/i-renderable";
+import {IRenderable} from "../props-typing/i-renderable";
+import {I_Stylable} from "../props-typing/i-stylable";
 
 export const ToggleView = (props: {
     content?: string | JSX.Element,

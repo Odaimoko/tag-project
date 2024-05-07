@@ -1,36 +1,22 @@
 // region Legend
-import {HStack} from "./view-template/h-stack";
+import {HStack} from "../pure-react/view-template/h-stack";
 import {I_OdaPmWorkflow, Workflow_Type_Enum_Array, WorkflowType} from "../../data-model/workflow-def";
 import React, {MouseEvent, useContext} from "react";
 import {PluginContext} from "../obsidian/manage-page-view";
-import {ExternalControlledCheckbox} from "./view-template/checkbox";
-import {I_Stylable, InternalLinkView} from "./view-template/icon-view";
-import {centerChildren, getIconByWorkflow, getIconViewByWorkflowType, iconViewAsAWholeStyle} from "./style-def";
+import {ExternalControlledCheckbox} from "../pure-react/view-template/checkbox";
+import {InternalLinkView} from "../pure-react/view-template/icon-view";
+import {centerChildren, iconViewAsAWholeStyle} from "./style-def";
 import {openTaskPrecisely} from "../../utils/io-util";
 import {initialToUpper} from "../../utils/format-util";
 import {NameableFilterHeading} from "./nameable-filter-heading";
-import {I_Nameable} from "../../data-model/I_Nameable";
+import {INameable} from "../pure-react/props-typing/i-nameable";
 import {taskCheckBoxMargin} from "./task-table-view";
-import {ExternalToggleView} from "./view-template/toggle-view";
-import {OptionValueType, SearchableDropdown} from "./view-template/searchable-dropdown";
+import {ExternalToggleView} from "../pure-react/view-template/toggle-view";
+import {OptionValueType, SearchableDropdown} from "../pure-react/view-template/searchable-dropdown";
 import {devLog} from "../../utils/env-util";
 import {getForceNewTabOnClick} from "../../settings/settings";
-
-/**
- * Accept children as a HStack with a unified style
- * @param props
- * @constructor
- */
-export function FilterHeadHStack(props: React.PropsWithChildren<any>) {
-    return <span style={{display: "flex"}}>
-            <HStack style={{
-                display: "flex",
-                alignItems: "center"
-            }} spacing={10}>
-                {props.children}
-            </HStack>
-        </span>
-}
+import {I_Stylable} from "../pure-react/props-typing/i-stylable";
+import {getIconByWorkflow, getIconViewByWorkflowType} from "./tag-project-style";
 
 export function WorkflowTypeLegend({type, style}: { type: WorkflowType } & I_Stylable) {
     return <span style={style}>
@@ -106,7 +92,7 @@ export const WorkflowFilter = (props: {
                                                                      workflow={workflows.find(k => k.name === props.item.name)!}
                                                                      handleSetDisplayNames={handleSetDisplayNames}/>
                                     }}/>
-                <button onClick={() => handleSetDisplayNames(workflows.map((k: I_Nameable) => {
+                <button onClick={() => handleSetDisplayNames(workflows.map((k: INameable) => {
                     return k.name;
                 }))}>All
                 </button>

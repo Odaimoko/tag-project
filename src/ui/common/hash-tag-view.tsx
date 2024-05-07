@@ -1,6 +1,6 @@
 import React, {useContext} from "react";
 import {MarkdownConvertContext} from "../../utils/markdown-converter";
-import {IRenderable} from "./i-renderable";
+import {IRenderable} from "../pure-react/props-typing/i-renderable";
 
 export const HashTagView = ({tagWithoutHash}: {
     tagWithoutHash: IRenderable

@@ -1,5 +1,6 @@
 import React, {Fragment, ReactNode} from "react";
-import {I_Stylable} from "./icon-view";
+
+import {I_Stylable} from "../props-typing/i-stylable";
 
 export type StyleProps = I_Stylable
 

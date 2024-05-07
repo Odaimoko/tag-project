@@ -1,7 +1,7 @@
 import React, {JSX, useState} from "react";
-import {I_Stylable} from "./icon-view";
-import {IRenderable} from "../../common/i-renderable";
-import {GeneralMouseEventHandler} from "../event-handling/general-mouse-event-handler";
+import {IRenderable} from "../props-typing/i-renderable";
+import {GeneralMouseEventHandler} from "./event-handling/general-mouse-event-handler";
+import {I_Stylable} from "../props-typing/i-stylable";
 
 /**
  * A checkbox that is totally controlled by its parent.

@@ -11,7 +11,7 @@ import {TaskTableView} from "./task-table-view";
 import {WorkflowFilter} from "./workflow-filter";
 import {TagFilter} from "./tag-filter";
 import {ProjectFilter, ProjectFilterOptionValue_All} from "./project-filter";
-import {HStack} from "./view-template/h-stack";
+import {HStack} from "../pure-react/view-template/h-stack";
 import {FixOrphanTasks} from "./fix-orphan-tasks";
 import {ModuleFilter} from "./module-filter";
 
