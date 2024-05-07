@@ -4,7 +4,7 @@ import React, {useState} from "react";
 import OdaPmToolPlugin, {PLUGIN_NAME} from "../../../main";
 import {PluginContext} from "../manage-page-view";
 import {HStack} from "../../pure-react/view-template/h-stack";
-import {StrictModeWrapper} from "../../pure-react/view-template/strict-mode-wrapper";
+import {StrictModeWrapper} from "../../react-view/strict-mode-wrapper";
 import {HelpPanelSwitcher} from "../../common/link-view";
 import {H1} from "../../common/heading";
 import {jsxToMarkdown} from "../../../utils/markdown-converter";

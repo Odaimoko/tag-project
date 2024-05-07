@@ -7,8 +7,9 @@ import {isCharacterInput} from "../../../utils/react-user-input";
 import {IRenderable} from "../props-typing/i-renderable";
 import {toggleValueInArray} from "../../react-view/workflow-filter";
 import {dropdownSelectedColor} from "../style-def";
-import {ClickableObsidianIconView} from "../../react-view/obsidian-icon-view";
 import {loopIndex} from "../../../utils/loop-index";
+import {ClickableView} from "./clickable-view";
+import {Cross} from "../icon/Cross";
 
 
 interface I_OptionItem {
@@ -108,7 +109,7 @@ export const SearchableDropdown = (props: {
                        showDropdown();
                    }}
             />
-        <ClickableObsidianIconView style={{marginLeft: -25, paddingTop: 5}}
+        <ClickableView style={{marginLeft: -25, paddingTop: 5}}
                                    onIconClicked={() => {
                                setSearchText("")
                                // input's focus is already lost onclick, so we need to 
@@ -117,7 +118,7 @@ export const SearchableDropdown = (props: {
                                // 2. focus on it again, so that user can input text immediately.
                                showDropdown()
                                inputRef.current?.focus()
-                           }} iconName={"x-circle"}/>
+                                   }} icon={<Cross/>}/>
         </span>
         {/*Add background so it won't be transparent. */}
         <div id={`${dropdownId}s`} style={getDropdownStyle(dropDownDisplay)}

@@ -6,7 +6,7 @@ import React, {createContext} from "react";
 import OdaPmToolPlugin, {PLUGIN_NAME} from "../../main";
 import {ClickableObsidianIconView} from "../react-view/obsidian-icon-view";
 import {HStack} from "../pure-react/view-template/h-stack";
-import {StrictModeWrapper} from "../pure-react/view-template/strict-mode-wrapper";
+import {StrictModeWrapper} from "../react-view/strict-mode-wrapper";
 import {PmHelpModal} from "./help-page/pm-help-modal";
 
 export const Icon_ManagePage = "book-open-check";
