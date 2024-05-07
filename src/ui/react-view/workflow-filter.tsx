@@ -13,10 +13,10 @@ import {INameable} from "../pure-react/props-typing/i-nameable";
 import {taskCheckBoxMargin} from "./task-table-view";
 import {ExternalToggleView} from "../pure-react/view-template/toggle-view";
 import {OptionValueType, SearchableDropdown} from "../pure-react/view-template/searchable-dropdown";
-import {devLog} from "../../utils/env-util";
 import {getForceNewTabOnClick} from "../../settings/settings";
 import {I_Stylable} from "../pure-react/props-typing/i-stylable";
 import {getIconByWorkflow, getIconViewByWorkflowType} from "./tag-project-style";
+import {toggleValueInArray} from "../pure-react/utils/toggle-value-in-array";
 
 export function WorkflowTypeLegend({type, style}: { type: WorkflowType } & I_Stylable) {
     return <span style={style}>
@@ -140,21 +140,6 @@ const WorkflowCheckboxes = ({nameables, displayNames}: {
         })}
     </div>;
 };
-
-/**
- * Toggle the value in the array. If the value is in the array, remove it. If not, add it.
- * @param value
- * @param valueArray
- * @param setValueArray
- */
-export function toggleValueInArray(value: string, valueArray: string[], setValueArray: (value: (((prevState: string[]) => string[]) | string[])) => void) {
-    if (!setValueArray || !valueArray) return;
-    // invert the checkbox
-    const v = !valueArray.includes(value)
-    const newArr = v ? [...valueArray, value] : valueArray.filter(k => k != value)
-    devLog(`Setting ${value} to ${v}, resulting in array: ${newArr}`)
-    setValueArray(newArr)
-}
 
 /**
  * A clickable view that can be used to jump to its definition.

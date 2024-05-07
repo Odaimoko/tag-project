@@ -3,11 +3,10 @@ import React, {KeyboardEvent, useRef, useState} from "react";
 import {getDropdownStyle, usePopup} from "./hovering-popup";
 import {devLog} from "../../../utils/env-util";
 import {INameable} from "../props-typing/i-nameable";
-import {isCharacterInput} from "../../../utils/react-user-input";
+import {isCharacterInput} from "./event-handling/react-user-input";
 import {IRenderable} from "../props-typing/i-renderable";
-import {toggleValueInArray} from "../../react-view/workflow-filter";
 import {dropdownSelectedColor} from "../style-def";
-import {loopIndex} from "../../../utils/loop-index";
+import {loopIndex} from "../utils/loop-index";
 import {ClickableView} from "./clickable-view";
 import {Cross} from "../icon/Cross";
 

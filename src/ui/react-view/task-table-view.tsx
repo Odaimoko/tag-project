@@ -36,7 +36,7 @@ import {HoveringPopup} from "../pure-react/view-template/hovering-popup";
 import {CircleHelp} from "../pure-react/icon/CircleHelp";
 import {devLog} from "../../utils/env-util";
 import {I_Stylable} from "../pure-react/props-typing/i-stylable";
-import {loopIndex} from "../../utils/loop-index";
+import {loopIndex} from "../pure-react/utils/loop-index";
 import {getIconByWorkflow} from "./tag-project-style";
 import {ClickableView} from "../pure-react/view-template/clickable-view";
 
