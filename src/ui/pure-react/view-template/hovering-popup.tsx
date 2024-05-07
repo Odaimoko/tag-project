@@ -1,8 +1,9 @@
 import React, {useState} from "react";
 import {IRenderable} from "../props-typing/i-renderable";
-import {ClickableObsidianIconView} from "../../react-view/obsidian-icon-view";
 import {HStack} from "./h-stack";
 import {varBackgroundSecondary} from "../style-def";
+import {ClickableView} from "./clickable-view";
+import {Cross} from "../icon/Cross";
 
 function toggleDropDown(setDropDownDisplay: (value: (((prevState: string) => string) | string)) => void) {
     setDropDownDisplay((prevState) => {
@@ -86,7 +87,7 @@ export function HoveringPopup(props: {
                         <label style={{whiteSpace: "nowrap"}}>{props.title}</label> :
                         props.title as React.ReactNode
                     }
-                    <ClickableObsidianIconView onIconClicked={hideDropdown} iconName={"x"}/>
+                    <ClickableView icon={<Cross/>} onIconClicked={hideDropdown}/>
                 </HStack>
                 {props.popupContent}
             </div>
