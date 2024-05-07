@@ -25,7 +25,7 @@ import {DataTable} from "../ui/pure-react/view-template/data-table";
 import {Tag_Prefix_Tag} from "../data-model/workflow-def";
 import {getPriorityIcon, OdaTaskSummaryCell} from "../ui/react-view/task-table-view";
 import {TwiceConfirmButton} from "../ui/pure-react/view-template/twice-confirm-button";
-import {ObsidianIconView} from "../ui/pure-react/view-template/icon-view";
+import {ObsidianIconView} from "../ui/react-view/obsidian-icon-view";
 import {Evt_DbReloaded, Evt_SettingsChanged} from "../typing/dataview-event";
 import {InlineCodeView} from "../ui/common/inline-code-view";
 import {HashTagView} from "../ui/common/hash-tag-view";

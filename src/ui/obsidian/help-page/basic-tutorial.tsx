@@ -8,7 +8,7 @@ import {
 } from "../../../main";
 import React from "react";
 import {usePluginSettings} from "../../../settings/settings";
-import {ObsidianIconView} from "../../pure-react/view-template/icon-view";
+import {ObsidianIconView} from "../../react-view/obsidian-icon-view";
 import {Icon_ManagePage} from "../manage-page-view";
 import {DataTable} from "../../pure-react/view-template/data-table";
 import {WorkflowTypeLegend} from "../../react-view/workflow-filter";

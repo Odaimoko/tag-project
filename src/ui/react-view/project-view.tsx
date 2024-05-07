@@ -1,7 +1,7 @@
 import {OdaPmProject, OdaPmProjectDefinition} from "../../data-model/OdaPmProject";
 import React, {MouseEvent, useContext} from "react";
 import {PluginContext} from "../obsidian/manage-page-view";
-import {ClickableIconView, InternalLinkView} from "../pure-react/view-template/icon-view";
+import {ClickableObsidianIconView, InternalLinkView} from "./obsidian-icon-view";
 import {iconViewAsAWholeStyle} from "./style-def";
 import {openProjectPrecisely} from "../../utils/io-util";
 import {VStack} from "../pure-react/view-template/h-stack";
@@ -39,9 +39,10 @@ export function ProjectView(props: {
 
     const showableDefinitions = project.projectDefinitions.filter(k => k.type !== "system");
     const projectContent = <label>{project.name}</label>;
-    const hoveredContent = <ClickableIconView onContentClicked={toggleDropdown} onIconClicked={toggleDropdown}
-                                              iconName={IconName_Project}
-                                              content={projectContent} clickable={showableDefinitions.length > 0}/>;
+    const hoveredContent = <ClickableObsidianIconView onContentClicked={toggleDropdown} onIconClicked={toggleDropdown}
+                                                      iconName={IconName_Project}
+                                                      content={projectContent}
+                                                      clickable={showableDefinitions.length > 0}/>;
     // if showableDefinitions.length === 0, we don't show the popup
     const popupContent = showableDefinitions.length > 0 ?
         <div>

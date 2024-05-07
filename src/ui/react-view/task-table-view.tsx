@@ -17,7 +17,7 @@ import {
 import {Evt_JumpTask, Evt_JumpWorkflow} from "../../typing/dataview-event";
 import {initialToUpper, isStringNullOrEmpty, simpleFilter} from "../../utils/format-util";
 import {HStack, VStack} from "../pure-react/view-template/h-stack";
-import {ClickableIconView, ClickableView, InternalLinkView} from "../pure-react/view-template/icon-view";
+import {ClickableObsidianIconView, InternalLinkView} from "./obsidian-icon-view";
 import {ExternalControlledCheckbox} from "../pure-react/view-template/checkbox";
 import {DataTable} from "../pure-react/view-template/data-table";
 import {IRenderable} from "../pure-react/props-typing/i-renderable";
@@ -27,17 +27,18 @@ import {HtmlStringComponent} from "../pure-react/view-template/html-string-compo
 import {appendBoldText} from "../common/html-template";
 import {notify} from "../../utils/o-notice";
 import {centerChildren, centerChildrenVertStyle, getStickyHeaderStyle} from "./style-def";
-import {Minus} from "./icon/Minus";
-import {DownAZ, UpAZ} from "./icon/DownAZ";
-import {Down01, Up01} from "./icon/Down01";
-import {ArrowBigDown, ArrowBigDownDash, ArrowBigUp, ArrowBigUpDash} from "./icon/ArrowBigUpDash";
+import {Minus} from "../pure-react/icon/Minus";
+import {DownAZ, UpAZ} from "../pure-react/icon/DownAZ";
+import {Down01, Up01} from "../pure-react/icon/Down01";
+import {ArrowBigDown, ArrowBigDownDash, ArrowBigUp, ArrowBigUpDash} from "../pure-react/icon/ArrowBigUpDash";
 import {OdaPmDbProvider} from "../../data-model/OdaPmDb";
 import {HoveringPopup} from "../pure-react/view-template/hovering-popup";
-import {CircleHelp} from "./icon/CircleHelp";
+import {CircleHelp} from "../pure-react/icon/CircleHelp";
 import {devLog} from "../../utils/env-util";
 import {I_Stylable} from "../pure-react/props-typing/i-stylable";
 import {loopIndex} from "../../utils/loop-index";
 import {getIconByWorkflow} from "./tag-project-style";
+import {ClickableView} from "../pure-react/view-template/clickable-view";
 
 export const taskCheckBoxMargin = {marginLeft: 3};
 
@@ -484,8 +485,8 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
                         }}
                     />
                     {/*It seems that the icon's size is 10x10? */}
-                    <ClickableIconView style={{marginLeft: -25, paddingTop: 5}}
-                                       onIconClicked={() => {
+                    <ClickableObsidianIconView style={{marginLeft: -25, paddingTop: 5}}
+                                               onIconClicked={() => {
                                            setSearchText("")
                                        }} iconName={"x-circle"}/>
                 </span>

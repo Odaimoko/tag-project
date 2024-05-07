@@ -6,7 +6,7 @@ import {
     FilterMethod_NotFiltering,
     getNextFilterMethod
 } from "../../settings/settings";
-import {ClickableIconView} from "../pure-react/view-template/icon-view";
+import {ClickableObsidianIconView} from "./obsidian-icon-view";
 import {iconViewAsAWholeStyle} from "./style-def";
 import {Tag_Prefix_Tag} from "../../data-model/workflow-def";
 
@@ -124,12 +124,12 @@ const TagFilterCheckbox = ({tag, displayed, setDisplayed, excludeTags, setExclud
     // inline-block: make this check box a whole element. It won't be split into multiple sub-elements when layout.
     // block will start a new line, inline will not, so we use inline-block
     return <span style={{display: "inline-block", margin: 3}}>
-        <ClickableIconView style={iconViewAsAWholeStyle} iconName={displayed.includes(tag) ? tagIncludedIcon : (
+        <ClickableObsidianIconView style={iconViewAsAWholeStyle} iconName={displayed.includes(tag) ? tagIncludedIcon : (
             excludeTags.includes(tag) ? tagExcludedIcon : noTagIcon
         )}
-                           content={<label style={{marginLeft: 5}}>{tag.replace(Tag_Prefix_Tag, "")}</label>}
-                           onIconClicked={tickCheckbox}
-                           onContentClicked={tickCheckbox}
+                                   content={<label style={{marginLeft: 5}}>{tag.replace(Tag_Prefix_Tag, "")}</label>}
+                                   onIconClicked={tickCheckbox}
+                                   onContentClicked={tickCheckbox}
         />
     </span>
 

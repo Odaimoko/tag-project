@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 import {IRenderable} from "../props-typing/i-renderable";
-import {ClickableIconView} from "./icon-view";
+import {ClickableObsidianIconView} from "../../react-view/obsidian-icon-view";
 import {HStack} from "./h-stack";
 import {varBackgroundSecondary} from "../../react-view/style-def";
 
@@ -86,7 +86,7 @@ export function HoveringPopup(props: {
                         <label style={{whiteSpace: "nowrap"}}>{props.title}</label> :
                         props.title as React.ReactNode
                     }
-                    <ClickableIconView onIconClicked={hideDropdown} iconName={"x"}/>
+                    <ClickableObsidianIconView onIconClicked={hideDropdown} iconName={"x"}/>
                 </HStack>
                 {props.popupContent}
             </div>

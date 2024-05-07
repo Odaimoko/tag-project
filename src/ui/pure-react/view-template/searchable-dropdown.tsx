@@ -7,7 +7,7 @@ import {isCharacterInput} from "../../../utils/react-user-input";
 import {IRenderable} from "../props-typing/i-renderable";
 import {toggleValueInArray} from "../../react-view/workflow-filter";
 import {dropdownSelectedColor} from "../../react-view/style-def";
-import {ClickableIconView} from "./icon-view";
+import {ClickableObsidianIconView} from "../../react-view/obsidian-icon-view";
 import {loopIndex} from "../../../utils/loop-index";
 
 
@@ -108,8 +108,8 @@ export const SearchableDropdown = (props: {
                        showDropdown();
                    }}
             />
-        <ClickableIconView style={{marginLeft: -25, paddingTop: 5}}
-                           onIconClicked={() => {
+        <ClickableObsidianIconView style={{marginLeft: -25, paddingTop: 5}}
+                                   onIconClicked={() => {
                                setSearchText("")
                                // input's focus is already lost onclick, so we need to 
                                // 1. show the already hidden dropdown.

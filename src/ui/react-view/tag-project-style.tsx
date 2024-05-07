@@ -1,5 +1,5 @@
 import {I_OdaPmWorkflow, WorkflowType} from "../../data-model/workflow-def";
-import {ObsidianIconView} from "../pure-react/view-template/icon-view";
+import {ObsidianIconView} from "./obsidian-icon-view";
 import React from "react";
 import {Color_Workflow_Checkbox, Color_WorkflowChain} from "./style-def";
 
@@ -24,3 +24,10 @@ export function getIconViewByWorkflowType(type: WorkflowType) {
 export function getIconByWorkflow(workflow: I_OdaPmWorkflow) {
     return getIconViewByWorkflowType(workflow.type);
 }
+
+const obsidianIconTopOffset = 4;
+export const obsidianIconOffsetStyle = {position: "relative", top: obsidianIconTopOffset} as React.CSSProperties;
+export const obsidianIconOffsetCenteredStyle = {
+    position: "relative",
+    top: obsidianIconTopOffset / 2
+} as React.CSSProperties;

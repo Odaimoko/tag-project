@@ -4,7 +4,7 @@ import {ReactManagePage} from "../react-view/react-manage-page";
 import {createRoot, Root} from "react-dom/client";
 import React, {createContext} from "react";
 import OdaPmToolPlugin, {PLUGIN_NAME} from "../../main";
-import {ClickableIconView} from "../pure-react/view-template/icon-view";
+import {ClickableObsidianIconView} from "../react-view/obsidian-icon-view";
 import {HStack} from "../pure-react/view-template/h-stack";
 import {StrictModeWrapper} from "../pure-react/view-template/strict-mode-wrapper";
 import {PmHelpModal} from "./help-page/pm-help-modal";
@@ -57,8 +57,8 @@ export class ManagePageView extends ItemView {
                 <div style={{display: "flex", justifyContent: "center", marginBottom: -20}}>
                     <HStack spacing={10} style={{alignItems: "center"}}>
                         <h1>{this.getDisplayText()}</h1>
-                        <ClickableIconView onIconClicked={() => new PmHelpModal(this.plugin).open()}
-                                           iconName={"help-circle"}/>
+                        <ClickableObsidianIconView onIconClicked={() => new PmHelpModal(this.plugin).open()}
+                                                   iconName={"help-circle"}/>
                         <h1>v{this.plugin.manifest.version}</h1>
                     </HStack>
                 </div>
