@@ -1,10 +1,9 @@
 import {StyleProps, VStack} from "./h-stack";
-import React, {KeyboardEvent, useRef, useState} from "react";
+import React, {JSX, KeyboardEvent, useRef, useState} from "react";
 import {getDropdownStyle, usePopup} from "./hovering-popup";
 import {devLog} from "../../../utils/env-util";
 import {INameable} from "../props-typing/i-nameable";
 import {isCharacterInput} from "./event-handling/react-user-input";
-import {IRenderable} from "../props-typing/i-renderable";
 import {dropdownSelectedColor} from "../style-def";
 import {loopIndex} from "../utils/loop-index";
 import {ClickableView} from "./clickable-view";
@@ -38,10 +37,11 @@ export const SearchableDropdown = (props: {
     data: OptionValueType[]
     handleSetOptionValues(param: string[]): void;
     placeholder?: string;
-    RenderView?: (props: { item: OptionValueType }) => IRenderable;
+    RenderView?: (props: { item: OptionValueType }) => JSX.Element;
     singleSelect?: boolean;
     currentOptionValues?: OptionValueType[]; // Current selected option values. If singleSelect, we don't need to pass this.
     dropdownId: string; // used to check if we clicked outside the dropdown. The direct interactable element should have a prefix of this id.
+    onFocus?: () => void;
 } & StyleProps) => {
     const singleSelect = props.singleSelect ?? true; // Default to single select
     if (!singleSelect) {
@@ -85,6 +85,7 @@ export const SearchableDropdown = (props: {
                         hideDropdown()
                     }
                 }}
+                onFocus={props.onFocus}
     >
         <span id={`${dropdownId}_input`} style={{display: "flex", alignItems: "center"}}>
             <input ref={inputRef}
