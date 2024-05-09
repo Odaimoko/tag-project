@@ -9,7 +9,7 @@ import {loopIndex} from "../utils/loop-index";
 import {ClickableView} from "./clickable-view";
 import {Cross} from "../icon/Cross";
 import {toggleValueInArray} from "../utils/toggle-value-in-array";
-
+import "./searchable-dropdown.css"
 
 interface I_OptionItem {
     // Shown in the dropdown
@@ -71,7 +71,7 @@ export const SearchableDropdown = (props: {
         selectedChild.current = -1;
     }
 
-    return <div style={Object.assign({}, props.style, {position: "relative"})}
+    return <div className={"dropdown-root"} style={Object.assign({}, props.style, {position: "relative"})}
                 onKeyDown={handleBaseKeyboard}
                 onBlur={(event) => {
                     // Hide Dropdown if we lose focus
@@ -122,15 +122,15 @@ export const SearchableDropdown = (props: {
                        }} icon={<Cross/>}/>
         </span>
         {/*Add background so it won't be transparent. */}
-        <div id={`${dropdownId}s`} style={getDropdownStyle(dropDownDisplay)}
-        >
-            <VStack spacing={2}>
+        <div className={"dropdown-button-collection"} id={`${dropdownId}s`} style={getDropdownStyle(dropDownDisplay)}>
+            <VStack className={"dropdown-button-collection"} spacing={2}>
                 {filtered.map((option: OptionValueType) => {
                     const childId = `${dropdownId}_${option.name}`;
                     // @ts-ignore
                     const has = !singleSelect ? props.currentOptionValues.includes(option) : false;
                     return (
-                        <button style={{background: has ? dropdownSelectedColor : varDropdownNonSelected}} id={childId}
+                        <button className="dropdown-button"
+                                style={{background: has ? dropdownSelectedColor : varDropdownNonSelected}} id={childId}
                                 onClick={(event) => {
                                     // console.log(event.target) // html element
                                     if (singleSelect) {

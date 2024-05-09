@@ -1,0 +1,13 @@
+
+.dropdown-root {
+}
+
+.dropdown-button-collection {
+    background-color: antiquewhite;
+    min-width: 100%;
+}
+
+.dropdown-button {
+    --dropdown-non-selected: none;
+    width: 100%;
+}

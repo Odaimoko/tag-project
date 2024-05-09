@@ -7,7 +7,17 @@ If your plugin does not need CSS, delete this file.
 
 */
 
-:root {
-    --dropdown-non-selected: none;
+/*@import "src/ui/pure-react/view-template/searchable-dropdown.css";*/
+
+.dropdown-root {
 }
 
+.dropdown-button-collection {
+    background-color: white;
+    min-width: 100%;
+}
+
+.dropdown-button {
+    --dropdown-non-selected: none;
+    width: 100%;
+}
