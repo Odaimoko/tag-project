@@ -4,10 +4,11 @@ import {getDropdownStyle, usePopup} from "./hovering-popup";
 import {devLog} from "../../../utils/env-util";
 import {INameable} from "../props-typing/i-nameable";
 import {isCharacterInput} from "./event-handling/react-user-input";
-import {dropdownSelectedColor} from "../style-def";
+import {dropdownSelectedColor, varDropdownNonSelected} from "../style-def";
 import {loopIndex} from "../utils/loop-index";
 import {ClickableView} from "./clickable-view";
 import {Cross} from "../icon/Cross";
+import {toggleValueInArray} from "../utils/toggle-value-in-array";
 
 
 interface I_OptionItem {
@@ -110,15 +111,15 @@ export const SearchableDropdown = (props: {
                    }}
             />
         <ClickableView style={{marginLeft: -25, paddingTop: 5}}
-                                   onIconClicked={() => {
-                               setSearchText("")
-                               // input's focus is already lost onclick, so we need to 
-                               // 1. show the already hidden dropdown.
-                               //    a. must. merely focusing on the input box will show the dropdown on the next event loop, which causes blinking dropdown.
-                               // 2. focus on it again, so that user can input text immediately.
-                               showDropdown()
-                               inputRef.current?.focus()
-                                   }} icon={<Cross/>}/>
+                       onIconClicked={() => {
+                           setSearchText("")
+                           // input's focus is already lost onclick, so we need to 
+                           // 1. show the already hidden dropdown.
+                           //    a. must. merely focusing on the input box will show the dropdown on the next event loop, which causes blinking dropdown.
+                           // 2. focus on it again, so that user can input text immediately.
+                           showDropdown()
+                           inputRef.current?.focus()
+                       }} icon={<Cross/>}/>
         </span>
         {/*Add background so it won't be transparent. */}
         <div id={`${dropdownId}s`} style={getDropdownStyle(dropDownDisplay)}
@@ -129,7 +130,7 @@ export const SearchableDropdown = (props: {
                     // @ts-ignore
                     const has = !singleSelect ? props.currentOptionValues.includes(option) : false;
                     return (
-                        <button style={{background: has ? dropdownSelectedColor : "none"}} id={childId}
+                        <button style={{background: has ? dropdownSelectedColor : varDropdownNonSelected}} id={childId}
                                 onClick={(event) => {
                                     // console.log(event.target) // html element
                                     if (singleSelect) {
@@ -142,7 +143,9 @@ export const SearchableDropdown = (props: {
                                         // toggle the option
                                         devLog(`Toggle Option Value ${getProjectOptionValue(option)}`)
                                         // @ts-ignore
-                                        toggleValueInArray(getProjectOptionValue(option), props.currentOptionValues.map(k => getProjectOptionValue(k)), props.handleSetOptionValues,)
+                                        const projectOptionValues = props.currentOptionValues.map(k => getProjectOptionValue(k));
+                                        // @ts-ignore
+                                        toggleValueInArray(getProjectOptionValue(option), projectOptionValues, props.handleSetOptionValues,)
                                     }
 
                                 }} key={option.name}
