@@ -60,8 +60,8 @@ export function HoveringPopup(props: {
     hoveredContent: IRenderable, popupContent: IRenderable, style?: React.CSSProperties, title?: IRenderable
 } & PopupProps) {
     let {dropDownDisplay, hideDropdown, showDropdown} = props;
+    const {dropDownDisplay: d, hideDropdown: h, showDropdown: s} = usePopup();
     if (hideDropdown === undefined || showDropdown === undefined) {
-        const {dropDownDisplay: d, hideDropdown: h, showDropdown: s} = usePopup();
         dropDownDisplay = d;
         hideDropdown = h;
         showDropdown = s;
