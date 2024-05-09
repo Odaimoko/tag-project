@@ -33,6 +33,7 @@ import {OdaPmDbProvider} from "../data-model/OdaPmDb";
 import {devLog} from "../utils/env-util";
 import {setTaskPriority} from "../data-model/OdaPmTask";
 import {ExternalToggleView} from "../ui/pure-react/view-template/toggle-view";
+import {DisappearableErrText} from "../ui/pure-react/view-template/disappearable-err-text";
 
 function ObsidianSettingToggleView(props: {
     name: string,
@@ -352,18 +353,3 @@ export function PriorityTagsEditView() {
 }
 
 
-function DisappearableErrText(props: {
-    color: string;
-    text: string,
-    setText: (value: (((prevState: string) => string) | string)) => void,
-}) {
-    useEffect(() => {
-        // after 3 seconds, clear the text
-        setTimeout(() => {
-            props.setText("")
-        }, 5000)
-    }, [props.text]);
-    return <label style={{
-        color: props.color
-    }}>{props.text}</label>
-}
