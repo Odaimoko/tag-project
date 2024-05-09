@@ -2,13 +2,15 @@ import React, {Fragment, ReactNode} from "react";
 
 import {I_Stylable} from "../props-typing/i-stylable";
 
-export type StyleProps = I_Stylable
+export type StyleProps = I_Stylable & {
+    className?: string,
+}
 
 // https://react.dev/learn/rendering-lists#keeping-list-items-in-order-with-key
 // JSX elements directly inside a map() call always need keys! 
 interface StackProps extends StyleProps {
     spacing?: number,
-    children?: ReactNode[] | ReactNode
+    children?: ReactNode[] | ReactNode,
 }
 
 function getSpacingStyle(spacing: number | undefined, isHorizontal = true) {
@@ -30,8 +32,8 @@ function Stack(props: StackProps & { isHorizontal?: boolean }) {
         display: "flex",
         flexDirection: props.isHorizontal ? "row" : "column"
     };
-    return <div
-        style={Object.assign({}, props.style, source2)}>
+    return <div className={props.className}
+                style={Object.assign({}, props.style, source2)}>
         {wrapChildrenWithArray(props.children).map((child: ReactNode, i: number) => {
             return <Fragment key={i}>
                 {i > 0 ? <div style={getSpacingStyle(props.spacing, props.isHorizontal)}/> : null}
