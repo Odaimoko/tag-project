@@ -13,7 +13,8 @@ If your plugin does not need CSS, delete this file.
 }
 
 .dropdown-button-collection {
-    background-color: white;
+    /* //defined in obsidian*/
+    background-color: var(--background-primary);
     min-width: 100%;
 }
 
