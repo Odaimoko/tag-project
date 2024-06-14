@@ -93,7 +93,6 @@ function shouldTagBeAbbr(tag: string) {
         || lowerTag.startsWith(Tag_Prefix_Project)
         || lowerTag.startsWith(Tag_Prefix_Workflow)
         || lowerTag.startsWith(Tag_Prefix_Step)
-        || lowerTag.startsWith(Tag_Prefix_Tag)
         || lowerTag.startsWith(Tag_Prefix_TaskType);
 }
 

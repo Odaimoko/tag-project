@@ -1,6 +1,14 @@
 import {OdaPmTask, setTaskPriority} from "../../data-model/OdaPmTask";
 import OdaPmToolPlugin from "../../main";
-import {I_OdaPmStep, I_OdaPmWorkflow, TaskStatus_checked, TaskStatus_unchecked} from "../../data-model/workflow-def";
+import {
+    I_OdaPmStep,
+    I_OdaPmWorkflow,
+    Tag_Prefix_Step,
+    Tag_Prefix_TaskType,
+    Tag_Prefix_Workflow,
+    TaskStatus_checked,
+    TaskStatus_unchecked
+} from "../../data-model/workflow-def";
 import {openTaskPrecisely, rewriteTask} from "../../utils/io-util";
 import React, {MouseEvent, ReactElement, useContext, useEffect, useState} from "react";
 import {PluginContext} from "../obsidian/manage-page-view";
@@ -39,6 +47,8 @@ import {I_Stylable} from "../pure-react/props-typing/i-stylable";
 import {loopIndex} from "../pure-react/utils/loop-index";
 import {getIconByWorkflow} from "./tag-project-style";
 import {ClickableView} from "../pure-react/view-template/clickable-view";
+import {addTagText} from "../../data-model/tag-text-manipulate";
+import {Tag_Prefix_Project} from "../../data-model/OdaPmProject";
 
 export const taskCheckBoxMargin = {marginLeft: 3};
 
@@ -487,8 +497,8 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
                     {/*It seems that the icon's size is 10x10? */}
                     <ClickableObsidianIconView style={{marginLeft: -25, paddingTop: 5}}
                                                onIconClicked={() => {
-                                           setSearchText("")
-                                       }} iconName={"x-circle"}/>
+                                                   setSearchText("")
+                                               }} iconName={"x-circle"}/>
                 </span>
 
                 <ExternalControlledCheckbox content={"Show Completed"} onChange={handleShowCompletedChange}
@@ -684,8 +694,43 @@ function odaWorkflowToTableCells(displayStepTags: string[], oTask: OdaPmTask) {
 // For checkbox  
 // region Workflow Ui wrapper
 function odaTaskToTableRow(displayStepTags: string[], oTask: OdaPmTask): IRenderable[] {
+    let summary = oTask.summary;
+    if (getSettings()?.tags_in_task_table_summary_cell) {
+        for (const tag of oTask.getAllTags()) {
 
-    return [`${oTask.summary}`, ...(getSettings()?.table_steps_shown ? odaWorkflowToTableCells(displayStepTags, oTask) : [])];
+            const hidden = shouldTagBeHidden(tag);
+            devLog(tag, "Hidden?", hidden)
+
+            if (!hidden) {
+                summary = addTagText(summary, tag)
+            }
+        }
+    }
+    return [summary, ...(getSettings()?.table_steps_shown ? odaWorkflowToTableCells(displayStepTags, oTask) : [])];
+}
+
+
+/**
+ * Tag_Prefix_Tag is not included.
+ * @param tag
+ */
+function shouldTagBeHidden(tag: string) {
+    const lowerTag = tag.toLowerCase();
+    const startsWith = lowerTag.startsWith(Tag_Prefix_Project)
+        || lowerTag.startsWith(Tag_Prefix_Workflow)
+        || lowerTag.startsWith(Tag_Prefix_Step)
+        || lowerTag.startsWith(Tag_Prefix_TaskType);
+    if (startsWith)
+        return startsWith;
+
+    const db = OdaPmDbProvider.get();
+    const priorityTags = db?.pmPriorityTags || [];
+    // remove priority tags
+    for (const priorityTag of priorityTags) {
+        if (tag == priorityTag)
+            return true
+    }
+    return false;
 }
 
 // endregion

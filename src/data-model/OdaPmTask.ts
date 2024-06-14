@@ -157,9 +157,12 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
         return addTagText(cleanText, stepTag)
     }
 
+    getAllTags(): string[] {
+        return this.boundTask.tags;
+    }
 
     hasTag(tag: string) {
-        for (const t of this.boundTask.tags) {
+        for (const t of this.getAllTags()) {
             if (tag == t) return true;
         }
         return false;
@@ -171,7 +174,7 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
      * @param displayTags
      */
     hasAnyTag(displayTags: string[]) {
-        for (const tag of this.boundTask.tags) {
+        for (const tag of this.getAllTags()) {
             if (displayTags.includes(tag)) {
                 return true;
             }

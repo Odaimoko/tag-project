@@ -97,6 +97,7 @@ export interface TPMSettings {
     open_new_tab_if_task_tab_not_found: boolean, // 0.6.0, if true, when the task file is not found in existing tabs, open a new tab; if false, open in current editor,
     always_open_task_in_new_tab_modify_key: ModifierKeyOnClick, // 0.6.0. Key stroke enum. If click the task with this key pressed, always open a new tab.
     cached_help_page_tutorial_tldr: SerializedType,
+    tags_in_task_table_summary_cell: SerializedType,// 0.7.0
 }
 
 export const TPM_DEFAULT_SETTINGS: Partial<TPMSettings> = {
@@ -125,6 +126,7 @@ export const TPM_DEFAULT_SETTINGS: Partial<TPMSettings> = {
     open_new_tab_if_task_tab_not_found: true, // 0.6.0
     always_open_task_in_new_tab_modify_key: ModifierKeyOnClick.MetaOrCtrl, // 0.6.0
     cached_help_page_tutorial_tldr: false,
+    tags_in_task_table_summary_cell: true, // 0.7.0
 }
 export type SettingName = keyof TPMSettings;
 

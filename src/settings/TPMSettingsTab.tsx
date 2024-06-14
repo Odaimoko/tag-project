@@ -309,7 +309,7 @@ export function PriorityTagsEditView() {
                                     // replace tags in all tasks
                                     for (const affectedTask of affectedTasks) {
                                         const pri = affectedTask.getPriority(oldPriTags); // keep the old priority
-                                        devLog(`on save ${affectedTask.boundTask.tags} (pri ${pri}) to ${newTags[pri]}`, "settingTags", settingsTagNames)
+                                        devLog(`on save ${affectedTask.getAllTags()} (pri ${pri}) to ${newTags[pri]}`, "settingTags", settingsTagNames)
                                         await setTaskPriority(affectedTask.boundTask, plugin,
                                             oldPriTags, `${Tag_Prefix_Tag}${newTags[pri]}`)
                                     }

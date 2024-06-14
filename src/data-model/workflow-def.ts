@@ -11,6 +11,7 @@ export const TaskStatus_checked = "x";
 export const TaskStatus_unchecked = " ";
 export const Tag_Prefix_TaskType = "#tpm/workflow/";
 
+
 export const Workflow_Type_Enum_Array = [
     "chain",
     "checkbox",
@@ -123,8 +124,6 @@ export interface I_OdaPmWorkflow extends I_OdaPmTaskble, INameable {
 export function factoryTask(task: STask, type: I_OdaPmWorkflow) {
     return new OdaPmTask(type, task)
 }
-
-
 
 
 export function isTaskSingleLine(task: STask) {
