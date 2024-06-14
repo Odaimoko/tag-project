@@ -103,9 +103,16 @@ export class TPMSettingsTab extends PluginSettingTab {
             .setName('Notify when a task is malformed')
             .setDesc('A task or workflow definition is malformed if it contains multiple lines, or the text is empty. Try adding blank line before or after the task.')
             .addToggle(this.setValueAndSave("report_malformed_task"));
+        containerEl.createEl("h2", {text: "Appearance"})
+
         new Setting(containerEl)
             .setName('Capitalized the first letter in table row')
             .addToggle(this.setValueAndSave("capitalize_table_row_initial"));
+
+        new Setting(containerEl)
+            .setName("Tags in Task Table")
+            .setDesc('Show normal tags in the task table on Manage Page. Need to reopen the Manage Page.')
+            .addToggle(this.setValueAndSave("tags_in_task_table_summary_cell"));
 
         const projectHeader = containerEl.createEl("h2", {text: "Projects"})
 
@@ -114,7 +121,7 @@ export class TPMSettingsTab extends PluginSettingTab {
             .setDesc("If ON, unclassified workflows will be available to any projects. If OFF, only workflows in that project are available.")
             .addToggle(this.setValueAndSave("unclassified_workflows_available_to_all_projects"));
         const headerAsModule = new Setting(containerEl).setName("Header as module")
-            .setDesc("If ON, the tasks under headers with the same name can be grouped together.")
+            .setDesc("If ON, the tasks under headers with the same name can be grouped together. Need to reopen the Manage Page.")
             .addToggle(this.setValueAndSave("manage_page_header_as_module"));
 
         const priTagDiv = containerEl.createDiv();

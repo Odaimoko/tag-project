@@ -20,7 +20,8 @@ import {
     TableSortData,
     TableSortMethod,
     TaskPriority,
-    totalSortMethods
+    totalSortMethods,
+    usePluginSettings
 } from "../../settings/settings";
 import {Evt_JumpTask, Evt_JumpWorkflow} from "../../typing/dataview-event";
 import {initialToUpper, isStringNullOrEmpty, simpleFilter} from "../../utils/format-util";
@@ -309,6 +310,7 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
     // show completed
     const [showCompleted, setShowCompleted] = useState(getSettings()?.show_completed_tasks as boolean);
     const [showSteps, setShowSteps] = useState(getSettings()?.table_steps_shown as boolean);
+    const [showTagsInSummary, setShowTagsInSummary] = usePluginSettings<boolean>("tags_in_task_table_summary_cell");
 
     function onJumpToTask(oTask: OdaPmTask) {
         setSearchText(oTask.summary)
@@ -469,9 +471,11 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
         const row = odaTaskToTableRow(displayStepTags, oTask)
         // console.log(`${oTask.boundTask.text.split(" ").first()}. Md: ${oTask.isMdCompleted()}. Step: ${oTask.stepCompleted()}.`)
         rectifyOdaTaskOnMdTaskChanged(oTask, plugin);
+
+        const summaryWithTag = showTagsInSummary ? addTagToSummary(oTask, row[0]) : row[0];
         row[0] = (
             <OdaTaskSummaryCell key={`${oTask.boundTask.path}:${oTask.boundTask.line}`} oTask={oTask}
-                                taskFirstColumn={row[0]}/>
+                                taskFirstColumn={summaryWithTag}/>
         )
         return row
     });
@@ -692,21 +696,23 @@ function odaWorkflowToTableCells(displayStepTags: string[], oTask: OdaPmTask) {
 }
 
 // For checkbox  
-// region Workflow Ui wrapper
-function odaTaskToTableRow(displayStepTags: string[], oTask: OdaPmTask): IRenderable[] {
-    let summary = oTask.summary;
-    if (getSettings()?.tags_in_task_table_summary_cell) {
-        for (const tag of oTask.getAllTags()) {
+function addTagToSummary(oTask: OdaPmTask, summary: string) {
+    for (const tag of oTask.getAllTags()) {
 
-            const hidden = shouldTagBeHidden(tag);
-            devLog(tag, "Hidden?", hidden)
+        const hidden = shouldTagBeHidden(tag);
+        devLog(tag, "Hidden?", hidden)
 
-            if (!hidden) {
-                summary = addTagText(summary, tag)
-            }
+        if (!hidden) {
+            summary = addTagText(summary, tag)
         }
     }
-    return [summary, ...(getSettings()?.table_steps_shown ? odaWorkflowToTableCells(displayStepTags, oTask) : [])];
+    return summary;
+}
+
+// region Workflow Ui wrapper
+function odaTaskToTableRow(displayStepTags: string[], oTask: OdaPmTask): IRenderable[] {
+
+    return [oTask.summary, ...(getSettings()?.table_steps_shown ? odaWorkflowToTableCells(displayStepTags, oTask) : [])];
 }
 
 

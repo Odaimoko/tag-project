@@ -147,8 +147,9 @@ export function getSettings() {
 
 // for react
 /**
+ * Used when a react view changes a settings value and wants to save it.
  * This hook returns a function which only triggers Evt_SettingsChanged event by calling set settings function.
- * Then the event will be handled by `handler`, which then executes setValue.
+ * Then the event will be handled by `handler`, which then executes the react setValue.
  * This is to ensure that when a value is changed in settings, the `handler` will receive the event, and update the value in the ui.
  * @param name
  */
