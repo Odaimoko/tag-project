@@ -29,7 +29,7 @@ export function ModuleFilter({modules, displayModuleIds, handleSetDisplayModuleI
                         .filter(k => displayModuleIds.includes(k.optionValue))}
                     RenderView={(props: { item: OptionValueType }) => {
 
-                        return props.item.name
+                        return <label>{props.item.name}</label>
                     }}/>
                 <button onClick={() => handleSetDisplayModuleIds(allModules.map((k: OdaPmModule) => {
                     return k.id;
