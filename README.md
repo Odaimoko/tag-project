@@ -80,6 +80,8 @@ The tutorials and template are also available in the plugin's Help Page, directl
 
 ## Change log
 
+To be updated. Current version is `0.7.0`.
+
 Here's the latest features and bug-fixes.
 
 [0.2.0 (Current)](https://imoko.cc/blog/imk/TagProject/TagProject---Change-log-and-Roadmap#020-current)
