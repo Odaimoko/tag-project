@@ -24,6 +24,7 @@
         "esbuild": "0.17.3",
         "esbuild-plugin-ifdef": "^1.0.1",
         "esbuild-plugin-replace": "^1.4.0",
+        "eslint-plugin-react-hooks": "^4.6.2",
         "jest": "^29.7.0",
         "obsidian": "latest",
         "obsidian-dataview": "^0.5.61",
