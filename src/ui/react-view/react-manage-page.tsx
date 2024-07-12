@@ -8,11 +8,11 @@ import {Evt_DbReloaded, Evt_JumpTask, Evt_JumpWorkflow, Evt_ManagePageReRender} 
 import {devLog} from "../../utils/env-util";
 import {OdaPmTask} from "../../data-model/OdaPmTask";
 import {TaskTableView} from "./task-table-view";
-import {WorkflowFilter} from "./workflow-filter";
-import {TagFilter} from "./tag-filter";
-import {ProjectFilter, ProjectFilterOptionValue_All} from "./project-filter";
+import {WorkflowFilterView} from "./workflow-filter-view";
+import {TagFilterView} from "./tag-filter-view";
+import {ProjectFilterOptionValue_All, ProjectFilterView} from "./project-filter-view";
 import {HStack} from "../pure-react/view-template/h-stack";
-import {FixOrphanTasks} from "./fix-orphan-tasks";
+import {FixOrphanTasksView} from "./fix-orphan-tasks-view";
 import {ModuleFilter} from "./module-filter";
 
 function isInAnyProject(projectTask: I_OdaPmProjectTask, displayPrjNames: string[]) {
@@ -231,25 +231,25 @@ export function ReactManagePage({eventCenter}: {
     return (
         <div>
             <HStack>
-                <ProjectFilter allProjects={allProjects} dropdownProjects={dropdownProjects}
-                               displayNames={displayProjectOptionValues}
-                               handleSetDisplayNames={handleSetDisplayProjects}
+                <ProjectFilterView allProjects={allProjects} dropdownProjects={dropdownProjects}
+                                   displayNames={displayProjectOptionValues}
+                                   handleSetDisplayNames={handleSetDisplayProjects}
                 />
             </HStack>
-            <FixOrphanTasks db={db}/>
+            <FixOrphanTasksView db={db}/>
 
-            <WorkflowFilter workflows={workflows} displayNames={displayWorkflowNames}
-                            handleSetDisplayNames={handleSetDisplayWorkflows}
-                            showSubprojectWorkflows={showSubprojectWorkflows}
-                            setShowSubprojectWorkflows={setShowSubprojectWorkflows}
-                            showUnclassifiedWorkflows={showUnclassified}
-                            setShowUnclassifiedWorkflows={setShowUnclassified}
+            <WorkflowFilterView workflows={workflows} displayNames={displayWorkflowNames}
+                                handleSetDisplayNames={handleSetDisplayWorkflows}
+                                showSubprojectWorkflows={showSubprojectWorkflows}
+                                setShowSubprojectWorkflows={setShowSubprojectWorkflows}
+                                showUnclassifiedWorkflows={showUnclassified}
+                                setShowUnclassifiedWorkflows={setShowUnclassified}
             />
 
             {getSettings()?.manage_page_header_as_module &&
                 <ModuleFilter modules={filteredModules} displayModuleIds={displayModuleIds}
                               handleSetDisplayModuleIds={handleSetDisplayModuleIds}/>}
-            <TagFilter
+            <TagFilterView
                 pmTags={pmTags}
                 rectifiedExcludedTags={rectifiedExcludedTags}
                 rectifiedDisplayTags={rectifiedDisplayTags}

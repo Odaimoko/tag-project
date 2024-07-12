@@ -5,10 +5,10 @@ import {TwiceConfirmButton} from "../pure-react/view-template/twice-confirm-butt
 import {ObsidianIconView} from "./obsidian-icon-view";
 import {getDefaultTableStyleGetters, OdaTaskSummaryCell} from "./task-table-view";
 import {ProjectView} from "./project-view";
-import {ClickableWorkflowView} from "./workflow-filter";
+import {ClickableWorkflowView} from "./workflow-filter-view";
 import {DataTable} from "../pure-react/view-template/data-table";
 import React, {useState} from "react";
-import {ProjectFilterName_All} from "./project-filter";
+import {ProjectFilterName_All} from "./project-filter-view";
 import {OdaPmTask} from "../../data-model/OdaPmTask";
 import {warningColor} from "../pure-react/style-def";
 
@@ -103,7 +103,7 @@ export function OrphanTaskButtonAndPanel(props: {
     </div>;
 }
 
-export function FixOrphanTasks({db}: { db?: OdaPmDb }) {
+export function FixOrphanTasksView({db}: { db?: OdaPmDb }) {
     const orphanTasks = db?.orphanTasks || [];
     if (orphanTasks.length === 0) return <></>;
     return <OrphanTaskButtonAndPanel orphanTasks={orphanTasks}/>

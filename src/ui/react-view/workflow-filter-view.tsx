@@ -52,7 +52,7 @@ function DropdownWorkflowView(props: {
 
 // endregion
 // region Workflow Filter
-export const WorkflowFilter = (props: {
+export const WorkflowFilterView = (props: {
     workflows: I_OdaPmWorkflow[],
     displayNames: string[],
     handleSetDisplayNames: (names: string[]) => void,

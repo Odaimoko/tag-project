@@ -16,7 +16,7 @@ const tagIncludedIcon = "check"
 const tagExcludedIcon = "x"
 const noTagIcon = "scan"
 
-export function TagFilter({
+export function TagFilterView({
                               pmTags,
                               rectifiedExcludedTags,
                               rectifiedDisplayTags,

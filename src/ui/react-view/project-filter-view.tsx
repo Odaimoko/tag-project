@@ -39,7 +39,7 @@ const AllProjectsOption = {
     optionValue: ProjectFilterOptionValue_All
 } as OptionValueType;
 
-export function ProjectFilter(props: {
+export function ProjectFilterView(props: {
     allProjects: OdaPmProject[],
     dropdownProjects: OdaPmProject[],
     handleSetDisplayNames: (names: string[]) => void,

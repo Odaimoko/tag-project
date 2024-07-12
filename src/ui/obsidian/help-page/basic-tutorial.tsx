@@ -11,7 +11,7 @@ import {usePluginSettings} from "../../../settings/settings";
 import {ObsidianIconView} from "../../react-view/obsidian-icon-view";
 import {Icon_ManagePage} from "../manage-page-view";
 import {DataTable} from "../../pure-react/view-template/data-table";
-import {WorkflowTypeLegend} from "../../react-view/workflow-filter";
+import {WorkflowTypeLegend} from "../../react-view/workflow-filter-view";
 import {HashTagView} from "../../common/hash-tag-view";
 import {
     Tag_Prefix_Step,
@@ -30,8 +30,8 @@ import {
 import {InlineCodeView} from "../../common/inline-code-view";
 import {MarkdownFrontMatterView} from "../../common/markdown-front-matter-view";
 import {FileNavView} from "../../common/file-nav-view";
-import {ProjectFilterName_All} from "../../react-view/project-filter";
-import {OrphanTaskButtonAndPanel} from "../../react-view/fix-orphan-tasks";
+import {ProjectFilterName_All} from "../../react-view/project-filter-view";
+import {OrphanTaskButtonAndPanel} from "../../react-view/fix-orphan-tasks-view";
 import {Desc_ManagePage, HelpPage_Template, HelpPage_UserManual} from "./help-page-view";
 import {centerChildrenVertStyle} from "../../pure-react/style-def";
 
