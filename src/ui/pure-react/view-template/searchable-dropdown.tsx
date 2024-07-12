@@ -127,10 +127,11 @@ export const SearchableDropdown = (props: {
                 {filtered.map((option: OptionValueType) => {
                     const childId = `${dropdownId}_${option.name}`;
                     // @ts-ignore
-                    const has = !singleSelect ? props.currentOptionValues.includes(option) : false;
+                    const isSelected = !singleSelect ? props.currentOptionValues.includes(option) : false;
                     return (
                         <button className="dropdown-button"
-                                style={{background: has ? dropdownSelectedColor : varDropdownNonSelected}} id={childId}
+                                style={{background: isSelected ? dropdownSelectedColor : varDropdownNonSelected}}
+                                id={childId}
                                 onClick={(event) => {
                                     // console.log(event.target) // html element
                                     if (singleSelect) {
