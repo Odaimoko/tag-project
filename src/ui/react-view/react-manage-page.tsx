@@ -44,13 +44,13 @@ function isInAnyModule(projectTask: OdaPmTask, displayModuleIds: string[]) {
 
 function useFilteredTags(): Array<string> {
     const db = OdaPmDbProvider.get();
-    const [hidePriority, setHidePriority]
-        = usePluginSettings<boolean>("hide_priority_tags_in_manage_page");
+    const [showPriority, setShowPriority]
+        = usePluginSettings<boolean>("show_priority_tags_in_manage_page");
     if (db === null)
         return [];
     let pmTags = db.pmTags || [];
 
-    if (hidePriority) {
+    if (!showPriority) {
 
         pmTags = pmTags.filter(k => !db.pmPriorityTags.contains(k));
         devLog(pmTags)

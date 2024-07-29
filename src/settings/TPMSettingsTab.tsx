@@ -34,6 +34,7 @@ import {devLog} from "../utils/env-util";
 import {setTaskPriority} from "../data-model/OdaPmTask";
 import {ExternalToggleView} from "../ui/pure-react/view-template/toggle-view";
 import {DisappearableErrText} from "../ui/pure-react/view-template/disappearable-err-text";
+import {Desc_ManagePage} from "../ui/obsidian/help-page/help-page-view";
 
 function ObsidianSettingToggleView(props: {
     name: string,
@@ -124,6 +125,7 @@ export class TPMSettingsTab extends PluginSettingTab {
             .setDesc("If ON, the tasks under headers with the same name can be grouped together. Need to reopen the Manage Page.")
             .addToggle(this.setValueAndSave("manage_page_header_as_module"));
 
+        // region Priority Tags
         const priTagDiv = containerEl.createDiv();
         priTagDiv.className = "setting-item";
 
@@ -133,6 +135,13 @@ export class TPMSettingsTab extends PluginSettingTab {
                 <PriorityTagsEditView/>
             </PluginContext.Provider>
         )
+
+
+        new Setting(containerEl).setName(`Show Priority Tags in ${Desc_ManagePage}`)
+            .setDesc(`If ON, the priority tags will appear in the Tag Filter in ${Desc_ManagePage}. Default OFF.`)
+            .addToggle(this.setValueAndSave("show_priority_tags_in_manage_page"))
+
+        // endregion
 
         containerEl.createEl("h2", {text: "Task Navigation Policy"})
         const navPolicyDiv = containerEl.createDiv();

@@ -98,7 +98,7 @@ export interface TPMSettings {
     always_open_task_in_new_tab_modify_key: ModifierKeyOnClick, // 0.6.0. Key stroke enum. If click the task with this key pressed, always open a new tab.
     cached_help_page_tutorial_tldr: SerializedType,
     tags_in_task_table_summary_cell: SerializedType,// 0.7.0
-    hide_priority_tags_in_manage_page: SerializedType,// 0.7.1
+    show_priority_tags_in_manage_page: SerializedType,// 0.7.1
 }
 
 export const TPM_DEFAULT_SETTINGS: Partial<TPMSettings> = {
@@ -128,7 +128,7 @@ export const TPM_DEFAULT_SETTINGS: Partial<TPMSettings> = {
     always_open_task_in_new_tab_modify_key: ModifierKeyOnClick.MetaOrCtrl, // 0.6.0
     cached_help_page_tutorial_tldr: false,
     tags_in_task_table_summary_cell: true, // 0.7.0
-    hide_priority_tags_in_manage_page: true,
+    show_priority_tags_in_manage_page: false,
 }
 export type SettingName = keyof TPMSettings;
 
