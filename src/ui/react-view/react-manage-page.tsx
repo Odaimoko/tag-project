@@ -42,6 +42,23 @@ function isInAnyModule(projectTask: OdaPmTask, displayModuleIds: string[]) {
     return b;
 }
 
+function useFilteredTags(): Array<string> {
+    const db = OdaPmDbProvider.get();
+    const [hidePriority, setHidePriority]
+        = usePluginSettings<boolean>("hide_priority_tags_in_manage_page");
+    if (db === null)
+        return [];
+    let pmTags = db.pmTags || [];
+
+    if (hidePriority) {
+
+        pmTags = pmTags.filter(k => !db.pmPriorityTags.contains(k));
+        devLog(pmTags)
+    }
+    return pmTags;
+
+}
+
 export function ReactManagePage({eventCenter}: {
     eventCenter?: EventEmitter
 }) {
@@ -89,6 +106,7 @@ export function ReactManagePage({eventCenter}: {
     let workflows = db?.workflows || [];
     const allProjects = db?.pmProjects || [];
     const modules = db?.pmModules || {};
+    const pmTags = useFilteredTags();
     const settingsCompletedProjects = getSettings()?.completed_project_names as string[];
 
     //region Display Variables
@@ -155,8 +173,8 @@ export function ReactManagePage({eventCenter}: {
         return <EmptyWorkflowView/>
 
     // region Filtering
-    const rectifiedDisplayTags = displayTags.filter(k => db?.pmTags.contains(k))
-    const rectifiedExcludedTags = excludedTags.filter(k => db?.pmTags.contains(k))
+    const rectifiedDisplayTags = displayTags.filter(k => pmTags.contains(k))
+    const rectifiedExcludedTags = excludedTags.filter(k => pmTags.contains(k))
 
     // region Rectify
 
@@ -217,7 +235,6 @@ export function ReactManagePage({eventCenter}: {
             && !isInCompletedProjects(k, settingsCompletedProjects)
         )
 
-    const pmTags = db.pmTags || [];
     // It is undefined how saved tags will behave after we switch allProjects.
     // So we prevent tags from being filtered by tasks.
     // pmTags = pmTags.filter(k => {
@@ -226,6 +243,7 @@ export function ReactManagePage({eventCenter}: {
     //             return true;
     //     }
     // })
+
     // endregion
 
     return (
