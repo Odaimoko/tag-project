@@ -123,7 +123,7 @@ export default class OdaPmToolPlugin extends Plugin {
             id: 'set-project',
             name: CmdPal_SetProject,
             editorCallback: (editor: Editor, view: MarkdownView) => {
-                this.addPriorityToMdTask(editor, view);
+                this.addProjectToMdTask(editor, view);
             }
         });
         this.addCommand({
