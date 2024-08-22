@@ -1,23 +1,39 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
 import {HStack} from "../ui/pure-react/view-template/h-stack";
 import {centerChildren, diffGroupSpacing} from "../ui/pure-react/style-def";
 import {getSettings, usePluginSettings} from "./settings";
 import {ArrowMoveRight} from "../ui/pure-react/icon/ArrowBigUpDash";
 import {InlineCodeView} from "../ui/common/inline-code-view";
 import {devLog} from "../utils/env-util";
+import {DisappearableErrText} from "../ui/pure-react/view-template/disappearable-err-text";
 
 export function RegexTrimEditView() {
     // TODO Previe use task_summary_trim_regexp_pattern_test_text
     const [regPattern, setRegPattern] = usePluginSettings<string>("task_summary_trim_regexp_pattern")
     const [testText, setTestText] = usePluginSettings<string>("task_summary_trim_regexp_pattern_test_text");
-    const replacedText = testText.replace(new RegExp(regPattern), "");
-    devLog(`$[RegexTrimEditView] oriTag: ${regPattern}, patternValid?`);
+    const [notiText, setNotiText] = useState("")
+    let regExp: RegExp | null = null;
+    try {
+        regExp = new RegExp(regPattern);
+    } catch (e) {
+        // regExp is invalid
+    }
+    useEffect(() => {
+        if (!regExp)
+            setNotiText("[Err] Invalid Regular expression.")
+        else setNotiText("")
+    }, [testText, regPattern]);
+    const replacedText = regExp ? testText.replace(regExp, "") : testText;
+    devLog(`$[RegexTrimEditView] oriTag: ${regPattern}, patternValid? ${!!regExp}`);
     return <div>
         <HStack style={{justifyContent: "space-between"}}>
             <div>
                 <div className={"setting-item-name"}>Remove regex pattern from task summary</div>
                 <div className={"setting-item-description"}>
-                    You need to edit some file and save for this to be effective. Empty means no effect.
+                    Empty means no effect.
+                </div>
+                <div className={"setting-item-description"}>
+                    <b>You need to edit any file and save for this to be effective.</b>
                 </div>
             </div>
             <div>
@@ -28,10 +44,15 @@ export function RegexTrimEditView() {
                            setRegPattern(event.target.value)
                        }}
                 />
+
             </div>
         </HStack>
+
         <p/>
-        <label>Preview Your Task:</label>
+        <DisappearableErrText color={notiText.startsWith("[Err]") ? "var(--text-error)" : "green"}
+                              text={notiText} setText={setNotiText}/>
+        <p/>
+        <label>Preview Your Task </label>
         <HStack style={{justifyContent: "space-between", ...centerChildren}} spacing={diffGroupSpacing}>
             <div style={{minWidth: 200,}}>
                 <div style={{display: "inline-block"}}>
@@ -54,6 +75,7 @@ export function RegexTrimEditView() {
                     <InlineCodeView text={"]"}/>
                 </div>
             </div>
+
         </HStack>
     </div>
 }

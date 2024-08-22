@@ -245,7 +245,6 @@ export function ReactManagePage({eventCenter}: {
     // })
 
     // endregion
-
     return (
         <div>
             <HStack>

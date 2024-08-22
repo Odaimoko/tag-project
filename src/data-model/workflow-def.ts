@@ -51,12 +51,17 @@ export function isTaskSummaryValid(task: STask) {
 export function trimTextBySettings(text: string) {
     const taskSummaryTrimPattern = getSettings()?.task_summary_trim_regexp_pattern as string;
     if (taskSummaryTrimPattern) { // undefined or empty string we do not use regex
-        const regex = new RegExp(taskSummaryTrimPattern, "g");
-        const regexReplacedText = text.replace(regex, "");
-        if (text != regexReplacedText && text.includes("UT_080")) {
-            devLog("Regex Trimmed", text, "->", regexReplacedText);
+        let regexReplacedText = text;
+        try {
+            const regex = new RegExp(taskSummaryTrimPattern, "g");
+            regexReplacedText = text.replace(regex, "");
+            if (text != regexReplacedText && text.includes("UT_080")) {
+                devLog("Regex Trimmed", text, "->", regexReplacedText);
+            }
+        } catch (e) { /* empty */
+        } finally {
+            text = regexReplacedText;
         }
-        text = regexReplacedText;
     }
     return text;
 }
