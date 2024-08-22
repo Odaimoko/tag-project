@@ -1,15 +1,14 @@
 import {App, PluginSettingTab, Setting, ValueComponent} from "obsidian";
 import TPMPlugin from "../main";
 import {createRoot, Root} from "react-dom/client";
-import React, {useState} from "react";
-import {getSettings, ModifierKeyOnClick, setSettingsValueAndSave, SettingName, usePluginSettings} from "./settings";
+import React from "react";
+import {ModifierKeyOnClick, setSettingsValueAndSave, SettingName, usePluginSettings} from "./settings";
 import {SerializedType} from "./SerializedType";
-import {HStack} from "../ui/pure-react/view-template/h-stack";
 import {PluginContext} from "../ui/obsidian/manage-page-view";
-import {diffGroupSpacing} from "../ui/pure-react/style-def";
 import {ExternalToggleView} from "../ui/pure-react/view-template/toggle-view";
 import {Desc_ManagePage} from "../ui/obsidian/help-page/help-page-view";
 import {PriorityTagsEditView} from "./PriorityTagsEditView";
+import {RegexTrimEditView} from "./RegexTrimEditView";
 
 function ObsidianSettingToggleView(props: {
     name: string,
@@ -90,6 +89,10 @@ export class TPMSettingsTab extends PluginSettingTab {
             .setDesc('Show normal tags in the task table on Manage Page. Need to reopen the Manage Page.')
             .addToggle(this.setValueAndSave("tags_in_task_table_summary_cell"));
 
+
+        this.renderReactView(containerEl, <RegexTrimEditView/>);
+
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const projectHeader = containerEl.createEl("h2", {text: "Projects"})
 
         new Setting(containerEl)
@@ -102,16 +105,7 @@ export class TPMSettingsTab extends PluginSettingTab {
             .addToggle(this.setValueAndSave("manage_page_header_as_module"));
 
         // region Priority Tags
-        const priTagDiv = containerEl.createDiv();
-        priTagDiv.className = "setting-item";
-
-        this.root = createRoot(priTagDiv); // Override the previous container
-        this.root.render(
-            <PluginContext.Provider value={this.plugin}>
-                <PriorityTagsEditView/>
-            </PluginContext.Provider>
-        )
-
+        this.renderReactView(containerEl, <PriorityTagsEditView/>)
 
         new Setting(containerEl).setName(`Show Priority Tags in ${Desc_ManagePage}`)
             .setDesc(`If ON, the priority tags will appear in the Tag Filter in ${Desc_ManagePage}. Default OFF.`)
@@ -120,13 +114,7 @@ export class TPMSettingsTab extends PluginSettingTab {
         // endregion
 
         containerEl.createEl("h2", {text: "Task Navigation Policy"})
-        const navPolicyDiv = containerEl.createDiv();
-        this.root = createRoot(navPolicyDiv);
-        this.root.render(
-            <PluginContext.Provider value={this.plugin}>
-                <TaskNavigationPolicyView/>
-            </PluginContext.Provider>
-        )
+        this.renderReactView(containerEl, <TaskNavigationPolicyView/>);
 
         new Setting(containerEl).setName("Always open task in new tab modify key")
             .setDesc("If the key is pressed when clicking the task, always open in a new tab. None for never apply modifier keys.")
@@ -144,6 +132,17 @@ export class TPMSettingsTab extends PluginSettingTab {
             })
     }
 
+    private renderReactView(containerEl: HTMLElement, children: React.ReactElement) {
+        const containerDiv = containerEl.createDiv();
+        containerDiv.className = "setting-item";
+        const infoDiv = containerDiv.createDiv();
+        infoDiv.className = "setting-item-info";
+        this.root = createRoot(infoDiv); // Override the previous container
+        this.root.render(<PluginContext.Provider value={this.plugin}>
+            {children}
+        </PluginContext.Provider>)
+    }
+
     setValueAndSave<T extends SerializedType>(settingName: SettingName) {
         return (vc: ValueComponent<T>) =>
             // @ts-ignore
@@ -156,25 +155,4 @@ export class TPMSettingsTab extends PluginSettingTab {
     }
 
 } // Singleton!
-
-function RegexTrimEditView() {
-    // TODO Previe use task_summary_trim_regexp_pattern_test_text
-    const [oriTag, setOriTag] = useState("")
-    return <div>
-        <HStack style={{justifyContent: "space-between"}} spacing={diffGroupSpacing}>
-            <div>
-                <div className={"setting-item-name"}>Remove regex pattern from task summary</div>
-                <div className={"setting-item-description"}>
-                    You need to edit some file and save for this to be effective
-                </div>
-            </div>
-            <div>
-                <input style={{width: 100}} type={"text"}
-                       placeholder={getSettings()?.task_summary_trim_regexp_pattern as string}
-                       value={oriTag}
-                       onChange={() => {
-                       }}
-                />
-            </div>
-        </HStack>
 

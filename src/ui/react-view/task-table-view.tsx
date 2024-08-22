@@ -121,7 +121,7 @@ export const OdaTaskSummaryCell = ({oTask, taskFirstColumn, showCheckBox, showPr
             setSummaryView(<HtmlStringComponent style={taskCheckBoxMargin}
                                                 htmlString={container.children[0].innerHTML}/>);
         })
-    }, [oTask]);
+    }, [oTask, plugin, taskFirstColumn]);
 
     const checkBoxContent = showCheckBox ? <span>
         <InternalLinkView content={summaryView}/>

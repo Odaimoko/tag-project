@@ -3,6 +3,8 @@ import {OdaPmTask} from "./OdaPmTask";
 import {OdaPmProject, Tag_Prefix_Project} from "./OdaPmProject";
 import {INameable} from "../ui/pure-react/props-typing/i-nameable";
 import {matchTags, POTENTIAL_TAG_MATCHER} from "./markdown-parse";
+import {devLog} from "src/utils/env-util";
+import {getSettings} from "src/settings/settings";
 
 export const Tag_Prefix_Step = "#tpm/step/";
 export const Tag_Prefix_Workflow = "#tpm/workflow_type/";
@@ -43,6 +45,20 @@ export function isTaskSummaryValid(task: STask) {
     // Empty names for workflow def and tasks are not allowed
     const summary = trimTagsFromTask(task)
     return summary && summary.length > 0;
+}
+
+// \d{4}-\d{2}-\d{2}
+export function trimTextBySettings(text: string) {
+    const taskSummaryTrimPattern = getSettings()?.task_summary_trim_regexp_pattern as string;
+    if (taskSummaryTrimPattern) { // undefined or empty string we do not use regex
+        const regex = new RegExp(taskSummaryTrimPattern, "g");
+        const regexReplacedText = text.replace(regex, "");
+        if (text != regexReplacedText && text.includes("UT_080")) {
+            devLog("Regex Trimmed", text, "->", regexReplacedText);
+        }
+        text = regexReplacedText;
+    }
+    return text;
 }
 
 export function trimTagsFromTask(task: STask): string {

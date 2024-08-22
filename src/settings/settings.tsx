@@ -99,6 +99,8 @@ export interface TPMSettings {
     cached_help_page_tutorial_tldr: SerializedType,
     tags_in_task_table_summary_cell: SerializedType,// 0.7.0
     show_priority_tags_in_manage_page: SerializedType,// 0.7.1
+    task_summary_trim_regexp_pattern: SerializedType,    //0.8.0. If empty, we do not filter. Otherwise we use regex.
+    task_summary_trim_regexp_pattern_test_text: SerializedType,    //0.8.0. The user uses this to test the regex pattern.
 }
 
 export const TPM_DEFAULT_SETTINGS: Partial<TPMSettings> = {
@@ -129,6 +131,8 @@ export const TPM_DEFAULT_SETTINGS: Partial<TPMSettings> = {
     cached_help_page_tutorial_tldr: false,
     tags_in_task_table_summary_cell: true, // 0.7.0
     show_priority_tags_in_manage_page: false,
+    task_summary_trim_regexp_pattern: "",    //0.8.0
+    task_summary_trim_regexp_pattern_test_text: "",    //0.8.0
 }
 export type SettingName = keyof TPMSettings;
 
@@ -162,7 +166,7 @@ export function usePluginSettings<T extends SerializedType>(name: SettingName): 
 
     async function setValueAndSave(newValue: T) {
         // @ts-ignore
-        devLog(`DirectSetValue: ${name}, Old value: ${getSettings()[name]}`)
+        devLog(`DirectSetValue: ${name}, Old value: ${getSettings()[name]}, newValue: ${newValue}`)
         if (plugin)
             await setSettingsValueAndSave(plugin, name, newValue)
     }

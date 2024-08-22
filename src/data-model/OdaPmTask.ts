@@ -6,7 +6,8 @@ import {
     I_OdaPmStep,
     I_OdaPmTaskble,
     I_OdaPmWorkflow,
-    trimTagsFromTask
+    trimTagsFromTask,
+    trimTextBySettings
 } from "./workflow-def";
 import {BaseDatabaseObject} from "./BaseDatabaseObject";
 import {getOrCreateStep} from "./OdaPmStep";
@@ -35,6 +36,7 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
         this.text = task.text;
         this.type = type;
         this.summary = trimTagsFromTask(task)
+        this.summary = trimTextBySettings(this.summary) // only task summary is trimmed. we do not trim workflow names
         this.tickedSteps = [];
         for (const tag of task.tags) {
             if (type.includesStepTag(tag)) {
