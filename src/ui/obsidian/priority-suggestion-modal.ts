@@ -1,6 +1,7 @@
 import {App, FuzzySuggestModal} from "obsidian";
 import {OdaPmDbProvider} from "../../data-model/OdaPmDb";
-import {PriorityLabels} from "../../settings/TPMSettingsTab";
+
+import {PriorityLabels} from "../../settings/PriorityTagsEditView";
 
 export class PrioritySuggestionModal extends FuzzySuggestModal<string> {
     onChosen: (w: string, evt: MouseEvent | KeyboardEvent) => void;
