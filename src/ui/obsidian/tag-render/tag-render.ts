@@ -24,7 +24,7 @@
  * https://github.com/darrenkuro/obsidian-basetag/blob/master/LICENSE
  */
 
-import {App, livePreviewState, Plugin, PluginSettingTab, Setting} from "obsidian";
+import {livePreviewState, Plugin, WorkspaceLeaf} from "obsidian";
 import {syntaxTree} from "@codemirror/language";
 import {RangeSetBuilder} from "@codemirror/state";
 import {
@@ -43,8 +43,12 @@ import {
     Tag_Prefix_Workflow
 } from "../../../data-model/workflow-def";
 import {Tag_Prefix_Project} from "../../../data-model/OdaPmProject";
+import {devLog} from "../../../utils/env-util";
+import {WorkspaceLeafEditModeWrapper} from "./workspace-leaf-edit-mode-wrapper";
+
 
 const tag_class = "basename-tag";
+const currentLeaf: WorkspaceLeafEditModeWrapper = new WorkspaceLeafEditModeWrapper();
 
 /** Get the current vault name. */
 const getVaultName = () => window.app.vault.getName();
@@ -96,7 +100,7 @@ function shouldTagBeAbbr(tag: string) {
         || lowerTag.startsWith(Tag_Prefix_TaskType);
 }
 
-class editorPlugin implements PluginValue {
+class TagRenderEditorPlugin implements PluginValue {
     decorations: DecorationSet;
 
     constructor(view: EditorView) {
@@ -104,6 +108,7 @@ class editorPlugin implements PluginValue {
     }
 
     update(update: ViewUpdate): void {
+        // devLog(`[TagRender] Update`) // Invoked when cursor or other editor state changes
         if (
             update.view.composing ||
             update.view.plugin(livePreviewState)?.mousedown
@@ -114,10 +119,18 @@ class editorPlugin implements PluginValue {
         }
     }
 
+    /**
+     * Won't be triggered when Edit mode changes.
+     * @param view
+     * @private
+     */
     private buildDecorations(view: EditorView): DecorationSet {
         const builder = new RangeSetBuilder<Decoration>();
 
         // console.log(view.visibleRanges) // a subset that is drawn.
+        devLog(`[TagRender] buildDecorations viewState`, currentLeaf?.currentLeaf?.getViewState())
+        if (!currentLeaf) return builder.finish();
+        if (currentLeaf.isSource()) return builder.finish();
 
         for (const {from, to} of view.visibleRanges) {
             let curHashtagStart = -1; // uninitialized
@@ -247,8 +260,10 @@ class editorPlugin implements PluginValue {
     }
 }
 
+
 // Rerender Property by changing the text directly
 const rerenderProperty = () => {
+    devLog(`[TagRender] rerenderProperty`)
     document
         .querySelectorAll(
             `[data-property-key="tags"] .multi-select-pill-content span:not(.${tag_class})`,
@@ -262,17 +277,18 @@ const rerenderProperty = () => {
 }
 
 export default class TagRenderer extends Plugin {
-    public settings: SettingParams = DEFAULT_SETTING;
 
     async onload() {
-        // await this.loadSettings();
+
         this.registerEditorExtension(
-            ViewPlugin.fromClass(editorPlugin, {
-                decorations: (value) =>
-                    // only renders on editor if setting allows
-                    this.settings.renderOnEditor
+            ViewPlugin.fromClass(TagRenderEditorPlugin, {
+                decorations: function (value) {
+                    const useDeco = currentLeaf && !currentLeaf.isSource();
+                    devLog(`[TagRender] registerEditorExtension useDeco `, useDeco);
+                    return useDeco
                         ? value.decorations
-                        : new RangeSetBuilder<Decoration>().finish(),
+                        : new RangeSetBuilder<Decoration>().finish();
+                }
             }),
         );
 
@@ -293,54 +309,40 @@ export default class TagRenderer extends Plugin {
         });
 
         // Rerender property by changing the text directly
+        // Rerender when: 
+        // (1) Preview/Source/Reading Mode Toggled 
+        //      - [ ] Files without front matter will not be rerendered when (1) toggled.
+        // (2) Leaf changed / File opened 
+        // (3) TODO Vault Opened. Leaf may not be registered yet.
+
+
+        // "layout-change": triggered when switch preview/source/live-preview mode
         this.registerEvent(
-            this.app.workspace.on("layout-change", rerenderProperty)
+            this.app.workspace.on("layout-change", function () {
+                devLog(`[TagRender] layout-change`)
+                return rerenderProperty();
+            })
         );
 
         this.registerEvent(
-            this.app.workspace.on("file-open", rerenderProperty)
+            this.app.workspace.on("file-open", function (e) {
+                devLog(`[TagRender] file-open `, e)
+                return rerenderProperty();
+            })
         );
 
-        // this.addSettingTab(new SettingTab(this.app, this));
+        // "active-leaf-change": open note, navigate to note -> will check whether
+        // the view mode needs to be set; default view mode setting is ignored.
+        this.registerEvent(
+            this.app.workspace.on(
+                "active-leaf-change",
+                (leaf: WorkspaceLeaf) => {
+                    currentLeaf.withLeaf(leaf);
+                    return rerenderProperty();
+                }
+            )
+        );
     }
 
-    async loadSettings() {
-        this.settings = Object.assign(DEFAULT_SETTING, await this.loadData());
-    }
-
-    async saveSettings() {
-        await this.saveData(this.settings);
-    }
 }
-
-interface SettingParams {
-    renderOnEditor: boolean;
-}
-
-const DEFAULT_SETTING: SettingParams = {
-    renderOnEditor: true,
-};
-
-class SettingTab extends PluginSettingTab {
-    constructor(public app: App, public plugin: TagRenderer) {
-        super(app, plugin);
-    }
-
-    async display() {
-        const {settings: setting} = this.plugin;
-        const {containerEl} = this;
-        containerEl.empty();
-
-        const editorSetting = new Setting(containerEl);
-        editorSetting
-            .setName("Render on Editor")
-            .setDesc("Render basetags also on editor.")
-            .addToggle((toggle) => {
-                toggle.setValue(setting.renderOnEditor);
-                toggle.onChange(async (value) => {
-                    setting.renderOnEditor = value;
-                    await this.plugin.saveSettings();
-                });
-            });
-    }
-}
+ 
