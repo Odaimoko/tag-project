@@ -1,11 +1,10 @@
 {
-    "id": "tag-project-odaimoko",
-    "name": "Tag Project",
-    "minAppVersion": "1.4.13",
-    "description": "A Project Management Tool: Tag tasks everywhere, Manage in One page.",
-    "author": "Odaimoko",
-    "authorUrl": "https://github.com/Odaimoko",
-    "fundingUrl": "https://ko-fi.com/odaimoko",
-    "isDesktopOnly": false,
-    "version": "0.9.0"
+	"id": "tag-project-odaimoko",
+	"name": "Tag Project",
+	"minAppVersion": "1.4.13",
+	"description": "A Project Management Tool: Tag tasks everywhere, Manage in One page.",
+	"author": "Odaimoko",
+	"authorUrl": "https://github.com/Odaimoko",
+	"fundingUrl": "https://ko-fi.com/odaimoko",
+	"isDesktopOnly": false
 }
