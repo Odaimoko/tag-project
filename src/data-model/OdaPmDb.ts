@@ -107,7 +107,7 @@ function createPmTaskFromTask(workflowTags: string[], workflows: I_OdaPmWorkflow
 function getAllWorkflows(): I_OdaPmWorkflow[] {
     const allTasks = dv.pages()["file"]["tasks"];
     return allTasks.where(function (k: STask) {
-        for (const defTag of getWorkflowTypeTags()) {
+            for (const defTag of getWorkflowTypeTags()) {
                 if (k.tags.length === 0) continue;
                 if (k.tags.includes(defTag)) {
                     return true;
@@ -230,7 +230,14 @@ export class OdaPmDb implements I_EvtListener {
 
 // region Init
     private reloadDb() {
-        this.inited = false;
+        if (!this.plugin.isDataviewPluginInitialized()) {
+            devLog("[Event] dataviewReady is false. reloadDb canceled.")
+            return;
+        }
+        //#ifdef DEVELOPMENT_BUILD
+
+        console.time("[Event] [Timed] reloadDb")
+        //#endif
         this.workflows = getAllWorkflows()
         this.workflowTags = getWorkflowTypeTags()
         this.stepTags = this.initStepTags(this.workflows);
@@ -244,9 +251,12 @@ export class OdaPmDb implements I_EvtListener {
         this.linkProject(this.pmProjects, this.pmTasks, this.workflows);
         this.orphanTasks = this.initOrphanTasks(this.pmTasks);
         this.emit(Evt_DbReloaded)
-        this.inited = true;
         assertDatabase(this);
         devLog("Database Reloaded.")
+        //#ifdef DEVELOPMENT_BUILD
+        console.timeEnd("[Event] [Timed] reloadDb")
+
+        //#endif
     }
 
 
@@ -298,13 +308,13 @@ export class OdaPmDb implements I_EvtListener {
         return pmTasks.filter(k => {
                 // console.log(k.getFirstProject()?.name, k.type.getFirstProject()?.name, k.getFirstProject()?.internalKey, k.type.getFirstProject()?.internalKey, k.getFirstProject() !== k.type.getFirstProject())
                 // name is the most consistent comparison. internalKey and reference are fragile. 
-            const wfPrjName = k.type.getFirstProject()?.name ?? "";
-            // A task can use its parents' workflows.
-            // A workflow in unclassified project can be used in any Project. 
-            return !(
-                k.isInProject(wfPrjName, true)
-                || k.type.isInProject(ProjectName_Unclassified)
-            );
+                const wfPrjName = k.type.getFirstProject()?.name ?? "";
+                // A task can use its parents' workflows.
+                // A workflow in unclassified project can be used in any Project. 
+                return !(
+                    k.isInProject(wfPrjName, true)
+                    || k.type.isInProject(ProjectName_Unclassified)
+                );
             }
         )
     }

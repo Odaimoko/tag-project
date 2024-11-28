@@ -41,7 +41,7 @@ export default class OdaPmToolPlugin extends Plugin {
     async onload() {
         await this.initSettings();
 
-        if (!this.hasDataviewPlugin()) {
+        if (!this.isDataviewPluginEnabled()) {
             new ONotice("Dataview plugin is not enabled.");
 
             this.registerEvent(this.app.metadataCache.on(DataviewIndexReadyEvent, () => {
@@ -357,8 +357,12 @@ export default class OdaPmToolPlugin extends Plugin {
             });
     }
 
-    hasDataviewPlugin() {
-        return this.app.plugins.enabledPlugins.has("dataview");
+    isDataviewPluginEnabled() {
+        return this.app.plugins?.enabledPlugins?.has("dataview"); // enabledPlugins is extended by obsidian-ex.d.ts
+    }
+
+    isDataviewPluginInitialized() {
+        return this.app.plugins.plugins.dataview?.api?.index?.initialized;
     }
 
     regPluginListener() {
@@ -370,8 +374,12 @@ export default class OdaPmToolPlugin extends Plugin {
     // Thus, we cannot pass registerEvent function directly to a React component. 
     // Instead, we use a custom event emitter, which allows us to clear the listener with useEffect.
     listenToMetadataChange() {
+        this.registerEvent(this.app.metadataCache.on("resolved", (...args) => {
+            devLog(`[Event] resolved:`, args)
+        }));
         // @ts-ignore
         this.registerEvent(this.app.metadataCache.on(DataviewMetadataChangeEvent, (...args) => {
+            devLog(`[Event] DataviewMetadataChangeEvent: ${DataviewMetadataChangeEvent} Triggered. args:`, args)
             this.emitter.emit(DataviewMetadataChangeEvent, ...args);
         }));
         // Don't use DataviewIndexReadyEvent, because it is fired when the full index is processed.
@@ -379,6 +387,7 @@ export default class OdaPmToolPlugin extends Plugin {
         // @ts-ignore
         this.registerEvent(this.app.metadataCache.on(DataviewIndexReadyEvent, (...args) => {
             // render only when index is ready
+            devLog(`[Event] DataviewIndexReadyEvent: ${DataviewIndexReadyEvent} Triggered. args:`, args)
             this.emitter.emit(DataviewIndexReadyEvent, ...args);
         }));
 
