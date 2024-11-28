@@ -19,7 +19,7 @@ import {ONotice} from "../utils/o-notice";
 import {getSettings} from "../settings/settings";
 import {GenericProvider} from "../utils/GenericProvider";
 import {clearGlobalProjectMap, OdaPmProject, ProjectName_Unclassified} from "./OdaPmProject";
-import {devLog} from "../utils/env-util";
+import {devLog, devTime, devTimeEnd} from "../utils/env-util";
 import {OdaPmTask} from "./OdaPmTask";
 import {getOrCreateWorkflow, removeWorkflow} from "./OdaPmWorkflow";
 import {OdaProjectTree} from "./OdaProjectTree";
@@ -38,6 +38,14 @@ function notifyMalformedTask(task: STask, reason: string) {
 
 function getTaskMultiLineErrMsg() {
     return `Task cannot have multiple lines.`
+}
+
+function getAllFiles() {
+    return dv.pages()["file"];
+}
+
+function getAllTasks() {
+    return getAllFiles()["tasks"];
 }
 
 /**
@@ -104,9 +112,13 @@ function createPmTaskFromTask(workflowTags: string[], workflows: I_OdaPmWorkflow
 }
 
 
-function getAllWorkflows(): I_OdaPmWorkflow[] {
-    const allTasks = dv.pages()["file"]["tasks"];
-    return allTasks.where(function (k: STask) {
+function getAllWorkflows(allTasks: any = undefined): I_OdaPmWorkflow[] {
+
+    devTime(`[Event] [Timed] getAllWorkflows dv.pages()["file"]["tasks"]`)
+    allTasks = allTasks ?? getAllTasks();
+    devTimeEnd(`[Event] [Timed] getAllWorkflows dv.pages()["file"]["tasks"]`)
+    devTime(`[Event] [Timed] getAllWorkflows allTasks.where`)
+    const unique = allTasks.where(function (k: STask) {
             for (const defTag of getWorkflowTypeTags()) {
                 if (k.tags.length === 0) continue;
                 if (k.tags.includes(defTag)) {
@@ -119,14 +131,19 @@ function getAllWorkflows(): I_OdaPmWorkflow[] {
         .flatMap((task: STask) => createWorkflowsFromTask(task))
         .array()
         .unique();
+    devTimeEnd(`[Event] [Timed] getAllWorkflows allTasks.where`)
+    return unique;
 }
 
-function getAllPmTasks(workflows: I_OdaPmWorkflow[]) {
+function getAllPmTasks(workflows: I_OdaPmWorkflow[], allTasks: any = undefined) {
     const workflowTags = workflows.map(function (k: I_OdaPmWorkflow) {
         return k.tag;
     });
-    const allTasks = dv.pages()["file"]["tasks"];
-    return allTasks.where(function (k: STask) {
+    devTime(`[Event] [Timed] getAllPmTasks dv.pages()["file"]["tasks"]`)
+    allTasks = allTasks ?? getAllTasks();
+    devTimeEnd(`[Event] [Timed] getAllPmTasks dv.pages()["file"]["tasks"]`)
+    devTime(`[Event] [Timed] getAllPmTasks taskArray`)
+    const taskArray = allTasks.where(function (k: STask) {
             for (const defTag of workflowTags) {
                 if (k.tags.includes(defTag)) return true;
             }
@@ -138,6 +155,9 @@ function getAllPmTasks(workflows: I_OdaPmWorkflow[]) {
         }).filter(function (k: OdaPmTask | null) {
             return k !== null;
         }).array()
+    ;
+    devTimeEnd(`[Event] [Timed] getAllPmTasks taskArray`)
+    return taskArray
         ;
 }
 
@@ -145,7 +165,7 @@ function getAllPmTasks(workflows: I_OdaPmWorkflow[]) {
  * Pass 1: create projects from frontmatter and tasks.
  * Pass 2: link tasks/Wf to projects.
  */
-function getAllProjectsAndLinkTasks(pmTasks: OdaPmTask[], workflows: I_OdaPmWorkflow[]): OdaPmProject[] {
+function getAllProjectsAndLinkTasks(pmTasks: OdaPmTask[], workflows: I_OdaPmWorkflow[], allFiles: any = undefined): OdaPmProject[] {
     clearGlobalProjectMap();
 
     const projects: OdaPmProject[] = [
@@ -158,10 +178,10 @@ function getAllProjectsAndLinkTasks(pmTasks: OdaPmTask[], workflows: I_OdaPmWork
         }
     }
 
-    const pages = dv.pages()["file"];
+    allFiles = allFiles ?? dv.pages()["file"];
     // File defs
 
-    for (const pg of pages) {
+    for (const pg of allFiles) {
         const project = OdaPmProject.createProjectFromFrontmatter(pg);
         if (project) {
             addProject(project);
@@ -236,25 +256,51 @@ export class OdaPmDb implements I_EvtListener {
         }
         //#ifdef DEVELOPMENT_BUILD
 
-        console.time("[Event] [Timed] reloadDb")
+        devTime("[Event] [Timed] reloadDb")
         //#endif
-        this.workflows = getAllWorkflows()
+        // cache for faster calc
+        devTime("[Event] [Timed] getAllFiles")
+        const allFiles = getAllFiles();
+        devTimeEnd(`[Event] [Timed] getAllFiles`)
+        devTime("[Event] [Timed] allTasks")
+        const allTasks = allFiles["tasks"];
+        devTimeEnd(`[Event] [Timed] allTasks`)
+
+        devTime(`[Event] [Timed] getAllWorkflows`)
+        this.workflows = getAllWorkflows(allTasks)
+        devTimeEnd(`[Event] [Timed] getAllWorkflows`)
+        devTime(`[Event] [Timed] getWorkflowTypeTags`)
         this.workflowTags = getWorkflowTypeTags()
+        devTimeEnd(`[Event] [Timed] getWorkflowTypeTags`)
         this.stepTags = this.initStepTags(this.workflows);
 
-        this.pmTasks = getAllPmTasks(this.workflows)
+        devTime(`[Event] [Timed] getAllPmTasks`)
+        this.pmTasks = getAllPmTasks(this.workflows, allTasks)
+        devTimeEnd(`[Event] [Timed] getAllPmTasks`)
+        devTime(`[Event] [Timed] initModulesFromTasks`)
         this.pmModules = this.initModulesFromTasks(this.pmTasks)
+        devTimeEnd(`[Event] [Timed] initModulesFromTasks`)
+        devTime(`[Event] [Timed] initManagedTags`)
         this.pmTags = this.initManagedTags(this.pmTasks)
+        devTimeEnd(`[Event] [Timed] initManagedTags`)
+        devTime(`[Event] [Timed] initPriorityTags`)
         this.pmPriorityTags = this.initPriorityTags()
-        this.pmProjects = getAllProjectsAndLinkTasks(this.pmTasks, this.workflows);
+        devTimeEnd(`[Event] [Timed] initPriorityTags`)
+        devTime(`[Event] [Timed] getAllProjectsAndLinkTasks`)
+        this.pmProjects = getAllProjectsAndLinkTasks(this.pmTasks, this.workflows, allFiles);
+        devTimeEnd(`[Event] [Timed] getAllProjectsAndLinkTasks`)
 
+        devTime(`[Event] [Timed] linkProject`)
         this.linkProject(this.pmProjects, this.pmTasks, this.workflows);
+        devTimeEnd(`[Event] [Timed] linkProject`)
+        devTime(`[Event] [Timed] orphanTasks`)
         this.orphanTasks = this.initOrphanTasks(this.pmTasks);
+        devTimeEnd(`[Event] [Timed] orphanTasks`)
         this.emit(Evt_DbReloaded)
         assertDatabase(this);
         devLog("Database Reloaded.")
         //#ifdef DEVELOPMENT_BUILD
-        console.timeEnd("[Event] [Timed] reloadDb")
+        devTimeEnd("[Event] [Timed] reloadDb")
 
         //#endif
     }

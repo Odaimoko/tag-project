@@ -19,6 +19,8 @@ export function prodWrapper(func: CallableFunction) {
 }
 
 export const devLog = prodWrapper(console.log);
+export const devTime = prodWrapper(console.time);
+export const devTimeEnd = prodWrapper(console.timeEnd);
 export const PluginEnvProvider: GenericProvider<PluginEnv> = new GenericProvider<PluginEnv>();
 
 export function initPluginEnv() {
