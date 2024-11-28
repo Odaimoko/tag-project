@@ -26,6 +26,7 @@ import {OdaProjectTree} from "./OdaProjectTree";
 import {assertDatabase} from "../test_runtime";
 import {ModuleId_Unclassified, OdaPmModule} from "./OdaPmModule";
 import OdaPmToolPlugin from "../main";
+import {TimeChecker} from "../utils/TimeChecker";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
 
@@ -144,17 +145,17 @@ function getAllPmTasks(workflows: I_OdaPmWorkflow[], allTasks: any = undefined) 
     devTimeEnd(`[Event] [Timed] getAllPmTasks dv.pages()["file"]["tasks"]`)
     devTime(`[Event] [Timed] getAllPmTasks taskArray`)
     const taskArray = allTasks.where(function (k: STask) {
-            for (const defTag of workflowTags) {
-                if (k.tags.includes(defTag)) return true;
+                for (const defTag of workflowTags) {
+                    if (k.tags.includes(defTag)) return true;
+                }
+                return false;
             }
-            return false;
-        }
-    )
-        .map((task: STask) => {
-            return createPmTaskFromTask(workflowTags, workflows, task)
-        }).filter(function (k: OdaPmTask | null) {
-            return k !== null;
-        }).array()
+        )
+            .map((task: STask) => {
+                return createPmTaskFromTask(workflowTags, workflows, task)
+            }).filter(function (k: OdaPmTask | null) {
+                return k !== null;
+            }).array()
     ;
     devTimeEnd(`[Event] [Timed] getAllPmTasks taskArray`)
     return taskArray
@@ -181,14 +182,16 @@ function getAllProjectsAndLinkTasks(pmTasks: OdaPmTask[], workflows: I_OdaPmWork
     allFiles = allFiles ?? dv.pages()["file"];
     // File defs
 
+    devTime("[Event] [Timed] addProject Frontmatter")
     for (const pg of allFiles) {
         const project = OdaPmProject.createProjectFromFrontmatter(pg);
         if (project) {
             addProject(project);
         }
     }
-
+    devTimeEnd("[Event] [Timed] addProject Frontmatter")
     // Task def
+    devTime("[Event] [Timed] addProject FromTaskable")
     for (const pmTask of pmTasks) {
         const taskTag = pmTask.getProjectTag();
         if (taskTag) {
@@ -207,6 +210,7 @@ function getAllProjectsAndLinkTasks(pmTasks: OdaPmTask[], workflows: I_OdaPmWork
             }
         }
     }
+    devTimeEnd("[Event] [Timed] addProject FromTaskable")
 
     return projects;
 }
@@ -229,6 +233,7 @@ export class OdaPmDb implements I_EvtListener {
     // 0.5.0
     pmPriorityTags: string[]
     private plugin: OdaPmToolPlugin;
+    timer: TimeChecker = new TimeChecker(5000);
 
     constructor(emitter: EventEmitter, plugin: OdaPmToolPlugin) {
         this.emitter = emitter;
@@ -254,8 +259,13 @@ export class OdaPmDb implements I_EvtListener {
             devLog("[Event] dataviewReady is false. reloadDb canceled.")
             return;
         }
+        if (!this.timer.isOver()) {
+            devLog(`[Event] reloadDb canceled because timer is not ready: ${this.timer.elapsed()} < ${this.timer.thresMs}`);
+            return;
+        }
+        
         //#ifdef DEVELOPMENT_BUILD
-
+        this.timer.reset();
         devTime("[Event] [Timed] reloadDb")
         //#endif
         // cache for faster calc
