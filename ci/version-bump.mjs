@@ -1,8 +1,12 @@
 import {readFileSync, writeFileSync} from "fs";
 
 // This is the version defined in package.json
-const targetVersion = process.env.npm_package_version;
+const targetVersion = process.env.npm_package_version ?? JSON.parse(readFileSync('./package.json', 'utf-8')).version;
+if (targetVersion === undefined || targetVersion === null) {
 
+    console.error(`target version: ${targetVersion} is invalid`)
+    process.exit(1)
+}
 // read minAppVersion from manifest.json and bump version to target version
 let manifest = JSON.parse(readFileSync("manifest.json", "utf8"));
 const {minAppVersion} = manifest;
