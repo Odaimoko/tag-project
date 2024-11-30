@@ -26,7 +26,8 @@ import {OdaProjectTree} from "./OdaProjectTree";
 import {assertDatabase} from "../test_runtime";
 import {ModuleId_Unclassified, OdaPmModule} from "./OdaPmModule";
 import OdaPmToolPlugin from "../main";
-import {TimeChecker} from "../utils/TimeChecker";
+
+import {RateLimiter} from "../utils/RateLimiter";
 
 const dv = getAPI(); // We can use dv just like the examples in the docs
 
@@ -234,11 +235,7 @@ export class OdaPmDb implements I_EvtListener {
     private plugin: OdaPmToolPlugin;
 // region rate limit
     // refresh db at least once 3 seconds
-    timer: TimeChecker = new TimeChecker(3000);
-    // if the db is queuedReload to reload during the rate limitation. 
-    // True only when reloadDb is requested but rate is still limited.
-    queuedReload = false;
-    timerId: NodeJS.Timeout;
+    rateLimiter: RateLimiter = new RateLimiter(3, 1 / 3, 3)
 
 // endregion
 
@@ -254,16 +251,11 @@ export class OdaPmDb implements I_EvtListener {
         this.emitter.on(DataviewMetadataChangeEvent, this.boundReloadWorkflows)
         this.emitter.on(Evt_ReqDbReload, this.boundReloadWorkflows)
 
-        this.timerId = setTimeout(() => {
-            if (this.queuedReload)
-                this.reloadDb();
-        }, 2000)
     }
 
     rmListener(): void {
         this.emitter.off(DataviewMetadataChangeEvent, this.boundReloadWorkflows)
         this.emitter.off(Evt_ReqDbReload, this.boundReloadWorkflows)
-        clearTimeout(this.timerId)
     }
 
 // region Init
@@ -272,16 +264,13 @@ export class OdaPmDb implements I_EvtListener {
             devLog("[Event] dataviewReady is false. reloadDb canceled.")
             return;
         }
-        this.queuedReload = true;
-        if (!this.timer.isOver()) {
-            devLog(`[Event] reloadDb canceled because timer is not ready: ${this.timer.elapsed()} < ${this.timer.thresMs}`);
+        if (!this.rateLimiter.addRequest("rate")) {
+
+            devLog(`[Event] reloadDb canceled because rateLimiter is not ready`);
             return;
         }
 
-//#ifdef DEVELOPMENT_BUILD
-        this.timer.reset();
         devTime("[Event] [Timed] reloadDb")
-//#endif
         // cache for faster calc
         devTime("[Event] [Timed] getAllFiles")
         const allFiles = getAllFiles();
@@ -323,10 +312,7 @@ export class OdaPmDb implements I_EvtListener {
         this.emit(Evt_DbReloaded)
         assertDatabase(this);
         devLog("Database Reloaded.")
-//#ifdef DEVELOPMENT_BUILD
         devTimeEnd("[Event] [Timed] reloadDb")
-//#endif
-        this.queuedReload = false;
     }
 
 

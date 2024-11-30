@@ -35,6 +35,7 @@
     },
     "dependencies": {
         "chai": "^4.3.10",
+        "denque": "^2.1.0",
         "html-react-parser": "^4.2.7",
         "react-dom": "^18.2.0"
     },

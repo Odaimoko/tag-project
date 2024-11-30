@@ -379,7 +379,7 @@ export default class OdaPmToolPlugin extends Plugin {
         }));
         // @ts-ignore
         this.registerEvent(this.app.metadataCache.on(DataviewMetadataChangeEvent, (...args) => {
-            devLog(`[Event] DataviewMetadataChangeEvent: ${DataviewMetadataChangeEvent} Triggered. args:`, args)
+            // devLog(`[Event] DataviewMetadataChangeEvent: ${DataviewMetadataChangeEvent} Triggered. args:`, args)
             this.emitter.emit(DataviewMetadataChangeEvent, ...args);
         }));
         // Don't use DataviewIndexReadyEvent, because it is fired when the full index is processed.
