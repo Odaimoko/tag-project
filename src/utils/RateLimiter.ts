@@ -66,8 +66,8 @@ export class RateLimiter {
         while (this.respondedQueue.peekFront() && this.respondedQueue.peekFront()!.timestamp < now - this.window * 1000) {
             this.respondedQueue.shift();
         }
-//#ifdef DEVELOPMENT_BUILD
-        console.log(`[Rate] reqQueue: ${this.requestedQueue.length}, respQueue: ${this.respondedQueue.length}, oldReqQueueSize: ${oldReqQueueSize}, oldRespQueueSize: ${oldRespQueueSize}`);
+//#ifdef DEVELOPMENT_BUILDD
+        devLog(`[Rate] reqQueue: ${this.requestedQueue.length}, respQueue: ${this.respondedQueue.length}, oldReqQueueSize: ${oldReqQueueSize}, oldRespQueueSize: ${oldRespQueueSize}`);
 //#endif
     }
 
