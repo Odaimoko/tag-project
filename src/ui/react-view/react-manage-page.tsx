@@ -4,7 +4,13 @@ import {PluginContext} from "../obsidian/manage-page-view";
 import {EventEmitter} from "events";
 import {getSettings, setSettingsValueAndSave, usePluginSettings} from "../../settings/settings";
 import {OdaPmDbProvider} from "../../data-model/OdaPmDb";
-import {Evt_DbReloaded, Evt_JumpTask, Evt_JumpWorkflow, Evt_ManagePageReRender} from "../../typing/dataview-event";
+import {
+    Evt_DbReloaded,
+    Evt_JumpTask,
+    Evt_JumpWorkflow,
+    Evt_ManagePageReRender,
+    Evt_ReqDbReload
+} from "../../typing/dataview-event";
 import {devLog} from "../../utils/env-util";
 import {OdaPmTask} from "../../data-model/OdaPmTask";
 import {TaskTableView} from "./task-table-view";
@@ -14,6 +20,7 @@ import {ProjectFilterOptionValue_All, ProjectFilterView} from "./project-filter-
 import {HStack} from "../pure-react/view-template/h-stack";
 import {FixOrphanTasksView} from "./fix-orphan-tasks-view";
 import {ModuleFilter} from "./module-filter";
+import {Desc_ManagePage} from "../obsidian/help-page/help-page-view";
 
 function isInAnyProject(projectTask: I_OdaPmProjectTask, displayPrjNames: string[]) {
     // TODO Performance
@@ -282,7 +289,15 @@ export function ReactManagePage({eventCenter}: {
 }
 
 const EmptyWorkflowView = () => {
-    return <h1>No Workflow defined, or Dataview is not initialized.</h1>
+    const db = OdaPmDbProvider.get();
+    return <div>
+        <h1>No Workflow defined, or Dataview is not initialized.</h1>
+        <button onClick={() => {
+            db?.emit(Evt_ReqDbReload);
+        }}>
+            <label>Try Refresh {Desc_ManagePage}</label>
+        </button>
+    </div>
 }
 
 
