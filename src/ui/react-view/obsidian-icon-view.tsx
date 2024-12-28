@@ -6,6 +6,8 @@ import {I_InteractableId} from "../pure-react/props-typing/i-interactable-id";
 import {GeneralMouseEventHandler} from "../pure-react/view-template/event-handling/general-mouse-event-handler";
 import {I_Stylable} from "../pure-react/props-typing/i-stylable";
 import {ClickableView, I_IconClickable} from "../pure-react/view-template/clickable-view";
+// Obsidian's icon will offset by 4px upwards, so we drive it down.
+const clickableIconTransform = {transform: `translateY(4px)`};
 
 // const taskLinkHtmlString = getIcon("link")?.outerHTML;
 /**
@@ -13,9 +15,16 @@ import {ClickableView, I_IconClickable} from "../pure-react/view-template/clicka
  * @param iconName
  * @constructor
  */
-export function ObsidianIconView({iconName, style}: { iconName: string } & I_Stylable) {
-    const htmlString = getIcon(iconName)?.outerHTML
-    return <HtmlStringComponent style={style} htmlString={htmlString}/>;
+export function ObsidianIconView({iconName, style, yOffset}: { iconName: string, yOffset?: boolean } & I_Stylable) {
+    const icon: SVGSVGElement | null = getIcon(iconName);
+    yOffset = yOffset ?? true; // default to true
+    if (icon) {
+        icon.setCssStyles(style as CSSStyleDeclaration)
+        if (yOffset)
+            icon.setCssStyles(clickableIconTransform); // do not override th e
+    }
+    const htmlString = icon?.outerHTML
+    return <HtmlStringComponent style={clickableIconTransform} htmlString={htmlString}/>;
 }
 
 /**
@@ -33,18 +42,19 @@ export function InternalLinkView({content, onIconClicked, onContentClicked, styl
     />
 }
 
+
 /**
  * Can also be used as non-clickable
  */
 export function ClickableObsidianIconView({
-                                      content,
-                                      onIconClicked,
-                                      onContentClicked,
-                                      iconName,
-                                      style,
-                                      clickable,
-                                      interactableId
-                                  }: {
+                                              content,
+                                              onIconClicked,
+                                              onContentClicked,
+                                              iconName,
+                                              style,
+                                              clickable,
+                                              interactableId
+                                          }: {
     iconName: string,
 } & I_IconClickable & I_Stylable & I_InteractableId) {
     return <ClickableView clickable={clickable} icon={<ObsidianIconView iconName={iconName}/>} content={content}

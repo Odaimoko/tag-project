@@ -18,7 +18,8 @@ function getIconNameByWorkflowType(type: WorkflowType) {
 }
 
 export function getIconViewByWorkflowType(type: WorkflowType) {
-    return <ObsidianIconView iconName={getIconNameByWorkflowType(type)}/>;
+    // We do not offset here, the icon will center without yOffset
+    return <ObsidianIconView iconName={getIconNameByWorkflowType(type)} yOffset={false}/>;
 }
 
 export function getIconByWorkflow(workflow: I_OdaPmWorkflow) {
