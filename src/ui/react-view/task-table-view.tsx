@@ -297,9 +297,10 @@ function TaskPriorityIcon({oTask}: { oTask: OdaPmTask }): React.JSX.Element {
     </div>} title={"Choose priority..."}/>;
 }
 
-export function TaskTableView({displayWorkflows, filteredTasks}: {
+export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowCompleted}: {
     displayWorkflows: I_OdaPmWorkflow[],
-    filteredTasks: OdaPmTask[]
+    filteredTasks: OdaPmTask[],
+    alwaysShowCompleted?: boolean // if true, always show completed.
 }) {
     const plugin = useContext(PluginContext);
     const [searchText, setSearchText] = useState("");
@@ -337,7 +338,7 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
     });
     const displayedTasks = filteredTasks
         .filter(function (k: OdaPmTask) {
-            return (showCompleted || !k.isMdCompleted());
+            return alwaysShowCompleted || (showCompleted || !k.isMdCompleted());
         }).filter(function (k: OdaPmTask) { // search string
             return isStringNullOrEmpty(searchText) ? true : simpleFilter(searchText, k);
         })

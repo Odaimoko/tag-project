@@ -330,6 +330,9 @@ export function ReactManagePage({eventCenter}: {
                         rectifiedExcludedTags={rectifiedExcludedTags}
                         handleSetExcludedNames={handleSetExcludedTags}
                     />
+                    {/* 
+                       Display or Exclude statuses
+                      */}
                     <TagFilterView
                         pmTags={pmStatuses}
                         rectifiedDisplayTags={rectifiedDisplayStatuses}
@@ -346,7 +349,10 @@ export function ReactManagePage({eventCenter}: {
             </VStack>
             <p></p>
             <TaskTableView displayWorkflows={displayWorkflows}
-                           filteredTasks={filteredTasks}/>
+                           filteredTasks={filteredTasks}
+                // we always show completed if there are statuses to filter against, otherwise the filter shows nothing
+                           alwaysShowCompleted={rectifiedDisplayStatuses.length > 0 || rectifiedExcludedStatuses.length > 0}
+            />
 
         </VStack>
     )
