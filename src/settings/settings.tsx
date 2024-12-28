@@ -101,6 +101,9 @@ export interface TPMSettings {
     show_priority_tags_in_manage_page: SerializedType,// 0.7.1
     task_summary_trim_regexp_pattern: SerializedType,    //0.8.0. If empty, we do not filter. Otherwise we use regex.
     task_summary_trim_regexp_pattern_test_text: SerializedType,    //0.8.0. The user uses this to test the regex pattern.
+    manage_page_display_task_statuses: SerializedType[]; // 0.11.0 `null` or `undefined` or `""`: filter by complete status. a single symbol: match this symbol.
+    manage_page_excluded_task_statuses: SerializedType[],
+
 }
 
 export const TPM_DEFAULT_SETTINGS: Partial<TPMSettings> = {
@@ -133,6 +136,8 @@ export const TPM_DEFAULT_SETTINGS: Partial<TPMSettings> = {
     show_priority_tags_in_manage_page: false,
     task_summary_trim_regexp_pattern: "",    //0.8.0
     task_summary_trim_regexp_pattern_test_text: "",    //0.8.0
+    manage_page_display_task_statuses: [], // 0.11.0
+    manage_page_excluded_task_statuses: [],
 }
 export type SettingName = keyof TPMSettings;
 
