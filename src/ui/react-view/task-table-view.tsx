@@ -156,6 +156,7 @@ export const OdaTaskSummaryCell = ({oTask, taskFirstColumn, showCheckBox, showPr
  * @param plugin
  */
 function rectifyOdaTaskOnMdTaskChanged(oTask: OdaPmTask, plugin: OdaPmToolPlugin) {
+    // TODO Retain the original task status, do not always use TaskStatus_checked
     if (!oTask.isMdCompleted() && oTask.stepCompleted()) {
         //  State: summary unticked, all steps are ticked. Outcome: auto tick summary and the original task.
         rewriteTask(plugin.app.vault, oTask.boundTask, TaskStatus_checked, oTask.boundTask.text)
@@ -334,11 +335,10 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
             eventCenter?.removeListener(Evt_JumpWorkflow, onJumpToWorkflow)
         }
     });
-
     const displayedTasks = filteredTasks
         .filter(function (k: OdaPmTask) {
             return (showCompleted || !k.isMdCompleted());
-        }).filter(function (k: OdaPmTask) {
+        }).filter(function (k: OdaPmTask) { // search string
             return isStringNullOrEmpty(searchText) ? true : simpleFilter(searchText, k);
         })
 
@@ -530,7 +530,9 @@ export function TaskTableView({displayWorkflows, filteredTasks}: {
                         }}
                         thStyleGetter={headStyleGetter}
                         cellStyleGetter={cellStyleGetter}
-                    /> : <label>No results.</label>
+                    /> : <div>
+                        <label>No results.</label>
+                    </div>
                 )
             }
         </>

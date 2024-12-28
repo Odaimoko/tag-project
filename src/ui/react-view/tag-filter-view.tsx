@@ -11,61 +11,69 @@ import {iconViewAsAWholeStyle} from "../pure-react/style-def";
 import {Tag_Prefix_Tag} from "../../data-model/workflow-def";
 
 import {FilterHeadHStack} from "../pure-react/view-template/filter-head-h-stack";
+import {IRenderable} from "../pure-react/props-typing/i-renderable";
+import {getPluralSuffix} from "../../utils/word-util";
 
 const tagIncludedIcon = "check"
 const tagExcludedIcon = "x"
 const noTagIcon = "scan"
 
-export function TagFilterView({
-                              pmTags,
-                              rectifiedExcludedTags,
-                              rectifiedDisplayTags,
-                              handleSetDisplayNames,
-                              handleSetExcludedNames
-                          }: {
-    pmTags: string[],
-    rectifiedExcludedTags: string[],
+interface TagFilterOptions {
+    pmTags: string[];
+    rectifiedExcludedTags: string[];
     rectifiedDisplayTags: string[],
     handleSetDisplayNames: (names: string[]) => void,
     handleSetExcludedNames: (names: string[]) => void
-}) {
-    return <div>
-        <TagFilterHeader rectifiedDisplayTags={rectifiedDisplayTags} pmTags={pmTags}
-                         handleSetDisplayTags={handleSetDisplayNames} handleSetExcludedTags={handleSetExcludedNames}/>
+    tagRenderer?: (tag: string) => IRenderable | undefined,
+    titleName?: string
+}
 
+
+export function TagFilterView(props: TagFilterOptions) {
+    const {
+        pmTags,
+        rectifiedExcludedTags,
+        rectifiedDisplayTags,
+        handleSetDisplayNames,
+        handleSetExcludedNames,
+        tagRenderer
+    } = props;
+    return <div>
+        <TagFilterHeader {...props}/>
         <TagFilterCheckboxes
             pmTags={pmTags}
             rectifiedExcludedTags={rectifiedExcludedTags}
             rectifiedDisplayTags={rectifiedDisplayTags}
-            handleSetDisplayTags={handleSetDisplayNames}
-            handleSetExcludedTags={handleSetExcludedNames}
+            handleSetDisplayNames={handleSetDisplayNames}
+            handleSetExcludedNames={handleSetExcludedNames}
+            tagRenderer={tagRenderer}
+
         />
 
     </div>
 }
 
-function TagFilterHeader({rectifiedDisplayTags, pmTags, handleSetDisplayTags, handleSetExcludedTags}: {
-    rectifiedDisplayTags: string[],
-    pmTags: string[],
-    handleSetDisplayTags: (names: string[]) => void,
-    handleSetExcludedTags: (names: string[]) => void
-}) {
+function TagFilterHeader({
+                             rectifiedDisplayTags, pmTags, handleSetDisplayNames, handleSetExcludedNames,
+                             titleName
+                         }: Omit<TagFilterOptions, "tagRenderer">) {
+    const title = titleName ?? "Tag";
     return pmTags.length > 0 ?
         <FilterHeadHStack>
-            <h3>{rectifiedDisplayTags.length}/{pmTags.length} Tags(s)</h3>
+            <h3>{rectifiedDisplayTags.length}/{pmTags.length} {title}({getPluralSuffix(title)})</h3>
             <button onClick={() => {
-                handleSetDisplayTags([...pmTags]);
-                handleSetExcludedTags([])
+                handleSetDisplayNames([...pmTags]);
+                handleSetExcludedNames([])
             }}>Include All
             </button>
             <button onClick={() => {
-                handleSetDisplayTags([]);
-                handleSetExcludedTags([...pmTags])
+                handleSetDisplayNames([]);
+                handleSetExcludedNames([...pmTags])
             }}>Exclude All
             </button>
             <button onClick={() => {
-                handleSetDisplayTags([]);
-                handleSetExcludedTags([])
+                handleSetDisplayNames([]);
+                handleSetExcludedNames([])
             }}>Clear
             </button>
         </FilterHeadHStack>
@@ -76,33 +84,37 @@ function TagFilterCheckboxes({
                                  pmTags,
                                  rectifiedExcludedTags,
                                  rectifiedDisplayTags,
-                                 handleSetDisplayTags,
-                                 handleSetExcludedTags
+                                 handleSetDisplayNames,
+                                 handleSetExcludedNames,
+                                 tagRenderer
                              }: {
     pmTags: string[],
     rectifiedExcludedTags: string[],
     rectifiedDisplayTags: string[],
-    handleSetDisplayTags: (names: string[]) => void,
-    handleSetExcludedTags: (names: string[]) => void
+    handleSetDisplayNames: (names: string[]) => void,
+    handleSetExcludedNames: (names: string[]) => void
+    tagRenderer?: (tag: string) => IRenderable | undefined
 }) {
     return <div>
         {pmTags.map((tag: string) => {
             return <TagFilterCheckbox key={tag} excludeTags={rectifiedExcludedTags}
                                       tag={tag} displayed={rectifiedDisplayTags}
-                                      setDisplayed={handleSetDisplayTags}
-                                      setExcludedTags={handleSetExcludedTags}
+                                      setDisplayed={handleSetDisplayNames}
+                                      setExcludedTags={handleSetExcludedNames}
+                                      tagRenderer={tagRenderer}
             />
         })
         }
     </div>;
 }
 
-const TagFilterCheckbox = ({tag, displayed, setDisplayed, excludeTags, setExcludedTags}: {
+const TagFilterCheckbox = ({tag, displayed, setDisplayed, excludeTags, setExcludedTags, tagRenderer}: {
     tag: string,
     displayed: string[],
     excludeTags: string[],
     setDisplayed: React.Dispatch<React.SetStateAction<string[]>>,
-    setExcludedTags: React.Dispatch<React.SetStateAction<string[]>>
+    setExcludedTags: React.Dispatch<React.SetStateAction<string[]>>,
+    tagRenderer?: (tag: string) => IRenderable | undefined
 }) => {
 
     // Remove display from excluded and vice versa
@@ -123,11 +135,14 @@ const TagFilterCheckbox = ({tag, displayed, setDisplayed, excludeTags, setExclud
 
     // inline-block: make this check box a whole element. It won't be split into multiple sub-elements when layout.
     // block will start a new line, inline will not, so we use inline-block
+    const trimmedTag = tag.replace(Tag_Prefix_Tag, "");
     return <span style={{display: "inline-block", margin: 3}}>
         <ClickableObsidianIconView style={iconViewAsAWholeStyle} iconName={displayed.includes(tag) ? tagIncludedIcon : (
             excludeTags.includes(tag) ? tagExcludedIcon : noTagIcon
         )}
-                                   content={<label style={{marginLeft: 5}}>{tag.replace(Tag_Prefix_Tag, "")}</label>}
+                                   content={<label style={{marginLeft: 5}}>
+                                       {tagRenderer?.(trimmedTag) ?? trimmedTag}
+                                   </label>}
                                    onIconClicked={tickCheckbox}
                                    onContentClicked={tickCheckbox}
         />

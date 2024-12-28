@@ -21,6 +21,7 @@ import {HStack} from "../pure-react/view-template/h-stack";
 import {FixOrphanTasksView} from "./fix-orphan-tasks-view";
 import {ModuleFilter} from "./module-filter";
 import {Desc_ManagePage} from "../obsidian/help-page/help-page-view";
+import {InlineCodeView} from "../common/inline-code-view";
 
 function isInAnyProject(projectTask: I_OdaPmProjectTask, displayPrjNames: string[]) {
     // TODO Performance
@@ -63,6 +64,16 @@ function useFilteredTags(): Array<string> {
         devLog(pmTags)
     }
     return pmTags;
+
+}
+
+function getPmTaskStatuses(): Array<string> {
+    const db = OdaPmDbProvider.get();
+    if (db === null)
+        return [];
+    const pmTasks = db.pmTasks || [];
+
+    return pmTasks.map(k => k.getStatus()).unique();
 
 }
 
@@ -115,7 +126,7 @@ export function ReactManagePage({eventCenter}: {
     const modules = db?.pmModules || {};
     const pmTags = useFilteredTags();
     const settingsCompletedProjects = getSettings()?.completed_project_names as string[];
-
+    const pmStatuses = getPmTaskStatuses();
     //region Display Variables
     // Use workflow names as filters' state instead. previously we use workflows themselves as state, but this requires dataview to be initialized.
     // However, this component might render before dataview is ready. The partially ready workflows will be used as the initial value, which is incorrect.
@@ -129,6 +140,11 @@ export function ReactManagePage({eventCenter}: {
         = useState(getSettings()?.manage_page_display_tags as string[]);
     const [excludedTags, setExcludedTags]
         = useState(getSettings()?.manage_page_excluded_tags as string[]);
+
+    const [displayStatuses, setDisplayStatuses]
+        = useState(getSettings()?.manage_page_display_task_statuses as string[]);
+    const [excludedStatuses, setExcludedStatuses]
+        = useState(getSettings()?.manage_page_excluded_task_statuses as string[]);
     // Current project displayed
     const [settingsDisplayProjectOptionValues, setDisplayProjectOptionValues]
         = useState(initDisplayProjectOptionValues);
@@ -168,10 +184,21 @@ export function ReactManagePage({eventCenter}: {
         setExcludedTags(names)
     }
 
+    function handleSetDisplayStatuses(names: string[]) {
+        setSettingsValueAndSave(plugin, "manage_page_display_task_statuses", [...names])
+        setDisplayStatuses(names)
+    }
+
+    function handleSetExcludedStatuses(names: string[]) {
+        setSettingsValueAndSave(plugin, "manage_page_excluded_task_statuses", [...names])
+        setExcludedStatuses(names)
+    }
+
     function handleSetDisplayProjects(names: string[]) {
         setSettingsValueAndSave(plugin, "manage_page_display_projects", [...names])
         setDisplayProjectOptionValues(names)
     }
+
 
     // endregion
 
@@ -182,6 +209,8 @@ export function ReactManagePage({eventCenter}: {
     // region Filtering
     const rectifiedDisplayTags = displayTags.filter(k => pmTags.contains(k))
     const rectifiedExcludedTags = excludedTags.filter(k => pmTags.contains(k))
+    const rectifiedDisplayStatuses = displayStatuses.filter(k => pmStatuses.includes(k))
+    const rectifiedExcludedStatuses = excludedStatuses.filter(k => pmStatuses.includes(k))
 
     // region Rectify
 
@@ -240,7 +269,12 @@ export function ReactManagePage({eventCenter}: {
             isInAnyProject(k, displayProjectOptionValues)
             && isInAnyModule(k, displayModuleIds)
             && !isInCompletedProjects(k, settingsCompletedProjects)
-        )
+        ).filter(k => {
+            return k.isStatus(displayStatuses) && (excludedStatuses.length == 0 ||
+                // exclude only if excludedStatuses is not empty, since `isStatus` returns true for empty array
+                !k.isStatus(excludedStatuses)
+            );
+        })
 
     // It is undefined how saved tags will behave after we switch allProjects.
     // So we prevent tags from being filtered by tasks.
@@ -275,10 +309,22 @@ export function ReactManagePage({eventCenter}: {
                               handleSetDisplayModuleIds={handleSetDisplayModuleIds}/>}
             <TagFilterView
                 pmTags={pmTags}
-                rectifiedExcludedTags={rectifiedExcludedTags}
                 rectifiedDisplayTags={rectifiedDisplayTags}
                 handleSetDisplayNames={handleSetDisplayTags}
+                rectifiedExcludedTags={rectifiedExcludedTags}
                 handleSetExcludedNames={handleSetExcludedTags}
+            />
+            <TagFilterView
+                pmTags={pmStatuses}
+                rectifiedDisplayTags={rectifiedDisplayStatuses}
+                handleSetDisplayNames={handleSetDisplayStatuses}
+                rectifiedExcludedTags={rectifiedExcludedStatuses}
+                handleSetExcludedNames={handleSetExcludedStatuses}
+                tagRenderer={(t) => {
+                    return <InlineCodeView text={`[${t}]`}/>;
+                }
+                }
+                titleName={"Status"}
             />
             <p/>
             <TaskTableView displayWorkflows={displayWorkflows}
