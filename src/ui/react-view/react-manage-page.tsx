@@ -17,11 +17,14 @@ import {TaskTableView} from "./task-table-view";
 import {WorkflowFilterView} from "./workflow-filter-view";
 import {TagFilterView} from "./tag-filter-view";
 import {ProjectFilterOptionValue_All, ProjectFilterView} from "./project-filter-view";
-import {HStack} from "../pure-react/view-template/h-stack";
+import {HStack, VStack} from "../pure-react/view-template/h-stack";
 import {FixOrphanTasksView} from "./fix-orphan-tasks-view";
 import {ModuleFilter} from "./module-filter";
 import {Desc_ManagePage} from "../obsidian/help-page/help-page-view";
 import {InlineCodeView} from "../common/inline-code-view";
+import {ObsidianIconView} from "./obsidian-icon-view";
+import {obsidianIconOffsetCenteredStyle} from "./tag-project-style";
+import {diffGroupSpacing, sameGroupSpacing} from "../pure-react/style-def";
 
 function isInAnyProject(projectTask: I_OdaPmProjectTask, displayPrjNames: string[]) {
     // TODO Performance
@@ -84,6 +87,7 @@ export function ReactManagePage({eventCenter}: {
     // region Re-render trigger
     // only for re-render
     const [rerenderState, setRerenderState] = useState(0);
+    const [panelShown, setPanelShown] = usePluginSettings<boolean>("manage_page_filters_shown")
 
     function triggerRerender() {
         // console.log(`ReactManagePage rerender triggered. ${rerenderState + 1}`)
@@ -287,50 +291,64 @@ export function ReactManagePage({eventCenter}: {
 
     // endregion
     return (
-        <div>
+        <VStack spacing={sameGroupSpacing}>
             <HStack>
                 <ProjectFilterView allProjects={allProjects} dropdownProjects={dropdownProjects}
                                    displayNames={displayProjectOptionValues}
                                    handleSetDisplayNames={handleSetDisplayProjects}
                 />
             </HStack>
-            <FixOrphanTasksView db={db}/>
+            <VStack spacing={sameGroupSpacing}>
+                <HStack spacing={diffGroupSpacing}>
+                    <FixOrphanTasksView db={db}/>
+                    <button onClick={() => setPanelShown(!panelShown)}>
+                        Filters {
+                        panelShown ?
+                            <ObsidianIconView style={obsidianIconOffsetCenteredStyle} iconName={"chevron-down"}/> :
+                            <ObsidianIconView style={obsidianIconOffsetCenteredStyle} iconName={"chevron-right"}/>
+                    }
+                    </button>
+                </HStack>
 
-            <WorkflowFilterView workflows={workflows} displayNames={displayWorkflowNames}
-                                handleSetDisplayNames={handleSetDisplayWorkflows}
-                                showSubprojectWorkflows={showSubprojectWorkflows}
-                                setShowSubprojectWorkflows={setShowSubprojectWorkflows}
-                                showUnclassifiedWorkflows={showUnclassified}
-                                setShowUnclassifiedWorkflows={setShowUnclassified}
-            />
+                {panelShown ? <div>
 
-            {getSettings()?.manage_page_header_as_module &&
-                <ModuleFilter modules={filteredModules} displayModuleIds={displayModuleIds}
-                              handleSetDisplayModuleIds={handleSetDisplayModuleIds}/>}
-            <TagFilterView
-                pmTags={pmTags}
-                rectifiedDisplayTags={rectifiedDisplayTags}
-                handleSetDisplayNames={handleSetDisplayTags}
-                rectifiedExcludedTags={rectifiedExcludedTags}
-                handleSetExcludedNames={handleSetExcludedTags}
-            />
-            <TagFilterView
-                pmTags={pmStatuses}
-                rectifiedDisplayTags={rectifiedDisplayStatuses}
-                handleSetDisplayNames={handleSetDisplayStatuses}
-                rectifiedExcludedTags={rectifiedExcludedStatuses}
-                handleSetExcludedNames={handleSetExcludedStatuses}
-                tagRenderer={(t) => {
-                    return <InlineCodeView text={`[${t}]`}/>;
-                }
-                }
-                titleName={"Status"}
-            />
-            <p/>
+
+                    <WorkflowFilterView workflows={workflows} displayNames={displayWorkflowNames}
+                                        handleSetDisplayNames={handleSetDisplayWorkflows}
+                                        showSubprojectWorkflows={showSubprojectWorkflows}
+                                        setShowSubprojectWorkflows={setShowSubprojectWorkflows}
+                                        showUnclassifiedWorkflows={showUnclassified}
+                                        setShowUnclassifiedWorkflows={setShowUnclassified}
+                    />
+                    {getSettings()?.manage_page_header_as_module &&
+                        <ModuleFilter modules={filteredModules} displayModuleIds={displayModuleIds}
+                                      handleSetDisplayModuleIds={handleSetDisplayModuleIds}/>}
+                    <TagFilterView
+                        pmTags={pmTags}
+                        rectifiedDisplayTags={rectifiedDisplayTags}
+                        handleSetDisplayNames={handleSetDisplayTags}
+                        rectifiedExcludedTags={rectifiedExcludedTags}
+                        handleSetExcludedNames={handleSetExcludedTags}
+                    />
+                    <TagFilterView
+                        pmTags={pmStatuses}
+                        rectifiedDisplayTags={rectifiedDisplayStatuses}
+                        handleSetDisplayNames={handleSetDisplayStatuses}
+                        rectifiedExcludedTags={rectifiedExcludedStatuses}
+                        handleSetExcludedNames={handleSetExcludedStatuses}
+                        tagRenderer={(t) => {
+                            return <InlineCodeView text={`[${t}]`}/>;
+                        }
+                        }
+                        titleName={"Status"}
+                    />
+                </div> : null}
+            </VStack>
+            <p></p>
             <TaskTableView displayWorkflows={displayWorkflows}
                            filteredTasks={filteredTasks}/>
 
-        </div>
+        </VStack>
     )
 }
 

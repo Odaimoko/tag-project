@@ -103,7 +103,7 @@ export interface TPMSettings {
     task_summary_trim_regexp_pattern_test_text: SerializedType,    //0.8.0. The user uses this to test the regex pattern.
     manage_page_display_task_statuses: SerializedType[]; // 0.11.0 `null` or `undefined` or `""`: filter by complete status. a single symbol: match this symbol.
     manage_page_excluded_task_statuses: SerializedType[],
-
+    manage_page_filters_shown: SerializedType, // 0.11.0 
 }
 
 export const TPM_DEFAULT_SETTINGS: Partial<TPMSettings> = {
@@ -138,6 +138,7 @@ export const TPM_DEFAULT_SETTINGS: Partial<TPMSettings> = {
     task_summary_trim_regexp_pattern_test_text: "",    //0.8.0
     manage_page_display_task_statuses: [], // 0.11.0
     manage_page_excluded_task_statuses: [],
+    manage_page_filters_shown: true,
 }
 export type SettingName = keyof TPMSettings;
 
