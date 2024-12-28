@@ -7,7 +7,7 @@ import {GeneralMouseEventHandler} from "../pure-react/view-template/event-handli
 import {I_Stylable} from "../pure-react/props-typing/i-stylable";
 import {ClickableView, I_IconClickable} from "../pure-react/view-template/clickable-view";
 // Obsidian's icon will offset by 4px upwards, so we drive it down.
-const clickableIconTransform = {transform: `translateY(4px)`};
+const clickableIconTransform = {transform: `translateY(2px)`};
 
 // const taskLinkHtmlString = getIcon("link")?.outerHTML;
 /**
