@@ -10,9 +10,8 @@ import {DataTable} from "../pure-react/view-template/data-table";
 import React, {useState} from "react";
 import {ProjectFilterName_All} from "./project-filter-view";
 import {OdaPmTask} from "../../data-model/OdaPmTask";
-import {warningColor} from "../pure-react/style-def";
+import {miniGroupSpacing, warningColor} from "../pure-react/style-def";
 
-import {obsidianIconOffsetCenteredStyle, obsidianIconOffsetStyle} from "./tag-project-style";
 
 function OrphanTasksFixPanel({orphanTasks}: { orphanTasks: OdaPmTask[] }) {
     // Task\n Workflow
@@ -29,9 +28,9 @@ function OrphanTasksFixPanel({orphanTasks}: { orphanTasks: OdaPmTask[] }) {
                     confirmView={"Fix"}
                     twiceConfirmView={<label>Confirm</label>}
                 />}
-                popupContent={<VStack style={{alignItems: "center"}} spacing={2}>
+                popupContent={<VStack style={{alignItems: "center"}} spacing={miniGroupSpacing}>
                     {`${task.getFirstProject()?.name}`}
-                    <ObsidianIconView style={obsidianIconOffsetStyle} iconName={"chevron-down"}/>
+                    <ObsidianIconView iconName={"chevron-down"} yOffset={false}/>
                     {`${wfProject?.name}`}
                 </VStack>}
                 title={<label style={{
@@ -91,8 +90,8 @@ export function OrphanTaskButtonAndPanel(props: {
         <button onClick={() => setPanelShown(!panelShown)}>
             Fix {props.orphanTasks.length} orphan task(s) {
             panelShown ?
-                <ObsidianIconView style={obsidianIconOffsetCenteredStyle} iconName={"chevron-down"}/> :
-                <ObsidianIconView style={obsidianIconOffsetCenteredStyle} iconName={"chevron-right"}/>
+                <ObsidianIconView yOffset={false} iconName={"chevron-down"}/> :
+                <ObsidianIconView yOffset={false} iconName={"chevron-right"}/>
         }
         </button>
 

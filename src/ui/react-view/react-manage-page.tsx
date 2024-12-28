@@ -23,7 +23,6 @@ import {ModuleFilter} from "./module-filter";
 import {Desc_ManagePage} from "../obsidian/help-page/help-page-view";
 import {InlineCodeView} from "../common/inline-code-view";
 import {ObsidianIconView} from "./obsidian-icon-view";
-import {obsidianIconOffsetCenteredStyle} from "./tag-project-style";
 import {diffGroupSpacing, sameGroupSpacing} from "../pure-react/style-def";
 
 function isInAnyProject(projectTask: I_OdaPmProjectTask, displayPrjNames: string[]) {
@@ -304,8 +303,8 @@ export function ReactManagePage({eventCenter}: {
                     <button onClick={() => setPanelShown(!panelShown)}>
                         Filters {
                         panelShown ?
-                            <ObsidianIconView style={obsidianIconOffsetCenteredStyle} iconName={"chevron-down"}/> :
-                            <ObsidianIconView style={obsidianIconOffsetCenteredStyle} iconName={"chevron-right"}/>
+                            <ObsidianIconView yOffset={false} iconName={"chevron-down"}/> :
+                            <ObsidianIconView yOffset={false} iconName={"chevron-right"}/>
                     }
                     </button>
                 </HStack>

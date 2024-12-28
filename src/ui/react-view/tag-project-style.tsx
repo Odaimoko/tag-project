@@ -25,10 +25,3 @@ export function getIconViewByWorkflowType(type: WorkflowType) {
 export function getIconByWorkflow(workflow: I_OdaPmWorkflow) {
     return getIconViewByWorkflowType(workflow.type);
 }
-
-const obsidianIconTopOffset = 4;
-export const obsidianIconOffsetStyle = {position: "relative", top: obsidianIconTopOffset} as React.CSSProperties;
-export const obsidianIconOffsetCenteredStyle = {
-    position: "relative",
-    top: obsidianIconTopOffset / 2
-} as React.CSSProperties;
