@@ -281,6 +281,23 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
 
         return DefaultTaskPriority;
     }
+
+    // region Task status
+    /**
+     * @param targetStatus
+     * @return true if this task is in the target status array or if the array is empty
+     */
+    isStatus(targetStatus: string[]): boolean {
+        if (!targetStatus) return true
+        if (targetStatus.length === 0) return true;
+        return targetStatus.includes(this.boundTask.status);
+    }
+
+    getStatus(): string {
+        return this.boundTask.status;
+    }
+
+    // endregion
 }
 
 export async function setTaskPriority(sTask: STask, plugin: Plugin, oldPriTags: string[], newPriTag: string) {
