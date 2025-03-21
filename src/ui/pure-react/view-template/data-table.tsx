@@ -1,6 +1,19 @@
 import {IRenderable} from "../props-typing/i-renderable";
 import React from "react";
 
+interface DataTableParams {
+    tableTitle: string;
+    headers: IRenderable[];
+    rows: IRenderable[][];
+    onHeaderClicked?: (arg0: number) => void;
+    tableStyle?: React.CSSProperties;
+    thStyle?: React.CSSProperties;
+    thStyleGetter?: (column: number) => React.CSSProperties;
+    cellStyle?: React.CSSProperties;
+    cellStyleGetter?: (column: number, row: number) => React.CSSProperties;
+    rowRange?: [number, number]; // [begin, end], if end is -1, means the end is the last row
+}
+
 /**
  *
  * @param tableTitle
@@ -23,18 +36,11 @@ export const DataTable = ({
                               thStyleGetter,
                               cellStyle,
                               cellStyleGetter,
-                          }: {
-        tableTitle: string,
-        headers: IRenderable[],
-        rows: IRenderable[][],
-        onHeaderClicked?: (arg0: number) => void,
-        tableStyle?: React.CSSProperties,
-        thStyle?: React.CSSProperties,
-        thStyleGetter?: (column: number) => React.CSSProperties,
-        cellStyle?: React.CSSProperties,
-        cellStyleGetter?: (column: number, row: number) => React.CSSProperties
-    }) => {
-
+                              rowRange
+                          }: DataTableParams) => {
+        const start = rowRange?.[0] ?? 0;
+        const end = Math.min(rowRange?.[1] ?? rows.length, rows.length);
+        rows = rows.slice(start, end);
         return (
             <table style={tableStyle} key={tableTitle}>
                 <tbody>
@@ -68,3 +74,10 @@ export const DataTable = ({
             </table>
         );
     }
+
+export const PaginatedDataTable = (props: DataTableParams) => {
+    
+    return (
+        <DataTable {...props}/>
+    )
+}
