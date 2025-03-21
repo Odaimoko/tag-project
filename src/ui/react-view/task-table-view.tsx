@@ -28,7 +28,7 @@ import {initialToUpper, isStringNullOrEmpty, simpleFilter} from "../../utils/for
 import {HStack, VStack} from "../pure-react/view-template/h-stack";
 import {ClickableObsidianIconView, InternalLinkView} from "./obsidian-icon-view";
 import {ExternalControlledCheckbox} from "../pure-react/view-template/checkbox";
-import {DataTable} from "../pure-react/view-template/data-table";
+import {PaginatedDataTable} from "../pure-react/view-template/data-table";
 import {IRenderable} from "../pure-react/props-typing/i-renderable";
 import {DataArray} from "obsidian-dataview";
 import {MarkdownRenderer} from "obsidian";
@@ -297,6 +297,34 @@ function TaskPriorityIcon({oTask}: { oTask: OdaPmTask }): React.JSX.Element {
     </div>} title={"Choose priority..."}/>;
 }
 
+function PaginatedTaskTable({curWfName, headers, taskRows, setSortToColumn, headStyleGetter, cellStyleGetter}: {
+    curWfName: string,
+    headers: React.JSX.Element[],
+    taskRows: IRenderable[][],
+    setSortToColumn: (index: number) => void,
+    headStyleGetter: (columnIndex: number) => React.CSSProperties,
+    cellStyleGetter: (column: number, row: number) => React.CSSProperties
+}) {
+    const [tasksPerPage] = usePluginSettings<number>("display_tasks_count_per_page");
+    const [maxPageButtonCount] = usePluginSettings<number>("max_page_buttons_count");
+    return <PaginatedDataTable
+        tableTitle={curWfName}
+        headers={headers}
+        rows={taskRows}
+        onHeaderClicked={(arg0) => {
+            if (arg0 === 0) {
+                // setSortToName()
+            } else {
+                setSortToColumn(arg0)
+            }
+        }}
+        thStyleGetter={headStyleGetter}
+        cellStyleGetter={cellStyleGetter}
+        dataCountPerPage={tasksPerPage}
+        maxPageButtonCount={maxPageButtonCount}
+    />;
+}
+
 export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowCompleted}: {
     displayWorkflows: I_OdaPmWorkflow[],
     filteredTasks: OdaPmTask[],
@@ -516,22 +544,15 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
 
             <p/>
             {
-
                 displayWorkflows.length === 0 ? <label>No Workflow selected.</label> : (
-                    taskRows.length > 0 ? <DataTable
-                        tableTitle={curWfName}
-                        headers={headers}
-                        rows={taskRows}
-                        onHeaderClicked={(arg0) => {
-                            if (arg0 === 0) {
-                                // setSortToName()
-                            } else {
-                                setSortToColumn(arg0)
-                            }
-                        }}
-                        thStyleGetter={headStyleGetter}
-                        cellStyleGetter={cellStyleGetter}
-                    /> : <div>
+                    taskRows.length > 0 ? PaginatedTaskTable({
+                        curWfName: curWfName,
+                        headers: headers,
+                        taskRows: taskRows,
+                        setSortToColumn: setSortToColumn,
+                        headStyleGetter: headStyleGetter,
+                        cellStyleGetter: cellStyleGetter
+                    }) : <div>
                         <label>No results.</label>
                     </div>
                 )

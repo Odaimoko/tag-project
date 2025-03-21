@@ -104,6 +104,8 @@ export interface TPMSettings {
     manage_page_display_task_statuses: SerializedType[]; // 0.11.0 `null` or `undefined` or `""`: filter by complete status. a single symbol: match this symbol.
     manage_page_excluded_task_statuses: SerializedType[],
     manage_page_filters_shown: SerializedType, // 0.11.0 
+    display_tasks_count_per_page: SerializedType, // 0.12.0 
+    max_page_buttons_count: SerializedType, // 0.12.0 
 }
 
 export const TPM_DEFAULT_SETTINGS: Partial<TPMSettings> = {
@@ -139,6 +141,8 @@ export const TPM_DEFAULT_SETTINGS: Partial<TPMSettings> = {
     manage_page_display_task_statuses: [], // 0.11.0
     manage_page_excluded_task_statuses: [],
     manage_page_filters_shown: true,
+    display_tasks_count_per_page: 20,
+    max_page_buttons_count: 5,
 }
 export type SettingName = keyof TPMSettings;
 

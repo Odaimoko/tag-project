@@ -1,5 +1,9 @@
 import {IRenderable} from "../props-typing/i-renderable";
-import React from "react";
+import React, {useState} from "react";
+import {HStack, VStack} from "./h-stack";
+import {ClickableObsidianIconView} from "../../react-view/obsidian-icon-view";
+import {sameGroupSpacing} from "../style-def";
+import {LinkView} from "../../common/link-view";
 
 interface DataTableParams {
     tableTitle: string;
@@ -75,9 +79,85 @@ export const DataTable = ({
         );
     }
 
-export const PaginatedDataTable = (props: DataTableParams) => {
-    
+export const PaginatedDataTable = (props: Omit<DataTableParams, "rowRange"> & {
+    dataCountPerPage: number,
+    maxPageButtonCount: number
+}) => {
+    const totalPageCount = Math.ceil(props.rows.length / props.dataCountPerPage);
+    const [curPage, setCurPage] = useState(0);
+    const rowRange: [number, number] = [curPage * props.dataCountPerPage, (curPage + 1) * props.dataCountPerPage];
     return (
-        <DataTable {...props}/>
+        <VStack>
+            <PaginationView  {...props} totalPageCount={totalPageCount} externalCurPage={curPage}
+                             externalSetCurPage={setCurPage}/>
+            <DataTable {...props} rowRange={rowRange}/>
+        </VStack>
     )
+}
+
+interface PaginationViewParams {
+    externalCurPage: number;
+    totalPageCount: number;
+    maxPageButtonCount: undefined | number;
+    externalSetCurPage: (page: number) => void
+}
+
+const MaxPages = 20;
+
+/**
+ * `<< < 1 2 3 4 5 ... > >>`
+ * @constructor
+ */
+function PaginationView({
+                            externalCurPage,
+                            totalPageCount,
+                            maxPageButtonCount,
+                            externalSetCurPage
+                        }: PaginationViewParams) {
+    const pageInteractableArray = []
+    maxPageButtonCount = maxPageButtonCount ?? MaxPages
+    pageInteractableArray.push(<ClickableObsidianIconView iconName={"arrow-left-to-line"} onIconClicked={() => {
+        // to 0
+        if (externalCurPage > 0)
+            externalSetCurPage(0);
+    }}/>)
+    pageInteractableArray.push(<ClickableObsidianIconView iconName={"arrow-left"} onIconClicked={() => {
+        // min 0
+        if (externalCurPage > 0)
+            externalSetCurPage(externalCurPage - 1);
+    }}/>)
+    // Only show maximum 5 page links, with current at the center if possible
+    let pageStartInclusive = Math.max(0, externalCurPage - Math.floor(maxPageButtonCount / 2));
+    const pageEndExclusive = Math.min(totalPageCount, pageStartInclusive + maxPageButtonCount);
+    if (pageEndExclusive - pageStartInclusive < maxPageButtonCount) {
+        // not enough pages
+        pageStartInclusive = Math.max(0, pageEndExclusive - maxPageButtonCount);
+    }
+    for (let i = pageStartInclusive; i < pageEndExclusive; i++) {
+        const displayPage = i + 1;
+        if (i === externalCurPage) {
+            pageInteractableArray.push(<label>{displayPage}</label>)
+        } else {
+            // clickable underline
+            pageInteractableArray.push(<LinkView text={displayPage.toString()} onClick={() => {
+                externalSetCurPage(i);
+            }}/>)
+        }
+    }
+    pageInteractableArray.push(<ClickableObsidianIconView iconName={"arrow-right"} onIconClicked={() => {
+        // max length-1
+        if (externalCurPage < totalPageCount - 1)
+            externalSetCurPage(externalCurPage + 1);
+    }}/>)
+    pageInteractableArray.push(<ClickableObsidianIconView iconName={"arrow-right-to-line"} onIconClicked={() => {
+        // to length-1
+        if (externalCurPage < totalPageCount - 1)
+            externalSetCurPage(totalPageCount - 1);
+    }}/>)
+    return <HStack spacing={sameGroupSpacing}>
+        {...pageInteractableArray}
+        <label>
+            Showing {externalCurPage + 1} of {totalPageCount}
+        </label>
+    </HStack>
 }
