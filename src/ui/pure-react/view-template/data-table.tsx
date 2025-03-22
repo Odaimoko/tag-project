@@ -91,7 +91,9 @@ export const PaginatedDataTable = (props: Omit<DataTableParams, "rowRange"> & Se
     const totalPageCount = Math.ceil(props.rows.length / props.dataCountPerPage);
     const [curPage, setCurPage] = useState(0);
     const rowRange: [number, number] = [curPage * props.dataCountPerPage, (curPage + 1) * props.dataCountPerPage];
-
+    useEffect(() => {
+        setCurPage(0) // When tasks change, the current page should change to the first.
+    }, [props.rows]);
     return (
         <VStack>
             <HStack style={{
