@@ -44,6 +44,7 @@ export const SearchableDropdown = (props: {
     dropdownId: string; // used to check if we clicked outside the dropdown. The direct interactable element should have a prefix of this id.
     onFocus?: () => void;
     onBlur?: () => void;
+    showInputBox?: boolean
     initDropdownStatus?: PopupDisplay; // 0.12.0, If initDropdownStatus is "block", we will expand the dropdown when mounted. In this case we should manually focus on the input box so when it goes blur, the dropdown will be hidden. 
 } & StyleProps) => {
     const singleSelect = props.singleSelect ?? true; // Default to single select
@@ -56,6 +57,7 @@ export const SearchableDropdown = (props: {
     }
     const initDropdownStatus = props.initDropdownStatus ?? "none";
     const focusOnMounted: boolean = initDropdownStatus == "block";
+    const showInputBox = props.showInputBox ?? true;
     const dropdownId = props.dropdownId;
     const [searchText, setSearchText] = useState("")
     const {dropDownDisplay, setDropDownDisplay, showDropdown} = usePopup(initDropdownStatus);
@@ -84,7 +86,6 @@ export const SearchableDropdown = (props: {
                 onBlur={(event) => {
                     // Hide Dropdown if we lose focus
                     // target is the element that lost focus (input), relatedTarget is the element that gains focus
-                    devLog(event.relatedTarget?.id)
                     if (event.relatedTarget?.id?.startsWith(dropdownId)) {
                         // Let the project_choice button handle the click event
                         // Otherwise when we lose focus and hide the dropdown, the button will not be triggered.
@@ -97,7 +98,10 @@ export const SearchableDropdown = (props: {
                 }}
                 onFocus={props.onFocus}
     >
-        <span id={`${dropdownId}_input`} style={{display: "flex", alignItems: "center"}}>
+            <span id={`${dropdownId}_input`} style={{
+                display: "flex", alignItems: "center",
+                transform: `scale(${showInputBox ? 1 : 0})` // this won't change the layout, only the visual part
+            }}>
             <input ref={inputRef}
                    type="text" placeholder={props.placeholder}
                    value={searchText}
@@ -114,7 +118,6 @@ export const SearchableDropdown = (props: {
 
                    onFocus={() => {
                        // show when click search input box
-
                        devLog("Input Focused");
                        showDropdown();
                    }}

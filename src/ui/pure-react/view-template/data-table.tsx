@@ -139,17 +139,27 @@ function SetCountPerPageWidget(props: SetTableDataCountPerPageParams) {
     }
 
     // 10,20,50
-    const buttonView = searching ?
-        <SearchableDropdown data={AvailableTasksPerPage} handleSetOptionValues={setSettings}
-                            dropdownId={"SetCountPerPageWidget"}
-                            initDropdownStatus={"block"} onBlur={() => {
-            setSearching(false)
-        }}/>
-        : <button onClick={() => {
-            setSearching(true)
-        }}>{props.dataCountPerPage}</button>;
+
     return <HStack style={centerChildren} spacing={sameGroupSpacing}>
-        {buttonView}
+        <div>
+            {
+                // since a inputbox's height is the same as the button, we use absolute position and hide the input box to 
+                searching && <div style={{position: "absolute"}}>
+                    <SearchableDropdown data={AvailableTasksPerPage} handleSetOptionValues={setSettings}
+                                        dropdownId={"SetCountPerPageWidget"}
+                                        showInputBox={false}
+                                        initDropdownStatus={"block"} onBlur={() => {
+                        setSearching(false)
+                    }}/>
+
+                </div>
+
+            }
+            <button onClick={() => {
+                setSearching(!searching)
+            }}>{props.dataCountPerPage}</button>
+
+        </div>
         <label> Tasks per page</label>
     </HStack>
 }
@@ -164,7 +174,7 @@ interface PaginationViewParams {
 const MaxPageButtonCount = 20;
 
 /**
- *
+ * Slider
  * @constructor
  */
 function PaginationView({
