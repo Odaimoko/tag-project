@@ -1,6 +1,6 @@
 import {StyleProps, VStack} from "./h-stack";
-import React, {JSX, KeyboardEvent, useRef, useState} from "react";
-import {getDropdownStyle, usePopup} from "./hovering-popup";
+import React, {JSX, KeyboardEvent, useEffect, useRef, useState} from "react";
+import {getDropdownStyle, PopupDisplay, usePopup} from "./hovering-popup";
 import {devLog} from "../../../utils/env-util";
 import {INameable} from "../props-typing/i-nameable";
 import {isCharacterInput} from "./event-handling/react-user-input";
@@ -43,6 +43,8 @@ export const SearchableDropdown = (props: {
     currentOptionValues?: OptionValueType[]; // Current selected option values. If singleSelect, we don't need to pass this.
     dropdownId: string; // used to check if we clicked outside the dropdown. The direct interactable element should have a prefix of this id.
     onFocus?: () => void;
+    onBlur?: () => void;
+    initDropdownStatus?: PopupDisplay; // 0.12.0, If initDropdownStatus is "block", we will expand the dropdown when mounted. In this case we should manually focus on the input box so when it goes blur, the dropdown will be hidden. 
 } & StyleProps) => {
     const singleSelect = props.singleSelect ?? true; // Default to single select
     if (!singleSelect) {
@@ -52,9 +54,11 @@ export const SearchableDropdown = (props: {
             console.error("Multiple Select Dropdown must pass currentOptionValues. Data are ", props.data)
         }
     }
+    const initDropdownStatus = props.initDropdownStatus ?? "none";
+    const focusOnMounted: boolean = initDropdownStatus == "block";
     const dropdownId = props.dropdownId;
     const [searchText, setSearchText] = useState("")
-    const {dropDownDisplay, setDropDownDisplay, showDropdown} = usePopup();
+    const {dropDownDisplay, setDropDownDisplay, showDropdown} = usePopup(initDropdownStatus);
     const filtered = props.data.filter(k => k.name.toLowerCase().includes(searchText.toLowerCase()))
     const RenderView = props.RenderView ?? DefaultSearchableOptionView;
 
@@ -71,6 +75,10 @@ export const SearchableDropdown = (props: {
         selectedChild.current = -1;
     }
 
+    useEffect(() => {
+        if (focusOnMounted)
+            inputRef.current?.focus()
+    }, [focusOnMounted]);
     return <div className={"dropdown-root"} style={Object.assign({}, props.style, {position: "relative"})}
                 onKeyDown={handleBaseKeyboard}
                 onBlur={(event) => {
@@ -82,7 +90,8 @@ export const SearchableDropdown = (props: {
                         // Otherwise when we lose focus and hide the dropdown, the button will not be triggered.
                     } else {
                         // Close when click outside
-                        devLog("Close when click outside")
+                        devLog(`Close when click outside ${dropdownId}`)
+                        props.onBlur?.()
                         hideDropdown()
                     }
                 }}
@@ -109,6 +118,7 @@ export const SearchableDropdown = (props: {
                        devLog("Input Focused");
                        showDropdown();
                    }}
+
             />
         <ClickableView style={{marginLeft: -25, paddingTop: 5}}
                        onIconClicked={() => {
