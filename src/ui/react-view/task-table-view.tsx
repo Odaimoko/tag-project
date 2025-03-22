@@ -305,7 +305,7 @@ function PaginatedTaskTable({curWfName, headers, taskRows, setSortToColumn, head
     headStyleGetter: (columnIndex: number) => React.CSSProperties,
     cellStyleGetter: (column: number, row: number) => React.CSSProperties
 }) {
-    const [tasksPerPage] = usePluginSettings<number>("display_tasks_count_per_page");
+    const [tasksPerPage, setTasksPerPage,] = usePluginSettings<number>("display_tasks_count_per_page");
     const [maxPageButtonCount] = usePluginSettings<number>("max_page_buttons_count");
     return <PaginatedDataTable
         tableTitle={curWfName}
@@ -320,7 +320,7 @@ function PaginatedTaskTable({curWfName, headers, taskRows, setSortToColumn, head
         }}
         thStyleGetter={headStyleGetter}
         cellStyleGetter={cellStyleGetter}
-        dataCountPerPage={tasksPerPage}
+        dataCountPerPage={tasksPerPage} setDataCountPerPage={setTasksPerPage}
         maxPageButtonCount={maxPageButtonCount}
     />;
 }

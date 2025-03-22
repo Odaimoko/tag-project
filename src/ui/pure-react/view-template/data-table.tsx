@@ -4,6 +4,7 @@ import {HStack, VStack} from "./h-stack";
 import {ClickableObsidianIconView} from "../../react-view/obsidian-icon-view";
 import {sameGroupSpacing} from "../style-def";
 import {LinkView} from "../../common/link-view";
+import {OptionValueType, SearchableDropdown} from "./searchable-dropdown";
 
 interface DataTableParams {
     tableTitle: string;
@@ -79,8 +80,12 @@ export const DataTable = ({
         );
     }
 
-export const PaginatedDataTable = (props: Omit<DataTableParams, "rowRange"> & {
+interface SetTableDataCountPerPageParams {
     dataCountPerPage: number,
+    setDataCountPerPage: (count: number) => void,
+}
+
+export const PaginatedDataTable = (props: Omit<DataTableParams, "rowRange"> & SetTableDataCountPerPageParams & {
     maxPageButtonCount: number
 }) => {
     const totalPageCount = Math.ceil(props.rows.length / props.dataCountPerPage);
@@ -88,11 +93,65 @@ export const PaginatedDataTable = (props: Omit<DataTableParams, "rowRange"> & {
     const rowRange: [number, number] = [curPage * props.dataCountPerPage, (curPage + 1) * props.dataCountPerPage];
     return (
         <VStack>
-            <PaginationView  {...props} totalPageCount={totalPageCount} externalCurPage={curPage}
-                             externalSetCurPage={setCurPage}/>
+            <HStack style={{
+                justifyContent: "center",
+                display: 'flex' // center
+            }}>
+                <PaginationView  {...props} totalPageCount={totalPageCount} externalCurPage={curPage}
+                                 externalSetCurPage={setCurPage}/>
+                <SetCountPerPageWidget {...props}/>
+            </HStack>
+
             <DataTable {...props} rowRange={rowRange}/>
         </VStack>
     )
+}
+const dropdowns: OptionValueType[] = [
+    {
+        name: "10"
+    },
+    {
+        name: "20"
+    },
+    {
+        name: "50"
+    },
+    {
+        name: "100"
+    },
+]
+
+/**
+ Dropdown to set tasks count per page
+ *
+ * @param props
+ * @constructor
+ */
+function SetCountPerPageWidget(props: SetTableDataCountPerPageParams) {
+    const [searching, setSearching] = useState(false)
+
+    function setSettings(inputText: string[]) {
+        if (inputText.length === 0) {
+            return
+        }
+        setSearching(false)
+        props.setDataCountPerPage(Number(inputText[0]))
+    }
+
+    // 10,20,50,100
+    const buttonView = searching ?
+        <SearchableDropdown data={dropdowns} handleSetOptionValues={setSettings} dropdownId={"SetCountPerPageWidget"}
+                            initDropdownStatus={"block"} onBlur={() => {
+            setSearching(false)
+        }}/>
+        : <button onClick={() => {
+            setSearching(true)
+        }}>{props.dataCountPerPage}</button>;
+    return <HStack>
+        {buttonView}
+        <label>
+            Tasks per page</label>
+    </HStack>
 }
 
 interface PaginationViewParams {
@@ -155,9 +214,10 @@ function PaginationView({
             externalSetCurPage(totalPageCount - 1);
     }}/>)
     return <HStack spacing={sameGroupSpacing}>
-        {...pageInteractableArray}
         <label>
-            Showing {externalCurPage + 1} of {totalPageCount}
+            Page <b>{externalCurPage + 1}</b> of {totalPageCount}
         </label>
+        {...pageInteractableArray}
+
     </HStack>
 }

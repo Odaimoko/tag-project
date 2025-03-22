@@ -105,7 +105,7 @@ export interface TPMSettings {
     manage_page_excluded_task_statuses: SerializedType[],
     manage_page_filters_shown: SerializedType, // 0.11.0 
     display_tasks_count_per_page: SerializedType, // 0.12.0 
-    max_page_buttons_count: SerializedType, // 0.12.0 
+    max_page_buttons_count: SerializedType, // 0.12.0, the max number of page buttons to show. Exceeded will be truncated. Current page will be tried to be centered.
 }
 
 export const TPM_DEFAULT_SETTINGS: Partial<TPMSettings> = {
