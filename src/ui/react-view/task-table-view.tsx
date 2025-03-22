@@ -544,16 +544,13 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
 
             {
                 displayWorkflows.length === 0 ? <label>No Workflow selected.</label> : (
-                    taskRows.length > 0 ? PaginatedTaskTable({
-                        curWfName: curWfName,
-                        headers: headers,
-                        taskRows: taskRows,
-                        setSortToColumn: setSortToColumn,
-                        headStyleGetter: headStyleGetter,
-                        cellStyleGetter: cellStyleGetter
-                    }) : <div>
-                        <label>No results.</label>
-                    </div>
+                    taskRows.length > 0 ?
+                        <PaginatedTaskTable curWfName={curWfName} headers={headers} taskRows={taskRows}
+                                            setSortToColumn={setSortToColumn} headStyleGetter={headStyleGetter}
+                                            cellStyleGetter={cellStyleGetter}/>
+                        : <div>
+                            <label>No results.</label>
+                        </div>
                 )
             }
         </VStack>
