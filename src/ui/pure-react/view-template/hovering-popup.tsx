@@ -16,7 +16,9 @@ function toggleDropDown(setDropDownDisplay: (value: (((prevState: string) => str
     )
 }
 
-export function usePopup(init = "none") {
+export type PopupDisplay = "block" | "none";
+
+export function usePopup(init: PopupDisplay = "none") {
     const [dropDownDisplay, setDropDownDisplay] = useState(init);
 
     function toggleDropdown() {
