@@ -290,7 +290,7 @@ export function ReactManagePage({eventCenter}: {
 
     // endregion
     return (
-        <VStack spacing={sameGroupSpacing}>
+        <VStack spacing={diffGroupSpacing}>
             <HStack>
                 <ProjectFilterView allProjects={allProjects} dropdownProjects={dropdownProjects}
                                    displayNames={displayProjectOptionValues}
@@ -346,7 +346,7 @@ export function ReactManagePage({eventCenter}: {
                     />
                 </div> : null}
             </VStack>
-            <p></p>
+
             <TaskTableView displayWorkflows={displayWorkflows}
                            filteredTasks={filteredTasks}
                 // we always show completed if there are statuses to filter against, otherwise the filter shows nothing

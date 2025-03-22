@@ -35,7 +35,7 @@ import {MarkdownRenderer} from "obsidian";
 import {HtmlStringComponent} from "../pure-react/view-template/html-string-component";
 import {appendBoldText} from "../common/html-template";
 import {notify} from "../../utils/o-notice";
-import {centerChildren, centerChildrenVertStyle, getStickyHeaderStyle} from "../pure-react/style-def";
+import {centerChildren, centerChildrenVertStyle, diffGroupSpacing, getStickyHeaderStyle} from "../pure-react/style-def";
 import {Minus} from "../pure-react/icon/Minus";
 import {DownAZ, UpAZ} from "../pure-react/icon/DownAZ";
 import {Down01, Up01} from "../pure-react/icon/Down01";
@@ -512,7 +512,7 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
     const {cellStyleGetter, headStyleGetter} = getDefaultTableStyleGetters();
 
     return (
-        <>
+        <VStack spacing={diffGroupSpacing}>
             <HStack style={{
                 justifyContent: "flex-start",
                 alignItems: "center"
@@ -542,7 +542,6 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
                                             externalControl={showSteps}/>
             </HStack>
 
-            <p/>
             {
                 displayWorkflows.length === 0 ? <label>No Workflow selected.</label> : (
                     taskRows.length > 0 ? PaginatedTaskTable({
@@ -557,7 +556,7 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
                     </div>
                 )
             }
-        </>
+        </VStack>
     )
 
     //region sort method
