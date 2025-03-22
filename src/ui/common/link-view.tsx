@@ -1,11 +1,12 @@
 import React, {useContext} from "react";
 import {MarkdownConvertContext} from "../../utils/markdown-converter";
 
-export const LinkView = ({text, onClick}: {
+export const LinkView = ({text, onClick, style}: {
     text: string,
-    onClick?: () => void
+    onClick?: () => void,
+    style?: React.CSSProperties
 }) => {
-    return <a className="internal-link" onClick={onClick}>{text}</a>
+    return <a style={style} className="internal-link" onClick={onClick}>{text}</a>
 }
 /**
  * Wrapped by spaces
