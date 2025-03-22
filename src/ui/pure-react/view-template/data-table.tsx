@@ -1,9 +1,10 @@
 import {IRenderable} from "../props-typing/i-renderable";
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {HStack, VStack} from "./h-stack";
 import {ClickableObsidianIconView} from "../../react-view/obsidian-icon-view";
 import {centerChildren, diffGroupSpacing, sameGroupSpacing} from "../style-def";
 import {OptionValueType, SearchableDropdown} from "./searchable-dropdown";
+import {devLog} from "../../../utils/env-util";
 
 interface DataTableParams {
     tableTitle: string;
@@ -90,6 +91,7 @@ export const PaginatedDataTable = (props: Omit<DataTableParams, "rowRange"> & Se
     const totalPageCount = Math.ceil(props.rows.length / props.dataCountPerPage);
     const [curPage, setCurPage] = useState(0);
     const rowRange: [number, number] = [curPage * props.dataCountPerPage, (curPage + 1) * props.dataCountPerPage];
+
     return (
         <VStack>
             <HStack style={{
@@ -106,7 +108,8 @@ export const PaginatedDataTable = (props: Omit<DataTableParams, "rowRange"> & Se
         </VStack>
     )
 }
-const dropdowns: OptionValueType[] = [
+// 100 leads to lagging
+const AvailableTasksPerPage: OptionValueType[] = [
     {
         name: "10"
     },
@@ -115,9 +118,6 @@ const dropdowns: OptionValueType[] = [
     },
     {
         name: "50"
-    },
-    {
-        name: "100"
     },
 ]
 
@@ -138,9 +138,10 @@ function SetCountPerPageWidget(props: SetTableDataCountPerPageParams) {
         props.setDataCountPerPage(Number(inputText[0]))
     }
 
-    // 10,20,50,100
+    // 10,20,50
     const buttonView = searching ?
-        <SearchableDropdown data={dropdowns} handleSetOptionValues={setSettings} dropdownId={"SetCountPerPageWidget"}
+        <SearchableDropdown data={AvailableTasksPerPage} handleSetOptionValues={setSettings}
+                            dropdownId={"SetCountPerPageWidget"}
                             initDropdownStatus={"block"} onBlur={() => {
             setSearching(false)
         }}/>
@@ -160,10 +161,10 @@ interface PaginationViewParams {
     externalSetCurPage: (page: number) => void
 }
 
-const MaxPages = 20;
+const MaxPageButtonCount = 20;
 
 /**
- * 
+ *
  * @constructor
  */
 function PaginationView({
@@ -172,9 +173,17 @@ function PaginationView({
                             maxPageButtonCount,
                             externalSetCurPage
                         }: PaginationViewParams) {
-    maxPageButtonCount = maxPageButtonCount ?? MaxPages
+    maxPageButtonCount = maxPageButtonCount ?? MaxPageButtonCount
 
     const pageInteractableArray = prepareInteractableArray(maxPageButtonCount);
+
+    useEffect(() => {
+        if (externalCurPage >= totalPageCount || externalCurPage < 0) {
+            // When we change the tasks per page, the curPage might be out of range.
+            devLog(`externalCurPage: ${externalCurPage}, totalPageCount: ${totalPageCount}`);
+            externalSetCurPage(totalPageCount - 1)
+        }
+    }, [externalCurPage, externalSetCurPage, totalPageCount]);
     return <HStack spacing={diffGroupSpacing}>
 
         <HStack spacing={sameGroupSpacing} style={centerChildren}>
