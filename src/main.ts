@@ -15,7 +15,7 @@ import {getWorkflowNameFromRawText, I_OdaPmWorkflow} from "./data-model/workflow
 import {rewriteTask, setProjectTagAtPath} from "./utils/io-util";
 import {WorkflowSuggestionModal} from "./ui/obsidian/workflow-suggestion-modal";
 import {Icon_HelpPage, PmHelpPageView, PmHelpPageViewId} from "./ui/obsidian/help-page/help-page-view";
-import {devLog, initPluginEnv, removePluginEnv, setVaultName} from "./utils/env-util";
+import {addBlacklistTag, devLog, devTaggedLog, initPluginEnv, removePluginEnv, setVaultName} from "./utils/env-util";
 import {OdaPmTask, setTaskPriority} from "./data-model/OdaPmTask";
 import {ProjectSuggestionModal} from "./ui/obsidian/project-suggestion-modal";
 import {assertOnPluginInit} from "./test_runtime/assertDatabase";
@@ -39,6 +39,10 @@ export default class OdaPmToolPlugin extends Plugin {
     tagRenderer: TagRenderer;
 
     async onload() {
+        addBlacklistTag("TagRender")
+        addBlacklistTag("Event")
+        addBlacklistTag("Init")
+        addBlacklistTag("AssertTest")
         await this.initSettings();
 
         if (!this.isDataviewPluginEnabled()) {
@@ -375,11 +379,10 @@ export default class OdaPmToolPlugin extends Plugin {
     // Instead, we use a custom event emitter, which allows us to clear the listener with useEffect.
     listenToMetadataChange() {
         this.registerEvent(this.app.metadataCache.on("resolved", (...args) => {
-            devLog(`[Event] resolved:`, args)
+            devTaggedLog("Event", `resolved:`, args)
         }));
         // @ts-ignore
         this.registerEvent(this.app.metadataCache.on(DataviewMetadataChangeEvent, (...args) => {
-            // devLog(`[Event] DataviewMetadataChangeEvent: ${DataviewMetadataChangeEvent} Triggered. args:`, args)
             this.emitter.emit(DataviewMetadataChangeEvent, ...args);
         }));
         // Don't use DataviewIndexReadyEvent, because it is fired when the full index is processed.
@@ -387,7 +390,7 @@ export default class OdaPmToolPlugin extends Plugin {
         // @ts-ignore
         this.registerEvent(this.app.metadataCache.on(DataviewIndexReadyEvent, (...args) => {
             // render only when index is ready
-            devLog(`[Event] DataviewIndexReadyEvent: ${DataviewIndexReadyEvent} Triggered. args:`, args)
+            devTaggedLog("Event", `DataviewIndexReadyEvent: ${DataviewIndexReadyEvent} Triggered. args:`, args)
             this.emitter.emit(DataviewIndexReadyEvent, ...args);
         }));
 

@@ -43,7 +43,7 @@ import {
     Tag_Prefix_Workflow
 } from "../../../data-model/workflow-def";
 import {Tag_Prefix_Project} from "../../../data-model/OdaPmProject";
-import {devLog} from "../../../utils/env-util";
+import {devLog, devTaggedLog} from "../../../utils/env-util";
 import {WorkspaceLeafEditModeWrapper} from "./workspace-leaf-edit-mode-wrapper";
 
 
@@ -128,7 +128,7 @@ class TagRenderEditorPlugin implements PluginValue {
         const builder = new RangeSetBuilder<Decoration>();
 
         // console.log(view.visibleRanges) // a subset that is drawn.
-        devLog(`[TagRender] buildDecorations viewState`, currentLeaf?.currentLeaf?.getViewState())
+        devTaggedLog("TagRender", `buildDecorations viewState`, currentLeaf?.currentLeaf?.getViewState())
         if (!currentLeaf) return builder.finish();
         if (currentLeaf.isSource()) return builder.finish();
 
@@ -263,7 +263,7 @@ class TagRenderEditorPlugin implements PluginValue {
 
 // Rerender Property by changing the text directly
 const rerenderProperty = () => {
-    devLog(`[TagRender] rerenderProperty`)
+    devTaggedLog("TagRender", `rerenderProperty`)
     document
         .querySelectorAll(
             `[data-property-key="tags"] .multi-select-pill-content span:not(.${tag_class})`,
@@ -284,7 +284,7 @@ export default class TagRenderer extends Plugin {
             ViewPlugin.fromClass(TagRenderEditorPlugin, {
                 decorations: function (value) {
                     const useDeco = currentLeaf && !currentLeaf.isSource();
-                    devLog(`[TagRender] registerEditorExtension useDeco `, useDeco);
+                    devTaggedLog("TagRender", `registerEditorExtension useDeco `, useDeco);
                     return useDeco
                         ? value.decorations
                         : new RangeSetBuilder<Decoration>().finish();
@@ -319,14 +319,14 @@ export default class TagRenderer extends Plugin {
         // "layout-change": triggered when switch preview/source/live-preview mode
         this.registerEvent(
             this.app.workspace.on("layout-change", function () {
-                devLog(`[TagRender] layout-change`)
+                devTaggedLog("TagRender", `layout-change`)
                 return rerenderProperty();
             })
         );
 
         this.registerEvent(
             this.app.workspace.on("file-open", function (e) {
-                devLog(`[TagRender] file-open `, e)
+                devTaggedLog("TagRender", `file-open `, e)
                 return rerenderProperty();
             })
         );

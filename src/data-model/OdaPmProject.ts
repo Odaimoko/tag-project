@@ -1,5 +1,5 @@
 import {SMarkdownPage} from "obsidian-dataview";
-import {devLog} from "../utils/env-util";
+import {devLog, devTaggedLog} from "../utils/env-util";
 import {getProjectNameFromTag, getProjectPathFromFilePath, I_OdaPmTaskble, I_OdaPmWorkflow} from "./workflow-def";
 import {BaseDatabaseObject} from "./BaseDatabaseObject";
 import {OdaPmTask} from "./OdaPmTask";
@@ -155,7 +155,7 @@ export class OdaPmProject extends BaseDatabaseObject implements INameable {
 
         function createNewProject(name: string) {
             const p = new OdaPmProject();
-            devLog(`Creating new project ${name}`)
+            devTaggedLog("Init", `Creating new project ${name}`)
             p.name = name;
             p.internalKey = ++currentMaxProjectId;
             return p;

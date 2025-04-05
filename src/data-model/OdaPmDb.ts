@@ -19,7 +19,7 @@ import {ONotice} from "../utils/o-notice";
 import {getSettings} from "../settings/settings";
 import {GenericProvider} from "../utils/GenericProvider";
 import {clearGlobalProjectMap, OdaPmProject, ProjectName_Unclassified} from "./OdaPmProject";
-import {devLog, devTime, devTimeEnd} from "../utils/env-util";
+import {devTaggedLog, devTime, devTimeEnd} from "../utils/env-util";
 import {OdaPmTask} from "./OdaPmTask";
 import {getOrCreateWorkflow, removeWorkflow} from "./OdaPmWorkflow";
 import {OdaProjectTree} from "./OdaProjectTree";
@@ -116,10 +116,10 @@ function createPmTaskFromTask(workflowTags: string[], workflows: I_OdaPmWorkflow
 
 function getAllWorkflows(allTasks: any = undefined): I_OdaPmWorkflow[] {
 
-    devTime(`[Event] [Timed] getAllWorkflows dv.pages()["file"]["tasks"]`)
+    devTime("Event", `[Timed] getAllWorkflows dv.pages()["file"]["tasks"]`)
     allTasks = allTasks ?? getAllTasks();
-    devTimeEnd(`[Event] [Timed] getAllWorkflows dv.pages()["file"]["tasks"]`)
-    devTime(`[Event] [Timed] getAllWorkflows allTasks.where`)
+    devTimeEnd("Event", `[Timed] getAllWorkflows dv.pages()["file"]["tasks"]`)
+    devTime("Event", `[Timed] getAllWorkflows allTasks.where`)
     const unique = allTasks.where(function (k: STask) {
             for (const defTag of getWorkflowTypeTags()) {
                 if (k.tags.length === 0) continue;
@@ -133,7 +133,7 @@ function getAllWorkflows(allTasks: any = undefined): I_OdaPmWorkflow[] {
         .flatMap((task: STask) => createWorkflowsFromTask(task))
         .array()
         .unique();
-    devTimeEnd(`[Event] [Timed] getAllWorkflows allTasks.where`)
+    devTimeEnd("Event", `[Timed] getAllWorkflows allTasks.where`)
     return unique;
 }
 
@@ -141,10 +141,10 @@ function getAllPmTasks(workflows: I_OdaPmWorkflow[], allTasks: any = undefined) 
     const workflowTags = workflows.map(function (k: I_OdaPmWorkflow) {
         return k.tag;
     });
-    devTime(`[Event] [Timed] getAllPmTasks dv.pages()["file"]["tasks"]`)
+    devTime("Event", `[Timed] getAllPmTasks dv.pages()["file"]["tasks"]`)
     allTasks = allTasks ?? getAllTasks();
-    devTimeEnd(`[Event] [Timed] getAllPmTasks dv.pages()["file"]["tasks"]`)
-    devTime(`[Event] [Timed] getAllPmTasks taskArray`)
+    devTimeEnd("Event", `[Timed] getAllPmTasks dv.pages()["file"]["tasks"]`)
+    devTime("Event", `[Timed] getAllPmTasks taskArray`)
     const taskArray = allTasks.where(function (k: STask) {
                 for (const defTag of workflowTags) {
                     if (k.tags.includes(defTag)) return true;
@@ -158,7 +158,7 @@ function getAllPmTasks(workflows: I_OdaPmWorkflow[], allTasks: any = undefined) 
                 return k !== null;
             }).array()
     ;
-    devTimeEnd(`[Event] [Timed] getAllPmTasks taskArray`)
+    devTimeEnd("Event", `[Timed] getAllPmTasks taskArray`)
     return taskArray
         ;
 }
@@ -183,16 +183,16 @@ function getAllProjectsAndLinkTasks(pmTasks: OdaPmTask[], workflows: I_OdaPmWork
     allFiles = allFiles ?? dv.pages()["file"];
     // File defs
 
-    devTime("[Event] [Timed] addProject Frontmatter")
+    devTime("Event", "[Timed] addProject Frontmatter")
     for (const pg of allFiles) {
         const project = OdaPmProject.createProjectFromFrontmatter(pg);
         if (project) {
             addProject(project);
         }
     }
-    devTimeEnd("[Event] [Timed] addProject Frontmatter")
+    devTimeEnd("Event", "[Timed] addProject Frontmatter")
     // Task def
-    devTime("[Event] [Timed] addProject FromTaskable")
+    devTime("Event", "[Timed] addProject FromTaskable")
     for (const pmTask of pmTasks) {
         const taskTag = pmTask.getProjectTag();
         if (taskTag) {
@@ -211,7 +211,7 @@ function getAllProjectsAndLinkTasks(pmTasks: OdaPmTask[], workflows: I_OdaPmWork
             }
         }
     }
-    devTimeEnd("[Event] [Timed] addProject FromTaskable")
+    devTimeEnd("Event", "[Timed] addProject FromTaskable")
 
     return projects;
 }
@@ -261,58 +261,57 @@ export class OdaPmDb implements I_EvtListener {
 // region Init
     private reloadDb() {
         if (!this.plugin.isDataviewPluginInitialized()) {
-            devLog("[Event] dataviewReady is false. reloadDb canceled.")
+            devTaggedLog("Event", "dataviewReady is false. reloadDb canceled.")
             return;
         }
         if (!this.rateLimiter.addRequest("rate")) {
 
-            devLog(`[Event] reloadDb canceled because rateLimiter is not ready`);
+            devTaggedLog("Event", `reloadDb canceled because rateLimiter is not ready`);
             return;
         }
 
-        devTime("[Event] [Timed] reloadDb")
+        devTime("Event", "[Timed] reloadDb")
         // cache for faster calc
-        devTime("[Event] [Timed] getAllFiles")
+        devTime("Event", "[Timed] getAllFiles")
         const allFiles = getAllFiles();
-        devTimeEnd(`[Event] [Timed] getAllFiles`)
-        devTime("[Event] [Timed] allTasks")
+        devTimeEnd("Event", `[Timed] getAllFiles`)
+        devTime("Event", "[Timed] allTasks")
         const allTasks = allFiles["tasks"];
-        devTimeEnd(`[Event] [Timed] allTasks`)
+        devTimeEnd("Event", `[Timed] allTasks`)
 
-        devTime(`[Event] [Timed] getAllWorkflows`)
+        devTime("Event", `[Timed] getAllWorkflows`)
         this.workflows = getAllWorkflows(allTasks)
-        devTimeEnd(`[Event] [Timed] getAllWorkflows`)
-        devTime(`[Event] [Timed] getWorkflowTypeTags`)
+        devTimeEnd("Event", `[Timed] getAllWorkflows`)
+        devTime("Event", `[Timed] getWorkflowTypeTags`)
         this.workflowTags = getWorkflowTypeTags()
-        devTimeEnd(`[Event] [Timed] getWorkflowTypeTags`)
+        devTimeEnd("Event", `[Timed] getWorkflowTypeTags`)
         this.stepTags = this.initStepTags(this.workflows);
 
-        devTime(`[Event] [Timed] getAllPmTasks`)
+        devTime("Event", `[Timed] getAllPmTasks`)
         this.pmTasks = getAllPmTasks(this.workflows, allTasks)
-        devTimeEnd(`[Event] [Timed] getAllPmTasks`)
-        devTime(`[Event] [Timed] initModulesFromTasks`)
+        devTimeEnd("Event", `[Timed] getAllPmTasks`)
+        devTime("Event", `[Timed] initModulesFromTasks`)
         this.pmModules = this.initModulesFromTasks(this.pmTasks)
-        devTimeEnd(`[Event] [Timed] initModulesFromTasks`)
-        devTime(`[Event] [Timed] initManagedTags`)
+        devTimeEnd("Event", `[Timed] initModulesFromTasks`)
+        devTime("Event", `[Timed] initManagedTags`)
         this.pmTags = this.initManagedTags(this.pmTasks)
-        devTimeEnd(`[Event] [Timed] initManagedTags`)
-        devTime(`[Event] [Timed] initPriorityTags`)
+        devTimeEnd("Event", `[Timed] initManagedTags`)
+        devTime("Event", `[Timed] initPriorityTags`)
         this.pmPriorityTags = this.initPriorityTags()
-        devTimeEnd(`[Event] [Timed] initPriorityTags`)
-        devTime(`[Event] [Timed] getAllProjectsAndLinkTasks`)
+        devTimeEnd("Event", `[Timed] initPriorityTags`)
+        devTime("Event", `[Timed] getAllProjectsAndLinkTasks`)
         this.pmProjects = getAllProjectsAndLinkTasks(this.pmTasks, this.workflows, allFiles);
-        devTimeEnd(`[Event] [Timed] getAllProjectsAndLinkTasks`)
+        devTimeEnd("Event", `[Timed] getAllProjectsAndLinkTasks`)
 
-        devTime(`[Event] [Timed] linkProject`)
+        devTime("Event", `[Timed] linkProject`)
         this.linkProject(this.pmProjects, this.pmTasks, this.workflows);
-        devTimeEnd(`[Event] [Timed] linkProject`)
-        devTime(`[Event] [Timed] orphanTasks`)
+        devTimeEnd("Event", `[Timed] linkProject`)
+        devTime("Event", `[Timed] orphanTasks`)
         this.orphanTasks = this.initOrphanTasks(this.pmTasks);
-        devTimeEnd(`[Event] [Timed] orphanTasks`)
+        devTimeEnd("Event", `[Timed] orphanTasks`)
         this.emit(Evt_DbReloaded)
         assertDatabase(this);
-        devLog("Database Reloaded.")
-        devTimeEnd("[Event] [Timed] reloadDb")
+        devTimeEnd("Event", "[Timed] reloadDb")
     }
 
 
@@ -468,7 +467,7 @@ export class OdaPmDb implements I_EvtListener {
     // endregion
     private initPriorityTags() {
         const tags = this.plugin.settings.priority_tags.map(k => `${Tag_Prefix_Tag}${k}`);
-        devLog(`Init Priority Tags`, tags)
+        devTaggedLog("Init", `Priority Tags`, tags)
         return tags;
     }
 }

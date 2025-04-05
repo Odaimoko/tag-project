@@ -1,5 +1,5 @@
 // Test in dev mode.
-import {devLog, getVaultName, prodWrapper} from "../utils/env-util";
+import {devTaggedLog, getVaultName, prodWrapper} from "../utils/env-util";
 import {OdaPmTask} from "../data-model/OdaPmTask";
 import {OdaPmProject, ProjectDefinedType, ProjectName_Unclassified} from "../data-model/OdaPmProject";
 import {I_OdaPmWorkflow} from "../data-model/workflow-def";
@@ -113,7 +113,7 @@ async function test_UT_020_2(pmDb: OdaPmDb) {
 
     expectWorkflowInProject("UT_020_2_4_Wf", "UT_020_2_Project_Layer_1_task_definition");
     expectTaskInProject("UT_020_2_4_Task", "UT_020_2_Project_Layer_1_task_definition");
-    devLog("Test PASSED: Project Definition.")
+    devTaggedLog("AssertTest", "PASSED: Project Definition.")
 }
 
 async function testTaskProjectLink(pmDb: OdaPmDb) {
@@ -127,7 +127,7 @@ async function testTaskProjectLink(pmDb: OdaPmDb) {
     expectTaskInProject("UT_020_3_2_file3_Prj1", "UT_020_3_Prj1")
     expectTaskInProject("UT_020_3_2_file3_Prj3", "UT_020_3_Prj3")
     expectTaskInProject("UT_020_3_2_file4_Prj3", "UT_020_3_Prj3")
-    devLog("Test PASSED: Task Project Link.")
+    devTaggedLog("AssertTest", "PASSED: Task Project Link.")
 }
 
 async function testGetTaskProjectPath(pmDb: OdaPmDb) {
@@ -140,7 +140,7 @@ async function testGetTaskProjectPath(pmDb: OdaPmDb) {
     expectTaskPath("UT_020_3_2_file3_Prj1", "/UT_020_3 project Folder/UT_020_3 file3 Prj1.md")
     expectTaskPath("UT_020_3_2_file3_Prj3", "/UT_020_3 project Folder/UT_020_3 file3 Prj1.md:UT_020_3_Prj3")
     expectTaskPath("UT_020_3_2_file4_Prj3", "/UT_020_3 project Folder/UT_020_3 file4 Prj3.md")
-    devLog("Test PASSED: Get Task Project Path.")
+    devTaggedLog("AssertTest", "PASSED: Get Task Project Path.")
 }
 
 async function test_UT_020_3(pmDb: OdaPmDb) {
@@ -240,7 +240,7 @@ async function test_UT_020_6(pmDb: OdaPmDb) {
     const orphans = pmDb.orphanTasks;
     const orphans_020_6 = orphans.filter(k => k.summary.startsWith("UT_020_6"));
     expect(orphans_020_6, `Should have 0 orphan tasks in UT_020_6`).length(0);
-    devLog("Test PASSED: Subproject Inclusion.")
+    devTaggedLog("AssertTest", "PASSED: Subproject Inclusion.")
 }
 
 /**
@@ -255,7 +255,7 @@ function test_UT_050(pmDb: OdaPmDb) {
     dbAssertFunctions.expectTaskHasPriority("UT_050_med", TaskPriority.Medium, pmDb.pmPriorityTags);
     dbAssertFunctions.expectTaskHasPriority("UT_050_med_lo", TaskPriority.MedLo, pmDb.pmPriorityTags);
     dbAssertFunctions.expectTaskHasPriority("UT_050_lo", TaskPriority.Low, pmDb.pmPriorityTags);
-    devLog("Test PASSED: Priority Tags.")
+    devTaggedLog("AssertTest", "PASSED: Priority Tags.")
 }
 
 //#endif
@@ -270,8 +270,8 @@ export const assertOnPluginInit = prodWrapper((plugin: OdaPmToolPlugin) => {
     if (!getVaultName().contains("test-obsidian-vault")) {
         return;
     }
-    console.log("Assert start: on plugin init...");
-    console.log("Assert End: on plugin init.")
+    devTaggedLog("AssertTest", "start: on plugin init...");
+    devTaggedLog("AssertTest", "End: on plugin init.")
 //#endif
 })
 
@@ -281,7 +281,7 @@ export const assertDatabase = prodWrapper(async (pmDb: OdaPmDb) => {
     if (!getVaultName().contains("test-obsidian-vault")) {
         return;
     }
-    devLog("Assert start: on db refreshed...")
+    devTaggedLog("AssertTest", "start: on db refreshed...")
     // Only Assert in dev vault.
     initAssertFunctions(pmDb);
     const projects = pmDb.pmProjects;
@@ -294,6 +294,6 @@ export const assertDatabase = prodWrapper(async (pmDb: OdaPmDb) => {
     test_UT_020_4(pmDb);
     test_UT_020_6(pmDb);
     test_UT_050(pmDb)
-    devLog("Assert end: on db refreshed...")
+    devTaggedLog("AssertTest", "end: on db refreshed...")
 //#endif
 });
