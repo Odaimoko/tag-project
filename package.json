@@ -1,13 +1,13 @@
 {
     "name": "tag-project",
-    "version": "0.12.0",
+    "version": "0.12.1",
     "description": "This is a sample plugin for Obsidian (https://obsidian.md)",
     "main": "main.js",
     "scripts": {
         "dev": "node esbuild.config.mjs",
         "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-        "version": "./ci/bump_version.sh",
-        "postbuild": "ci/postbuild.sh"
+        "version": "sh ./ci/bump_version.sh",
+        "postbuild": "sh ci/postbuild.sh"
     },
     "keywords": [],
     "author": "",
