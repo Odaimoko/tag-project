@@ -18,7 +18,7 @@ export function prodWrapper(func: CallableFunction) {
     return f;
 }
 
-//#ifdef DEVELOPMENT_BUILD
+// do not show logs with these tags
 const blacklistTagSet = new Set<string>();
 
 export function addBlacklistTag(tag: string) {
@@ -29,6 +29,7 @@ export function removeBlacklistTag(tag: string) {
     blacklistTagSet.delete(tag)
 }
 
+//#ifdef DEVELOPMENT_BUILD
 //#endif
 
 function taggedLog(tag: string, ...args: any[]) {
