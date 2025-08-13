@@ -179,9 +179,12 @@ class TagRenderEditorPlugin implements PluginValue {
                                     tag += text;
                                     status = 0;
                                     if (shouldTagBeAbbr(tag)) {
+                                        // devLog("[Hashtag] shouldTagBeAbbr is true", tag, "curHashtagStart", curHashtagStart,
+                                        //     "node.from", node.from,
+                                        //     "node.to", node.to)
+                                        // ↓ this will replace the whole tag to abbreviation
                                         builder.add(
-                                            // To include the "#".
-                                            curHashtagStart - 1,
+                                            curHashtagStart, // should not use curHashTagStart - 1, this will replace the `\n` if a tpm tag is at the beginning of a line
                                             node.to,
                                             Decoration.replace({
                                                 widget: new TagWidget(tag, false),
