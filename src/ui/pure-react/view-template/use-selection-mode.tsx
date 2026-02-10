@@ -13,6 +13,7 @@ interface UseSelectionModeReturn {
     selectedRows: Set<number>;
     setSelectedRows: React.Dispatch<React.SetStateAction<Set<number>>>;
     toggleRowSelection: (rowIndex: number) => void;
+    clearSelection: () => void;
 }
 
 /**
@@ -106,11 +107,18 @@ export function useSelectionMode({
         });
     }, []);
 
+    // Clear all selections
+    const clearSelection = useCallback(() => {
+        setSelectedRows(new Set());
+        onSelectionChangeRef.current?.([]);
+    }, []);
+
     return {
         isSelectionMode,
         setIsSelectionMode,
         selectedRows,
         setSelectedRows,
-        toggleRowSelection
+        toggleRowSelection,
+        clearSelection
     };
 }

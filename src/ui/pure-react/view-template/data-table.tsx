@@ -28,6 +28,7 @@ interface DataTableParams {
     selectionMode?: boolean; // External control of selection mode (controlled component)
     onSelectionChange?: (selectedRowIndices: number[]) => void; // Callback when selection changes
     onSelectionModeChange?: (isSelectionMode: boolean) => void; // Callback when selection mode changes
+    clearSelectionTrigger?: number; // When this value changes, clear the selection
     // Callback to pass selection mode state to row renderers
     rowRenderer?: (rowIndex: number, content: IRenderable[], isSelectionMode: boolean) => IRenderable[];
 }
@@ -60,7 +61,8 @@ export const DataTable = ({
                               enableSelectionMode = false,
                               selectionMode: externalSelectionMode,
                               onSelectionChange,
-                              onSelectionModeChange
+                              onSelectionModeChange,
+                              clearSelectionTrigger
                           }: DataTableParams) => {
         const tableRef = useRef<HTMLTableElement>(null);
 
@@ -69,13 +71,21 @@ export const DataTable = ({
             isSelectionMode,
             setIsSelectionMode,
             selectedRows,
-            toggleRowSelection
+            toggleRowSelection,
+            clearSelection
         } = useSelectionMode({
             enableSelectionMode,
             externalSelectionMode,
             onSelectionChange,
             onSelectionModeChange
         });
+
+        // Clear selection when trigger changes
+        useEffect(() => {
+            if (clearSelectionTrigger !== undefined && clearSelectionTrigger > 0) {
+                clearSelection();
+            }
+        }, [clearSelectionTrigger, clearSelection]);
 
         const start = rowRange?.[0] ?? 0;
         const end = Math.min(rowRange?.[1] ?? rows.length, rows.length);
@@ -268,6 +278,7 @@ export const PaginatedDataTable = (props: Omit<DataTableParams, "rowRange"> & Se
                 selectionMode={isSelectionMode}
                 onSelectionModeChange={handleSelectionModeChange}
                 onSelectionChange={handleSelectionChange}
+                clearSelectionTrigger={props.clearSelectionTrigger}
             />
         </VStack>
     )

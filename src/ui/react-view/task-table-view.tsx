@@ -316,7 +316,7 @@ function TaskPriorityIcon({oTask}: { oTask: OdaPmTask }): React.JSX.Element {
     </div>} title={"Choose priority..."}/>;
 }
 
-function PaginatedTaskTable({curWfName, headers, taskRows, setSortToColumn, headStyleGetter, cellStyleGetter, taskData, onRowContextMenu, onSelectionChange, onSelectionModeChange}: {
+function PaginatedTaskTable({curWfName, headers, taskRows, setSortToColumn, headStyleGetter, cellStyleGetter, taskData, onRowContextMenu, onSelectionChange, onSelectionModeChange, clearSelectionTrigger}: {
     curWfName: string,
     headers: React.JSX.Element[],
     taskRows: IRenderable[][],
@@ -326,7 +326,8 @@ function PaginatedTaskTable({curWfName, headers, taskRows, setSortToColumn, head
     taskData?: OdaPmTask[],
     onRowContextMenu?: (rowIndex: number, event: React.MouseEvent) => void,
     onSelectionChange?: (selectedRowIndices: number[]) => void,
-    onSelectionModeChange?: (isSelectionMode: boolean) => void
+    onSelectionModeChange?: (isSelectionMode: boolean) => void,
+    clearSelectionTrigger?: number
 }) {
     const [tasksPerPage, setTasksPerPage,] = usePluginSettings<number>("display_tasks_count_per_page");
     const [maxPageButtonCount] = usePluginSettings<number>("max_page_buttons_count");
@@ -377,6 +378,7 @@ function PaginatedTaskTable({curWfName, headers, taskRows, setSortToColumn, head
         enableSelectionMode={true}
         onSelectionChange={handleSelectionChange}
         onSelectionModeChange={handleSelectionModeChange}
+        clearSelectionTrigger={clearSelectionTrigger}
     />;
 }
 
@@ -404,6 +406,8 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
     const [isSelectionMode, setIsSelectionMode] = useState(false);
     // animation state for selected tasks toolbar
     const [toolbarVisible, setToolbarVisible] = useState(false);
+    // trigger to clear DataTable selection
+    const [clearSelectionTrigger, setClearSelectionTrigger] = useState(0);
 
     function onJumpToTask(oTask: OdaPmTask) {
         setSearchText(oTask.summary)
@@ -596,23 +600,24 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
         // Clear selected tasks when exiting selection mode
         if (!isMode) {
             setSelectedTasksFromTable([]);
+            setToolbarVisible(false);
         }
     }, []);
 
-    // Animate toolbar appearance/disappearance
+    // Animate toolbar appearance/disappearance based on selection mode
     useEffect(() => {
-        if (selectedTasksFromTable.length > 0) {
-            // Fade in when tasks are selected
+        if (isSelectionMode) {
+            // Fade in when entering selection mode
             // Use setTimeout to ensure DOM is ready for animation
             const timer = setTimeout(() => {
                 setToolbarVisible(true);
             }, 10);
             return () => clearTimeout(timer);
         } else {
-            // Fade out when no tasks are selected
+            // Fade out when exiting selection mode
             setToolbarVisible(false);
         }
-    }, [selectedTasksFromTable.length]);
+    }, [isSelectionMode]);
 
     function handleRowContextMenu(rowIndex: number, event: React.MouseEvent) {
         const selectedTasks = [displayedTasks[rowIndex]];
@@ -770,7 +775,7 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
                 displayWorkflows.length === 0 ? <label>No Workflow selected.</label> : (
                     taskRows.length > 0 ?
                         <>
-                            {(selectedTasksFromTable.length > 0 || toolbarVisible) && (
+                            {isSelectionMode && (
                                 <HStack style={{
                                     justifyContent: "flex-start",
                                     alignItems: "center",
@@ -795,50 +800,62 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
                                     </label>
                                     <button 
                                         onClick={() => handleBatchChangeWorkflow(selectedTasksFromTable)}
+                                        disabled={selectedTasksFromTable.length === 0}
                                         style={{
                                             padding: "6px 12px",
                                             fontSize: "12px",
-                                            backgroundColor: "var(--interactive-accent)",
-                                            color: "var(--text-on-accent)",
+                                            backgroundColor: selectedTasksFromTable.length > 0 ? "var(--interactive-accent)" : "var(--background-modifier-border)",
+                                            color: selectedTasksFromTable.length > 0 ? "var(--text-on-accent)" : "var(--text-muted)",
                                             border: "none",
                                             borderRadius: "4px",
-                                            cursor: "pointer",
+                                            cursor: selectedTasksFromTable.length > 0 ? "pointer" : "not-allowed",
                                             fontWeight: "500",
                                             transition: "background-color 0.2s ease, transform 0.1s ease",
-                                            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.2)"
+                                            boxShadow: selectedTasksFromTable.length > 0 ? "0 1px 3px rgba(0, 0, 0, 0.2)" : "none",
+                                            opacity: selectedTasksFromTable.length > 0 ? 1 : 0.6
                                         }}
                                         onMouseEnter={(e) => {
-                                            e.currentTarget.style.backgroundColor = "var(--interactive-accent-hover)";
-                                            e.currentTarget.style.transform = "translateY(-1px)";
+                                            if (selectedTasksFromTable.length > 0) {
+                                                e.currentTarget.style.backgroundColor = "var(--interactive-accent-hover)";
+                                                e.currentTarget.style.transform = "translateY(-1px)";
+                                            }
                                         }}
                                         onMouseLeave={(e) => {
-                                            e.currentTarget.style.backgroundColor = "var(--interactive-accent)";
-                                            e.currentTarget.style.transform = "translateY(0)";
+                                            if (selectedTasksFromTable.length > 0) {
+                                                e.currentTarget.style.backgroundColor = "var(--interactive-accent)";
+                                                e.currentTarget.style.transform = "translateY(0)";
+                                            }
                                         }}
                                     >
                                         Change Workflow
                                     </button>
                                     <button 
                                         onClick={() => handleBatchSetPriority(selectedTasksFromTable)}
+                                        disabled={selectedTasksFromTable.length === 0}
                                         style={{
                                             padding: "6px 12px",
                                             fontSize: "12px",
-                                            backgroundColor: "var(--interactive-accent)",
-                                            color: "var(--text-on-accent)",
+                                            backgroundColor: selectedTasksFromTable.length > 0 ? "var(--interactive-accent)" : "var(--background-modifier-border)",
+                                            color: selectedTasksFromTable.length > 0 ? "var(--text-on-accent)" : "var(--text-muted)",
                                             border: "none",
                                             borderRadius: "4px",
-                                            cursor: "pointer",
+                                            cursor: selectedTasksFromTable.length > 0 ? "pointer" : "not-allowed",
                                             fontWeight: "500",
                                             transition: "background-color 0.2s ease, transform 0.1s ease",
-                                            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.2)"
+                                            boxShadow: selectedTasksFromTable.length > 0 ? "0 1px 3px rgba(0, 0, 0, 0.2)" : "none",
+                                            opacity: selectedTasksFromTable.length > 0 ? 1 : 0.6
                                         }}
                                         onMouseEnter={(e) => {
-                                            e.currentTarget.style.backgroundColor = "var(--interactive-accent-hover)";
-                                            e.currentTarget.style.transform = "translateY(-1px)";
+                                            if (selectedTasksFromTable.length > 0) {
+                                                e.currentTarget.style.backgroundColor = "var(--interactive-accent-hover)";
+                                                e.currentTarget.style.transform = "translateY(-1px)";
+                                            }
                                         }}
                                         onMouseLeave={(e) => {
-                                            e.currentTarget.style.backgroundColor = "var(--interactive-accent)";
-                                            e.currentTarget.style.transform = "translateY(0)";
+                                            if (selectedTasksFromTable.length > 0) {
+                                                e.currentTarget.style.backgroundColor = "var(--interactive-accent)";
+                                                e.currentTarget.style.transform = "translateY(0)";
+                                            }
                                         }}
                                     >
                                         Set Priority
@@ -846,6 +863,8 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
                                     <button 
                                         onClick={() => {
                                             setSelectedTasksFromTable([]);
+                                            // Trigger DataTable to clear selection
+                                            setClearSelectionTrigger(prev => prev + 1);
                                         }}
                                         style={{
                                             padding: "6px 12px",
@@ -878,7 +897,8 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
                                                     taskData={displayedTasks}
                                                     onRowContextMenu={handleRowContextMenu}
                                                     onSelectionChange={handleTableSelectionChange}
-                                                    onSelectionModeChange={handleTableSelectionModeChange}/>
+                                                    onSelectionModeChange={handleTableSelectionModeChange}
+                                                    clearSelectionTrigger={clearSelectionTrigger}/>
                             </SelectionModeContext.Provider>
                             {contextMenu && (
                                 <ContextMenu
