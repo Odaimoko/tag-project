@@ -10,7 +10,7 @@ import {
     TaskStatus_unchecked
 } from "../../data-model/workflow-def";
 import {openTaskPrecisely, rewriteTask} from "../../utils/io-util";
-import React, {MouseEvent, ReactElement, useContext, useEffect, useState} from "react";
+import React, {MouseEvent, ReactElement, useCallback, useContext, useEffect, useState} from "react";
 import {PluginContext} from "../obsidian/manage-page-view";
 import {
     getForceNewTabOnClick,
@@ -51,6 +51,13 @@ import {ClickableView} from "../pure-react/view-template/clickable-view";
 import {addTagText} from "../../data-model/tag-text-manipulate";
 import {Tag_Prefix_Project} from "../../data-model/OdaPmProject";
 import {ContextMenu, ContextMenuItem} from "../pure-react/view-template/context-menu";
+import {WorkflowSuggestionModal} from "../obsidian/workflow-suggestion-modal";
+import {PrioritySuggestionModal} from "../obsidian/priority-suggestion-modal";
+import {
+    batchChangeWorkflow,
+    batchSetPriority,
+    notifyBatchOperationResult
+} from "../../utils/task-batch-util";
 
 export const taskCheckBoxMargin = {marginLeft: 3};
 
@@ -180,7 +187,7 @@ function rectifyOdaTaskOnMdTaskChanged(oTask: OdaPmTask, plugin: OdaPmToolPlugin
     }
 }
 
-export function getDefaultTableStyleGetters(minSummaryWidth: number | string = 500, maxSummaryWidth: number | string = 300, summaryColumn = 0, isCellCentered = true) {
+export function getDefaultTableStyleGetters(minSummaryWidth: number | string = 300, maxSummaryWidth: number | string = 300, summaryColumn = 0, isCellCentered = true) {
     // striped rows. center step cell but not summary cell.
     // TODO performance, we instantiate a lot of dictionaries here
     const evenBg: React.CSSProperties = {backgroundColor: "rgba(0,0,0,0.2)"};
@@ -301,7 +308,7 @@ function TaskPriorityIcon({oTask}: { oTask: OdaPmTask }): React.JSX.Element {
     </div>} title={"Choose priority..."}/>;
 }
 
-function PaginatedTaskTable({curWfName, headers, taskRows, setSortToColumn, headStyleGetter, cellStyleGetter, taskData, onRowContextMenu}: {
+function PaginatedTaskTable({curWfName, headers, taskRows, setSortToColumn, headStyleGetter, cellStyleGetter, taskData, onRowContextMenu, onSelectionChange, onSelectionModeChange}: {
     curWfName: string,
     headers: React.JSX.Element[],
     taskRows: IRenderable[][],
@@ -309,10 +316,29 @@ function PaginatedTaskTable({curWfName, headers, taskRows, setSortToColumn, head
     headStyleGetter: (columnIndex: number) => React.CSSProperties,
     cellStyleGetter: (column: number, row: number) => React.CSSProperties,
     taskData?: OdaPmTask[],
-    onRowContextMenu?: (rowIndex: number, event: React.MouseEvent) => void
+    onRowContextMenu?: (rowIndex: number, event: React.MouseEvent) => void,
+    onSelectionChange?: (selectedRowIndices: number[]) => void,
+    onSelectionModeChange?: (isSelectionMode: boolean) => void
 }) {
     const [tasksPerPage, setTasksPerPage,] = usePluginSettings<number>("display_tasks_count_per_page");
     const [maxPageButtonCount] = usePluginSettings<number>("max_page_buttons_count");
+    
+    // Handle selection changes from DataTable
+    // Use useCallback to prevent infinite loops
+    const handleSelectionChange = useCallback((selectedRowIndices: number[]) => {
+        onSelectionChange?.(selectedRowIndices);
+    }, [onSelectionChange]);
+
+    // Handle selection mode changes - clear selection when exiting mode
+    // Use useCallback to prevent infinite loops
+    const handleSelectionModeChange = useCallback((isSelectionMode: boolean) => {
+        onSelectionModeChange?.(isSelectionMode);
+        if (!isSelectionMode) {
+            // Clear selection when exiting selection mode
+            onSelectionChange?.([]);
+        }
+    }, [onSelectionModeChange, onSelectionChange]);
+
     return <PaginatedDataTable
         tableTitle={curWfName}
         headers={headers}
@@ -330,6 +356,9 @@ function PaginatedTaskTable({curWfName, headers, taskRows, setSortToColumn, head
         maxPageButtonCount={maxPageButtonCount}
         rowData={taskData}
         onRowContextMenu={onRowContextMenu}
+        enableSelectionMode={true}
+        onSelectionChange={handleSelectionChange}
+        onSelectionModeChange={handleSelectionModeChange}
     />;
 }
 
@@ -348,9 +377,11 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
     // show completed
     const [showCompleted, setShowCompleted] = useState(getSettings()?.show_completed_tasks as boolean);
     const [showSteps, setShowSteps] = useState(getSettings()?.table_steps_shown as boolean);
-    const [showTagsInSummary, setShowTagsInSummary] = usePluginSettings<boolean>("tags_in_task_table_summary_cell");
+    const [showTagsInSummary] = usePluginSettings<boolean>("tags_in_task_table_summary_cell");
     // context menu
     const [contextMenu, setContextMenu] = useState<{x: number, y: number, tasks: OdaPmTask[]} | null>(null);
+    // selected tasks from DataTable selection mode
+    const [selectedTasksFromTable, setSelectedTasksFromTable] = useState<OdaPmTask[]>([]);
 
     function onJumpToTask(oTask: OdaPmTask) {
         setSearchText(oTask.summary)
@@ -455,6 +486,7 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
     }
 
     // endregion
+
     const curWfName = "Tasks";
     const headers = [
         <VStack style={centerChildrenVertStyle}>
@@ -567,6 +599,36 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
         }
     }
 
+    // Batch operations for selected tasks
+    function handleBatchChangeWorkflow(tasks: OdaPmTask[]) {
+        if (tasks.length === 0) return;
+        
+        // Use the first task's project to filter workflows
+        const firstTask = tasks[0];
+        
+        new WorkflowSuggestionModal(plugin.app, firstTask.boundTask.path, firstTask, async (workflow, evt) => {
+            if (!workflow) return;
+            
+            const result = await batchChangeWorkflow(tasks, workflow, plugin.app.vault);
+            notifyBatchOperationResult('Changed workflow', tasks.length, result);
+        }).open();
+    }
+
+    function handleBatchSetPriority(tasks: OdaPmTask[]) {
+        if (tasks.length === 0) return;
+        
+        const priorityTags = OdaPmDbProvider.get()?.pmPriorityTags ?? [];
+        if (priorityTags.length === 0) {
+            notify('No priority tags configured', 3);
+            return;
+        }
+        
+        new PrioritySuggestionModal(plugin.app, async (priorityTag, evt) => {
+            const result = await batchSetPriority(tasks, priorityTag, plugin, priorityTags);
+            notifyBatchOperationResult('Set priority', tasks.length, result);
+        }).open();
+    }
+
     const contextMenuItems: ContextMenuItem[] = contextMenu ? [
         {
             label: 'Copy Task Names (Original)',
@@ -579,7 +641,17 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
         {
             label: 'Copy Task Names (Without tags)',
             onClick: () => copyTaskNames(contextMenu.tasks, 'withoutTags')
-        }
+        },
+        ...(contextMenu.tasks.length > 0 ? [
+            {
+                label: `Change Workflow (${contextMenu.tasks.length} task${contextMenu.tasks.length > 1 ? 's' : ''})`,
+                onClick: () => handleBatchChangeWorkflow(contextMenu.tasks)
+            },
+            {
+                label: `Set Priority (${contextMenu.tasks.length} task${contextMenu.tasks.length > 1 ? 's' : ''})`,
+                onClick: () => handleBatchSetPriority(contextMenu.tasks)
+            }
+        ] : [])
     ] : [];
 
     return (
@@ -617,11 +689,49 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
                 displayWorkflows.length === 0 ? <label>No Workflow selected.</label> : (
                     taskRows.length > 0 ?
                         <>
+                            {selectedTasksFromTable.length > 0 && (
+                                <HStack style={{
+                                    justifyContent: "flex-start",
+                                    alignItems: "center",
+                                    padding: "8px",
+                                    backgroundColor: "var(--background-modifier-hover)",
+                                    borderRadius: "4px",
+                                    marginBottom: "8px"
+                                }} spacing={10}>
+                                    <label style={{fontWeight: "bold"}}>
+                                        {selectedTasksFromTable.length} task{selectedTasksFromTable.length > 1 ? 's' : ''} selected
+                                    </label>
+                                    <button onClick={() => handleBatchChangeWorkflow(selectedTasksFromTable)}>
+                                        Change Workflow
+                                    </button>
+                                    <button onClick={() => handleBatchSetPriority(selectedTasksFromTable)}>
+                                        Set Priority
+                                    </button>
+                                    <button onClick={() => {
+                                        setSelectedTasksFromTable([]);
+                                    }}>
+                                        Clear Selection
+                                    </button>
+                                </HStack>
+                            )}
                             <PaginatedTaskTable curWfName={curWfName} headers={headers} taskRows={taskRows}
                                                 setSortToColumn={setSortToColumn} headStyleGetter={headStyleGetter}
                                                 cellStyleGetter={cellStyleGetter}
                                                 taskData={displayedTasks}
-                                                onRowContextMenu={handleRowContextMenu}/>
+                                                onRowContextMenu={handleRowContextMenu}
+                                                onSelectionChange={useCallback((selectedRowIndices: number[]) => {
+                                                    // Convert row indices to actual tasks
+                                                    const selectedTasks = selectedRowIndices
+                                                        .map(index => displayedTasks[index])
+                                                        .filter((task): task is OdaPmTask => task !== undefined);
+                                                    setSelectedTasksFromTable(selectedTasks);
+                                                }, [displayedTasks])}
+                                                onSelectionModeChange={useCallback((isSelectionMode: boolean) => {
+                                                    // Clear selected tasks when exiting selection mode
+                                                    if (!isSelectionMode) {
+                                                        setSelectedTasksFromTable([]);
+                                                    }
+                                                }, [])}/>
                             {contextMenu && (
                                 <ContextMenu
                                     items={contextMenuItems}

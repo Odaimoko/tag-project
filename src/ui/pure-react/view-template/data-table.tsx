@@ -1,10 +1,14 @@
 import {IRenderable} from "../props-typing/i-renderable";
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
+import {createPortal} from "react-dom";
 import {HStack, VStack} from "./h-stack";
 import {ClickableObsidianIconView} from "../../react-view/obsidian-icon-view";
 import {centerChildren, diffGroupSpacing, sameGroupSpacing} from "../style-def";
 import {OptionValueType, SearchableDropdown} from "./searchable-dropdown";
 import {devLog} from "../../../utils/env-util";
+import {SelectionCheckbox} from "./selection-checkbox";
+import {SelectionModeStatusBar} from "./selection-mode-status-bar";
+import {useSelectionMode} from "./use-selection-mode";
 
 interface DataTableParams {
     tableTitle: string;
@@ -19,6 +23,11 @@ interface DataTableParams {
     rowRange?: [number, number]; // [begin, end], if end is -1, means the end is the last row
     onRowContextMenu?: (rowIndex: number, event: React.MouseEvent) => void;
     rowData?: any[]; // Additional data for each row (e.g., task objects)
+    // Selection mode props
+    enableSelectionMode?: boolean; // Enable selection mode feature
+    selectionMode?: boolean; // External control of selection mode (controlled component)
+    onSelectionChange?: (selectedRowIndices: number[]) => void; // Callback when selection changes
+    onSelectionModeChange?: (isSelectionMode: boolean) => void; // Callback when selection mode changes
 }
 
 /**
@@ -45,58 +54,106 @@ export const DataTable = ({
                               cellStyleGetter,
                               rowRange,
                               onRowContextMenu,
-                              rowData
+                              rowData,
+                              enableSelectionMode = false,
+                              selectionMode: externalSelectionMode,
+                              onSelectionChange,
+                              onSelectionModeChange
                           }: DataTableParams) => {
+        const tableRef = useRef<HTMLTableElement>(null);
+
+        // Use selection mode hook for state management
+        const {
+            isSelectionMode,
+            setIsSelectionMode,
+            selectedRows,
+            toggleRowSelection
+        } = useSelectionMode({
+            enableSelectionMode,
+            externalSelectionMode,
+            onSelectionChange,
+            onSelectionModeChange
+        });
+
         const start = rowRange?.[0] ?? 0;
         const end = Math.min(rowRange?.[1] ?? rows.length, rows.length);
         const displayedRows = rows.slice(start, end);
         const displayedRowData = rowData ? rowData.slice(start, end) : undefined;
+
+        // Handle row click for selection
+        const handleRowClick = (actualRowIndex: number, event: React.MouseEvent) => {
+            if (!enableSelectionMode || !isSelectionMode) return;
+
+            event.preventDefault();
+            event.stopPropagation();
+            toggleRowSelection(actualRowIndex);
+        };
+
         return (
-            <table style={tableStyle} key={tableTitle}>
-                <tbody>
-                {displayedRows.map((items: IRenderable[], rowIdx) => {
-                    const actualRowIndex = start + rowIdx;
-                    return (
-                        <tr 
-                            key={rowIdx}
-                            onContextMenu={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                onRowContextMenu?.(actualRowIndex, e);
-                            }}
-                        >
-                            {items.map(
-                                function (k: IRenderable, columnIdx) {
-                                    const key = `${tableTitle}_${rowIdx}_${columnIdx}`;
-                                    const cStyle = cellStyleGetter ?
-                                        cellStyleGetter(columnIdx, actualRowIndex) :
-                                        cellStyle;
-                                    return <td style={cStyle} key={key}>{k}</td>;
-                                })}
-                        </tr>
-                    );
-                })}
-                </tbody>
-                {/*Draw header at the end, so it can cover body view. Or else the body content will be rendered above headers. */}
-                <thead>
-                <tr>
-                    {headers.map((header: IRenderable, index) => {
-                        const headerStyle = thStyleGetter ? thStyleGetter(index) : thStyle;
-                        return <th style={headerStyle} key={index}>
-                            <div onClick={() => {
-                                onHeaderClicked?.(index)
-                            }}>{header}</div>
-                        </th>;
+            <div style={{position: "relative"}}>
+                <table ref={tableRef} style={tableStyle} key={tableTitle}>
+                    <tbody>
+                    {displayedRows.map((items: IRenderable[], rowIdx) => {
+                        const actualRowIndex = start + rowIdx;
+                        const isSelected = isSelectionMode && selectedRows.has(actualRowIndex);
+                        return (
+                            <tr
+                                key={rowIdx}
+                                onClick={(e) => handleRowClick(actualRowIndex, e)}
+                                onContextMenu={(e) => {
+                                    if (!isSelectionMode) {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        onRowContextMenu?.(actualRowIndex, e);
+                                    }
+                                }}
+                                style={{
+                                    cursor: isSelectionMode ? "pointer" : "default",
+                                    backgroundColor: isSelected ? "var(--background-modifier-active)" : "transparent",
+                                    userSelect: "none"
+                                }}
+                            >
+                                {isSelectionMode && (
+                                    <SelectionCheckbox
+                                        isSelected={isSelected}
+                                        onToggle={(e) => handleRowClick(actualRowIndex, e as any)}
+                                    />
+                                )}
+                                {items.map(
+                                    function (k: IRenderable, columnIdx) {
+                                        const key = `${tableTitle}_${rowIdx}_${columnIdx}`;
+                                        const cStyle = cellStyleGetter ?
+                                            cellStyleGetter(columnIdx, actualRowIndex) :
+                                            cellStyle;
+                                        return <td style={cStyle} key={key}>{k}</td>;
+                                    })}
+                            </tr>
+                        );
                     })}
-                </tr>
-                </thead>
-            </table>
+                    </tbody>
+                    {/*Draw header at the end, so it can cover body view. Or else the body content will be rendered above headers. */}
+                    <thead>
+                    <tr>
+                        {isSelectionMode && <th style={{width: "40px", padding: "8px 4px"}}></th>}
+                        {headers.map((header: IRenderable, index) => {
+                            const headerStyle = thStyleGetter ? thStyleGetter(index) : thStyle;
+                            return <th style={headerStyle} key={index}>
+                                <div onClick={() => {
+                                    onHeaderClicked?.(index)
+                                }}>{header}</div>
+                            </th>;
+                        })}
+                    </tr>
+                    </thead>
+                </table>
+            </div>
         );
     }
 
 interface SetTableDataCountPerPageParams {
     dataCountPerPage: number,
     setDataCountPerPage: (count: number) => void,
+    onExitSelectionMode?: () => void; // Callback to exit selection mode when task per page is changed
 }
 
 export const PaginatedDataTable = (props: Omit<DataTableParams, "rowRange"> & SetTableDataCountPerPageParams & {
@@ -104,13 +161,32 @@ export const PaginatedDataTable = (props: Omit<DataTableParams, "rowRange"> & Se
 }) => {
     const totalPageCount = Math.ceil(props.rows.length / props.dataCountPerPage);
     const [curPage, setCurPage] = useState(0);
+    const [isSelectionMode, setIsSelectionMode] = useState(false);
+    const [selectedCount, setSelectedCount] = useState(0);
     const rowRange: [number, number] = [curPage * props.dataCountPerPage, (curPage + 1) * props.dataCountPerPage];
+    
     useEffect(() => {
         const clamped = Math.clamp(curPage, 0, totalPageCount - 1);
         setCurPage(clamped) // When tasks change, the current page should change to the first.
     }, [props.rows]);
+
+    // Handle selection mode change from DataTable
+    const handleSelectionModeChange = (isMode: boolean) => {
+        setIsSelectionMode(isMode);
+        props.onSelectionModeChange?.(isMode);
+        if (!isMode) {
+            setSelectedCount(0);
+        }
+    };
+
+    // Handle selection change from DataTable
+    const handleSelectionChange = (selectedRowIndices: number[]) => {
+        setSelectedCount(selectedRowIndices.length);
+        props.onSelectionChange?.(selectedRowIndices);
+    };
+
     return (
-        <VStack>
+        <VStack spacing={diffGroupSpacing}>
             <HStack style={{
                 justifyContent: "space-between", // align left and right
                 alignItems: "center",
@@ -118,10 +194,48 @@ export const PaginatedDataTable = (props: Omit<DataTableParams, "rowRange"> & Se
             }}>
                 <PaginationView  {...props} totalPageCount={totalPageCount} externalCurPage={curPage}
                                  externalSetCurPage={setCurPage}/>
-                <SetCountPerPageWidget {...props}/>
+                <HStack spacing={sameGroupSpacing} style={centerChildren}>
+                    {props.enableSelectionMode && !isSelectionMode && (
+                        <button 
+                            onClick={() => {
+                                setIsSelectionMode(true);
+                            }}
+                            style={{
+                                padding: "4px 8px",
+                                fontSize: "12px",
+                                cursor: "pointer"
+                            }}
+                        >
+                            Selection Mode
+                        </button>
+                    )}
+                    <SetCountPerPageWidget 
+                        {...props}
+                        onExitSelectionMode={props.enableSelectionMode && isSelectionMode ? () => {
+                            setIsSelectionMode(false);
+                        } : undefined}
+                    />
+                </HStack>
             </HStack>
 
-            <DataTable {...props} rowRange={rowRange}/>
+            {/* Selection mode status bar - positioned between pagination and table */}
+            {props.enableSelectionMode && isSelectionMode && (
+                <SelectionModeStatusBar 
+                    selectedCount={selectedCount}
+                    onExit={() => {
+                        setIsSelectionMode(false);
+                    }}
+                />
+            )}
+
+            <DataTable 
+                {...props} 
+                rowRange={rowRange}
+                enableSelectionMode={props.enableSelectionMode}
+                selectionMode={isSelectionMode}
+                onSelectionModeChange={handleSelectionModeChange}
+                onSelectionChange={handleSelectionChange}
+            />
         </VStack>
     )
 }
@@ -146,6 +260,8 @@ const AvailableTasksPerPage: OptionValueType[] = [
  */
 function SetCountPerPageWidget(props: SetTableDataCountPerPageParams) {
     const [searching, setSearching] = useState(false)
+    const buttonRef = useRef<HTMLButtonElement>(null)
+    const [dropdownPosition, setDropdownPosition] = useState<{ top: number, left: number } | null>(null)
 
     function setSettings(inputText: string[]) {
         if (inputText.length === 0) {
@@ -153,32 +269,78 @@ function SetCountPerPageWidget(props: SetTableDataCountPerPageParams) {
         }
         setSearching(false)
         props.setDataCountPerPage(Number(inputText[0]))
+        // Exit selection mode when task per page is changed
+        props.onExitSelectionMode?.()
     }
+
+    // Calculate dropdown position based on button position
+    useEffect(() => {
+        if (searching && buttonRef.current) {
+            const updatePosition = () => {
+                if (buttonRef.current) {
+                    const rect = buttonRef.current.getBoundingClientRect()
+                    // Use getBoundingClientRect() which returns viewport coordinates
+                    // Since we use position: fixed, we don't need to add scroll offsets
+                    setDropdownPosition({
+                        top: rect.bottom - rect.height, // offset with button height to align with button
+                        left: rect.left
+                    })
+                }
+            }
+
+            // Update position immediately
+            updatePosition()
+
+            // Update position on scroll/resize to keep dropdown aligned with button
+            window.addEventListener('scroll', updatePosition, true)
+            window.addEventListener('resize', updatePosition)
+
+            return () => {
+                window.removeEventListener('scroll', updatePosition, true)
+                window.removeEventListener('resize', updatePosition)
+            }
+        } else {
+            setDropdownPosition(null)
+        }
+    }, [searching])
 
     // 10,20,50
 
-    return <HStack style={centerChildren} spacing={sameGroupSpacing}>
-        <div>
-            {
-                // since a inputbox's height is the same as the button, we use absolute position and hide the input box to 
-                searching && <div style={{position: "absolute"}}>
-                    <SearchableDropdown data={AvailableTasksPerPage} handleSetOptionValues={setSettings}
-                                        dropdownId={"SetCountPerPageWidget"}
-                                        showInputBox={false}
-                                        initDropdownStatus={"block"} onBlur={() => {
+    return <>
+        <HStack style={centerChildren} spacing={sameGroupSpacing}>
+            <div>
+                <button
+                    ref={buttonRef}
+                    onClick={() => {
+                        setSearching(!searching)
+                    }}
+                >
+                    {props.dataCountPerPage}
+                </button>
+            </div>
+            <label> Tasks per page</label>
+        </HStack>
+        {searching && dropdownPosition && createPortal(
+            <div style={{
+                position: "fixed",
+                top: `${dropdownPosition.top}px`,
+                left: `${dropdownPosition.left}px`,
+                zIndex: 1000
+            }}>
+                <SearchableDropdown
+                    data={AvailableTasksPerPage}
+                    handleSetOptionValues={setSettings}
+                    dropdownId={"SetCountPerPageWidget"}
+                    showInputBox={false}
+                    initDropdownStatus={"block"}
+                    onBlur={() => {
                         setSearching(false)
-                    }}/>
-
-                </div>
-
-            }
-            <button onClick={() => {
-                setSearching(!searching)
-            }}>{props.dataCountPerPage}</button>
-
-        </div>
-        <label> Tasks per page</label>
-    </HStack>
+                    }}
+                />
+            </div>,
+            document.body
+        )}
+    </>
 }
 
 interface PaginationViewParams {
