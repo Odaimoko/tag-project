@@ -16,6 +16,7 @@ import {ModuleId_Unclassified} from "./OdaPmModule";
 import {DefaultTaskPriority, MoreThanOnePriority} from "../settings/settings";
 import {Plugin} from "obsidian";
 import {addTagText, removeTagText} from "./tag-text-manipulate";
+import {TaskSource} from "./TaskSource";
 
 export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
     boundTask: STask;
@@ -28,6 +29,10 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
     tickedSteps: I_OdaPmStep[];
     // 0.2.0
     projects: OdaPmProject[];
+    // Task source information: file, path, and line number
+    source: TaskSource;
+    // UUID for selection usage
+    uuid: string;
 
 
     constructor(type: I_OdaPmWorkflow, task: STask) {
@@ -46,6 +51,10 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
             }
         }
         this.projects = []
+        // Initialize source information
+        this.source = TaskSource.fromSTask(task);
+        // Generate UUID
+        this.uuid = crypto.randomUUID();
     }
 
     toObject() {
