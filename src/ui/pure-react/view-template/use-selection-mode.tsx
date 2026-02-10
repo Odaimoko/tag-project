@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 
 interface UseSelectionModeParams {
     enableSelectionMode: boolean;
@@ -33,9 +33,6 @@ export function useSelectionMode({
     // Selection mode state - use external if provided, otherwise internal
     const [internalSelectionMode, setInternalSelectionMode] = useState(false);
     const isSelectionMode = externalSelectionMode !== undefined ? externalSelectionMode : internalSelectionMode;
-    const setIsSelectionMode = externalSelectionMode !== undefined
-        ? (onSelectionModeChange ? (val: boolean) => onSelectionModeChange(val) : () => {})
-        : setInternalSelectionMode;
 
     const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
 
@@ -48,6 +45,18 @@ export function useSelectionMode({
         onSelectionChangeRef.current = onSelectionChange;
         onSelectionModeChangeRef.current = onSelectionModeChange;
     }, [onSelectionChange, onSelectionModeChange]);
+
+    // Stable setIsSelectionMode function
+    // Use useCallback to create a stable reference
+    const setIsSelectionMode = useCallback((val: boolean) => {
+        if (externalSelectionMode !== undefined) {
+            // External control - call the callback
+            onSelectionModeChangeRef.current?.(val);
+        } else {
+            // Internal control - update internal state
+            setInternalSelectionMode(val);
+        }
+    }, [externalSelectionMode]);
 
     // Handle ESC key to exit selection mode
     useEffect(() => {
@@ -84,7 +93,8 @@ export function useSelectionMode({
     }, [selectedRows, isSelectionMode]);
 
     // Toggle row selection
-    const toggleRowSelection = (rowIndex: number) => {
+    // Use useCallback to ensure stable reference
+    const toggleRowSelection = useCallback((rowIndex: number) => {
         setSelectedRows(prev => {
             const newSet = new Set(prev);
             if (newSet.has(rowIndex)) {
@@ -94,7 +104,7 @@ export function useSelectionMode({
             }
             return newSet;
         });
-    };
+    }, []);
 
     return {
         isSelectionMode,

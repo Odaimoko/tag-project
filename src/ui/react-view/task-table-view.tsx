@@ -10,7 +10,7 @@ import {
     TaskStatus_unchecked
 } from "../../data-model/workflow-def";
 import {openTaskPrecisely, rewriteTask} from "../../utils/io-util";
-import React, {MouseEvent, ReactElement, useCallback, useContext, useEffect, useState} from "react";
+import React, {MouseEvent, ReactElement, useCallback, useContext, useEffect, useMemo, useRef, useState} from "react";
 import {PluginContext} from "../obsidian/manage-page-view";
 import {
     getForceNewTabOnClick,
@@ -323,21 +323,31 @@ function PaginatedTaskTable({curWfName, headers, taskRows, setSortToColumn, head
     const [tasksPerPage, setTasksPerPage,] = usePluginSettings<number>("display_tasks_count_per_page");
     const [maxPageButtonCount] = usePluginSettings<number>("max_page_buttons_count");
     
+    // Use refs to store latest callbacks to avoid dependency issues
+    const onSelectionChangeRef = useRef(onSelectionChange);
+    const onSelectionModeChangeRef = useRef(onSelectionModeChange);
+    
+    // Update refs when callbacks change
+    useEffect(() => {
+        onSelectionChangeRef.current = onSelectionChange;
+        onSelectionModeChangeRef.current = onSelectionModeChange;
+    }, [onSelectionChange, onSelectionModeChange]);
+    
     // Handle selection changes from DataTable
-    // Use useCallback to prevent infinite loops
+    // Use useCallback with stable dependencies to prevent infinite loops
     const handleSelectionChange = useCallback((selectedRowIndices: number[]) => {
-        onSelectionChange?.(selectedRowIndices);
-    }, [onSelectionChange]);
+        onSelectionChangeRef.current?.(selectedRowIndices);
+    }, []); // Empty deps - using ref for latest callback
 
     // Handle selection mode changes - clear selection when exiting mode
-    // Use useCallback to prevent infinite loops
+    // Use useCallback with stable dependencies to prevent infinite loops
     const handleSelectionModeChange = useCallback((isSelectionMode: boolean) => {
-        onSelectionModeChange?.(isSelectionMode);
+        onSelectionModeChangeRef.current?.(isSelectionMode);
         if (!isSelectionMode) {
             // Clear selection when exiting selection mode
-            onSelectionChange?.([]);
+            onSelectionChangeRef.current?.([]);
         }
-    }, [onSelectionModeChange, onSelectionChange]);
+    }, []); // Empty deps - using ref for latest callbacks
 
     return <PaginatedDataTable
         tableTitle={curWfName}
@@ -553,6 +563,25 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
 
     const {cellStyleGetter, headStyleGetter} = getDefaultTableStyleGetters();
 
+    // Handle selection changes from DataTable - convert row indices to tasks
+    // Must be defined at component top level (hooks rule)
+    const handleTableSelectionChange = useCallback((selectedRowIndices: number[]) => {
+        // Convert row indices to actual tasks
+        const selectedTasks = selectedRowIndices
+            .map(index => displayedTasks[index])
+            .filter((task): task is OdaPmTask => task !== undefined);
+        setSelectedTasksFromTable(selectedTasks);
+    }, [displayedTasks]);
+
+    // Handle selection mode changes - clear selection when exiting mode
+    // Must be defined at component top level (hooks rule)
+    const handleTableSelectionModeChange = useCallback((isSelectionMode: boolean) => {
+        // Clear selected tasks when exiting selection mode
+        if (!isSelectionMode) {
+            setSelectedTasksFromTable([]);
+        }
+    }, []);
+
     function handleRowContextMenu(rowIndex: number, event: React.MouseEvent) {
         const selectedTasks = [displayedTasks[rowIndex]];
         devLog("handleRowContextMenu", rowIndex, event.clientX, event.clientY)
@@ -603,30 +632,50 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
     function handleBatchChangeWorkflow(tasks: OdaPmTask[]) {
         if (tasks.length === 0) return;
         
-        // Use the first task's project to filter workflows
-        const firstTask = tasks[0];
-        
-        new WorkflowSuggestionModal(plugin.app, firstTask.boundTask.path, firstTask, async (workflow, evt) => {
-            if (!workflow) return;
+        try {
+            // Use the first task's project to filter workflows
+            const firstTask = tasks[0];
             
-            const result = await batchChangeWorkflow(tasks, workflow, plugin.app.vault);
-            notifyBatchOperationResult('Changed workflow', tasks.length, result);
-        }).open();
+            new WorkflowSuggestionModal(plugin.app, firstTask.boundTask.path, firstTask, async (workflow, evt) => {
+                if (!workflow) return;
+                
+                try {
+                    const result = await batchChangeWorkflow(tasks, workflow, plugin.app.vault);
+                    notifyBatchOperationResult('Changed workflow', tasks.length, result);
+                } catch (error) {
+                    devLog('Error in batch change workflow:', error);
+                    notify('Failed to change workflow for selected tasks', 3);
+                }
+            }).open();
+        } catch (error) {
+            devLog('Error opening workflow suggestion modal:', error);
+            notify('Failed to open workflow selection', 3);
+        }
     }
 
     function handleBatchSetPriority(tasks: OdaPmTask[]) {
         if (tasks.length === 0) return;
         
-        const priorityTags = OdaPmDbProvider.get()?.pmPriorityTags ?? [];
-        if (priorityTags.length === 0) {
-            notify('No priority tags configured', 3);
-            return;
+        try {
+            const priorityTags = OdaPmDbProvider.get()?.pmPriorityTags ?? [];
+            if (priorityTags.length === 0) {
+                notify('No priority tags configured', 3);
+                return;
+            }
+            
+            new PrioritySuggestionModal(plugin.app, async (priorityTag, evt) => {
+                try {
+                    const result = await batchSetPriority(tasks, priorityTag, plugin, priorityTags);
+                    notifyBatchOperationResult('Set priority', tasks.length, result);
+                } catch (error) {
+                    devLog('Error in batch set priority:', error);
+                    notify('Failed to set priority for selected tasks', 3);
+                }
+            }).open();
+        } catch (error) {
+            devLog('Error opening priority suggestion modal:', error);
+            notify('Failed to open priority selection', 3);
         }
-        
-        new PrioritySuggestionModal(plugin.app, async (priorityTag, evt) => {
-            const result = await batchSetPriority(tasks, priorityTag, plugin, priorityTags);
-            notifyBatchOperationResult('Set priority', tasks.length, result);
-        }).open();
     }
 
     const contextMenuItems: ContextMenuItem[] = contextMenu ? [
@@ -719,19 +768,8 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
                                                 cellStyleGetter={cellStyleGetter}
                                                 taskData={displayedTasks}
                                                 onRowContextMenu={handleRowContextMenu}
-                                                onSelectionChange={useCallback((selectedRowIndices: number[]) => {
-                                                    // Convert row indices to actual tasks
-                                                    const selectedTasks = selectedRowIndices
-                                                        .map(index => displayedTasks[index])
-                                                        .filter((task): task is OdaPmTask => task !== undefined);
-                                                    setSelectedTasksFromTable(selectedTasks);
-                                                }, [displayedTasks])}
-                                                onSelectionModeChange={useCallback((isSelectionMode: boolean) => {
-                                                    // Clear selected tasks when exiting selection mode
-                                                    if (!isSelectionMode) {
-                                                        setSelectedTasksFromTable([]);
-                                                    }
-                                                }, [])}/>
+                                                onSelectionChange={handleTableSelectionChange}
+                                                onSelectionModeChange={handleTableSelectionModeChange}/>
                             {contextMenu && (
                                 <ContextMenu
                                     items={contextMenuItems}

@@ -116,7 +116,10 @@ export const DataTable = ({
                                 {isSelectionMode && (
                                     <SelectionCheckbox
                                         isSelected={isSelected}
-                                        onToggle={(e) => handleRowClick(actualRowIndex, e as any)}
+                                        onToggle={(e) => {
+                                            e.stopPropagation();
+                                            toggleRowSelection(actualRowIndex);
+                                        }}
                                     />
                                 )}
                                 {items.map(
