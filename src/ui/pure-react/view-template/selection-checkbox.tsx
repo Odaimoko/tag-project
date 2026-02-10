@@ -16,7 +16,9 @@ export function SelectionCheckbox({isSelected, onToggle}: SelectionCheckboxProps
                 width: "40px",
                 textAlign: "center",
                 padding: "8px 4px",
-                backgroundColor: isSelected ? "var(--background-modifier-active)" : "transparent",
+                // Keep the cell transparent so the row-level selected highlight
+                // (background/outline/accent bar) stays visually consistent.
+                backgroundColor: "transparent",
                 verticalAlign: "middle"
             }}
             onClick={(e) => {

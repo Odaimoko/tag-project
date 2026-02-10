@@ -28,6 +28,8 @@ interface DataTableParams {
     selectionMode?: boolean; // External control of selection mode (controlled component)
     onSelectionChange?: (selectedRowIndices: number[]) => void; // Callback when selection changes
     onSelectionModeChange?: (isSelectionMode: boolean) => void; // Callback when selection mode changes
+    // Callback to pass selection mode state to row renderers
+    rowRenderer?: (rowIndex: number, content: IRenderable[], isSelectionMode: boolean) => IRenderable[];
 }
 
 /**
@@ -109,8 +111,22 @@ export const DataTable = ({
                                 }}
                                 style={{
                                     cursor: isSelectionMode ? "pointer" : "default",
-                                    backgroundColor: isSelected ? "var(--background-modifier-active)" : "transparent",
-                                    userSelect: "none"
+                                    userSelect: "none",
+                                    transition: "background-color 120ms ease, box-shadow 120ms ease, outline-color 120ms ease",
+                                    ...(isSelected
+                                        ? {
+                                            // Make selected rows much more obvious:
+                                            // - stronger background
+                                            // - left accent bar
+                                            // - outline (works even if cells have their own background colors)
+                                            backgroundColor: "var(--background-modifier-hover)",
+                                            boxShadow: "inset 4px 0 0 var(--interactive-accent)",
+                                            outline: "2px solid var(--interactive-accent)",
+                                            outlineOffset: "-2px"
+                                        }
+                                        : {
+                                            backgroundColor: "transparent"
+                                        })
                                 }}
                             >
                                 {isSelectionMode && (
@@ -128,7 +144,21 @@ export const DataTable = ({
                                         const cStyle = cellStyleGetter ?
                                             cellStyleGetter(columnIdx, actualRowIndex) :
                                             cellStyle;
-                                        return <td style={cStyle} key={key}>{k}</td>;
+                                        return (
+                                            <td 
+                                                style={cStyle} 
+                                                key={key}
+                                                onClick={(e) => {
+                                                    // In selection mode, prevent all click events from bubbling
+                                                    // This disables original click behaviors (like opening tasks)
+                                                    if (isSelectionMode) {
+                                                        e.stopPropagation();
+                                                    }
+                                                }}
+                                            >
+                                                {k}
+                                            </td>
+                                        );
                                     })}
                             </tr>
                         );
