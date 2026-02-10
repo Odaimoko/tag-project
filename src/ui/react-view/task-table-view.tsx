@@ -50,6 +50,7 @@ import {getIconByWorkflow} from "./tag-project-style";
 import {ClickableView} from "../pure-react/view-template/clickable-view";
 import {addTagText} from "../../data-model/tag-text-manipulate";
 import {Tag_Prefix_Project} from "../../data-model/OdaPmProject";
+import {ContextMenu, ContextMenuItem} from "../pure-react/view-template/context-menu";
 
 export const taskCheckBoxMargin = {marginLeft: 3};
 
@@ -179,7 +180,7 @@ function rectifyOdaTaskOnMdTaskChanged(oTask: OdaPmTask, plugin: OdaPmToolPlugin
     }
 }
 
-export function getDefaultTableStyleGetters(minSummaryWidth: number | string = 1, maxSummaryWidth: number | string = 300, summaryColumn = 0, isCellCentered = true) {
+export function getDefaultTableStyleGetters(minSummaryWidth: number | string = 500, maxSummaryWidth: number | string = 300, summaryColumn = 0, isCellCentered = true) {
     // striped rows. center step cell but not summary cell.
     // TODO performance, we instantiate a lot of dictionaries here
     const evenBg: React.CSSProperties = {backgroundColor: "rgba(0,0,0,0.2)"};
@@ -188,6 +189,7 @@ export function getDefaultTableStyleGetters(minSummaryWidth: number | string = 1
         minWidth: minSummaryWidth,
         maxWidth: maxSummaryWidth,
         padding: 5, paddingLeft: 10,
+        width: "auto"
     }
     const summaryEvenCellStyle = {...summaryCellStyle, ...evenBg}
     const summaryOddCellStyle = {...summaryCellStyle, ...oddBg}
@@ -299,13 +301,15 @@ function TaskPriorityIcon({oTask}: { oTask: OdaPmTask }): React.JSX.Element {
     </div>} title={"Choose priority..."}/>;
 }
 
-function PaginatedTaskTable({curWfName, headers, taskRows, setSortToColumn, headStyleGetter, cellStyleGetter}: {
+function PaginatedTaskTable({curWfName, headers, taskRows, setSortToColumn, headStyleGetter, cellStyleGetter, taskData, onRowContextMenu}: {
     curWfName: string,
     headers: React.JSX.Element[],
     taskRows: IRenderable[][],
     setSortToColumn: (index: number) => void,
     headStyleGetter: (columnIndex: number) => React.CSSProperties,
-    cellStyleGetter: (column: number, row: number) => React.CSSProperties
+    cellStyleGetter: (column: number, row: number) => React.CSSProperties,
+    taskData?: OdaPmTask[],
+    onRowContextMenu?: (rowIndex: number, event: React.MouseEvent) => void
 }) {
     const [tasksPerPage, setTasksPerPage,] = usePluginSettings<number>("display_tasks_count_per_page");
     const [maxPageButtonCount] = usePluginSettings<number>("max_page_buttons_count");
@@ -324,6 +328,8 @@ function PaginatedTaskTable({curWfName, headers, taskRows, setSortToColumn, head
         cellStyleGetter={cellStyleGetter}
         dataCountPerPage={tasksPerPage} setDataCountPerPage={setTasksPerPage}
         maxPageButtonCount={maxPageButtonCount}
+        rowData={taskData}
+        onRowContextMenu={onRowContextMenu}
     />;
 }
 
@@ -343,6 +349,8 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
     const [showCompleted, setShowCompleted] = useState(getSettings()?.show_completed_tasks as boolean);
     const [showSteps, setShowSteps] = useState(getSettings()?.table_steps_shown as boolean);
     const [showTagsInSummary, setShowTagsInSummary] = usePluginSettings<boolean>("tags_in_task_table_summary_cell");
+    // context menu
+    const [contextMenu, setContextMenu] = useState<{x: number, y: number, tasks: OdaPmTask[]} | null>(null);
 
     function onJumpToTask(oTask: OdaPmTask) {
         setSearchText(oTask.summary)
@@ -513,6 +521,67 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
 
     const {cellStyleGetter, headStyleGetter} = getDefaultTableStyleGetters();
 
+    function handleRowContextMenu(rowIndex: number, event: React.MouseEvent) {
+        const selectedTasks = [displayedTasks[rowIndex]];
+        devLog("handleRowContextMenu", rowIndex, event.clientX, event.clientY)
+        // clientX and Y are relative to the browser window, not the element
+        setContextMenu({
+            x: event.clientX,
+            y: event.clientY,
+            tasks: selectedTasks
+        });
+    }
+
+    function capitalizeWords(text: string): string {
+        return text.split(' ').map(word => {
+            if (word.length === 0) return word;
+            return word[0].toUpperCase() + word.slice(1).toLowerCase();
+        }).join(' ');
+    }
+
+    async function copyTaskNames(tasks: OdaPmTask[], format: 'original' | 'capitalized' | 'withoutTags') {
+        let textToCopy = '';
+        for (const task of tasks) {
+            let taskName = '';
+            switch (format) {
+                case 'original':
+                    taskName = task.summary;
+                    break;
+                case 'capitalized':
+                    taskName = capitalizeWords(task.summary);
+                    break;
+                case 'withoutTags':
+                    taskName = task.summary; // summary already doesn't include tags
+                    break;
+            }
+            textToCopy += taskName + '\n';
+        }
+        textToCopy = textToCopy.trim(); // Remove trailing newline
+        
+        try {
+            await navigator.clipboard.writeText(textToCopy);
+            notify(`Copied ${tasks.length} task name(s)`, 2);
+        } catch (err) {
+            devLog('Failed to copy:', err);
+            notify('Failed to copy task names', 2);
+        }
+    }
+
+    const contextMenuItems: ContextMenuItem[] = contextMenu ? [
+        {
+            label: 'Copy Task Names (Original)',
+            onClick: () => copyTaskNames(contextMenu.tasks, 'original')
+        },
+        {
+            label: 'Copy Task Names (Capitalized)',
+            onClick: () => copyTaskNames(contextMenu.tasks, 'capitalized')
+        },
+        {
+            label: 'Copy Task Names (Without tags)',
+            onClick: () => copyTaskNames(contextMenu.tasks, 'withoutTags')
+        }
+    ] : [];
+
     return (
         <VStack spacing={diffGroupSpacing}>
             <HStack style={{
@@ -547,9 +616,21 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
             {
                 displayWorkflows.length === 0 ? <label>No Workflow selected.</label> : (
                     taskRows.length > 0 ?
-                        <PaginatedTaskTable curWfName={curWfName} headers={headers} taskRows={taskRows}
-                                            setSortToColumn={setSortToColumn} headStyleGetter={headStyleGetter}
-                                            cellStyleGetter={cellStyleGetter}/>
+                        <>
+                            <PaginatedTaskTable curWfName={curWfName} headers={headers} taskRows={taskRows}
+                                                setSortToColumn={setSortToColumn} headStyleGetter={headStyleGetter}
+                                                cellStyleGetter={cellStyleGetter}
+                                                taskData={displayedTasks}
+                                                onRowContextMenu={handleRowContextMenu}/>
+                            {contextMenu && (
+                                <ContextMenu
+                                    items={contextMenuItems}
+                                    x={contextMenu.x}
+                                    y={contextMenu.y}
+                                    onClose={() => setContextMenu(null)}
+                                />
+                            )}
+                        </>
                         : <div>
                             <label>No results.</label>
                         </div>
@@ -722,7 +803,7 @@ function addTagToSummary(oTask: OdaPmTask, summary: string) {
     for (const tag of oTask.getAllTags()) {
 
         const hidden = shouldTagBeHidden(tag);
-        devLog(tag, "Hidden?", hidden)
+        // devLog(tag, "Hidden?", hidden)
 
         if (!hidden) {
             summary = addTagText(summary, tag)

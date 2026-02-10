@@ -17,6 +17,8 @@ interface DataTableParams {
     cellStyle?: React.CSSProperties;
     cellStyleGetter?: (column: number, row: number) => React.CSSProperties;
     rowRange?: [number, number]; // [begin, end], if end is -1, means the end is the last row
+    onRowContextMenu?: (rowIndex: number, event: React.MouseEvent) => void;
+    rowData?: any[]; // Additional data for each row (e.g., task objects)
 }
 
 /**
@@ -41,27 +43,39 @@ export const DataTable = ({
                               thStyleGetter,
                               cellStyle,
                               cellStyleGetter,
-                              rowRange
+                              rowRange,
+                              onRowContextMenu,
+                              rowData
                           }: DataTableParams) => {
         const start = rowRange?.[0] ?? 0;
         const end = Math.min(rowRange?.[1] ?? rows.length, rows.length);
-        rows = rows.slice(start, end);
+        const displayedRows = rows.slice(start, end);
+        const displayedRowData = rowData ? rowData.slice(start, end) : undefined;
         return (
             <table style={tableStyle} key={tableTitle}>
                 <tbody>
-                {rows.map((items: IRenderable[], rowIdx) => (
-                    <tr key={rowIdx}>
-                        {items.map(
-                            function (k: IRenderable, columnIdx) {
-                                const key = `${tableTitle}_${rowIdx}_${columnIdx}`;
-                                const cStyle = cellStyleGetter ?
-                                    cellStyleGetter(columnIdx, rowIdx) :
-                                    cellStyle;
-                                return <td style={cStyle} key={key}>{k}</td>;
-                            })}
-
-                    </tr>))
-                }
+                {displayedRows.map((items: IRenderable[], rowIdx) => {
+                    const actualRowIndex = start + rowIdx;
+                    return (
+                        <tr 
+                            key={rowIdx}
+                            onContextMenu={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                onRowContextMenu?.(actualRowIndex, e);
+                            }}
+                        >
+                            {items.map(
+                                function (k: IRenderable, columnIdx) {
+                                    const key = `${tableTitle}_${rowIdx}_${columnIdx}`;
+                                    const cStyle = cellStyleGetter ?
+                                        cellStyleGetter(columnIdx, actualRowIndex) :
+                                        cellStyle;
+                                    return <td style={cStyle} key={key}>{k}</td>;
+                                })}
+                        </tr>
+                    );
+                })}
                 </tbody>
                 {/*Draw header at the end, so it can cover body view. Or else the body content will be rendered above headers. */}
                 <thead>
