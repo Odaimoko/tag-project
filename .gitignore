@@ -12,11 +12,13 @@ node_modules
 # They should be uploaded to GitHub releases instead.
 main.js
 
+# obsidian
+data.json
+/main.css
+
 # Exclude sourcemaps
 *.map
 
-# obsidian
-data.json
 
 # Exclude macOS Finder (System Explorer) View States
 .DS_Store

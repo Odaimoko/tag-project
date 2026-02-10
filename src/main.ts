@@ -1,4 +1,4 @@
-import {Editor, EditorPosition, MarkdownFileInfo, MarkdownView, Plugin} from 'obsidian';
+import {Editor, EditorPosition, MarkdownFileInfo, MarkdownView, Menu, Plugin} from 'obsidian';
 import {Icon_ManagePage, ManagePageView, ManagePageViewId} from "./ui/obsidian/manage-page-view";
 import {ONotice} from "./utils/o-notice";
 import {SettingsProvider, TPM_DEFAULT_SETTINGS, TPMSettings} from "./settings/settings";
@@ -23,6 +23,12 @@ import TagRenderer from "./ui/obsidian/tag-render/tag-render";
 import {TPMSettingsTab} from "./settings/TPMSettingsTab";
 import {PrioritySuggestionModal} from "./ui/obsidian/priority-suggestion-modal";
 import {addTagText} from "./data-model/tag-text-manipulate";
+import {
+    matchTasksFromText,
+    batchChangeWorkflow,
+    batchSetPriority,
+    notifyBatchOperationResult
+} from "./utils/task-batch-util";
 
 export const PLUGIN_NAME = 'Tag Project';
 export const CmdPal_OpenManagePage = `Open Manage Page`; // `Open ${Desc_ManagePage}`
@@ -150,6 +156,9 @@ export default class OdaPmToolPlugin extends Plugin {
                 items.forEach(({ title, icon, onClick }) => {
                     menu.addItem((item) => item.setTitle(title).setIcon(icon).onClick(onClick));
                 });
+
+                // Add batch operations for selected text
+                this.addBatchOperationsToMenu(menu, editor, view);
             })
         )
     }
@@ -267,6 +276,86 @@ export default class OdaPmToolPlugin extends Plugin {
                 setTaskPriority(pmTask.boundTask, this, this.pmDb.pmPriorityTags, targetTag)
             }).open();
         });
+    }
+
+    /**
+     * Add batch operations to context menu based on selected text
+     * @param menu The context menu
+     * @param editor The editor instance
+     * @param view The markdown view
+     */
+    private addBatchOperationsToMenu(menu: Menu, editor: Editor, view: MarkdownView | MarkdownFileInfo) {
+        const selectedText = editor.getSelection()?.trim();
+        if (!selectedText || selectedText.length < 3) {
+            return;
+        }
+
+        // Get all tasks from database
+        const allTasks = this.pmDb.pmTasks;
+        if (!allTasks || allTasks.length === 0) {
+            return;
+        }
+
+        // Match tasks from selected text
+        const matchedTasks = matchTasksFromText(selectedText, allTasks);
+        if (matchedTasks.length === 0) {
+            return;
+        }
+
+        // Add separator
+        menu.addSeparator();
+
+        // Add batch operation menu items
+        menu.addItem((item) => {
+            item.setTitle(`Batch: Change Workflow (${matchedTasks.length} task${matchedTasks.length > 1 ? 's' : ''})`)
+                .setIcon(Icon_ManagePage)
+                .onClick(() => {
+                    this.handleBatchChangeWorkflow(matchedTasks);
+                });
+        });
+
+        menu.addItem((item) => {
+            item.setTitle(`Batch: Set Priority (${matchedTasks.length} task${matchedTasks.length > 1 ? 's' : ''})`)
+                .setIcon(Icon_ManagePage)
+                .onClick(() => {
+                    this.handleBatchSetPriority(matchedTasks);
+                });
+        });
+    }
+
+    /**
+     * Handle batch change workflow for matched tasks
+     * @param tasks Tasks to change workflow for
+     */
+    private handleBatchChangeWorkflow(tasks: OdaPmTask[]) {
+        if (tasks.length === 0) return;
+
+        const firstTask = tasks[0];
+        new WorkflowSuggestionModal(this.app, firstTask.boundTask.path, firstTask, async (workflow, evt) => {
+            if (!workflow) return;
+
+            const result = await batchChangeWorkflow(tasks, workflow, this.app.vault);
+            notifyBatchOperationResult('Changed workflow', tasks.length, result);
+        }).open();
+    }
+
+    /**
+     * Handle batch set priority for matched tasks
+     * @param tasks Tasks to set priority for
+     */
+    private handleBatchSetPriority(tasks: OdaPmTask[]) {
+        if (tasks.length === 0) return;
+
+        const priorityTags = this.pmDb.pmPriorityTags ?? [];
+        if (priorityTags.length === 0) {
+            new ONotice('No priority tags configured');
+            return;
+        }
+
+        new PrioritySuggestionModal(this.app, async (priorityTag, evt) => {
+            const result = await batchSetPriority(tasks, priorityTag, this, priorityTags);
+            notifyBatchOperationResult('Set priority', tasks.length, result);
+        }).open();
     }
 
     /**
