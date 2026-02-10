@@ -12,6 +12,8 @@ import {
 import {openTaskPrecisely, rewriteTask} from "../../utils/io-util";
 import React, {MouseEvent, ReactElement, useCallback, useContext, useEffect, useMemo, useRef, useState} from "react";
 import {PluginContext} from "../obsidian/manage-page-view";
+import {useTaskSelection} from "./hooks/use-task-selection";
+import {TaskSelectionToolbar} from "./components/task-selection-toolbar";
 
 // Context for passing selection mode state to child components
 const SelectionModeContext = React.createContext<boolean>(false);
@@ -316,7 +318,7 @@ function TaskPriorityIcon({oTask}: { oTask: OdaPmTask }): React.JSX.Element {
     </div>} title={"Choose priority..."}/>;
 }
 
-function PaginatedTaskTable({curWfName, headers, taskRows, setSortToColumn, headStyleGetter, cellStyleGetter, taskData, onRowContextMenu, onSelectionChange, onSelectionModeChange, clearSelectionTrigger}: {
+function PaginatedTaskTable({curWfName, headers, taskRows, setSortToColumn, headStyleGetter, cellStyleGetter, taskData, onRowContextMenu, onSelectionChange, onSelectionModeChange, clearSelectionTrigger, selectedRowIndices}: {
     curWfName: string,
     headers: React.JSX.Element[],
     taskRows: IRenderable[][],
@@ -327,36 +329,25 @@ function PaginatedTaskTable({curWfName, headers, taskRows, setSortToColumn, head
     onRowContextMenu?: (rowIndex: number, event: React.MouseEvent) => void,
     onSelectionChange?: (selectedRowIndices: number[]) => void,
     onSelectionModeChange?: (isSelectionMode: boolean) => void,
-    clearSelectionTrigger?: number
+    clearSelectionTrigger?: number,
+    selectedRowIndices?: number[]
 }) {
     const [tasksPerPage, setTasksPerPage,] = usePluginSettings<number>("display_tasks_count_per_page");
     const [maxPageButtonCount] = usePluginSettings<number>("max_page_buttons_count");
     
-    // Use refs to store latest callbacks to avoid dependency issues
-    const onSelectionChangeRef = useRef(onSelectionChange);
-    const onSelectionModeChangeRef = useRef(onSelectionModeChange);
-    
-    // Update refs when callbacks change
-    useEffect(() => {
-        onSelectionChangeRef.current = onSelectionChange;
-        onSelectionModeChangeRef.current = onSelectionModeChange;
-    }, [onSelectionChange, onSelectionModeChange]);
-    
-    // Handle selection changes from DataTable
-    // Use useCallback with stable dependencies to prevent infinite loops
+    // Handle selection changes from DataTable - call callback directly
     const handleSelectionChange = useCallback((selectedRowIndices: number[]) => {
-        onSelectionChangeRef.current?.(selectedRowIndices);
-    }, []); // Empty deps - using ref for latest callback
+        onSelectionChange?.(selectedRowIndices);
+    }, [onSelectionChange]);
 
     // Handle selection mode changes - clear selection when exiting mode
-    // Use useCallback with stable dependencies to prevent infinite loops
     const handleSelectionModeChange = useCallback((isSelectionMode: boolean) => {
-        onSelectionModeChangeRef.current?.(isSelectionMode);
+        onSelectionModeChange?.(isSelectionMode);
         if (!isSelectionMode) {
             // Clear selection when exiting selection mode
-            onSelectionChangeRef.current?.([]);
+            onSelectionChange?.([]);
         }
-    }, []); // Empty deps - using ref for latest callbacks
+    }, [onSelectionChange, onSelectionModeChange]);
 
     return <PaginatedDataTable
         tableTitle={curWfName}
@@ -379,6 +370,7 @@ function PaginatedTaskTable({curWfName, headers, taskRows, setSortToColumn, head
         onSelectionChange={handleSelectionChange}
         onSelectionModeChange={handleSelectionModeChange}
         clearSelectionTrigger={clearSelectionTrigger}
+        selectedRowIndices={selectedRowIndices}
     />;
 }
 
@@ -400,12 +392,8 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
     const [showTagsInSummary] = usePluginSettings<boolean>("tags_in_task_table_summary_cell");
     // context menu
     const [contextMenu, setContextMenu] = useState<{x: number, y: number, tasks: OdaPmTask[]} | null>(null);
-    // selected tasks from DataTable selection mode
-    const [selectedTasksFromTable, setSelectedTasksFromTable] = useState<OdaPmTask[]>([]);
     // track selection mode state to disable interactions
     const [isSelectionMode, setIsSelectionMode] = useState(false);
-    // animation state for selected tasks toolbar
-    const [toolbarVisible, setToolbarVisible] = useState(false);
     // trigger to clear DataTable selection
     const [clearSelectionTrigger, setClearSelectionTrigger] = useState(0);
 
@@ -513,6 +501,14 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
 
     // endregion
 
+    // Use task selection hook to manage selection state
+    const {
+        selectedRowIndices,
+        getSelectedTasks,
+        handleSelectionChange,
+        clearSelection,
+    } = useTaskSelection(displayedTasks);
+
     const curWfName = "Tasks";
     const headers = [
         <VStack style={centerChildrenVertStyle}>
@@ -583,41 +579,19 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
 
     const {cellStyleGetter, headStyleGetter} = getDefaultTableStyleGetters();
 
-    // Handle selection changes from DataTable - convert row indices to tasks
-    // Must be defined at component top level (hooks rule)
-    const handleTableSelectionChange = useCallback((selectedRowIndices: number[]) => {
-        // Convert row indices to actual tasks
-        const selectedTasks = selectedRowIndices
-            .map(index => displayedTasks[index])
-            .filter((task): task is OdaPmTask => task !== undefined);
-        setSelectedTasksFromTable(selectedTasks);
-    }, [displayedTasks]);
-
     // Handle selection mode changes - clear selection when exiting mode
     // Must be defined at component top level (hooks rule)
     const handleTableSelectionModeChange = useCallback((isMode: boolean) => {
         setIsSelectionMode(isMode);
-        // Clear selected tasks when exiting selection mode
+        // Clear selected UUIDs when exiting selection mode
         if (!isMode) {
-            setSelectedTasksFromTable([]);
-            setToolbarVisible(false);
+            clearSelection();
         }
-    }, []);
+    }, [clearSelection]);
 
-    // Animate toolbar appearance/disappearance based on selection mode
-    useEffect(() => {
-        if (isSelectionMode) {
-            // Fade in when entering selection mode
-            // Use setTimeout to ensure DOM is ready for animation
-            const timer = setTimeout(() => {
-                setToolbarVisible(true);
-            }, 10);
-            return () => clearTimeout(timer);
-        } else {
-            // Fade out when exiting selection mode
-            setToolbarVisible(false);
-        }
-    }, [isSelectionMode]);
+    // Compute toolbar visibility directly (no useEffect needed)
+    // Toolbar is visible when in selection mode
+    const toolbarVisible = isSelectionMode;
 
     function handleRowContextMenu(rowIndex: number, event: React.MouseEvent) {
         const selectedTasks = [displayedTasks[rowIndex]];
@@ -775,130 +749,26 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
                 displayWorkflows.length === 0 ? <label>No Workflow selected.</label> : (
                     taskRows.length > 0 ?
                         <>
-                            {isSelectionMode && (
-                                <HStack style={{
-                                    justifyContent: "flex-start",
-                                    alignItems: "center",
-                                    padding: "10px 14px",
-                                    backgroundColor: "var(--background-modifier-hover)",
-                                    border: "1px solid var(--interactive-accent)",
-                                    borderRadius: "6px",
-                                    marginBottom: "8px",
-                                    boxShadow: "0 2px 6px rgba(0, 0, 0, 0.1)",
-                                    // Fade in animation
-                                    opacity: toolbarVisible ? 1 : 0,
-                                    transform: toolbarVisible ? "translateY(0)" : "translateY(-10px)",
-                                    transition: "opacity 0.3s ease, transform 0.3s ease",
-                                    pointerEvents: toolbarVisible ? "auto" : "none"
-                                }} spacing={12}>
-                                    <label style={{
-                                        fontWeight: "600",
-                                        fontSize: "13px",
-                                        color: "var(--interactive-accent)"
-                                    }}>
-                                        {selectedTasksFromTable.length} task{selectedTasksFromTable.length > 1 ? 's' : ''} selected
-                                    </label>
-                                    <button 
-                                        onClick={() => handleBatchChangeWorkflow(selectedTasksFromTable)}
-                                        disabled={selectedTasksFromTable.length === 0}
-                                        style={{
-                                            padding: "6px 12px",
-                                            fontSize: "12px",
-                                            backgroundColor: selectedTasksFromTable.length > 0 ? "var(--interactive-accent)" : "var(--background-modifier-border)",
-                                            color: selectedTasksFromTable.length > 0 ? "var(--text-on-accent)" : "var(--text-muted)",
-                                            border: "none",
-                                            borderRadius: "4px",
-                                            cursor: selectedTasksFromTable.length > 0 ? "pointer" : "not-allowed",
-                                            fontWeight: "500",
-                                            transition: "background-color 0.2s ease, transform 0.1s ease",
-                                            boxShadow: selectedTasksFromTable.length > 0 ? "0 1px 3px rgba(0, 0, 0, 0.2)" : "none",
-                                            opacity: selectedTasksFromTable.length > 0 ? 1 : 0.6
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            if (selectedTasksFromTable.length > 0) {
-                                                e.currentTarget.style.backgroundColor = "var(--interactive-accent-hover)";
-                                                e.currentTarget.style.transform = "translateY(-1px)";
-                                            }
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            if (selectedTasksFromTable.length > 0) {
-                                                e.currentTarget.style.backgroundColor = "var(--interactive-accent)";
-                                                e.currentTarget.style.transform = "translateY(0)";
-                                            }
-                                        }}
-                                    >
-                                        Change Workflow
-                                    </button>
-                                    <button 
-                                        onClick={() => handleBatchSetPriority(selectedTasksFromTable)}
-                                        disabled={selectedTasksFromTable.length === 0}
-                                        style={{
-                                            padding: "6px 12px",
-                                            fontSize: "12px",
-                                            backgroundColor: selectedTasksFromTable.length > 0 ? "var(--interactive-accent)" : "var(--background-modifier-border)",
-                                            color: selectedTasksFromTable.length > 0 ? "var(--text-on-accent)" : "var(--text-muted)",
-                                            border: "none",
-                                            borderRadius: "4px",
-                                            cursor: selectedTasksFromTable.length > 0 ? "pointer" : "not-allowed",
-                                            fontWeight: "500",
-                                            transition: "background-color 0.2s ease, transform 0.1s ease",
-                                            boxShadow: selectedTasksFromTable.length > 0 ? "0 1px 3px rgba(0, 0, 0, 0.2)" : "none",
-                                            opacity: selectedTasksFromTable.length > 0 ? 1 : 0.6
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            if (selectedTasksFromTable.length > 0) {
-                                                e.currentTarget.style.backgroundColor = "var(--interactive-accent-hover)";
-                                                e.currentTarget.style.transform = "translateY(-1px)";
-                                            }
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            if (selectedTasksFromTable.length > 0) {
-                                                e.currentTarget.style.backgroundColor = "var(--interactive-accent)";
-                                                e.currentTarget.style.transform = "translateY(0)";
-                                            }
-                                        }}
-                                    >
-                                        Set Priority
-                                    </button>
-                                    <button 
-                                        onClick={() => {
-                                            setSelectedTasksFromTable([]);
-                                            // Trigger DataTable to clear selection
-                                            setClearSelectionTrigger(prev => prev + 1);
-                                        }}
-                                        style={{
-                                            padding: "6px 12px",
-                                            fontSize: "12px",
-                                            backgroundColor: "var(--background-modifier-border)",
-                                            color: "var(--text-normal)",
-                                            border: "1px solid var(--background-modifier-border)",
-                                            borderRadius: "4px",
-                                            cursor: "pointer",
-                                            fontWeight: "500",
-                                            transition: "background-color 0.2s ease, border-color 0.2s ease"
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            e.currentTarget.style.backgroundColor = "var(--background-modifier-hover)";
-                                            e.currentTarget.style.borderColor = "var(--interactive-accent)";
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            e.currentTarget.style.backgroundColor = "var(--background-modifier-border)";
-                                            e.currentTarget.style.borderColor = "var(--background-modifier-border)";
-                                        }}
-                                    >
-                                        Clear Selection
-                                    </button>
-                                </HStack>
-                            )}
+                            <TaskSelectionToolbar
+                                selectedTasks={getSelectedTasks()}
+                                selectedCount={selectedRowIndices.length}
+                                plugin={plugin}
+                                onClearSelection={() => {
+                                    clearSelection();
+                                    setClearSelectionTrigger(prev => prev + 1);
+                                }}
+                                visible={isSelectionMode && toolbarVisible}
+                            />
                             <SelectionModeContext.Provider value={isSelectionMode}>
                                 <PaginatedTaskTable curWfName={curWfName} headers={headers} taskRows={taskRows}
                                                     setSortToColumn={setSortToColumn} headStyleGetter={headStyleGetter}
                                                     cellStyleGetter={cellStyleGetter}
                                                     taskData={displayedTasks}
                                                     onRowContextMenu={handleRowContextMenu}
-                                                    onSelectionChange={handleTableSelectionChange}
+                                                    onSelectionChange={handleSelectionChange}
                                                     onSelectionModeChange={handleTableSelectionModeChange}
-                                                    clearSelectionTrigger={clearSelectionTrigger}/>
+                                                    clearSelectionTrigger={clearSelectionTrigger}
+                                                    selectedRowIndices={selectedRowIndices}/>
                             </SelectionModeContext.Provider>
                             {contextMenu && (
                                 <ContextMenu

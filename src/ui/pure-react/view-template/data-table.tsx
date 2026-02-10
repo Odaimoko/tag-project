@@ -1,5 +1,5 @@
 import {IRenderable} from "../props-typing/i-renderable";
-import React, {useEffect, useRef, useState} from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import {createPortal} from "react-dom";
 import {HStack, VStack} from "./h-stack";
 import {ClickableObsidianIconView} from "../../react-view/obsidian-icon-view";
@@ -29,6 +29,7 @@ interface DataTableParams {
     onSelectionChange?: (selectedRowIndices: number[]) => void; // Callback when selection changes
     onSelectionModeChange?: (isSelectionMode: boolean) => void; // Callback when selection mode changes
     clearSelectionTrigger?: number; // When this value changes, clear the selection
+    selectedRowIndices?: number[]; // External control of selected rows (indices relative to displayedRows after rowRange)
     // Callback to pass selection mode state to row renderers
     rowRenderer?: (rowIndex: number, content: IRenderable[], isSelectionMode: boolean) => IRenderable[];
 }
@@ -62,7 +63,8 @@ export const DataTable = ({
                               selectionMode: externalSelectionMode,
                               onSelectionChange,
                               onSelectionModeChange,
-                              clearSelectionTrigger
+                              clearSelectionTrigger,
+                              selectedRowIndices: externalSelectedRowIndices
                           }: DataTableParams) => {
         const tableRef = useRef<HTMLTableElement>(null);
 
@@ -71,6 +73,7 @@ export const DataTable = ({
             isSelectionMode,
             setIsSelectionMode,
             selectedRows,
+            setSelectedRows,
             toggleRowSelection,
             clearSelection
         } = useSelectionMode({
@@ -80,12 +83,35 @@ export const DataTable = ({
             onSelectionModeChange
         });
 
-        // Clear selection when trigger changes
-        useEffect(() => {
-            if (clearSelectionTrigger !== undefined && clearSelectionTrigger > 0) {
-                clearSelection();
+        // Handle clearSelectionTrigger - use ref to track and call clearSelection when needed
+        const prevClearTriggerRef = useRef(0);
+        if (clearSelectionTrigger !== undefined && clearSelectionTrigger > prevClearTriggerRef.current) {
+            prevClearTriggerRef.current = clearSelectionTrigger;
+            // Use setTimeout to avoid calling setState during render
+            setTimeout(() => clearSelection(), 0);
+        }
+
+        // Sync selection when externalSelectedRowIndices changes (e.g., after sorting)
+        // Compute desired selection state
+        const desiredSelectedRows = useMemo(() => {
+            if (externalSelectedRowIndices === undefined || !isSelectionMode) {
+                return new Set<number>();
             }
-        }, [clearSelectionTrigger, clearSelection]);
+            return new Set(externalSelectedRowIndices);
+        }, [externalSelectedRowIndices, isSelectionMode]);
+        
+        // Sync state if different (use setTimeout to avoid setState during render)
+        const currentSelectedArray = Array.from(selectedRows).sort((a, b) => a - b);
+        const desiredSelectedArray = Array.from(desiredSelectedRows).sort((a, b) => a - b);
+        const needsSync = currentSelectedArray.length !== desiredSelectedArray.length ||
+            !currentSelectedArray.every((val, idx) => val === desiredSelectedArray[idx]);
+        
+        if (needsSync && isSelectionMode) {
+            // Use setTimeout to avoid calling setState during render
+            setTimeout(() => {
+                setSelectedRows(desiredSelectedRows);
+            }, 0);
+        }
 
         const start = rowRange?.[0] ?? 0;
         const end = Math.min(rowRange?.[1] ?? rows.length, rows.length);
@@ -222,11 +248,24 @@ export const PaginatedDataTable = (props: Omit<DataTableParams, "rowRange"> & Se
         }
     };
 
-    // Handle selection change from DataTable
+    // Handle selection change from DataTable - convert page-relative indices to global indices
     const handleSelectionChange = (selectedRowIndices: number[]) => {
         setSelectedCount(selectedRowIndices.length);
-        props.onSelectionChange?.(selectedRowIndices);
+        // Convert page-relative indices to global indices
+        const globalIndices = selectedRowIndices.map(idx => idx + rowRange[0]);
+        props.onSelectionChange?.(globalIndices);
     };
+
+    // Convert global selectedRowIndices to page-relative indices for DataTable
+    const pageRelativeSelectedIndices = useMemo(() => {
+        if (!props.selectedRowIndices || props.selectedRowIndices.length === 0) {
+            return undefined;
+        }
+        // Filter indices that are on the current page and convert to page-relative
+        return props.selectedRowIndices
+            .filter(idx => idx >= rowRange[0] && idx < rowRange[1])
+            .map(idx => idx - rowRange[0]);
+    }, [props.selectedRowIndices, rowRange]);
 
     return (
         <VStack spacing={diffGroupSpacing}>
@@ -279,6 +318,7 @@ export const PaginatedDataTable = (props: Omit<DataTableParams, "rowRange"> & Se
                 onSelectionModeChange={handleSelectionModeChange}
                 onSelectionChange={handleSelectionChange}
                 clearSelectionTrigger={props.clearSelectionTrigger}
+                selectedRowIndices={pageRelativeSelectedIndices}
             />
         </VStack>
     )

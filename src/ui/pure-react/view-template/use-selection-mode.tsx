@@ -37,29 +37,19 @@ export function useSelectionMode({
 
     const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
 
-    // Use refs to store latest callback functions to avoid dependency issues
-    const onSelectionChangeRef = useRef(onSelectionChange);
-    const onSelectionModeChangeRef = useRef(onSelectionModeChange);
-    
-    // Update refs when callbacks change
-    useEffect(() => {
-        onSelectionChangeRef.current = onSelectionChange;
-        onSelectionModeChangeRef.current = onSelectionModeChange;
-    }, [onSelectionChange, onSelectionModeChange]);
-
-    // Stable setIsSelectionMode function
-    // Use useCallback to create a stable reference
+    // Stable setIsSelectionMode function - call callback directly
     const setIsSelectionMode = useCallback((val: boolean) => {
         if (externalSelectionMode !== undefined) {
-            // External control - call the callback
-            onSelectionModeChangeRef.current?.(val);
+            // External control - call the callback directly
+            onSelectionModeChange?.(val);
         } else {
-            // Internal control - update internal state
+            // Internal control - update internal state and notify
             setInternalSelectionMode(val);
+            onSelectionModeChange?.(val);
         }
-    }, [externalSelectionMode]);
+    }, [externalSelectionMode, onSelectionModeChange]);
 
-    // Handle ESC key to exit selection mode
+    // Handle ESC key to exit selection mode (keep useEffect for DOM event listener)
     useEffect(() => {
         if (!enableSelectionMode || !isSelectionMode) return;
 
@@ -67,8 +57,8 @@ export function useSelectionMode({
             if (event.key === "Escape") {
                 setIsSelectionMode(false);
                 setSelectedRows(new Set());
-                onSelectionModeChangeRef.current?.(false);
-                onSelectionChangeRef.current?.([]);
+                onSelectionModeChange?.(false);
+                onSelectionChange?.([]);
                 event.preventDefault();
                 event.stopPropagation();
             }
@@ -78,23 +68,9 @@ export function useSelectionMode({
         return () => {
             document.removeEventListener("keydown", handleEscape);
         };
-    }, [enableSelectionMode, isSelectionMode, setIsSelectionMode]);
+    }, [enableSelectionMode, isSelectionMode, setIsSelectionMode, onSelectionModeChange, onSelectionChange]);
 
-    // Notify parent when selection mode changes
-    useEffect(() => {
-        onSelectionModeChangeRef.current?.(isSelectionMode);
-    }, [isSelectionMode]);
-
-    // Notify parent when selection changes
-    useEffect(() => {
-        if (isSelectionMode) {
-            const selectedIndices = Array.from(selectedRows);
-            onSelectionChangeRef.current?.(selectedIndices);
-        }
-    }, [selectedRows, isSelectionMode]);
-
-    // Toggle row selection
-    // Use useCallback to ensure stable reference
+    // Toggle row selection - notify parent directly
     const toggleRowSelection = useCallback((rowIndex: number) => {
         setSelectedRows(prev => {
             const newSet = new Set(prev);
@@ -103,15 +79,20 @@ export function useSelectionMode({
             } else {
                 newSet.add(rowIndex);
             }
+            // Notify parent immediately
+            if (isSelectionMode) {
+                const selectedIndices = Array.from(newSet);
+                onSelectionChange?.(selectedIndices);
+            }
             return newSet;
         });
-    }, []);
+    }, [isSelectionMode, onSelectionChange]);
 
-    // Clear all selections
+    // Clear all selections - notify parent directly
     const clearSelection = useCallback(() => {
         setSelectedRows(new Set());
-        onSelectionChangeRef.current?.([]);
-    }, []);
+        onSelectionChange?.([]);
+    }, [onSelectionChange]);
 
     return {
         isSelectionMode,
