@@ -141,55 +141,14 @@ export default class OdaPmToolPlugin extends Plugin {
 
         this.registerEvent(
             this.app.workspace.on("editor-menu", (menu, editor, view) => {
-                menu.addItem((item) => {
-                    item
-                        .setTitle(CmdPal_JumpToManagePage)
-                        .setIcon(Icon_ManagePage)
-                        .onClick(async () => {
-                            this.jumpToTaskOrWorkflow(editor, view);
-                            // console.log(leaf.view)
-                            // console.log(this.pmDb.pmTasks.filter(k => k.summary == "Open a md task in Manage Page"))
-                        });
-                });
-            })
-        )
-
-        this.registerEvent(
-            this.app.workspace.on("editor-menu", (menu, editor, view) => {
-                menu.addItem((item) => {
-                    item
-                        .setTitle(CmdPal_SetWorkflowToTask)
-                        .setIcon(Icon_ManagePage)
-                        .onClick(async () => {
-                            this.addWorkflowToMdTask(editor, view);
-                        });
-
-                });
-            })
-        )
-        this.registerEvent(
-            this.app.workspace.on("editor-menu", (menu, editor, view) => {
-                menu.addItem((item) => {
-                    item
-                        .setTitle(CmdPal_SetProject)
-                        .setIcon(Icon_ManagePage)
-                        .onClick(async () => {
-                            this.addProjectToMdTask(editor, view);
-                        });
-
-                });
-            })
-        )
-        this.registerEvent(
-            this.app.workspace.on("editor-menu", (menu, editor, view) => {
-                menu.addItem((item) => {
-                    item
-                        .setTitle(CmdPal_SetPriority)
-                        .setIcon(Icon_ManagePage)
-                        .onClick(async () => {
-                            this.addPriorityToMdTask(editor, view);
-                        });
-
+                const items: { title: string; icon: string; onClick: () => void }[] = [
+                    { title: CmdPal_JumpToManagePage, icon: Icon_ManagePage, onClick: () => this.jumpToTaskOrWorkflow(editor, view) },
+                    { title: CmdPal_SetWorkflowToTask, icon: Icon_ManagePage, onClick: () => this.addWorkflowToMdTask(editor, view) },
+                    { title: CmdPal_SetProject, icon: Icon_ManagePage, onClick: () => this.addProjectToMdTask(editor, view) },
+                    { title: CmdPal_SetPriority, icon: Icon_ManagePage, onClick: () => this.addPriorityToMdTask(editor, view) },
+                ];
+                items.forEach(({ title, icon, onClick }) => {
+                    menu.addItem((item) => item.setTitle(title).setIcon(icon).onClick(onClick));
                 });
             })
         )
@@ -228,96 +187,86 @@ export default class OdaPmToolPlugin extends Plugin {
         return true;
     }
 
-    private addWorkflowToMdTask(editor: Editor, view: MarkdownView | MarkdownFileInfo) {
+    private withValidMdTask(
+        view: MarkdownView | MarkdownFileInfo,
+        editor: Editor,
+        fn: (filePath: string, cursor: EditorPosition) => void
+    ): void {
         const filePath = view.file?.path;
         if (!filePath) {
-            new ONotice("Not a markdown file.")
-            return; // no file
+            new ONotice("Not a markdown file.");
+            return;
         }
         const cursor = editor.getCursor();
         if (!this.checkValidMdTask(filePath, cursor)) return;
+        fn(filePath, cursor);
+    }
 
-        // console.log(`line: ${editor.getLine(cursor.line)}`)
-        const workflow = this.pmDb.getWorkflow(filePath, cursor.line);
-        if (workflow) {
-            new ONotice("This is a workflow definition, not a task.")
-            return; // skip if the task is a workflow def
-        }
+    private addWorkflowToMdTask(editor: Editor, view: MarkdownView | MarkdownFileInfo) {
+        this.withValidMdTask(view, editor, (filePath, cursor) => {
+            const workflow = this.pmDb.getWorkflow(filePath, cursor.line);
+            if (workflow) {
+                new ONotice("This is a workflow definition, not a task.")
+                return; // skip if the task is a workflow def
+            }
 
-        const pmTask = this.pmDb.getPmTask(filePath, cursor.line);
-        // choose workflow
-        new WorkflowSuggestionModal(this.app, filePath, pmTask, (workflow, evt) => {
-            if (!workflow) {
-                return;
-            }
-            const targetTag = workflow.tag;
-            if (pmTask) {
-                // replace the existent workflow tag
-                const sTask = pmTask.boundTask;
-                const srcTag = pmTask.type.tag;
-                const desiredText = `${sTask.text.replace(srcTag, targetTag)}`;
-                // console.log(desiredText)
-                rewriteTask(this.app.vault, sTask, sTask.status, desiredText)
-                return;
-            } else {
-                const lineText = editor.getLine(cursor.line);
-                const desiredText = addTagText(lineText, targetTag);
-                editor.setLine(cursor.line, desiredText)
-            }
-        }).open();
+            const pmTask = this.pmDb.getPmTask(filePath, cursor.line);
+            new WorkflowSuggestionModal(this.app, filePath, pmTask, (workflow, evt) => {
+                if (!workflow) {
+                    return;
+                }
+                const targetTag = workflow.tag;
+                if (pmTask) {
+                    // replace the existing workflow tag
+                    const sTask = pmTask.boundTask;
+                    const srcTag = pmTask.type.tag;
+                    const desiredText = `${sTask.text.replace(srcTag, targetTag)}`;
+                    rewriteTask(this.app.vault, sTask, sTask.status, desiredText)
+                    return;
+                } else {
+                    const lineText = editor.getLine(cursor.line);
+                    const desiredText = addTagText(lineText, targetTag);
+                    editor.setLine(cursor.line, desiredText)
+                }
+            }).open();
+        });
     }
 
     private addProjectToMdTask(editor: Editor, view: MarkdownView | MarkdownFileInfo) {
-        const filePath = view.file?.path;
-        if (!filePath) {
-            new ONotice("Not a markdown file.")
-            return; // no file
-        }
-        const cursor = editor.getCursor();
-        if (!this.checkValidMdTask(filePath, cursor)) return;
-
-        new ProjectSuggestionModal(this.app, (prj, evt) => {
-            if (!prj) {
-                return;
-            }
-            const sanityCheckProject = getWorkflowNameFromRawText(prj.name);
-            if (prj.name !== sanityCheckProject) {
-                new ONotice(`Project name is not a valid Tag.\n - [${prj.name}]`)
-                return;
-            }
-            setProjectTagAtPath.call(this, prj, filePath, cursor);
-        }).open();
+        this.withValidMdTask(view, editor, (filePath, cursor) => {
+            new ProjectSuggestionModal(this.app, (prj, evt) => {
+                if (!prj) {
+                    return;
+                }
+                const sanityCheckProject = getWorkflowNameFromRawText(prj.name);
+                if (prj.name !== sanityCheckProject) {
+                    new ONotice(`Project name is not a valid Tag.\n - [${prj.name}]`)
+                    return;
+                }
+                setProjectTagAtPath.call(this, prj, filePath, cursor);
+            }).open();
+        });
     }
 
     private addPriorityToMdTask(editor: Editor, view: MarkdownView | MarkdownFileInfo) {
-        const filePath = view.file?.path;
-        if (!filePath) {
-            new ONotice("Not a markdown file.")
-            return; // no file
-        }
-        const cursor = editor.getCursor();
-        if (!this.checkValidMdTask(filePath, cursor)) return;
+        this.withValidMdTask(view, editor, (filePath, cursor) => {
+            const workflow = this.pmDb.getWorkflow(filePath, cursor.line);
+            if (workflow) {
+                new ONotice("This is a workflow definition, not a task.")
+                return; // skip if the task is a workflow def
+            }
+            const pmTask = this.pmDb.getPmTask(filePath, cursor.line);
 
-        // console.log(`line: ${editor.getLine(cursor.line)}`)
-        const workflow = this.pmDb.getWorkflow(filePath, cursor.line);
-        if (workflow) {
-            new ONotice("This is a workflow definition, not a task.")
-            return; // skip if the task is a workflow def
-        }
-        const pmTask = this.pmDb.getPmTask(filePath, cursor.line);
+            if (!pmTask) {
+                new ONotice("Not a managed task.")
+                return;
+            }
 
-        if (!pmTask) {
-            new ONotice("Not a managed task.")
-            return;
-        }
-
-        new PrioritySuggestionModal(this.app, (priorityTag, evt) => {
-
-            const targetTag = priorityTag;
-            // set priority
-            setTaskPriority(pmTask.boundTask, this, this.pmDb.pmPriorityTags, targetTag)
-            return;
-        }).open();
+            new PrioritySuggestionModal(this.app, (priorityTag, evt) => {
+                const targetTag = priorityTag;
+                setTaskPriority(pmTask.boundTask, this, this.pmDb.pmPriorityTags, targetTag)
+            }).open();
+        });
     }
 
     /**
