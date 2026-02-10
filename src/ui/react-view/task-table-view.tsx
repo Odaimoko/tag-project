@@ -179,7 +179,7 @@ function rectifyOdaTaskOnMdTaskChanged(oTask: OdaPmTask, plugin: OdaPmToolPlugin
     }
 }
 
-export function getDefaultTableStyleGetters(minSummaryWidth: number | string = 500, maxSummaryWidth: number | string = 300, summaryColumn = 0, isCellCentered = true) {
+export function getDefaultTableStyleGetters(minSummaryWidth: number | string = 1, maxSummaryWidth: number | string = 300, summaryColumn = 0, isCellCentered = true) {
     // striped rows. center step cell but not summary cell.
     // TODO performance, we instantiate a lot of dictionaries here
     const evenBg: React.CSSProperties = {backgroundColor: "rgba(0,0,0,0.2)"};
@@ -187,7 +187,7 @@ export function getDefaultTableStyleGetters(minSummaryWidth: number | string = 5
     const summaryCellStyle: React.CSSProperties = {
         minWidth: minSummaryWidth,
         maxWidth: maxSummaryWidth,
-        padding: 5, paddingLeft: 10
+        padding: 5, paddingLeft: 10,
     }
     const summaryEvenCellStyle = {...summaryCellStyle, ...evenBg}
     const summaryOddCellStyle = {...summaryCellStyle, ...oddBg}
@@ -195,6 +195,7 @@ export function getDefaultTableStyleGetters(minSummaryWidth: number | string = 5
     const stepCellStyle: React.CSSProperties = {
         textAlign: isCellCentered ? "center" : "inherit",
         padding: 10,
+        width: "auto"
     }
     const stepEvenCellStyle = {...stepCellStyle, ...evenBg}
     const stepOddCellStyle = {...stepCellStyle, ...oddBg}
@@ -212,8 +213,9 @@ export function getDefaultTableStyleGetters(minSummaryWidth: number | string = 5
         const style = {
             ...(getStickyHeaderStyle()),
             padding: 10,
-            minWidth: (columnIndex === summaryColumn ? minSummaryWidth : "unset"),
-            maxWidth: (columnIndex === summaryColumn ? maxSummaryWidth : "unset")
+            // Removed minWidth to allow adaptive width
+            maxWidth: (columnIndex === summaryColumn ? maxSummaryWidth : "unset"),
+            width: "auto"
         };
         // console.log(`thStyleGetter: ${JSON.stringify(style)}`)
         return style as React.CSSProperties;
