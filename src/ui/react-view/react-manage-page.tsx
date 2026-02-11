@@ -23,7 +23,7 @@ import {ModuleFilter} from "./module-filter";
 import {Desc_ManagePage} from "../obsidian/help-page/help-page-view";
 import {InlineCodeView} from "../common/inline-code-view";
 import {ObsidianIconView} from "./obsidian-icon-view";
-import {diffGroupSpacing, sameGroupSpacing} from "../pure-react/style-def";
+import {diffGroupSpacing, getExpandCollapseChevronStyle, getExpandCollapseContentStyle, sameGroupSpacing} from "../pure-react/style-def";
 
 function isInAnyProject(projectTask: I_OdaPmProjectTask, displayPrjNames: string[]) {
     // TODO Performance
@@ -300,18 +300,37 @@ export function ReactManagePage({eventCenter}: {
             <VStack spacing={sameGroupSpacing}>
                 <HStack spacing={diffGroupSpacing}>
                     <FixOrphanTasksView db={db}/>
-                    <button onClick={() => setPanelShown(!panelShown)}>
-                        Filters {
-                        panelShown ?
-                            <ObsidianIconView yOffset={false} iconName={"chevron-down"}/> :
+                    <button
+                        onClick={() => setPanelShown(!panelShown)}
+                        style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            padding: "8px 12px",
+                            fontSize: "0.95em",
+                            fontWeight: 500,
+                            color: "var(--text-normal)",
+                            backgroundColor: "var(--background-secondary)",
+                            border: "1px solid var(--background-modifier-border)",
+                            borderRadius: "8px",
+                            cursor: "pointer",
+                            transition: "background-color 0.2s ease, border-color 0.2s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = "var(--background-modifier-hover)";
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = "var(--background-secondary)";
+                        }}
+                    >
+                        <span style={getExpandCollapseChevronStyle(panelShown)}>
                             <ObsidianIconView yOffset={false} iconName={"chevron-right"}/>
-                    }
+                        </span>
+                        Filters
                     </button>
                 </HStack>
 
-                {panelShown ? <div>
-
-
+                <div style={getExpandCollapseContentStyle(panelShown)}>
                     <WorkflowFilterView workflows={workflows} displayNames={displayWorkflowNames}
                                         handleSetDisplayNames={handleSetDisplayWorkflows}
                                         showSubprojectWorkflows={showSubprojectWorkflows}
@@ -344,7 +363,7 @@ export function ReactManagePage({eventCenter}: {
                         }
                         titleName={"Status"}
                     />
-                </div> : null}
+                </div>
             </VStack>
 
             <TaskTableView displayWorkflows={displayWorkflows}

@@ -5,7 +5,7 @@ import React, { MouseEvent, useContext, useState } from "react";
 import { PluginContext } from "../obsidian/manage-page-view";
 import { ExternalControlledCheckbox } from "../pure-react/view-template/checkbox";
 import { InternalLinkView } from "./obsidian-icon-view";
-import { centerChildren, iconViewAsAWholeStyle } from "../pure-react/style-def";
+import { centerChildren, getExpandCollapseChevronStyle, getExpandCollapseContentStyle, getExpandCollapseSummaryStyle, iconViewAsAWholeStyle } from "../pure-react/style-def";
 import { openTaskPrecisely } from "../../utils/io-util";
 import { initialToUpper } from "../../utils/format-util";
 import { NameableFilterHeading } from "./nameable-filter-heading";
@@ -98,26 +98,8 @@ const workflowSummaryTextStyle: React.CSSProperties = {
     color: "var(--text-muted)",
     fontSize: "0.95em",
 };
-const workflowContentWrapperStyle = (expanded: boolean): React.CSSProperties => ({
-    maxHeight: expanded ? "1000px" : "0",
-    opacity: expanded ? 1 : 0,
-    transition: "max-height 0.3s ease-in-out, opacity 0.3s ease-in-out",
-    overflow: "hidden",
-});
-const workflowSummaryWrapperStyle = (expanded: boolean): React.CSSProperties => ({
-    maxHeight: expanded ? "0" : "50px",
-    opacity: expanded ? 0 : 1,
-    transition: "max-height 0.3s ease-in-out, opacity 0.3s ease-in-out",
-    overflow: "hidden",
-});
-const chevronIconStyle: React.CSSProperties = {
-    transition: "transform 0.3s ease-in-out",
-    display: "inline-block",
-};
-const chevronIconExpandedStyle: React.CSSProperties = {
-    ...chevronIconStyle,
-    transform: "rotate(90deg)",
-};
+const workflowContentWrapperStyle = (expanded: boolean) => getExpandCollapseContentStyle(expanded, "1000px");
+const workflowSummaryWrapperStyle = (expanded: boolean) => getExpandCollapseSummaryStyle(expanded, "50px");
 const WORKFLOW_EXPAND_THRESHOLD = 5;
 
 export const WorkflowFilterView = (props: {
@@ -149,7 +131,7 @@ export const WorkflowFilterView = (props: {
             showSelectAll={false}
             onTitleClicked={useExpandToggle ? () => setWorkflowsListExpanded(!workflowsListExpanded) : undefined}
             titleAddon={useExpandToggle ? (
-                <span style={workflowsListExpanded ? chevronIconExpandedStyle : chevronIconStyle}>
+                <span style={getExpandCollapseChevronStyle(workflowsListExpanded)}>
                     <ObsidianIconView
                         yOffset={false}
                         iconName={"chevron-right"} />

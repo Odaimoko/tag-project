@@ -25,3 +25,51 @@ export const sameGroupSpacing = 5;
 export const diffGroupSpacing = 10;
 export const warningColor = "var(--text-warning)";
 export const CssClass_Link = "cm-underline";
+
+/**
+ * Expand/collapse animation (shared by Workflow Filter, Filters panel, etc.)
+ * Use the get*Style helpers so all panels share the same duration and easing.
+ */
+export const EXPAND_COLLAPSE_DURATION = "0.3s";
+export const EXPAND_COLLAPSE_EASING = "ease-in-out";
+export const EXPAND_COLLAPSE_TRANSITION = `${EXPAND_COLLAPSE_DURATION} ${EXPAND_COLLAPSE_EASING}`;
+
+/**
+ * Style for the expandable content area. When expanded, shows content; when collapsed, maxHeight 0 and opacity 0.
+ * @param expanded - true when content should be visible
+ * @param maxHeightExpanded - max-height when expanded (default 3000px to fit most panels)
+ */
+export function getExpandCollapseContentStyle(expanded: boolean, maxHeightExpanded: string = "3000px"): React.CSSProperties {
+    return {
+        maxHeight: expanded ? maxHeightExpanded : "0",
+        opacity: expanded ? 1 : 0,
+        transition: `max-height ${EXPAND_COLLAPSE_TRANSITION}, opacity ${EXPAND_COLLAPSE_TRANSITION}`,
+        overflow: "hidden",
+    };
+}
+
+/**
+ * Style for a short summary line shown when collapsed (e.g. Workflow Filter summary). Inverse of content: visible when collapsed.
+ * @param expanded - true when detail is shown (summary hidden)
+ * @param summaryHeight - height of the summary line when visible (default 50px)
+ */
+export function getExpandCollapseSummaryStyle(expanded: boolean, summaryHeight: string = "50px"): React.CSSProperties {
+    return {
+        maxHeight: expanded ? "0" : summaryHeight,
+        opacity: expanded ? 0 : 1,
+        transition: `max-height ${EXPAND_COLLAPSE_TRANSITION}, opacity ${EXPAND_COLLAPSE_TRANSITION}`,
+        overflow: "hidden",
+    };
+}
+
+/**
+ * Style for a chevron icon that rotates 90deg when expanded (e.g. chevron-right → down).
+ * @param expanded - true to rotate 90deg, false for 0deg
+ */
+export function getExpandCollapseChevronStyle(expanded: boolean): React.CSSProperties {
+    return {
+        transition: `transform ${EXPAND_COLLAPSE_TRANSITION}`,
+        display: "inline-block",
+        transform: expanded ? "rotate(90deg)" : "rotate(0deg)",
+    };
+}
