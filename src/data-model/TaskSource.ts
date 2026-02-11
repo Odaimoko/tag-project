@@ -12,7 +12,7 @@ export interface I_GetTaskSource {
 export class TaskSource {
     file: string;  // File name
     path: string;  // File path
-    line: number;  // Line number
+    line: number;  // Line number, 0 based
 
     constructor(file: string, path: string, line: number) {
         this.file = file;
@@ -38,5 +38,13 @@ export class TaskSource {
             path: this.path,
             line: this.line,
         };
+    }
+
+    /**
+     * 用于悬停提示等展示，dev 模式下可见
+     */
+    static formatForTooltip(source: TaskSource | null): string {
+        if (!source) return "";
+        return `[DEV] ${source.file}\nLine: ${source.line + 1}`;
     }
 }

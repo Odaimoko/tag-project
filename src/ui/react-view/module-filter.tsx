@@ -3,6 +3,9 @@ import {NameableFilterHeading} from "./nameable-filter-heading";
 import {OptionValueType, SearchableDropdown} from "../pure-react/view-template/searchable-dropdown";
 import React from "react";
 import {HStack} from "../pure-react/view-template/h-stack";
+import {isDevMode} from "../../utils/env-util";
+import {I_GetTaskSource} from "../../data-model/TaskSource";
+import {TaskSource} from "../../data-model/TaskSource";
 
 
 export function ModuleFilter({modules, displayModuleIds, handleSetDisplayModuleIds}: {
@@ -45,8 +48,9 @@ export function ModuleFilter({modules, displayModuleIds, handleSetDisplayModuleI
             {allModules.map((module: OdaPmModule) => {
                 if (!displayModuleIds.includes(module.id))
                     return null
+                const sourceTitle = isDevMode() ? TaskSource.formatForTooltip((module as I_GetTaskSource).getSource?.() ?? null) : undefined;
                 return (
-                    <div style={{padding: 5, borderWidth: 1, borderStyle: "solid", borderColor: "#bcddff"}}>
+                    <div style={{padding: 5, borderWidth: 1, borderStyle: "solid", borderColor: "#bcddff"}} title={sourceTitle}>
                         <label>{module.name}</label>
                     </div>
 

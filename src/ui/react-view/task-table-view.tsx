@@ -48,7 +48,9 @@ import {ArrowBigDown, ArrowBigDownDash, ArrowBigUp, ArrowBigUpDash} from "../pur
 import {OdaPmDbProvider} from "../../data-model/OdaPmDb";
 import {HoveringPopup} from "../pure-react/view-template/hovering-popup";
 import {CircleHelp} from "../pure-react/icon/CircleHelp";
-import {devLog} from "../../utils/env-util";
+import {devLog, isDevMode} from "../../utils/env-util";
+import {I_GetTaskSource} from "../../data-model/TaskSource";
+import {TaskSource} from "../../data-model/TaskSource";
 import {I_Stylable} from "../pure-react/props-typing/i-stylable";
 import {loopIndex} from "../pure-react/utils/loop-index";
 import {getIconByWorkflow} from "./tag-project-style";
@@ -147,7 +149,7 @@ export const OdaTaskSummaryCell = ({oTask, taskFirstColumn, showCheckBox, showPr
                 onContentClicked={disableInteractions ? undefined : openThisTask}
             />
         </span>;
-    return <HStack style={centerChildren} spacing={5}>
+    const cellContent = <HStack style={centerChildren} spacing={5}>
         {showWorkflowIcon ? getIconByTask(oTask) : null}
         {showPriority && <TaskPriorityIcon oTask={oTask}/>}
         {showCheckBox ? <ExternalControlledCheckbox
@@ -158,6 +160,8 @@ export const OdaTaskSummaryCell = ({oTask, taskFirstColumn, showCheckBox, showPr
         /> : checkBoxContent}
 
     </HStack>;
+    const sourceTitle = isDevMode() ? TaskSource.formatForTooltip((oTask as I_GetTaskSource).getSource() ?? null) : undefined;
+    return <span title={sourceTitle || undefined}>{cellContent}</span>;
 
     function openThisTask(event: MouseEvent) {
         const forceNewTab = getForceNewTabOnClick(plugin, event);

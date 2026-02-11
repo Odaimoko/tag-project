@@ -5,6 +5,10 @@ export function isProduction() {
     return process.env.NODE_ENV === "production";
 }
 
+export function isDevMode(): boolean {
+    return !isProduction();
+}
+
 export function prodWrapper(func: CallableFunction) {
     // @ts-ignore
     function f(...args) {

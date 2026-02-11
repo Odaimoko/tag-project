@@ -1,29 +1,33 @@
 // region Legend
-import {HStack} from "../pure-react/view-template/h-stack";
-import {I_OdaPmWorkflow, Workflow_Type_Enum_Array, WorkflowType} from "../../data-model/workflow-def";
-import React, {MouseEvent, useContext} from "react";
-import {PluginContext} from "../obsidian/manage-page-view";
-import {ExternalControlledCheckbox} from "../pure-react/view-template/checkbox";
-import {InternalLinkView} from "./obsidian-icon-view";
-import {centerChildren, iconViewAsAWholeStyle} from "../pure-react/style-def";
-import {openTaskPrecisely} from "../../utils/io-util";
-import {initialToUpper} from "../../utils/format-util";
-import {NameableFilterHeading} from "./nameable-filter-heading";
-import {INameable} from "../pure-react/props-typing/i-nameable";
-import {taskCheckBoxMargin} from "./task-table-view";
-import {ExternalToggleView} from "../pure-react/view-template/toggle-view";
-import {OptionValueType, SearchableDropdown} from "../pure-react/view-template/searchable-dropdown";
-import {getForceNewTabOnClick} from "../../settings/settings";
-import {I_Stylable} from "../pure-react/props-typing/i-stylable";
-import {getIconByWorkflow, getIconViewByWorkflowType} from "./tag-project-style";
-import {toggleValueInArray} from "../pure-react/utils/toggle-value-in-array";
+import { HStack } from "../pure-react/view-template/h-stack";
+import { I_OdaPmWorkflow, Workflow_Type_Enum_Array, WorkflowType } from "../../data-model/workflow-def";
+import React, { MouseEvent, useContext, useState } from "react";
+import { PluginContext } from "../obsidian/manage-page-view";
+import { ExternalControlledCheckbox } from "../pure-react/view-template/checkbox";
+import { InternalLinkView } from "./obsidian-icon-view";
+import { centerChildren, iconViewAsAWholeStyle } from "../pure-react/style-def";
+import { openTaskPrecisely } from "../../utils/io-util";
+import { initialToUpper } from "../../utils/format-util";
+import { NameableFilterHeading } from "./nameable-filter-heading";
+import { INameable } from "../pure-react/props-typing/i-nameable";
+import { taskCheckBoxMargin } from "./task-table-view";
+import { ExternalToggleView } from "../pure-react/view-template/toggle-view";
+import { OptionValueType, SearchableDropdown } from "../pure-react/view-template/searchable-dropdown";
+import { getForceNewTabOnClick } from "../../settings/settings";
+import { I_Stylable } from "../pure-react/props-typing/i-stylable";
+import { getIconByWorkflow, getIconViewByWorkflowType } from "./tag-project-style";
+import { toggleValueInArray } from "../pure-react/utils/toggle-value-in-array";
+import { ObsidianIconView } from "./obsidian-icon-view";
+import { isDevMode } from "../../utils/env-util";
+import { I_GetTaskSource } from "../../data-model/TaskSource";
+import { TaskSource } from "../../data-model/TaskSource";
 
-export function WorkflowTypeLegend({type, style}: { type: WorkflowType } & I_Stylable) {
+export function WorkflowTypeLegend({ type, style }: { type: WorkflowType } & I_Stylable) {
     return <span style={style}>
         <HStack spacing={3}>
-        {getIconViewByWorkflowType(type)}
+            {getIconViewByWorkflowType(type)}
             <label>{initialToUpper(type)}</label>
-    </HStack>
+        </HStack>
     </span>;
 }
 
@@ -31,7 +35,7 @@ function WorkflowTypeLegendView() {
     return <HStack spacing={10}>
         {Workflow_Type_Enum_Array.map((type: WorkflowType) => {
             return <WorkflowTypeLegend key={type}
-                                       type={type}/>
+                type={type} />
 
         })}
     </HStack>;
@@ -44,14 +48,57 @@ function DropdownWorkflowView(props: {
     handleSetDisplayNames: (names: string[]) => void
 }) {
     const name = props.item.name;
-    const {displayNames, handleSetDisplayNames, workflow} = props;
+    const { displayNames, handleSetDisplayNames, workflow } = props;
     return <div>
-        <ClickableWorkflowView key={name} workflow={workflow} showCheckBox={false}/>
+        <ClickableWorkflowView key={name} workflow={workflow} showCheckBox={false} />
     </div>
 }
 
 // endregion
 // region Workflow Filter
+
+const workflowFilterCardStyle: React.CSSProperties = {
+    padding: "12px 14px",
+    marginBottom: 12,
+    backgroundColor: "var(--background-secondary)",
+    border: "1px solid var(--background-modifier-border)",
+    borderRadius: "8px",
+};
+const workflowFilterButtonStyle: React.CSSProperties = {
+    padding: "4px 10px",
+    fontSize: "0.9em",
+    border: "1px solid var(--background-modifier-border)",
+    borderRadius: "6px",
+    backgroundColor: "var(--background-modifier-border)",
+    color: "var(--text-normal)",
+    cursor: "pointer",
+};
+const workflowFilterTogglesRowStyle: React.CSSProperties = {
+    ...centerChildren,
+    marginTop: 10,
+    marginBottom: 10,
+    padding: "8px 10px",
+    backgroundColor: "var(--background-modifier-hover)",
+    borderRadius: "6px",
+    gap: 16,
+};
+const workflowSelectedListStyle: React.CSSProperties = {
+    display: "flex",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: "6px 12px",
+    marginTop: 8,
+    paddingTop: 8,
+    borderTop: "1px solid var(--background-modifier-border)",
+};
+const WORKFLOW_EXPAND_THRESHOLD = 5;
+const workflowExpandButtonStyle: React.CSSProperties = {
+    ...workflowFilterButtonStyle,
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 4,
+};
+
 export const WorkflowFilterView = (props: {
     workflows: I_OdaPmWorkflow[],
     displayNames: string[],
@@ -72,51 +119,85 @@ export const WorkflowFilterView = (props: {
             optionValue: k.name
         }
     });
-    return <div>
+    const selectedCount = workflows.filter((w) => displayNames.includes(w.name)).length;
+    const useExpandToggle = workflows.length > WORKFLOW_EXPAND_THRESHOLD;
+    const [workflowsListExpanded, setWorkflowsListExpanded] = useState(false);
+
+    return <div style={workflowFilterCardStyle}>
         <NameableFilterHeading nameableTypeName={"Workflow"} nameables={workflows} displayNames={displayNames}
-                               showSelectAll={false}
-                               handleSetDisplayNames={handleSetDisplayNames}>
-            {/*<WorkflowTypeLegendView/>*/}
-
-            <HStack spacing={5}>
+            showSelectAll={false}
+            handleSetDisplayNames={handleSetDisplayNames}>
+            <HStack spacing={8}>
                 <SearchableDropdown dropdownId={"workflow"}
-                                    data={workflowDropdownOptions}
-                                    handleSetOptionValues={handleSetDisplayNames}
-                                    placeholder={"Workflows"}
-                                    singleSelect={false}
-                                    currentOptionValues={workflowDropdownOptions
-                                        .filter(k => displayNames.includes(k.name))}
-                                    RenderView={(props: { item: OptionValueType }) => {
+                    data={workflowDropdownOptions}
+                    handleSetOptionValues={handleSetDisplayNames}
+                    placeholder={"Workflows"}
+                    singleSelect={false}
+                    currentOptionValues={workflowDropdownOptions
+                        .filter(k => displayNames.includes(k.name))}
+                    RenderView={(props: { item: OptionValueType }) => {
 
-                                        return <DropdownWorkflowView item={props.item} displayNames={displayNames}
-                                                                     workflow={workflows.find(k => k.name === props.item.name)!}
-                                                                     handleSetDisplayNames={handleSetDisplayNames}/>
-                                    }}/>
-                <button onClick={() => handleSetDisplayNames(workflows.map((k: INameable) => {
-                    return k.name;
-                }))}>All
+                        return <DropdownWorkflowView item={props.item} displayNames={displayNames}
+                            workflow={workflows.find(k => k.name === props.item.name)!}
+                            handleSetDisplayNames={handleSetDisplayNames} />
+                    }} />
+                <button
+                    style={workflowFilterButtonStyle}
+                    onClick={() => handleSetDisplayNames(workflows.map((k: INameable) => k.name))}
+                >
+                    All
                 </button>
-                <button onClick={() => handleSetDisplayNames([])}>Unselect All
+                <button
+                    style={workflowFilterButtonStyle}
+                    onClick={() => handleSetDisplayNames([])}
+                >
+                    Unselect All
                 </button>
             </HStack>
         </NameableFilterHeading>
 
-
-        <HStack style={{...centerChildren, marginBottom: 10,}} spacing={10}>
-
+        <HStack style={workflowFilterTogglesRowStyle} spacing={10}>
             <ExternalToggleView externalControl={showSubprojectWorkflows} onChange={() => {
                 const nextValue = !showSubprojectWorkflows;
                 setShowSubprojectWorkflows(nextValue)
-            }} content={<label>{"Subproject Workflows"}</label>}/>
+            }} content={<label>{"Subproject Workflows"}</label>} />
 
             <ExternalToggleView externalControl={showUnclassifiedWorkflows} onChange={() => {
                 const nextValue = !showUnclassifiedWorkflows;
                 setShowUnclassifiedWorkflows(nextValue)
-            }} content={<label>{"Unclassified Workflows"}</label>}/>
-
+            }} content={<label>{"Unclassified Workflows"}</label>} />
         </HStack>
-        <WorkflowCheckboxes nameables={workflows} displayNames={displayNames}/>
 
+        <div style={workflowSelectedListStyle}>
+            {useExpandToggle && !workflowsListExpanded ? (
+                <HStack spacing={8} style={centerChildren}>
+                    <span style={{ color: "var(--text-muted)", fontSize: "0.95em" }}>
+                        {selectedCount} Workflow{selectedCount !== 1 ? "s" : ""}
+                    </span>
+                    <button
+                        style={workflowExpandButtonStyle}
+                        onClick={() => setWorkflowsListExpanded(true)}
+                    >
+                        <ObsidianIconView yOffset={false} iconName={"chevron-down"} />
+                        Expand
+                    </button>
+                </HStack>
+            ) : (
+                <>
+                    {useExpandToggle && (
+                        <button
+                            style={workflowExpandButtonStyle}
+                            onClick={() => setWorkflowsListExpanded(false)}
+                        >
+                            <ObsidianIconView yOffset={false} iconName={"chevron-up"} />
+                            仅 {selectedCount} Workflow{selectedCount !== 1 ? "s" : ""}
+                        </button>
+                    )}
+                    <WorkflowCheckboxes nameables={workflows} displayNames={displayNames} />
+
+                </>
+            )}
+        </div>
     </div>;
 }
 /**
@@ -125,27 +206,38 @@ export const WorkflowFilterView = (props: {
  * @param handleSetDisplayNames
  * @constructor
  */
-const WorkflowCheckboxes = ({nameables, displayNames}: {
+const workflowChipWrapStyle: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    padding: "2px 8px 2px 4px",
+    backgroundColor: "var(--background-modifier-hover)",
+    border: "1px solid var(--background-modifier-border)",
+    borderRadius: "6px",
+};
+
+const WorkflowCheckboxes = ({ nameables, displayNames }: {
     nameables: I_OdaPmWorkflow[],
     displayNames: string[],
 }) => {
-    return <div>
-        {nameables.map((workflow: I_OdaPmWorkflow) => {
-            if (!displayNames.includes(workflow.name))
-                return null
+    const items = nameables.filter((w) => displayNames.includes(w.name));
+    if (items.length === 0) return null;
+    return <>
+        {items.map((workflow: I_OdaPmWorkflow) => {
+            const src = isDevMode() ? TaskSource.formatForTooltip((workflow as unknown as I_GetTaskSource).getSource?.() ?? null) : undefined;
             return (
-                <ClickableWorkflowView key={workflow.name} showCheckBox={false}
-                                       workflow={workflow}/>
-            )
+                <span key={workflow.name} style={workflowChipWrapStyle} title={src}>
+                    <ClickableWorkflowView showCheckBox={false} workflow={workflow} />
+                </span>
+            );
         })}
-    </div>;
+    </>;
 };
 
 /**
  * A clickable view that can be used to jump to its definition.
  * If showCheckBox is true, it will also show a checkbox that can be used to select the workflow, in which case displayNames and setDisplayNames must be defined.
  */
-export const ClickableWorkflowView = ({workflow, displayNames, setDisplayNames, showCheckBox, showWorkflowIcon}: {
+export const ClickableWorkflowView = ({ workflow, displayNames, setDisplayNames, showCheckBox, showWorkflowIcon }: {
     workflow: I_OdaPmWorkflow,
     displayNames?: string[],
     setDisplayNames?: React.Dispatch<React.SetStateAction<string[]>>,
@@ -173,7 +265,7 @@ export const ClickableWorkflowView = ({workflow, displayNames, setDisplayNames, 
                 <label style={taskCheckBoxMargin}>{wfName}</label>
             </span>}
             onIconClicked={openThisWorkflow}
-            onContentClicked={tickCheckbox}/>
+            onContentClicked={tickCheckbox} />
     </>;
 
     function openThisWorkflow(e: MouseEvent) {
@@ -181,7 +273,8 @@ export const ClickableWorkflowView = ({workflow, displayNames, setDisplayNames, 
         return openTaskPrecisely(plugin.app.workspace, workflow.boundTask, forceNewTab);
     }
 
-    return <span style={{display: "inline-block", marginRight: 15}}>
+    const sourceTitle = isDevMode() ? TaskSource.formatForTooltip((workflow as unknown as I_GetTaskSource).getSource?.() ?? null) : undefined;
+    return <span style={{ display: "inline-block", marginRight: 15 }} title={sourceTitle}>
         {showCheckBox ? <ExternalControlledCheckbox
             content={content}
             onChange={tickCheckbox}
