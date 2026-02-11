@@ -18,7 +18,7 @@ import {getAPI, STask} from "obsidian-dataview";
 import {ONotice} from "../utils/o-notice";
 import {getSettings} from "../settings/settings";
 import {GenericProvider} from "../utils/GenericProvider";
-import {clearGlobalProjectMap, OdaPmProject, ProjectName_Unclassified} from "./OdaPmProject";
+import {clearGlobalProjectMap, OdaPmProject, OdaPmProjectDefinition, ProjectName_Unclassified} from "./OdaPmProject";
 import {devTaggedLog, devTime, devTimeEnd} from "../utils/env-util";
 import {OdaPmTask} from "./OdaPmTask";
 import {getOrCreateWorkflow, removeWorkflow} from "./OdaPmWorkflow";
@@ -216,6 +216,11 @@ function getAllProjectsAndLinkTasks(pmTasks: OdaPmTask[], workflows: I_OdaPmWork
     return projects;
 }
 
+/** Path → entities from that file. Used for incremental build when a single file changes. */
+export type PathToWorkflowsMap = Map<string, I_OdaPmWorkflow[]>;
+export type PathToPmTasksMap = Map<string, OdaPmTask[]>;
+export type PathToProjectDefinitionsMap = Map<string, OdaPmProjectDefinition[]>;
+
 export class OdaPmDb implements I_EvtListener {
     workflows: I_OdaPmWorkflow[];
     workflowTags: string[];
@@ -233,6 +238,13 @@ export class OdaPmDb implements I_EvtListener {
     // 0.5.0
     pmPriorityTags: string[]
     private plugin: OdaPmToolPlugin;
+
+    /** path (file path) → workflows whose boundTask is in that file. For incremental build. */
+    pathToWorkflows: PathToWorkflowsMap = new Map();
+    /** path (file path) → pmTasks whose boundTask is in that file. For incremental build. */
+    pathToPmTasks: PathToPmTasksMap = new Map();
+    /** path (file path) → project definitions defined by that file (frontmatter or task/workflow). For incremental build. */
+    pathToProjectDefinitions: PathToProjectDefinitionsMap = new Map();
 // region rate limit
     // refresh db at least once 3 seconds
     rateLimiter: RateLimiter = new RateLimiter(3, 1 / 3, 3)
@@ -309,9 +321,37 @@ export class OdaPmDb implements I_EvtListener {
         devTime("Event", `[Timed] orphanTasks`)
         this.orphanTasks = this.initOrphanTasks(this.pmTasks);
         devTimeEnd("Event", `[Timed] orphanTasks`)
+        devTime("Event", `[Timed] buildPathMaps`)
+        this.buildPathMaps();
+        devTimeEnd("Event", `[Timed] buildPathMaps`)
         this.emit(Evt_DbReloaded)
         assertDatabase(this);
         devTimeEnd("Event", "[Timed] reloadDb")
+    }
+
+    /** Build path → workflows / pmTasks / projectDefinitions maps for incremental update when a single file changes. */
+    private buildPathMaps(): void {
+        this.pathToWorkflows.clear();
+        this.pathToPmTasks.clear();
+        this.pathToProjectDefinitions.clear();
+        for (const wf of this.workflows) {
+            const p = wf.boundTask.path;
+            if (!this.pathToWorkflows.has(p)) this.pathToWorkflows.set(p, []);
+            this.pathToWorkflows.get(p)!.push(wf);
+        }
+        for (const task of this.pmTasks) {
+            const p = task.boundTask.path;
+            if (!this.pathToPmTasks.has(p)) this.pathToPmTasks.set(p, []);
+            this.pathToPmTasks.get(p)!.push(task);
+        }
+        for (const project of this.pmProjects) {
+            for (const def of project.projectDefinitions) {
+                const p = def.getSourceFilePath();
+                if (p == null) continue;
+                if (!this.pathToProjectDefinitions.has(p)) this.pathToProjectDefinitions.set(p, []);
+                this.pathToProjectDefinitions.get(p)!.push(def);
+            }
+        }
     }
 
 
@@ -375,6 +415,19 @@ export class OdaPmDb implements I_EvtListener {
     }
 
 // endregion
+
+    /** Entities that are defined by or live in the given file path. Use for incremental build when only this file changes. */
+    getAffectedByPath(filePath: string): {
+        workflows: I_OdaPmWorkflow[];
+        pmTasks: OdaPmTask[];
+        projectDefinitions: OdaPmProjectDefinition[];
+    } {
+        return {
+            workflows: this.pathToWorkflows.get(filePath) ?? [],
+            pmTasks: this.pathToPmTasks.get(filePath) ?? [],
+            projectDefinitions: this.pathToProjectDefinitions.get(filePath) ?? [],
+        };
+    }
 
     getWorkflow(filePath: string, line: number) {
         for (const wf of this.workflows) {

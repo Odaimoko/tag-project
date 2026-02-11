@@ -42,6 +42,27 @@ export class OdaPmProjectDefinition {
         this.taskable = task;
     }
 
+    getSource(): TaskSource | null {
+        if (this.taskable && 'getSource' in this.taskable) {
+            return (this.taskable as unknown as I_GetTaskSource).getSource();
+        }
+        if (this.page) {
+            return new TaskSource(path.basename(this.page.path, path.extname(this.page.path)) || path.basename(this.page.path), this.page.path, 0);
+        }
+        return null;
+    }
+
+    /** File path that defines this definition (page path or task/workflow file path). Used for path→definition maps and incremental build. */
+    getSourceFilePath(): string | null {
+        if (this.taskable && "boundTask" in this.taskable) {
+            return (this.taskable as { boundTask: { path: string } }).boundTask.path;
+        }
+        if (this.page) {
+            return this.page.path;
+        }
+        return null;
+    }
+
     hasDefinedType(type: ProjectDefinedType) {
         return this.type == type;
     }
@@ -64,41 +85,21 @@ export class OdaPmProjectDefinition {
         }
     }
 }
-
-export class OdaPmProject extends BaseDatabaseObject implements INameable, I_GetTaskSource {
+/**
+ * A project is a collection of tasks and workflows.
+ * It can be defined by a folder, a file, a tag override, or a system project.
+ * It does not implement I_GetTaskSource interface.
+ */
+export class OdaPmProject extends BaseDatabaseObject implements INameable {
     name: string;
     workflows: I_OdaPmWorkflow[];
     pmTasks: OdaPmTask[];
     projectDefinitions: OdaPmProjectDefinition[] = []
-    /** Cached result of getSource(); invalidated when projectDefinitions change */
-    private _cachedSource: TaskSource | null | undefined = undefined;
 
     constructor() {
         super();
         this.workflows = []
         this.pmTasks = []
-    }
-
-    /** 来源信息：优先从 projectDefinitions 中的 taskable/page 取第一个可用 source */
-    getSource(): TaskSource | null {
-        if (this._cachedSource !== undefined) return this._cachedSource;
-        for (const def of this.projectDefinitions) {
-            if (def.taskable && typeof (def.taskable as unknown as I_GetTaskSource).getSource === "function") {
-                const src = (def.taskable as unknown as I_GetTaskSource).getSource();
-                if (src) {
-                    this._cachedSource = src;
-                    return src;
-                }
-            }
-            if (def.page) {
-                const p = def.page.path;
-                const src = new TaskSource(path.basename(p, path.extname(p)) || path.basename(p), p, 0);
-                this._cachedSource = src;
-                return src;
-            }
-        }
-        this._cachedSource = null;
-        return null;
     }
 
     hasDefinedType(type: ProjectDefinedType) {
@@ -112,7 +113,6 @@ export class OdaPmProject extends BaseDatabaseObject implements INameable, I_Get
             type, obsidianPath, page, task
         );
         this.projectDefinitions.push(odaPmProjectDefinition);
-        this._cachedSource = undefined;
     }
 
 
