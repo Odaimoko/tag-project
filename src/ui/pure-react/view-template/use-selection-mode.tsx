@@ -61,9 +61,6 @@ export function useSelectionMode({
         const handleEscape = (event: KeyboardEvent) => {
             if (event.key === "Escape") {
                 setIsSelectionMode(false);
-                setSelectedRows(new Set());
-                onSelectionModeChange?.(false);
-                onSelectionChange?.([]);
                 event.preventDefault();
                 event.stopPropagation();
             }
@@ -73,7 +70,7 @@ export function useSelectionMode({
         return () => {
             document.removeEventListener("keydown", handleEscape);
         };
-    }, [enableSelectionMode, isSelectionMode, setIsSelectionMode, onSelectionModeChange, onSelectionChange]);
+    }, [enableSelectionMode, isSelectionMode, setIsSelectionMode]);
 
     // Toggle row selection - notify parent directly
     const toggleRowSelection = useCallback((rowIndex: number) => {
