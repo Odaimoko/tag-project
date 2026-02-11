@@ -1,5 +1,5 @@
 import {IRenderable} from "../props-typing/i-renderable";
-import React, {useEffect, useMemo, useRef, useState} from "react";
+import React, {useEffect, useMemo, useRef, useState, useCallback} from "react";
 import {createPortal} from "react-dom";
 import {HStack, VStack} from "./h-stack";
 import {ClickableObsidianIconView} from "../../react-view/obsidian-icon-view";
@@ -33,6 +33,118 @@ interface DataTableParams {
     // Callback to pass selection mode state to row renderers
     rowRenderer?: (rowIndex: number, content: IRenderable[], isSelectionMode: boolean) => IRenderable[];
 }
+
+// Memoized row component to optimize rendering performance
+interface TableRowProps {
+    rowIdx: number;
+    actualRowIndex: number;
+    items: IRenderable[];
+    isSelected: boolean;
+    isSelectionMode: boolean;
+    tableTitle: string;
+    cellStyleGetter?: (column: number, row: number) => React.CSSProperties;
+    cellStyle?: React.CSSProperties;
+    onRowContextMenu?: (rowIndex: number, event: React.MouseEvent) => void;
+    handleRowClick: (actualRowIndex: number, event: React.MouseEvent) => void;
+    toggleRowSelection: (rowIndex: number) => void;
+}
+
+const TableRow = React.memo(({ 
+    rowIdx, 
+    actualRowIndex, 
+    items, 
+    isSelected, 
+    isSelectionMode,
+    tableTitle,
+    cellStyleGetter,
+    cellStyle,
+    onRowContextMenu,
+    handleRowClick,
+    toggleRowSelection
+}: TableRowProps) => {
+    const baseRowStyle = useMemo(() => ({
+        userSelect: "none" as const,
+        transition: "background-color 120ms ease, box-shadow 120ms ease, outline-color 120ms ease"
+    }), []);
+
+    const selectedRowStyle = useMemo(() => ({
+        backgroundColor: "var(--background-modifier-hover)",
+        boxShadow: "inset 4px 0 0 var(--interactive-accent)",
+        outline: "2px solid var(--interactive-accent)",
+        outlineOffset: "-2px"
+    }), []);
+
+    const unselectedRowStyle = useMemo(() => ({
+        backgroundColor: "transparent"
+    }), []);
+
+    const rowStyle = useMemo(() => ({
+        ...baseRowStyle,
+        cursor: isSelectionMode ? "pointer" as const : "default" as const,
+        ...(isSelected ? selectedRowStyle : unselectedRowStyle)
+    }), [isSelectionMode, isSelected, baseRowStyle, selectedRowStyle, unselectedRowStyle]);
+
+    const handleRowClickLocal = useCallback((e: React.MouseEvent) => {
+        handleRowClick(actualRowIndex, e);
+    }, [actualRowIndex, handleRowClick]);
+
+    const handleContextMenu = useCallback((e: React.MouseEvent) => {
+        if (!isSelectionMode) {
+            e.preventDefault();
+            e.stopPropagation();
+            onRowContextMenu?.(actualRowIndex, e);
+        }
+    }, [isSelectionMode, actualRowIndex, onRowContextMenu]);
+
+    const handleToggle = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+        toggleRowSelection(actualRowIndex);
+    }, [actualRowIndex, toggleRowSelection]);
+
+    const handleCellClick = useCallback((e: React.MouseEvent) => {
+        if (isSelectionMode) {
+            e.stopPropagation();
+        }
+    }, [isSelectionMode]);
+
+    return (
+        <tr
+            onClick={handleRowClickLocal}
+            onContextMenu={handleContextMenu}
+            style={rowStyle}
+        >
+            {isSelectionMode && (
+                <SelectionCheckbox
+                    isSelected={isSelected}
+                    onToggle={handleToggle}
+                />
+            )}
+            {items.map((k: IRenderable, columnIdx) => {
+                const key = `${tableTitle}_${rowIdx}_${columnIdx}`;
+                const cStyle = cellStyleGetter ?
+                    cellStyleGetter(columnIdx, actualRowIndex) :
+                    cellStyle;
+                return (
+                    <td 
+                        style={cStyle} 
+                        key={key}
+                        onClick={handleCellClick}
+                    >
+                        {k}
+                    </td>
+                );
+            })}
+        </tr>
+    );
+}, (prevProps, nextProps) => {
+    // Custom comparison: only re-render if these props change
+    return prevProps.rowIdx === nextProps.rowIdx &&
+           prevProps.actualRowIndex === nextProps.actualRowIndex &&
+           prevProps.isSelected === nextProps.isSelected &&
+           prevProps.isSelectionMode === nextProps.isSelectionMode &&
+           prevProps.items.length === nextProps.items.length &&
+           prevProps.items.every((item, idx) => item === nextProps.items[idx]);
+});
 
 /**
  *
@@ -127,14 +239,14 @@ export const DataTable = ({
         const displayedRows = rows.slice(start, end);
         const displayedRowData = rowData ? rowData.slice(start, end) : undefined;
 
-        // Handle row click for selection
-        const handleRowClick = (actualRowIndex: number, event: React.MouseEvent) => {
+        // Handle row click for selection - memoized to avoid recreating on every render
+        const handleRowClick = useCallback((actualRowIndex: number, event: React.MouseEvent) => {
             if (!enableSelectionMode || !isSelectionMode) return;
 
             event.preventDefault();
             event.stopPropagation();
             toggleRowSelection(actualRowIndex);
-        };
+        }, [enableSelectionMode, isSelectionMode, toggleRowSelection]);
 
         return (
             <div style={{position: "relative"}}>
@@ -144,68 +256,20 @@ export const DataTable = ({
                         const actualRowIndex = start + rowIdx;
                         const isSelected = isSelectionMode && selectedRows.has(actualRowIndex);
                         return (
-                            <tr
+                            <TableRow
                                 key={rowIdx}
-                                onClick={(e) => handleRowClick(actualRowIndex, e)}
-                                onContextMenu={(e) => {
-                                    if (!isSelectionMode) {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        onRowContextMenu?.(actualRowIndex, e);
-                                    }
-                                }}
-                                style={{
-                                    cursor: isSelectionMode ? "pointer" : "default",
-                                    userSelect: "none",
-                                    transition: "background-color 120ms ease, box-shadow 120ms ease, outline-color 120ms ease",
-                                    ...(isSelected
-                                        ? {
-                                            // Make selected rows much more obvious:
-                                            // - stronger background
-                                            // - left accent bar
-                                            // - outline (works even if cells have their own background colors)
-                                            backgroundColor: "var(--background-modifier-hover)",
-                                            boxShadow: "inset 4px 0 0 var(--interactive-accent)",
-                                            outline: "2px solid var(--interactive-accent)",
-                                            outlineOffset: "-2px"
-                                        }
-                                        : {
-                                            backgroundColor: "transparent"
-                                        })
-                                }}
-                            >
-                                {isSelectionMode && (
-                                    <SelectionCheckbox
-                                        isSelected={isSelected}
-                                        onToggle={(e) => {
-                                            e.stopPropagation();
-                                            toggleRowSelection(actualRowIndex);
-                                        }}
-                                    />
-                                )}
-                                {items.map(
-                                    function (k: IRenderable, columnIdx) {
-                                        const key = `${tableTitle}_${rowIdx}_${columnIdx}`;
-                                        const cStyle = cellStyleGetter ?
-                                            cellStyleGetter(columnIdx, actualRowIndex) :
-                                            cellStyle;
-                                        return (
-                                            <td 
-                                                style={cStyle} 
-                                                key={key}
-                                                onClick={(e) => {
-                                                    // In selection mode, prevent all click events from bubbling
-                                                    // This disables original click behaviors (like opening tasks)
-                                                    if (isSelectionMode) {
-                                                        e.stopPropagation();
-                                                    }
-                                                }}
-                                            >
-                                                {k}
-                                            </td>
-                                        );
-                                    })}
-                            </tr>
+                                rowIdx={rowIdx}
+                                actualRowIndex={actualRowIndex}
+                                items={items}
+                                isSelected={isSelected}
+                                isSelectionMode={isSelectionMode}
+                                tableTitle={tableTitle}
+                                cellStyleGetter={cellStyleGetter}
+                                cellStyle={cellStyle}
+                                onRowContextMenu={onRowContextMenu}
+                                handleRowClick={handleRowClick}
+                                toggleRowSelection={toggleRowSelection}
+                            />
                         );
                     })}
                     </tbody>
