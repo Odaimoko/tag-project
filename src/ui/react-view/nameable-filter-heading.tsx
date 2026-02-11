@@ -19,17 +19,29 @@ export function SelectAndDeselectAllView({handleSetDisplayNames, nameables}: {
 
 export const NameableFilterHeading = ({
                                           children, displayNames, handleSetDisplayNames, nameableTypeName, nameables,
-                                          showSelectAll
+                                          showSelectAll,
+                                          onTitleClicked,
+                                          titleAddon
                                       }: {
     nameableTypeName: string,
     displayNames: string[],
     nameables: INameable[],
     handleSetDisplayNames?: (s: string[]) => void, // if showSelectAll is false, this is not required
-    showSelectAll?: boolean
+    showSelectAll?: boolean,
+    onTitleClicked?: () => void,
+    titleAddon?: React.ReactNode
 } & React.PropsWithChildren<any>) => {
     showSelectAll = showSelectAll ?? true;
     return <FilterHeadHStack>
-        <h2>{displayNames.length}/{nameables.length} {nameableTypeName}(s)</h2>
+        <h2
+            style={onTitleClicked ? {cursor: "pointer", userSelect: "none"} : undefined}
+            onClick={() => onTitleClicked?.()}
+        >
+            <span style={{display: "inline-flex", alignItems: "center", gap: 6}}>
+                {displayNames.length}/{nameables.length} {nameableTypeName}(s)
+                {titleAddon}
+            </span>
+        </h2>
         {showSelectAll &&
             <SelectAndDeselectAllView handleSetDisplayNames={handleSetDisplayNames} nameables={nameables}/>}
         {children}

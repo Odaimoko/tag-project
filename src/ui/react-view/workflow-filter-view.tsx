@@ -82,22 +82,43 @@ const workflowFilterTogglesRowStyle: React.CSSProperties = {
     borderRadius: "6px",
     gap: 16,
 };
+const workflowSelectedListContainerStyle: React.CSSProperties = {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTop: "1px solid var(--background-modifier-border)",
+    overflow: "hidden",
+};
 const workflowSelectedListStyle: React.CSSProperties = {
     display: "flex",
     flexWrap: "wrap",
     alignItems: "center",
     gap: "6px 12px",
-    marginTop: 8,
-    paddingTop: 8,
-    borderTop: "1px solid var(--background-modifier-border)",
+};
+const workflowSummaryTextStyle: React.CSSProperties = {
+    color: "var(--text-muted)",
+    fontSize: "0.95em",
+};
+const workflowContentWrapperStyle = (expanded: boolean): React.CSSProperties => ({
+    maxHeight: expanded ? "1000px" : "0",
+    opacity: expanded ? 1 : 0,
+    transition: "max-height 0.3s ease-in-out, opacity 0.3s ease-in-out",
+    overflow: "hidden",
+});
+const workflowSummaryWrapperStyle = (expanded: boolean): React.CSSProperties => ({
+    maxHeight: expanded ? "0" : "50px",
+    opacity: expanded ? 0 : 1,
+    transition: "max-height 0.3s ease-in-out, opacity 0.3s ease-in-out",
+    overflow: "hidden",
+});
+const chevronIconStyle: React.CSSProperties = {
+    transition: "transform 0.3s ease-in-out",
+    display: "inline-block",
+};
+const chevronIconExpandedStyle: React.CSSProperties = {
+    ...chevronIconStyle,
+    transform: "rotate(90deg)",
 };
 const WORKFLOW_EXPAND_THRESHOLD = 5;
-const workflowExpandButtonStyle: React.CSSProperties = {
-    ...workflowFilterButtonStyle,
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 4,
-};
 
 export const WorkflowFilterView = (props: {
     workflows: I_OdaPmWorkflow[],
@@ -126,6 +147,14 @@ export const WorkflowFilterView = (props: {
     return <div style={workflowFilterCardStyle}>
         <NameableFilterHeading nameableTypeName={"Workflow"} nameables={workflows} displayNames={displayNames}
             showSelectAll={false}
+            onTitleClicked={useExpandToggle ? () => setWorkflowsListExpanded(!workflowsListExpanded) : undefined}
+            titleAddon={useExpandToggle ? (
+                <span style={workflowsListExpanded ? chevronIconExpandedStyle : chevronIconStyle}>
+                    <ObsidianIconView
+                        yOffset={false}
+                        iconName={"chevron-right"} />
+                </span>
+            ) : null}
             handleSetDisplayNames={handleSetDisplayNames}>
             <HStack spacing={8}>
                 <SearchableDropdown dropdownId={"workflow"}
@@ -168,36 +197,24 @@ export const WorkflowFilterView = (props: {
             }} content={<label>{"Unclassified Workflows"}</label>} />
         </HStack>
 
-        <div style={workflowSelectedListStyle}>
-            {useExpandToggle && !workflowsListExpanded ? (
-                <HStack spacing={8} style={centerChildren}>
-                    <span style={{ color: "var(--text-muted)", fontSize: "0.95em" }}>
-                        {selectedCount} Workflow{selectedCount !== 1 ? "s" : ""}
-                    </span>
-                    <button
-                        style={workflowExpandButtonStyle}
-                        onClick={() => setWorkflowsListExpanded(true)}
-                    >
-                        <ObsidianIconView yOffset={false} iconName={"chevron-down"} />
-                        Expand
-                    </button>
-                </HStack>
-            ) : (
-                <>
-                    {useExpandToggle && (
-                        <button
-                            style={workflowExpandButtonStyle}
-                            onClick={() => setWorkflowsListExpanded(false)}
-                        >
-                            <ObsidianIconView yOffset={false} iconName={"chevron-up"} />
-                            仅 {selectedCount} Workflow{selectedCount !== 1 ? "s" : ""}
-                        </button>
-                    )}
-                    <WorkflowCheckboxes nameables={workflows} displayNames={displayNames} />
-
-                </>
-            )}
-        </div>
+        {selectedCount > 0 && (
+            <div style={workflowSelectedListContainerStyle}>
+                {useExpandToggle && (
+                    <div style={workflowSummaryWrapperStyle(workflowsListExpanded)}>
+                        <div style={workflowSummaryTextStyle}>
+                            {selectedCount} Workflow{selectedCount !== 1 ? "s" : ""}
+                        </div>
+                    </div>
+                )}
+                <div style={useExpandToggle 
+                    ? workflowContentWrapperStyle(workflowsListExpanded)
+                    : workflowContentWrapperStyle(true)}>
+                    <div style={workflowSelectedListStyle}>
+                        <WorkflowCheckboxes nameables={workflows} displayNames={displayNames} />
+                    </div>
+                </div>
+            </div>
+        )}
     </div>;
 }
 /**
