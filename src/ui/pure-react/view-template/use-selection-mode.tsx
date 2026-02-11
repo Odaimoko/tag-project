@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useRef, useState} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface UseSelectionModeParams {
     enableSelectionMode: boolean;
@@ -39,6 +39,11 @@ export function useSelectionMode({
 
     // Stable setIsSelectionMode function - call callback directly
     const setIsSelectionMode = useCallback((val: boolean) => {
+        if (!val) {
+            // When exiting selection mode, clear selection array
+            setSelectedRows(new Set());
+            onSelectionChange?.([]);
+        }
         if (externalSelectionMode !== undefined) {
             // External control - call the callback directly
             onSelectionModeChange?.(val);
@@ -47,7 +52,7 @@ export function useSelectionMode({
             setInternalSelectionMode(val);
             onSelectionModeChange?.(val);
         }
-    }, [externalSelectionMode, onSelectionModeChange]);
+    }, [externalSelectionMode, onSelectionModeChange, onSelectionChange]);
 
     // Handle ESC key to exit selection mode (keep useEffect for DOM event listener)
     useEffect(() => {

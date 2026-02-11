@@ -91,6 +91,15 @@ export const DataTable = ({
             setTimeout(() => clearSelection(), 0);
         }
 
+        // When selection mode is turned off, clear selection array (e.g. when externalSelectionMode becomes false)
+        const prevSelectionModeRef = useRef(isSelectionMode);
+        useEffect(() => {
+            if (prevSelectionModeRef.current && !isSelectionMode) {
+                clearSelection();
+            }
+            prevSelectionModeRef.current = isSelectionMode;
+        }, [isSelectionMode, clearSelection]);
+
         // Sync selection when externalSelectedRowIndices changes (e.g., after sorting)
         // Compute desired selection state
         const desiredSelectedRows = useMemo(() => {
