@@ -11,8 +11,9 @@ import {
 import {getOrCreateStep} from "./OdaPmStep";
 import {OdaPmProject, ProjectName_Unclassified} from "./OdaPmProject";
 import {getSettings} from "../settings/settings";
+import {I_GetTaskSource, TaskSource} from "./TaskSource";
 
-class OdaPmWorkflow implements I_OdaPmWorkflow {
+class OdaPmWorkflow implements I_OdaPmWorkflow, I_GetTaskSource {
     boundTask: STask;
     stepsDef: I_OdaPmStep[];
     type: WorkflowType;
@@ -20,6 +21,8 @@ class OdaPmWorkflow implements I_OdaPmWorkflow {
     tag: string;
     // 0.2.0
     projects: OdaPmProject[];
+    /** 来源信息：文件、路径、行号 */
+    source: TaskSource;
 
     constructor(task: STask, type: WorkflowType, name: string) {
         this.boundTask = task;
@@ -28,6 +31,11 @@ class OdaPmWorkflow implements I_OdaPmWorkflow {
         this.name = name;
         this.tag = Tag_Prefix_TaskType + name;
         this.projects = [];
+        this.source = TaskSource.fromSTask(task);
+    }
+
+    getSource(): TaskSource | null {
+        return this.source;
     }
 
     addStep(tag: string) {

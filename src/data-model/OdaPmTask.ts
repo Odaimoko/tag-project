@@ -16,9 +16,9 @@ import {ModuleId_Unclassified} from "./OdaPmModule";
 import {DefaultTaskPriority, MoreThanOnePriority} from "../settings/settings";
 import {Plugin} from "obsidian";
 import {addTagText, removeTagText} from "./tag-text-manipulate";
-import {TaskSource} from "./TaskSource";
+import {I_GetTaskSource, TaskSource} from "./TaskSource";
 
-export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
+export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble, I_GetTaskSource {
     boundTask: STask;
     // without any step and typeDef tags
     summary: string;
@@ -55,6 +55,10 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble {
         this.source = TaskSource.fromSTask(task);
         // Generate UUID
         this.uuid = crypto.randomUUID();
+    }
+
+    getSource(): TaskSource | null {
+        return this.source;
     }
 
     toObject() {

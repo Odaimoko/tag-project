@@ -1,13 +1,18 @@
 import {I_OdaPmStep, Tag_Prefix_Step} from "./workflow-def";
+import {I_GetTaskSource, TaskSource} from "./TaskSource";
 
-class OdaPmStep implements I_OdaPmStep {
+class OdaPmStep implements I_OdaPmStep, I_GetTaskSource {
     tag: string;
     name: string;
-
+    source?: TaskSource;
 
     constructor(tag: string) {
         this.tag = tag;
         this.name = tag.replace(Tag_Prefix_Step, "");
+    }
+
+    getSource(): TaskSource | null {
+        return this.source ?? null;
     }
 
     toObject() {

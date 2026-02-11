@@ -1,4 +1,12 @@
 /**
+ * 可提供来源信息（文件、路径、行号）的共用接口。
+ * Module / Step / Task / Workflow 等均实现此接口。
+ */
+export interface I_GetTaskSource {
+    getSource(): TaskSource | null;
+}
+
+/**
  * Stores task source information: file, path, and line number
  */
 export class TaskSource {
