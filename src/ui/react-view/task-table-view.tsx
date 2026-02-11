@@ -593,10 +593,6 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
         }
     }, [clearSelection]);
 
-    // Compute toolbar visibility directly (no useEffect needed)
-    // Toolbar is visible when in selection mode
-    const toolbarVisible = isSelectionMode;
-
     function handleRowContextMenu(rowIndex: number, event: React.MouseEvent) {
         const selectedTasks = [displayedTasks[rowIndex]];
         devLog("handleRowContextMenu", rowIndex, event.clientX, event.clientY)
@@ -761,7 +757,7 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
                                     clearSelection();
                                     setClearSelectionTrigger(prev => prev + 1);
                                 }}
-                                visible={isSelectionMode && toolbarVisible}
+                                visible={isSelectionMode}
                             />
                             <SelectionModeContext.Provider value={isSelectionMode}>
                                 <PaginatedTaskTable curWfName={curWfName} headers={headers} taskRows={taskRows}

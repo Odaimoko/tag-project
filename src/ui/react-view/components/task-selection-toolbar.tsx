@@ -76,23 +76,25 @@ export function TaskSelectionToolbar({
         }
     }
 
-    if (!visible) return null;
-
     return (
-        <HStack style={{
-            justifyContent: "flex-start",
-            alignItems: "center",
-            padding: "10px 14px",
-            backgroundColor: "var(--background-modifier-hover)",
-            border: "1px solid var(--interactive-accent)",
-            borderRadius: "6px",
-            marginBottom: "8px",
-            boxShadow: "0 2px 6px rgba(0, 0, 0, 0.1)",
+        <div style={{
+            overflow: "hidden",
+            maxHeight: visible ? "100px" : "0",
             opacity: visible ? 1 : 0,
-            transform: visible ? "translateY(0)" : "translateY(-10px)",
-            transition: "opacity 0.3s ease, transform 0.3s ease",
-            pointerEvents: visible ? "auto" : "none"
-        }} spacing={12}>
+            transform: visible ? "translateY(0)" : "translateY(-20px)",
+            transition: "opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
+            marginBottom: visible ? "8px" : "0",
+        }}>
+            <HStack style={{
+                justifyContent: "flex-start",
+                alignItems: "center",
+                padding: "12px 16px",
+                backgroundColor: "var(--background-modifier-hover)",
+                border: "1px solid var(--interactive-accent)",
+                borderRadius: "6px",
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+                pointerEvents: visible ? "auto" : "none",
+            }} spacing={12}>
             <label style={{
                 fontWeight: "600",
                 fontSize: "13px",
@@ -186,6 +188,7 @@ export function TaskSelectionToolbar({
             >
                 Clear Selection
             </button>
-        </HStack>
+            </HStack>
+        </div>
     );
 }

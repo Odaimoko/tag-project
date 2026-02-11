@@ -289,7 +289,7 @@ export const PaginatedDataTable = (props: Omit<DataTableParams, "rowRange"> & Se
                     {props.enableSelectionMode && !isSelectionMode && (
                         <button 
                             onClick={() => {
-                                setIsSelectionMode(true);
+                                handleSelectionModeChange(true);
                             }}
                             style={{
                                 padding: "4px 8px",
@@ -303,7 +303,7 @@ export const PaginatedDataTable = (props: Omit<DataTableParams, "rowRange"> & Se
                     <SetCountPerPageWidget 
                         {...props}
                         onExitSelectionMode={props.enableSelectionMode && isSelectionMode ? () => {
-                            setIsSelectionMode(false);
+                            handleSelectionModeChange(false);
                         } : undefined}
                     />
                 </HStack>
@@ -314,7 +314,7 @@ export const PaginatedDataTable = (props: Omit<DataTableParams, "rowRange"> & Se
                 <SelectionModeStatusBar 
                     selectedCount={selectedCount}
                     onExit={() => {
-                        setIsSelectionMode(false);
+                        handleSelectionModeChange(false);
                     }}
                 />
             )}
