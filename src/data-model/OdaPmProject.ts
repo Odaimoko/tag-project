@@ -6,6 +6,7 @@ import {OdaPmTask} from "./OdaPmTask";
 import * as path from "path";
 import {INameable} from "../ui/pure-react/props-typing/i-nameable";
 import {ONotice} from "../utils/o-notice";
+import {I_GetTaskSource, TaskSource} from "./TaskSource";
 
 export const Frontmatter_FolderProject = "tpm_project_root";
 export const Frontmatter_FileProject = "tpm_project";
@@ -64,16 +65,40 @@ export class OdaPmProjectDefinition {
     }
 }
 
-export class OdaPmProject extends BaseDatabaseObject implements INameable {
+export class OdaPmProject extends BaseDatabaseObject implements INameable, I_GetTaskSource {
     name: string;
     workflows: I_OdaPmWorkflow[];
     pmTasks: OdaPmTask[];
     projectDefinitions: OdaPmProjectDefinition[] = []
+    /** Cached result of getSource(); invalidated when projectDefinitions change */
+    private _cachedSource: TaskSource | null | undefined = undefined;
 
     constructor() {
         super();
         this.workflows = []
         this.pmTasks = []
+    }
+
+    /** 来源信息：优先从 projectDefinitions 中的 taskable/page 取第一个可用 source */
+    getSource(): TaskSource | null {
+        if (this._cachedSource !== undefined) return this._cachedSource;
+        for (const def of this.projectDefinitions) {
+            if (def.taskable && typeof (def.taskable as unknown as I_GetTaskSource).getSource === "function") {
+                const src = (def.taskable as unknown as I_GetTaskSource).getSource();
+                if (src) {
+                    this._cachedSource = src;
+                    return src;
+                }
+            }
+            if (def.page) {
+                const p = def.page.path;
+                const src = new TaskSource(path.basename(p, path.extname(p)) || path.basename(p), p, 0);
+                this._cachedSource = src;
+                return src;
+            }
+        }
+        this._cachedSource = null;
+        return null;
     }
 
     hasDefinedType(type: ProjectDefinedType) {
@@ -86,7 +111,8 @@ export class OdaPmProject extends BaseDatabaseObject implements INameable {
         const odaPmProjectDefinition = new OdaPmProjectDefinition(
             type, obsidianPath, page, task
         );
-        this.projectDefinitions.push(odaPmProjectDefinition)
+        this.projectDefinitions.push(odaPmProjectDefinition);
+        this._cachedSource = undefined;
     }
 
 
