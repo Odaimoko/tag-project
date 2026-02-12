@@ -127,6 +127,14 @@ export async function openTaskPrecisely(workspace: Workspace, task: STask, force
     );
 }
 
+/** Open the file at the section (header) that contains the given task. Use for module "go to definition". */
+export async function openSectionPrecisely(workspace: Workspace, task: STask, forceNewTab = false) {
+    const openInNewLeaf = await getOpenInNewTab(forceNewTab, workspace, task.path);
+    const sectionLink = task.section.obsidianLink();
+    devLog(`[OpenSection] ${task.path} section ${sectionLink} openInNewLeaf ${openInNewLeaf}`);
+    await workspace.openLinkText(sectionLink, task.path, openInNewLeaf, {});
+}
+
 export function openProjectPrecisely(project: OdaPmProject, defType: OdaPmProjectDefinition, workspace: Workspace, forceNewTab = false) {
     switch (defType.type) {
         case "folder": // Project_FolderProject_Frontmatter

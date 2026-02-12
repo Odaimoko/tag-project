@@ -1,7 +1,7 @@
 import { OdaPmModule } from "../../data-model/OdaPmModule";
 import { NameableFilterHeading } from "./nameable-filter-heading";
 import { OptionValueType, SearchableDropdown } from "../pure-react/view-template/searchable-dropdown";
-import React, { useState } from "react";
+import React, { MouseEvent, useContext, useState } from "react";
 import { HStack } from "../pure-react/view-template/h-stack";
 import { isDevMode } from "../../utils/env-util";
 import { I_GetTaskSource } from "../../data-model/TaskSource";
@@ -15,6 +15,39 @@ import {
     FILTER_EXPAND_THRESHOLD,
     SelectableChipList,
 } from "./filter-card-styles";
+import { PluginContext } from "../obsidian/manage-page-view";
+import { InternalLinkView } from "./obsidian-icon-view";
+import { openSectionPrecisely } from "../../utils/io-util";
+import { getForceNewTabOnClick } from "../../settings/settings";
+import { iconViewAsAWholeStyle } from "../pure-react/style-def";
+import { taskCheckBoxMargin } from "./task-table-view";
+
+/** Module chip with optional link icon that jumps to the module's definition (first task line). */
+function ClickableModuleView({ module }: { module: OdaPmModule }) {
+    const plugin = useContext(PluginContext);
+    const hasDefinition = module.tasks.length > 0;
+    const firstTask = module.tasks[0];
+
+    function openModuleDefinition(e: MouseEvent) {
+        if (!hasDefinition || !firstTask) return;
+        const forceNewTab = getForceNewTabOnClick(plugin, e);
+        openSectionPrecisely(plugin.app.workspace, firstTask.boundTask, forceNewTab);
+    }
+
+    if (hasDefinition) {
+        return (
+            <InternalLinkView
+                content={
+                    <span style={iconViewAsAWholeStyle}>
+                        <label style={taskCheckBoxMargin}>{module.name}</label>
+                    </span>
+                }
+                onIconClicked={openModuleDefinition}
+            />
+        );
+    }
+    return <label>{module.name}</label>;
+}
 
 export function ModuleFilter({
     modules,
@@ -69,7 +102,7 @@ export function ModuleFilter({
                     selectedKeys={displayModuleIds}
                     onSelectionChange={handleSetDisplayModuleIds}
                     getKey={(m) => m.id}
-                    renderChipContent={(m) => <label>{m.name}</label>}
+                    renderChipContent={(m) => <ClickableModuleView module={m} />}
                     getTooltip={
                         isDevMode()
                             ? (m) => TaskSource.formatForTooltip((m as I_GetTaskSource).getSource?.() ?? null)
