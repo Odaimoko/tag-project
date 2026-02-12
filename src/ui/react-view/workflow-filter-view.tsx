@@ -5,7 +5,15 @@ import React, { MouseEvent, useContext, useState } from "react";
 import { PluginContext } from "../obsidian/manage-page-view";
 import { ExternalControlledCheckbox } from "../pure-react/view-template/checkbox";
 import { InternalLinkView } from "./obsidian-icon-view";
-import { centerChildren, getExpandCollapseChevronStyle, getExpandCollapseContentStyle, getExpandCollapseSummaryStyle, iconViewAsAWholeStyle } from "../pure-react/style-def";
+import { iconViewAsAWholeStyle } from "../pure-react/style-def";
+import {
+    filterButtonStyle,
+    filterCardStyle,
+    FilterExpandChevron,
+    filterTogglesRowStyle,
+    FILTER_EXPAND_THRESHOLD,
+    SelectableChipList,
+} from "./filter-card-styles";
 import { openTaskPrecisely } from "../../utils/io-util";
 import { initialToUpper } from "../../utils/format-util";
 import { NameableFilterHeading } from "./nameable-filter-heading";
@@ -17,7 +25,6 @@ import { getForceNewTabOnClick } from "../../settings/settings";
 import { I_Stylable } from "../pure-react/props-typing/i-stylable";
 import { getIconByWorkflow, getIconViewByWorkflowType } from "./tag-project-style";
 import { toggleValueInArray } from "../pure-react/utils/toggle-value-in-array";
-import { ObsidianIconView } from "./obsidian-icon-view";
 import { isDevMode } from "../../utils/env-util";
 import { I_GetTaskSource } from "../../data-model/TaskSource";
 import { TaskSource } from "../../data-model/TaskSource";
@@ -57,51 +64,6 @@ function DropdownWorkflowView(props: {
 // endregion
 // region Workflow Filter
 
-const workflowFilterCardStyle: React.CSSProperties = {
-    padding: "12px 14px",
-    marginBottom: 12,
-    backgroundColor: "var(--background-secondary)",
-    border: "1px solid var(--background-modifier-border)",
-    borderRadius: "8px",
-};
-const workflowFilterButtonStyle: React.CSSProperties = {
-    padding: "4px 10px",
-    fontSize: "0.9em",
-    border: "1px solid var(--background-modifier-border)",
-    borderRadius: "6px",
-    backgroundColor: "var(--background-modifier-border)",
-    color: "var(--text-normal)",
-    cursor: "pointer",
-};
-const workflowFilterTogglesRowStyle: React.CSSProperties = {
-    ...centerChildren,
-    marginTop: 10,
-    marginBottom: 10,
-    padding: "8px 10px",
-    backgroundColor: "var(--background-modifier-hover)",
-    borderRadius: "6px",
-    gap: 16,
-};
-const workflowSelectedListContainerStyle: React.CSSProperties = {
-    marginTop: 8,
-    paddingTop: 8,
-    borderTop: "1px solid var(--background-modifier-border)",
-    overflow: "hidden",
-};
-const workflowSelectedListStyle: React.CSSProperties = {
-    display: "flex",
-    flexWrap: "wrap",
-    alignItems: "center",
-    gap: "6px 12px",
-};
-const workflowSummaryTextStyle: React.CSSProperties = {
-    color: "var(--text-muted)",
-    fontSize: "0.95em",
-};
-const workflowContentWrapperStyle = (expanded: boolean) => getExpandCollapseContentStyle(expanded, "1000px");
-const workflowSummaryWrapperStyle = (expanded: boolean) => getExpandCollapseSummaryStyle(expanded, "50px");
-const WORKFLOW_EXPAND_THRESHOLD = 5;
-
 export const WorkflowFilterView = (props: {
     workflows: I_OdaPmWorkflow[],
     displayNames: string[],
@@ -123,20 +85,14 @@ export const WorkflowFilterView = (props: {
         }
     });
     const selectedCount = workflows.filter((w) => displayNames.includes(w.name)).length;
-    const useExpandToggle = workflows.length > WORKFLOW_EXPAND_THRESHOLD;
+    const useExpandToggle = workflows.length > FILTER_EXPAND_THRESHOLD;
     const [workflowsListExpanded, setWorkflowsListExpanded] = useState(false);
 
-    return <div style={workflowFilterCardStyle}>
+    return <div style={filterCardStyle}>
         <NameableFilterHeading nameableTypeName={"Workflow"} nameables={workflows} displayNames={displayNames}
             showSelectAll={false}
             onTitleClicked={useExpandToggle ? () => setWorkflowsListExpanded(!workflowsListExpanded) : undefined}
-            titleAddon={useExpandToggle ? (
-                <span style={getExpandCollapseChevronStyle(workflowsListExpanded)}>
-                    <ObsidianIconView
-                        yOffset={false}
-                        iconName={"chevron-right"} />
-                </span>
-            ) : null}
+            titleAddon={useExpandToggle ? <FilterExpandChevron expanded={workflowsListExpanded} /> : null}
             handleSetDisplayNames={handleSetDisplayNames}>
             <HStack spacing={8}>
                 <SearchableDropdown dropdownId={"workflow"}
@@ -153,13 +109,13 @@ export const WorkflowFilterView = (props: {
                             handleSetDisplayNames={handleSetDisplayNames} />
                     }} />
                 <button
-                    style={workflowFilterButtonStyle}
+                    style={filterButtonStyle}
                     onClick={() => handleSetDisplayNames(workflows.map((k: INameable) => k.name))}
                 >
                     All
                 </button>
                 <button
-                    style={workflowFilterButtonStyle}
+                    style={filterButtonStyle}
                     onClick={() => handleSetDisplayNames([])}
                 >
                     Unselect All
@@ -167,7 +123,7 @@ export const WorkflowFilterView = (props: {
             </HStack>
         </NameableFilterHeading>
 
-        <HStack style={workflowFilterTogglesRowStyle} spacing={10}>
+        <HStack style={filterTogglesRowStyle} spacing={10}>
             <ExternalToggleView externalControl={showSubprojectWorkflows} onChange={() => {
                 const nextValue = !showSubprojectWorkflows;
                 setShowSubprojectWorkflows(nextValue)
@@ -180,74 +136,20 @@ export const WorkflowFilterView = (props: {
         </HStack>
 
         {selectedCount > 0 && (
-            <div style={workflowSelectedListContainerStyle}>
-                {useExpandToggle && (
-                    <div style={workflowSummaryWrapperStyle(workflowsListExpanded)}>
-                        <div style={workflowSummaryTextStyle}>
-                            {selectedCount} Workflow{selectedCount !== 1 ? "s" : ""}
-                        </div>
-                    </div>
-                )}
-                <div style={useExpandToggle 
-                    ? workflowContentWrapperStyle(workflowsListExpanded)
-                    : workflowContentWrapperStyle(true)}>
-                    <div style={workflowSelectedListStyle}>
-                        <WorkflowCheckboxes nameables={workflows} displayNames={displayNames} handleSetDisplayNames={handleSetDisplayNames} />
-                    </div>
-                </div>
-            </div>
+            <SelectableChipList
+                items={workflows}
+                selectedKeys={displayNames}
+                onSelectionChange={handleSetDisplayNames}
+                getKey={(w) => w.name}
+                renderChipContent={(workflow) => <ClickableWorkflowView showCheckBox={false} workflow={workflow} />}
+                getTooltip={isDevMode() ? (w) => TaskSource.formatForTooltip((w as unknown as I_GetTaskSource).getSource?.() ?? null) : undefined}
+                typeName="Workflow"
+                expandThreshold={FILTER_EXPAND_THRESHOLD}
+                expanded={workflowsListExpanded}
+            />
         )}
     </div>;
 }
-/**
- * @param nameables
- * @param displayNames
- * @param handleSetDisplayNames
- * @constructor
- */
-const workflowChipWrapStyle: React.CSSProperties = {
-    display: "inline-flex",
-    alignItems: "center",
-    padding: "2px 8px 2px 4px",
-    backgroundColor: "var(--background-modifier-hover)",
-    border: "1px solid var(--background-modifier-border)",
-    borderRadius: "6px",
-};
-
-const workflowChipRemoveIconStyle: React.CSSProperties = {
-    marginLeft: 4,
-    cursor: "pointer",
-    display: "inline-flex",
-    alignItems: "center",
-    color: "var(--text-muted)",
-};
-
-const WorkflowCheckboxes = ({ nameables, displayNames, handleSetDisplayNames }: {
-    nameables: I_OdaPmWorkflow[],
-    displayNames: string[],
-    handleSetDisplayNames: (names: string[]) => void,
-}) => {
-    const items = nameables.filter((w) => displayNames.includes(w.name));
-    if (items.length === 0) return null;
-    return <>
-        {items.map((workflow: I_OdaPmWorkflow) => {
-            const src = isDevMode() ? TaskSource.formatForTooltip((workflow as unknown as I_GetTaskSource).getSource?.() ?? null) : undefined;
-            const removeFromSelection = (e: MouseEvent) => {
-                e.stopPropagation();
-                handleSetDisplayNames(displayNames.filter((n) => n !== workflow.name));
-            };
-            return (
-                <span key={workflow.name} style={workflowChipWrapStyle} title={src}>
-                    <ClickableWorkflowView showCheckBox={false} workflow={workflow} />
-                    <span style={workflowChipRemoveIconStyle} onClick={removeFromSelection} role="button" aria-label={`Remove ${workflow.name} from selection`}>
-                        <ObsidianIconView iconName="x" yOffset={false} />
-                    </span>
-                </span>
-            );
-        })}
-    </>;
-};
-
 /**
  * A clickable view that can be used to jump to its definition.
  * If showCheckBox is true, it will also show a checkbox that can be used to select the workflow, in which case displayNames and setDisplayNames must be defined.
