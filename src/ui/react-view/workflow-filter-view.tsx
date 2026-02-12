@@ -192,7 +192,7 @@ export const WorkflowFilterView = (props: {
                     ? workflowContentWrapperStyle(workflowsListExpanded)
                     : workflowContentWrapperStyle(true)}>
                     <div style={workflowSelectedListStyle}>
-                        <WorkflowCheckboxes nameables={workflows} displayNames={displayNames} />
+                        <WorkflowCheckboxes nameables={workflows} displayNames={displayNames} handleSetDisplayNames={handleSetDisplayNames} />
                     </div>
                 </div>
             </div>
@@ -214,18 +214,34 @@ const workflowChipWrapStyle: React.CSSProperties = {
     borderRadius: "6px",
 };
 
-const WorkflowCheckboxes = ({ nameables, displayNames }: {
+const workflowChipRemoveIconStyle: React.CSSProperties = {
+    marginLeft: 4,
+    cursor: "pointer",
+    display: "inline-flex",
+    alignItems: "center",
+    color: "var(--text-muted)",
+};
+
+const WorkflowCheckboxes = ({ nameables, displayNames, handleSetDisplayNames }: {
     nameables: I_OdaPmWorkflow[],
     displayNames: string[],
+    handleSetDisplayNames: (names: string[]) => void,
 }) => {
     const items = nameables.filter((w) => displayNames.includes(w.name));
     if (items.length === 0) return null;
     return <>
         {items.map((workflow: I_OdaPmWorkflow) => {
             const src = isDevMode() ? TaskSource.formatForTooltip((workflow as unknown as I_GetTaskSource).getSource?.() ?? null) : undefined;
+            const removeFromSelection = (e: MouseEvent) => {
+                e.stopPropagation();
+                handleSetDisplayNames(displayNames.filter((n) => n !== workflow.name));
+            };
             return (
                 <span key={workflow.name} style={workflowChipWrapStyle} title={src}>
                     <ClickableWorkflowView showCheckBox={false} workflow={workflow} />
+                    <span style={workflowChipRemoveIconStyle} onClick={removeFromSelection} role="button" aria-label={`Remove ${workflow.name} from selection`}>
+                        <ObsidianIconView iconName="x" yOffset={false} />
+                    </span>
                 </span>
             );
         })}
