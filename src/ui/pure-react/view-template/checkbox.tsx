@@ -20,15 +20,18 @@ export const ExternalControlledCheckbox = ({externalControl, onChange, onContent
                                                    content?: IRenderable,
 
                                                } & I_Stylable) => {
-    // Click the label won't trigger the checkbox change event
+    // Click the label won't trigger the checkbox change event. When no content (e.g. step cell), remove input margin and hide label for centering.
+    const inputStyle = content == null ? { margin: 0 } : undefined;
+    const labelStyle = content == null ? { width: 0, height: 0, overflow: "hidden", margin: 0, padding: 0, display: "block" } : undefined;
     return (
         <span style={style}>
             <input
                 type="checkbox"
                 checked={externalControl}
                 onChange={onChange}
+                style={inputStyle}
             />
-            <label onClick={onContentClicked}>
+            <label onClick={onContentClicked} style={labelStyle}>
                 {content}
             </label>
         </span>

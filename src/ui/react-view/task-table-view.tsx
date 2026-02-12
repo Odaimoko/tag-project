@@ -68,6 +68,54 @@ import {
 
 export const taskCheckBoxMargin = {marginLeft: 3};
 
+/** Table wrapper: vertical scroll container so th position:sticky sticks to its top. No inner overflow between th and this. */
+const tableContainerStyle: React.CSSProperties = {
+    border: "1px solid var(--background-modifier-border)",
+    borderRadius: "10px",
+    backgroundColor: "var(--background-primary)",
+    maxHeight: "70vh",
+    overflow: "auto",
+};
+const tableElementStyle: React.CSSProperties = {
+    width: "100%",
+    borderCollapse: "collapse",
+};
+const tableRowEvenBg: React.CSSProperties = { backgroundColor: "var(--background-secondary-alt)" };
+const tableRowOddBg: React.CSSProperties = { backgroundColor: "var(--background-primary)" };
+const summaryCellBase: React.CSSProperties = {
+    padding: "10px 14px",
+    minWidth: 300,
+    maxWidth: 300,
+    width: "auto",
+    verticalAlign: "middle",
+};
+const stepCellBase: React.CSSProperties = {
+    textAlign: "center",
+    padding: "10px 14px",
+    width: "auto",
+    verticalAlign: "middle",
+};
+const tableHeaderBase: React.CSSProperties = {
+    borderBottom: "2px solid var(--background-modifier-border)",
+    fontWeight: 600,
+    padding: "12px 14px",
+    fontSize: "0.95em",
+};
+const summaryCellInnerStyle: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+    padding: "4px 0",
+};
+/** Step cell: checkbox only, no background wrapper. */
+const stepCellCheckboxStyle: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    margin: 0,
+    padding: 0,
+};
+
 function getIconByTask(oTask: OdaPmTask) {
     return getIconByWorkflow(oTask.type)
 }
@@ -149,17 +197,24 @@ export const OdaTaskSummaryCell = ({oTask, taskFirstColumn, showCheckBox, showPr
                 onContentClicked={disableInteractions ? undefined : openThisTask}
             />
         </span>;
-    const cellContent = <HStack style={centerChildren} spacing={5}>
-        {showWorkflowIcon ? getIconByTask(oTask) : null}
-        {showPriority && <TaskPriorityIcon oTask={oTask}/>}
-        {showCheckBox ? <ExternalControlledCheckbox
-            content={checkBoxContent}
-            onChange={disableInteractions ? () => {} : tickSummary}
-            onContentClicked={disableInteractions ? undefined : openThisTask}
-            externalControl={oTask.stepCompleted()}
-        /> : checkBoxContent}
-
-    </HStack>;
+    const cellContent = (
+        <span style={summaryCellInnerStyle}>
+            <HStack style={centerChildren} spacing={6}>
+                {showWorkflowIcon ? getIconByTask(oTask) : null}
+                {showPriority && <TaskPriorityIcon oTask={oTask} />}
+                {showCheckBox ? (
+                    <ExternalControlledCheckbox
+                        content={checkBoxContent}
+                        onChange={disableInteractions ? () => {} : tickSummary}
+                        onContentClicked={disableInteractions ? undefined : openThisTask}
+                        externalControl={oTask.stepCompleted()}
+                    />
+                ) : (
+                    checkBoxContent
+                )}
+            </HStack>
+        </span>
+    );
     const sourceTitle = isDevMode() ? TaskSource.formatForTooltip((oTask as I_GetTaskSource).getSource() ?? null) : undefined;
     return <span title={sourceTitle || undefined}>{cellContent}</span>;
 
@@ -202,49 +257,46 @@ function rectifyOdaTaskOnMdTaskChanged(oTask: OdaPmTask, plugin: OdaPmToolPlugin
 }
 
 export function getDefaultTableStyleGetters(minSummaryWidth: number | string = 300, maxSummaryWidth: number | string = 300, summaryColumn = 0, isCellCentered = true) {
-    // striped rows. center step cell but not summary cell.
-    // TODO performance, we instantiate a lot of dictionaries here
-    const evenBg: React.CSSProperties = {backgroundColor: "rgba(0,0,0,0.2)"};
-    const oddBg: React.CSSProperties = {};
     const summaryCellStyle: React.CSSProperties = {
+        ...summaryCellBase,
         minWidth: minSummaryWidth,
         maxWidth: maxSummaryWidth,
-        padding: 5, paddingLeft: 10,
-        width: "auto"
-    }
-    const summaryEvenCellStyle = {...summaryCellStyle, ...evenBg}
-    const summaryOddCellStyle = {...summaryCellStyle, ...oddBg}
+    };
+    const summaryEvenCellStyle = { ...summaryCellStyle, ...tableRowEvenBg };
+    const summaryOddCellStyle = { ...summaryCellStyle, ...tableRowOddBg };
 
     const stepCellStyle: React.CSSProperties = {
+        ...stepCellBase,
         textAlign: isCellCentered ? "center" : "inherit",
-        padding: 10,
-        width: "auto"
-    }
-    const stepEvenCellStyle = {...stepCellStyle, ...evenBg}
-    const stepOddCellStyle = {...stepCellStyle, ...oddBg}
+    };
+    const stepEvenCellStyle = { ...stepCellStyle, ...tableRowEvenBg };
+    const stepOddCellStyle = { ...stepCellStyle, ...tableRowOddBg };
 
     function cellStyleGetter(column: number, row: number): React.CSSProperties {
         const even = row % 2 === 0;
-        const cellStyle = even ? stepEvenCellStyle : stepOddCellStyle
-        const summaryStyle = even ? summaryEvenCellStyle : summaryOddCellStyle
+        const cellStyle = even ? stepEvenCellStyle : stepOddCellStyle;
+        const summaryStyle = even ? summaryEvenCellStyle : summaryOddCellStyle;
         if (column === summaryColumn) {
-            return summaryStyle
-        } else return cellStyle
+            return summaryStyle;
+        }
+        return cellStyle;
     }
 
     function headStyleGetter(columnIndex: number): React.CSSProperties {
-        const style = {
-            ...(getStickyHeaderStyle()),
-            padding: 10,
-            // Removed minWidth to allow adaptive width
+        return {
+            ...getStickyHeaderStyle(1, 0), // top: 0 so header sticks to page top, not just table
+            ...tableHeaderBase,
             maxWidth: (columnIndex === summaryColumn ? maxSummaryWidth : "unset"),
-            width: "auto"
-        };
-        // console.log(`thStyleGetter: ${JSON.stringify(style)}`)
-        return style as React.CSSProperties;
+            width: "auto",
+        } as React.CSSProperties;
     }
 
-    return {cellStyleGetter, headStyleGetter};
+    return { cellStyleGetter, headStyleGetter };
+}
+
+/** Table wrapper and table element styles for PaginatedTaskTable */
+export function getTaskTableLayoutStyles() {
+    return { tableContainerStyle, tableElementStyle };
 }
 
 
@@ -322,7 +374,7 @@ function TaskPriorityIcon({oTask}: { oTask: OdaPmTask }): React.JSX.Element {
     </div>} title={"Choose priority..."}/>;
 }
 
-function PaginatedTaskTable({curWfName, headers, taskRows, setSortToColumn, headStyleGetter, cellStyleGetter, taskData, onRowContextMenu, onSelectionChange, onSelectionModeChange, clearSelectionTrigger, selectedRowIndices}: {
+function PaginatedTaskTable({ curWfName, headers, taskRows, setSortToColumn, headStyleGetter, cellStyleGetter, taskData, onRowContextMenu, onSelectionChange, onSelectionModeChange, clearSelectionTrigger, selectedRowIndices, tableStyle }: {
     curWfName: string,
     headers: React.JSX.Element[],
     taskRows: IRenderable[][],
@@ -334,7 +386,8 @@ function PaginatedTaskTable({curWfName, headers, taskRows, setSortToColumn, head
     onSelectionChange?: (selectedRowIndices: number[]) => void,
     onSelectionModeChange?: (isSelectionMode: boolean) => void,
     clearSelectionTrigger?: number,
-    selectedRowIndices?: number[]
+    selectedRowIndices?: number[],
+    tableStyle?: React.CSSProperties,
 }) {
     const [tasksPerPage, setTasksPerPage,] = usePluginSettings<number>("display_tasks_count_per_page");
     const [maxPageButtonCount] = usePluginSettings<number>("max_page_buttons_count");
@@ -353,29 +406,29 @@ function PaginatedTaskTable({curWfName, headers, taskRows, setSortToColumn, head
         }
     }, [onSelectionChange, onSelectionModeChange]);
 
-    return <PaginatedDataTable
-        tableTitle={curWfName}
-        headers={headers}
-        rows={taskRows}
-        onHeaderClicked={(arg0) => {
-            if (arg0 === 0) {
-                // setSortToName()
-            } else {
-                setSortToColumn(arg0)
-            }
-        }}
-        thStyleGetter={headStyleGetter}
-        cellStyleGetter={cellStyleGetter}
-        dataCountPerPage={tasksPerPage} setDataCountPerPage={setTasksPerPage}
-        maxPageButtonCount={maxPageButtonCount}
-        rowData={taskData}
-        onRowContextMenu={onRowContextMenu}
-        enableSelectionMode={true}
-        onSelectionChange={handleSelectionChange}
-        onSelectionModeChange={handleSelectionModeChange}
-        clearSelectionTrigger={clearSelectionTrigger}
-        selectedRowIndices={selectedRowIndices}
-    />;
+    return (
+        <PaginatedDataTable
+            tableTitle={curWfName}
+            headers={headers}
+            rows={taskRows}
+            onHeaderClicked={(arg0) => {
+                if (arg0 !== 0) setSortToColumn(arg0);
+            }}
+            thStyleGetter={headStyleGetter}
+            cellStyleGetter={cellStyleGetter}
+            dataCountPerPage={tasksPerPage}
+            setDataCountPerPage={setTasksPerPage}
+            maxPageButtonCount={maxPageButtonCount}
+            rowData={taskData}
+            onRowContextMenu={onRowContextMenu}
+            enableSelectionMode={true}
+            onSelectionChange={handleSelectionChange}
+            onSelectionModeChange={handleSelectionModeChange}
+            clearSelectionTrigger={clearSelectionTrigger}
+            selectedRowIndices={selectedRowIndices}
+            tableStyle={tableStyle}
+        />
+    );
 }
 
 export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowCompleted}: {
@@ -581,7 +634,8 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
         return row
     });
 
-    const {cellStyleGetter, headStyleGetter} = getDefaultTableStyleGetters();
+    const { cellStyleGetter, headStyleGetter } = getDefaultTableStyleGetters();
+    const { tableContainerStyle, tableElementStyle } = getTaskTableLayoutStyles();
 
     // Handle selection mode changes - clear selection when exiting mode
     // Must be defined at component top level (hooks rule)
@@ -714,78 +768,109 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
         ] : [])
     ] : [];
 
+    const toolbarStyle: React.CSSProperties = {
+        padding: "12px 14px",
+        borderRadius: 8,
+        backgroundColor: "var(--background-secondary)",
+        border: "1px solid var(--background-modifier-border)",
+        gap: 12,
+    };
+    const searchWrapStyle: React.CSSProperties = {
+        display: "flex",
+        alignItems: "center",
+        flex: "1 1 200px",
+        minWidth: 180,
+        maxWidth: 320,
+    };
+    const searchInputStyle: React.CSSProperties = {
+        width: "100%",
+        padding: "6px 10px",
+        borderRadius: 6,
+        border: "1px solid var(--background-modifier-border)",
+        backgroundColor: "var(--background-primary)",
+        fontSize: "0.9em",
+    };
+
     return (
         <VStack spacing={diffGroupSpacing}>
-            <HStack style={{
-                justifyContent: "flex-start",
-                alignItems: "center"
-            }} spacing={10}>
-                <span style={{display: "flex", alignItems: "center"}}>
+            <HStack style={{ ...centerChildren, ...toolbarStyle }} spacing={10}>
+                <span style={searchWrapStyle}>
                     <input
-                        style={{width: "100%"}}
-                        type="text" // You can change the "type" attribute for different input types
+                        style={searchInputStyle}
+                        type="text"
                         value={searchText}
-                        placeholder={"Search task name..."}
-                        onChange={(evt) => {
-                            setSearchText(evt.target.value)
-                        }}
+                        placeholder="Search task name..."
+                        onChange={(evt) => setSearchText(evt.target.value)}
                     />
-                    {/*It seems that the icon's size is 10x10? */}
-                    <ClickableObsidianIconView style={{marginLeft: -25, paddingTop: 5}}
-                                               onIconClicked={() => {
-                                                   setSearchText("")
-                                               }} iconName={"x-circle"}/>
+                    <ClickableObsidianIconView
+                        style={{ marginLeft: -28, paddingTop: 5 }}
+                        onIconClicked={() => setSearchText("")}
+                        iconName="x-circle"
+                    />
                 </span>
-
-                <ExternalControlledCheckbox content={"Show Completed"} onChange={handleShowCompletedChange}
-                                            externalControl={showCompleted}
-                                            onContentClicked={handleShowCompletedChange}/>
-                <ExternalControlledCheckbox content={"Show Steps"} onChange={handleShowStepsChange}
-                                            onContentClicked={handleShowStepsChange}
-                                            externalControl={showSteps}/>
+                <ExternalControlledCheckbox
+                    content="Show Completed"
+                    onChange={handleShowCompletedChange}
+                    externalControl={showCompleted}
+                    onContentClicked={handleShowCompletedChange}
+                />
+                <ExternalControlledCheckbox
+                    content="Show Steps"
+                    onChange={handleShowStepsChange}
+                    onContentClicked={handleShowStepsChange}
+                    externalControl={showSteps}
+                />
             </HStack>
 
-            {
-                displayWorkflows.length === 0 ? <label>No Workflow selected.</label> : (
-                    taskRows.length > 0 ?
-                        <>
-                            <TaskSelectionToolbar
-                                selectedTasks={getSelectedTasks()}
-                                selectedCount={selectedRowIndices.length}
-                                plugin={plugin}
-                                onClearSelection={() => {
-                                    clearSelection();
-                                    setClearSelectionTrigger(prev => prev + 1);
-                                }}
-                                visible={isSelectionMode}
+            {displayWorkflows.length === 0 ? (
+                <label>No Workflow selected.</label>
+            ) : taskRows.length > 0 ? (
+                <>
+                    <TaskSelectionToolbar
+                        selectedTasks={getSelectedTasks()}
+                        selectedCount={selectedRowIndices.length}
+                        plugin={plugin}
+                        onClearSelection={() => {
+                            clearSelection();
+                            setClearSelectionTrigger(prev => prev + 1);
+                        }}
+                        visible={isSelectionMode}
+                    />
+                    <div style={tableContainerStyle}>
+                        <SelectionModeContext.Provider value={isSelectionMode}>
+                            <PaginatedTaskTable
+                                curWfName={curWfName}
+                                headers={headers}
+                                taskRows={taskRows}
+                                setSortToColumn={setSortToColumn}
+                                headStyleGetter={headStyleGetter}
+                                cellStyleGetter={cellStyleGetter}
+                                taskData={displayedTasks}
+                                onRowContextMenu={handleRowContextMenu}
+                                onSelectionChange={handleSelectionChange}
+                                onSelectionModeChange={handleTableSelectionModeChange}
+                                clearSelectionTrigger={clearSelectionTrigger}
+                                selectedRowIndices={selectedRowIndices}
+                                tableStyle={tableElementStyle}
                             />
-                            <SelectionModeContext.Provider value={isSelectionMode}>
-                                <PaginatedTaskTable curWfName={curWfName} headers={headers} taskRows={taskRows}
-                                                    setSortToColumn={setSortToColumn} headStyleGetter={headStyleGetter}
-                                                    cellStyleGetter={cellStyleGetter}
-                                                    taskData={displayedTasks}
-                                                    onRowContextMenu={handleRowContextMenu}
-                                                    onSelectionChange={handleSelectionChange}
-                                                    onSelectionModeChange={handleTableSelectionModeChange}
-                                                    clearSelectionTrigger={clearSelectionTrigger}
-                                                    selectedRowIndices={selectedRowIndices}/>
-                            </SelectionModeContext.Provider>
-                            {contextMenu && (
-                                <ContextMenu
-                                    items={contextMenuItems}
-                                    x={contextMenu.x}
-                                    y={contextMenu.y}
-                                    onClose={() => setContextMenu(null)}
-                                />
-                            )}
-                        </>
-                        : <div>
-                            <label>No results.</label>
-                        </div>
-                )
-            }
+                        </SelectionModeContext.Provider>
+                    </div>
+                    {contextMenu && (
+                        <ContextMenu
+                            items={contextMenuItems}
+                            x={contextMenu.x}
+                            y={contextMenu.y}
+                            onClose={() => setContextMenu(null)}
+                        />
+                    )}
+                </>
+            ) : (
+                <div style={{ padding: "12px 14px", color: "var(--text-muted)" }}>
+                    <label>No results.</label>
+                </div>
+            )}
         </VStack>
-    )
+    );
 
     //region sort method
     function setSortToName() {
@@ -914,31 +999,29 @@ function tickStepCheckbox(includes: boolean, oTask: OdaPmTask, stepTag: string, 
     }
 }
 
-function OdaPmStepCell({oTask, stepTag, style}: {
+function OdaPmStepCell({ oTask, stepTag, style }: {
     oTask: OdaPmTask,
     stepTag: string
 } & I_Stylable) {
     const plugin = useContext(PluginContext);
     const disableInteractions = useContext(SelectionModeContext);
-    // TODO performance
-    // If this workflow does not need this step, we show nothing.
     if (!oTask.type.stepsDef.map(k => k.tag).includes(stepTag))
-        return <></>
-    // Otherwise, we show a checkbox showing if current task completes this step.
+        return <></>;
     const includes = oTask.tickedSteps.map(k => k.tag).includes(stepTag);
 
-    // Automatically  complete the parent task when checking in manage page 
     function tickStep() {
-        if (disableInteractions) return; // Disable in selection mode
+        if (disableInteractions) return;
         tickStepCheckbox(includes, oTask, stepTag, plugin);
     }
 
-    return <ExternalControlledCheckbox style={style}
-                                       key={oTask.text + stepTag}
-                                       externalControl={includes}
-                                       onChange={tickStep}
-    />
-
+    return (
+        <ExternalControlledCheckbox
+            style={stepCellCheckboxStyle}
+            key={oTask.text + stepTag}
+            externalControl={includes}
+            onChange={tickStep}
+        />
+    );
 }
 
 // For checkbox

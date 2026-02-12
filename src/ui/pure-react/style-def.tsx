@@ -8,10 +8,12 @@ export const iconViewAsAWholeStyle = {display: "inline-flex", justifyItems: "cen
 export const varBackgroundPrimary = "var(--background-primary)";
 export const varBackgroundSecondary = "var(--background-secondary)"; // -16 is the padding of the obsidian leaf view container. The content will overflow the container's box.
 // sticky header see: https://css-tricks.com/position-sticky-and-table-headers/
-export const getStickyHeaderStyle = (zIndex = 1) => {
+// top: use 0 to stick to the top of the page/scroll container; use -16 to align with leaf padding.
+export const getStickyHeaderStyle = (zIndex = 1, top: number = -16) => {
     return {
-        position: "sticky", top: -16,
-        zIndex: zIndex,
+        position: "sticky",
+        top,
+        zIndex,
         background: varBackgroundSecondary,
     } as React.CSSProperties;
 }

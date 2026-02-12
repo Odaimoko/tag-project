@@ -249,7 +249,7 @@ export const DataTable = ({
         }, [enableSelectionMode, isSelectionMode, toggleRowSelection]);
 
         return (
-            <div style={{position: "relative"}}>
+            <div style={{ position: "relative", width: "100%" }}>
                 <table ref={tableRef} style={tableStyle} key={tableTitle}>
                     <tbody>
                     {displayedRows.map((items: IRenderable[], rowIdx) => {
@@ -345,6 +345,7 @@ export const PaginatedDataTable = (props: Omit<DataTableParams, "rowRange"> & Se
             <HStack style={{
                 justifyContent: "space-between", // align left and right
                 alignItems: "center",
+                margin: "14px",
                 display: 'flex'
             }}>
                 <PaginationView  {...props} totalPageCount={totalPageCount} externalCurPage={curPage}
@@ -530,13 +531,13 @@ function PaginationView({
             externalSetCurPage(totalPageCount - 1)
         }
     }, [externalCurPage, externalSetCurPage, totalPageCount]);
-    return <HStack spacing={diffGroupSpacing}>
+    return <HStack spacing={diffGroupSpacing} style={centerChildren}>
 
         <HStack spacing={sameGroupSpacing} style={centerChildren}>
             {...pageInteractableArray}
         </HStack>
 
-        <label>
+        <label style={{ marginLeft: 14 }}>
             Page {externalCurPage + 1} of {totalPageCount}
         </label>
 
