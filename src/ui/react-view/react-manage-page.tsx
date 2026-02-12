@@ -24,6 +24,8 @@ import {Desc_ManagePage} from "../obsidian/help-page/help-page-view";
 import {InlineCodeView} from "../common/inline-code-view";
 import {ObsidianIconView} from "./obsidian-icon-view";
 import {diffGroupSpacing, getExpandCollapseChevronStyle, getExpandCollapseContentStyle, sameGroupSpacing} from "../pure-react/style-def";
+import {WorkflowConfigModal} from "../obsidian/workflow-config-manager/workflow-config-modal";
+import {OnboardingWizard} from "../obsidian/workflow-config-manager/onboarding-wizard";
 
 function isInAnyProject(projectTask: I_OdaPmProjectTask, displayPrjNames: string[]) {
     // TODO Performance
@@ -291,11 +293,29 @@ export function ReactManagePage({eventCenter}: {
     // endregion
     return (
         <VStack spacing={diffGroupSpacing}>
-            <HStack>
+            <HStack spacing={sameGroupSpacing}>
                 <ProjectFilterView allProjects={allProjects} dropdownProjects={dropdownProjects}
                                    displayNames={displayProjectOptionValues}
                                    handleSetDisplayNames={handleSetDisplayProjects}
                 />
+                <button onClick={() => {
+                    new WorkflowConfigModal(plugin.app, plugin).open();
+                }} style={{
+                    cursor: "pointer",
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: sameGroupSpacing,
+                    padding: "8px 12px",
+                    fontSize: "0.9em",
+                    border: "1px solid var(--background-modifier-border)",
+                    borderRadius: "6px",
+                    backgroundColor: "var(--interactive-accent)",
+                    color: "var(--text-on-accent)",
+                }}>
+                    <ObsidianIconView iconName={"settings"} width={16} height={16}/>
+                    <span>Manage Workflows</span>
+                </button>
             </HStack>
             <VStack spacing={sameGroupSpacing}>
                 <HStack spacing={diffGroupSpacing}>
@@ -378,13 +398,86 @@ export function ReactManagePage({eventCenter}: {
 
 const EmptyWorkflowView = () => {
     const db = OdaPmDbProvider.get();
-    return <div>
-        <h1>No Workflow defined, or Dataview is not initialized.</h1>
-        <button onClick={() => {
-            db?.emit(Evt_ReqDbReload);
+    const plugin = useContext(PluginContext);
+    
+    return <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '60px 20px',
+        textAlign: 'center'
+    }}>
+        <h1 style={{ marginBottom: '16px' }}>No Workflows Found</h1>
+        <p style={{ 
+            fontSize: '1.1em', 
+            color: 'var(--text-muted)',
+            marginBottom: '32px',
+            maxWidth: '600px'
         }}>
-            <label>Try Refresh {Desc_ManagePage}</label>
-        </button>
+            Get started by creating your first workflow, or check if Dataview plugin is initialized properly.
+        </p>
+        
+        <VStack spacing={12} style={{ alignItems: 'center' }}>
+            <button 
+                onClick={() => {
+                    new OnboardingWizard(plugin.app, plugin).open();
+                }}
+                style={{
+                    padding: '12px 24px',
+                    fontSize: '1.1em',
+                    fontWeight: 'bold',
+                    backgroundColor: 'var(--interactive-accent)',
+                    color: 'var(--text-on-accent)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    minWidth: '200px'
+                }}
+            >
+                🚀 Quick Start Wizard
+            </button>
+            
+            <button 
+                onClick={() => {
+                    new WorkflowConfigModal(plugin.app, plugin).open();
+                }}
+                style={{
+                    padding: '10px 20px',
+                    fontSize: '1em',
+                    backgroundColor: 'var(--background-secondary)',
+                    border: '1px solid var(--background-modifier-border)',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    minWidth: '200px'
+                }}
+            >
+                Manage Workflows
+            </button>
+            
+            <div style={{ 
+                marginTop: '24px',
+                padding: '16px',
+                backgroundColor: 'var(--background-secondary)',
+                borderRadius: '8px',
+                maxWidth: '500px'
+            }}>
+                <p style={{ margin: '0 0 12px 0', fontSize: '0.9em' }}>
+                    Having issues? Try refreshing the database:
+                </p>
+                <button 
+                    onClick={() => {
+                        db?.emit(Evt_ReqDbReload);
+                    }}
+                    style={{
+                        padding: '8px 16px',
+                        fontSize: '0.9em'
+                    }}
+                >
+                    🔄 Refresh {Desc_ManagePage}
+                </button>
+            </div>
+        </VStack>
     </div>
 }
 

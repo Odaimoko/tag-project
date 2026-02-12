@@ -29,6 +29,8 @@ import {
     batchSetPriority,
     notifyBatchOperationResult
 } from "./utils/task-batch-util";
+import {WorkflowConfigModal} from "./ui/obsidian/workflow-config-manager/workflow-config-modal";
+import {OnboardingWizard} from "./ui/obsidian/workflow-config-manager/onboarding-wizard";
 
 export const PLUGIN_NAME = 'Tag Project';
 export const CmdPal_OpenManagePage = `Open Manage Page`; // `Open ${Desc_ManagePage}`
@@ -36,6 +38,8 @@ export const CmdPal_SetWorkflowToTask = 'Set workflow';
 export const CmdPal_SetProject = 'Set Project';
 export const CmdPal_SetPriority = 'Set Priority';
 export const CmdPal_JumpToManagePage = `Jump To Manage Page`;
+export const CmdPal_ManageWorkflows = `Manage Workflows`;
+export const CmdPal_StartWizard = `Quick Start Wizard`;
 
 export default class OdaPmToolPlugin extends Plugin {
     settings: TPMSettings;
@@ -141,6 +145,20 @@ export default class OdaPmToolPlugin extends Plugin {
             name: CmdPal_SetPriority,
             editorCallback: (editor: Editor, view: MarkdownView) => {
                 this.addPriorityToMdTask(editor, view);
+            }
+        })
+        this.addCommand({
+            id: 'manage-workflows',
+            name: CmdPal_ManageWorkflows,
+            callback: () => {
+                new WorkflowConfigModal(this.app, this).open();
+            }
+        })
+        this.addCommand({
+            id: 'quick-start-wizard',
+            name: CmdPal_StartWizard,
+            callback: () => {
+                new OnboardingWizard(this.app, this).open();
             }
         })
         // endregion
