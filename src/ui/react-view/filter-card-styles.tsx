@@ -25,6 +25,29 @@ export const filterButtonStyle: React.CSSProperties = {
     cursor: "pointer",
 };
 
+/** Shared input style for search boxes in filters, project inspector, etc. */
+export const filterInputStyle: React.CSSProperties = {
+    padding: "6px 10px",
+    borderRadius: 6,
+    border: "1px solid var(--background-modifier-border)",
+    backgroundColor: "var(--background-primary)",
+    fontSize: "0.9em",
+};
+
+/** Shared table container style (rounded border, scroll area) */
+export const tableContainerStyle: React.CSSProperties = {
+    border: "1px solid var(--background-modifier-border)",
+    borderRadius: "10px",
+    backgroundColor: "var(--background-primary)",
+    overflow: "auto",
+};
+
+/** Shared table element base style */
+export const tableElementStyle: React.CSSProperties = {
+    width: "100%",
+    borderCollapse: "collapse",
+};
+
 export const filterTogglesRowStyle: React.CSSProperties = {
     display: "flex",
     alignItems: "center",

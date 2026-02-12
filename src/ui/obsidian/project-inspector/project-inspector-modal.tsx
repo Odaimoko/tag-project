@@ -8,9 +8,15 @@ import {setSettingsValueAndSave, usePluginSettings} from "../../../settings/sett
 import {Checkbox} from "../../pure-react/view-template/checkbox";
 import {getDefaultTableStyleGetters} from "../../react-view/task-table-view";
 import {ProjectView} from "../../react-view/project-view";
-import {HStack} from "../../pure-react/view-template/h-stack";
-import {centerChildren, centerChildrenVertStyle} from "../../pure-react/style-def";
+import {HStack, VStack} from "../../pure-react/view-template/h-stack";
+import {centerChildren, centerChildrenVertStyle, diffGroupSpacing} from "../../pure-react/style-def";
 import {Evt_ManagePageReRender} from "../../../typing/dataview-event";
+import {
+    filterCardStyle,
+    filterInputStyle,
+    tableContainerStyle,
+    tableElementStyle,
+} from "../../react-view/filter-card-styles";
 
 export class ProjectInspectorModal extends Modal {
     root: Root | null = null;
@@ -40,6 +46,17 @@ const {cellStyleGetter, headStyleGetter} = getDefaultTableStyleGetters(
     0, false
 );
 
+/** Project Inspector specific styles (extends shared filter styles) */
+const projectTableContainerStyle: React.CSSProperties = {
+    ...tableContainerStyle,
+    maxHeight: "60vh",
+    marginTop: "12px",
+};
+const projectSearchInputStyle: React.CSSProperties = {
+    ...filterInputStyle,
+    minWidth: 200,
+};
+
 export const ProjectInspectorView = (props: {
     plugin: OdaPmToolPlugin
 }) => {
@@ -56,22 +73,21 @@ export const ProjectInspectorView = (props: {
     }
 
     const headers = [
-        <div>
-            <HStack style={{
-                ...centerChildrenVertStyle, ...centerChildren
-            }} spacing={3}>
-                <label>Name</label>
-                <input
-                    type="text" placeholder={"Search Project"}
-                    value={searchText}
-                    onChange={(event) => {
-                        const text = event.target.value;
-                        setSearchText(text);
-                    }}
-                />
-            </HStack>
-        </div>
-        , "Completed",];
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <label style={{ fontWeight: 500 }}>Name</label>
+            <input
+                type="text"
+                placeholder="Search Project..."
+                value={searchText}
+                style={projectSearchInputStyle}
+                onChange={(event) => {
+                    const text = event.target.value;
+                    setSearchText(text);
+                }}
+            />
+        </div>,
+        "Completed",
+    ];
 
     const rows = projects.map(k => [
         <ProjectView project={k}/>,
@@ -84,22 +100,29 @@ export const ProjectInspectorView = (props: {
         }}/>
     ]);
 
-    return <div>
-        <h1>Project Inspector</h1>
-        <div>
-            <label>
-                If completed, the project will be hidden from the manage page.
-            </label>
-            <label>
-                Its workflows and tasks are also hidden.
-            </label>
-        </div>
+    return (
+        <VStack spacing={diffGroupSpacing}>
+            <div>
+                <h1 style={{ marginBottom: 8 }}>Project Inspector</h1>
+                <div style={filterCardStyle}>
+                    <div style={{ fontSize: "0.95em", lineHeight: 1.5 }}>
+                        <div>If completed, the project will be hidden from the manage page.</div>
+                        <div>Its workflows and tasks are also hidden.</div>
+                    </div>
+                </div>
+            </div>
 
-        <DataTable tableTitle={"PP"}
-                   headers={headers}
-                   rows={rows}
-                   cellStyleGetter={cellStyleGetter}
-                   thStyleGetter={headStyleGetter}/>
-    </div>
+            <div style={projectTableContainerStyle}>
+                <DataTable
+                    tableTitle="Projects"
+                    headers={headers}
+                    rows={rows}
+                    cellStyleGetter={cellStyleGetter}
+                    thStyleGetter={headStyleGetter}
+                    tableStyle={tableElementStyle}
+                />
+            </div>
+        </VStack>
+    );
 }
 

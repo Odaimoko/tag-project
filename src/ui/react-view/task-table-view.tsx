@@ -65,20 +65,19 @@ import {
     batchSetPriority,
     notifyBatchOperationResult
 } from "../../utils/task-batch-util";
+import {
+    filterCardStyle,
+    filterInputStyle,
+    tableContainerStyle as sharedTableContainerStyle,
+    tableElementStyle as sharedTableElementStyle
+} from "./filter-card-styles";
 
 export const taskCheckBoxMargin = {marginLeft: 3};
 
-/** Table wrapper: vertical scroll container so th position:sticky sticks to its top. No inner overflow between th and this. */
-const tableContainerStyle: React.CSSProperties = {
-    border: "1px solid var(--background-modifier-border)",
-    borderRadius: "10px",
-    backgroundColor: "var(--background-primary)",
+/** Task table wrapper: extends shared table container with fixed height for sticky header. */
+const taskTableContainerStyle: React.CSSProperties = {
+    ...sharedTableContainerStyle,
     maxHeight: "70vh",
-    overflow: "auto",
-};
-const tableElementStyle: React.CSSProperties = {
-    width: "100%",
-    borderCollapse: "collapse",
 };
 const tableRowEvenBg: React.CSSProperties = { backgroundColor: "var(--background-secondary-alt)" };
 const tableRowOddBg: React.CSSProperties = { backgroundColor: "var(--background-primary)" };
@@ -296,7 +295,7 @@ export function getDefaultTableStyleGetters(minSummaryWidth: number | string = 3
 
 /** Table wrapper and table element styles for PaginatedTaskTable */
 export function getTaskTableLayoutStyles() {
-    return { tableContainerStyle, tableElementStyle };
+    return { tableContainerStyle: taskTableContainerStyle, tableElementStyle: sharedTableElementStyle };
 }
 
 
@@ -769,11 +768,9 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
     ] : [];
 
     const toolbarStyle: React.CSSProperties = {
-        padding: "12px 14px",
-        borderRadius: 8,
-        backgroundColor: "var(--background-secondary)",
-        border: "1px solid var(--background-modifier-border)",
+        ...filterCardStyle,
         gap: 12,
+        marginBottom: 0, // override filterCardStyle's marginBottom
     };
     const searchWrapStyle: React.CSSProperties = {
         display: "flex",
@@ -782,13 +779,9 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
         minWidth: 180,
         maxWidth: 320,
     };
-    const searchInputStyle: React.CSSProperties = {
+    const taskSearchInputStyle: React.CSSProperties = {
+        ...filterInputStyle,
         width: "100%",
-        padding: "6px 10px",
-        borderRadius: 6,
-        border: "1px solid var(--background-modifier-border)",
-        backgroundColor: "var(--background-primary)",
-        fontSize: "0.9em",
     };
 
     return (
@@ -796,7 +789,7 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
             <HStack style={{ ...centerChildren, ...toolbarStyle }} spacing={10}>
                 <span style={searchWrapStyle}>
                     <input
-                        style={searchInputStyle}
+                        style={taskSearchInputStyle}
                         type="text"
                         value={searchText}
                         placeholder="Search task name..."
