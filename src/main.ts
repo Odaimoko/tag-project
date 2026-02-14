@@ -66,6 +66,7 @@ export default class OdaPmToolPlugin extends Plugin {
         // console.log('unloading plugin')
         SettingsProvider.remove();
         if (this.inited) {
+            this.pmDb.stopInitRetryTimer();
             OdaPmDbProvider.remove();
             removePluginEnv();
             this.emitter.removeAllListeners()
