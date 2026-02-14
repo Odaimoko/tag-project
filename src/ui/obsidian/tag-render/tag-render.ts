@@ -26,7 +26,7 @@
 
 import {livePreviewState, Plugin, WorkspaceLeaf} from "obsidian";
 import {syntaxTree} from "@codemirror/language";
-import {RangeSetBuilder} from "@codemirror/state";
+import {EditorSelection, RangeSetBuilder} from "@codemirror/state";
 import {
     Decoration,
     DecorationSet,
@@ -53,40 +53,80 @@ const currentLeaf: WorkspaceLeafEditModeWrapper = new WorkspaceLeafEditModeWrapp
 /** Get the current vault name. */
 const getVaultName = () => window.app.vault.getName();
 
-/** Create a custom tag node from text content (can include #). */
-const createTagNode = (tag: string | null, readingMode: boolean) => {
-    const tagNode = document.createElement("a");
-    // devLog("[Tag]", tag // the full tag, including #
-    if (!tag)
-        return tagNode;
+/** Options for createTagNode: first click can switch to edit + unbeautify instead of opening search. */
+interface CreateTagNodeOptions {
+    /** Called on click (Reading/Preview): switch to edit and unhide original; no search. */
+    onFirstClick?: () => void;
+    /** Called on click (Editor widget): unbeautify and focus; no search. */
+    onWidgetClick?: () => void;
+}
 
-    // Keep the 'tag' class for consistent css styles.
+/** Create a custom tag node from text content (can include #). */
+const createTagNode = (
+    tag: string | null,
+    readingMode: boolean,
+    options?: CreateTagNodeOptions,
+): HTMLAnchorElement => {
+    const tagNode = document.createElement("a");
+    if (!tag) return tagNode;
+
     tagNode.className = `tag ${tag_class}`;
     tagNode.target = "_blank";
     tagNode.rel = "noopener";
-    // To comply with colorful-tag css seletor
     tagNode.href = readingMode ? `${tag}` : `#${tag}`;
 
     const vaultStr = encodeURIComponent(getVaultName());
     const queryStr = `tag:${encodeURIComponent(tag)}`;
     tagNode.dataset.uri = `obsidian://search?vault=${vaultStr}&query=${queryStr}`;
 
-    // Remove the hash tags to conform to the same style.
     tagNode.textContent = tag.slice(tag.lastIndexOf("/") + 1).replace("#", "");
 
-    tagNode.onclick = () => window.open(tagNode.dataset.uri);
+    if (options?.onFirstClick) {
+        const fn = options.onFirstClick;
+        tagNode.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            fn();
+        };
+    } else if (options?.onWidgetClick) {
+        const fn = options.onWidgetClick;
+        tagNode.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            fn();
+        };
+    } else {
+        tagNode.onclick = () => window.open(tagNode.dataset.uri);
+    }
 
     return tagNode;
 };
 
-/** Create a tag node in the type of widget from text content. */
+/** Switches the leaf to source (edit) mode so the user can edit the note. */
+function setLeafToSourceMode(leaf: WorkspaceLeaf): void {
+    const vs = leaf.getViewState();
+    const state = vs?.state as { mode?: string } | undefined;
+    if (!state || state.mode === "source") return;
+    leaf.setViewState({
+        ...vs,
+        state: { ...(vs as { state: Record<string, unknown> }).state, mode: "source", source: true },
+    });
+}
+
+/** Widget for a single tag in the editor; click = switch to edit + unbeautify (no search). */
 class TagWidget extends WidgetType {
-    constructor(private tag: string, private readingMode: boolean) {
+    constructor(
+        private tag: string,
+        private readingMode: boolean,
+        private from: number,
+        private to: number,
+        private onUnbeautify: () => void,
+    ) {
         super();
     }
 
-    toDOM(view: EditorView): HTMLElement {
-        return createTagNode(this.tag, this.readingMode);
+    toDOM(_view: EditorView): HTMLElement {
+        return createTagNode(this.tag, this.readingMode, { onWidgetClick: () => this.onUnbeautify() });
     }
 }
 
@@ -100,16 +140,48 @@ function shouldTagBeAbbr(tag: string) {
         || lowerTag.startsWith(Tag_Prefix_TaskType);
 }
 
+/** True if selection overlaps [start, end). */
+function selectionOverlapsRange(
+    selection: readonly { from: number; to: number }[],
+    start: number,
+    end: number,
+): boolean {
+    for (const range of selection) {
+        if (start < range.to && range.from < end) return true;
+    }
+    return false;
+}
+
 class TagRenderEditorPlugin implements PluginValue {
     decorations: DecorationSet;
+    private view: EditorView;
+    /** Ranges that should not be beautified (click = show raw). Cleared when cursor leaves. */
+    private skipRangeMap = new Map<number, number>();
+    private needRebuildForUnbeautify = false;
 
     constructor(view: EditorView) {
+        this.view = view;
         this.decorations = this.buildDecorations(view);
     }
 
     update(update: ViewUpdate): void {
-        // devLog(`[TagRender] Update`) // Invoked when cursor or other editor state changes
-        if (
+        if (update.docChanged) this.skipRangeMap.clear();
+        if (update.selectionSet || update.viewportChanged) {
+            const sel = update.view.state.selection.ranges;
+            const toDelete: number[] = [];
+            for (const [start] of this.skipRangeMap) {
+                const end = this.skipRangeMap.get(start)!;
+                if (!selectionOverlapsRange(sel, start, end)) toDelete.push(start);
+            }
+            if (toDelete.length > 0) {
+                toDelete.forEach((start) => this.skipRangeMap.delete(start));
+                this.needRebuildForUnbeautify = true;
+            }
+        }
+        if (this.needRebuildForUnbeautify) {
+            this.needRebuildForUnbeautify = false;
+            this.decorations = this.buildDecorations(update.view);
+        } else if (
             update.view.composing ||
             update.view.plugin(livePreviewState)?.mousedown
         ) {
@@ -179,17 +251,26 @@ class TagRenderEditorPlugin implements PluginValue {
                                     tag += text;
                                     status = 0;
                                     if (shouldTagBeAbbr(tag)) {
-                                        // devLog("[Hashtag] shouldTagBeAbbr is true", tag, "curHashtagStart", curHashtagStart,
-                                        //     "node.from", node.from,
-                                        //     "node.to", node.to)
-                                        // ↓ this will replace the whole tag to abbreviation
-                                        builder.add(
-                                            curHashtagStart, // should not use curHashTagStart - 1, this will replace the `\n` if a tpm tag is at the beginning of a line
-                                            node.to,
-                                            Decoration.replace({
-                                                widget: new TagWidget(tag, false),
-                                            }),
-                                        );
+                                        const from = curHashtagStart;
+                                        const to = node.to;
+                                        if (!this.skipRangeMap.has(from)) {
+                                            const self = this;
+                                            builder.add(
+                                                from,
+                                                to,
+                                                Decoration.replace({
+                                                    widget: new TagWidget(tag, false, from, to, () => {
+                                                        self.skipRangeMap.set(from, to);
+                                                        self.needRebuildForUnbeautify = true;
+                                                        if (currentLeaf?.currentLeaf && !currentLeaf.isSource())
+                                                            setLeafToSourceMode(currentLeaf.currentLeaf);
+                                                        self.view.dispatch({ selection: EditorSelection.cursor(from) });
+                                                        self.view.focus();
+                                                        self.view.dispatch({});
+                                                    }),
+                                                }),
+                                            );
+                                        }
                                     }
                                 } else {
                                     tag += text;
@@ -296,17 +377,20 @@ export default class TagRenderer extends Plugin {
         );
 
         this.registerMarkdownPostProcessor((el: HTMLElement) => {
-            // Find the original tags to render.
             el.querySelectorAll(`a.tag:not(.${tag_class})`).forEach(
                 (node: HTMLAnchorElement) => {
-                    // Remove class 'tag' so it doesn't get rendered again.
+                    const original = node;
+                    const tagNode = createTagNode(node.textContent, true, {
+                        onFirstClick: () => {
+                            const leaf = this.app.workspace.activeLeaf;
+                            if (leaf) setLeafToSourceMode(leaf);
+                            original.style.display = "";
+                            tagNode.remove();
+                        },
+                    });
                     node.removeAttribute("class");
-                    // Hide this node and append the custom tag node in its place.
                     node.style.display = "none";
-                    node.parentNode?.insertBefore(
-                        createTagNode(node.textContent, true),
-                        node,
-                    );
+                    node.parentNode?.insertBefore(tagNode, node);
                 },
             );
         });
