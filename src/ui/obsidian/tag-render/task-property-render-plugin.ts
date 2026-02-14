@@ -6,6 +6,7 @@
 import { Plugin, WorkspaceLeaf } from "obsidian";
 import { Prec } from "@codemirror/state";
 import {
+    attachShortDelayTooltip,
     createTaskPropertyRenderExtension,
     TASK_PROPERTY_CLASS,
     TASK_PROPERTY_TOOLTIP,
@@ -24,21 +25,17 @@ function createTaskPropertySpan(
     span.className = TASK_PROPERTY_CLASS;
     span.setAttribute("data-key", key);
     span.setAttribute("data-value", value);
-    span.setAttribute("title", TASK_PROPERTY_TOOLTIP);
-    span.setAttribute("aria-label", TASK_PROPERTY_TOOLTIP);
     span.style.cursor = "pointer";
+    attachShortDelayTooltip(span, TASK_PROPERTY_TOOLTIP);
     const keyEl = document.createElement("span");
     keyEl.className = "tpm-task-property-key";
     keyEl.textContent = key;
-    keyEl.setAttribute("title", TASK_PROPERTY_TOOLTIP);
     const sep = document.createElement("span");
     sep.className = "tpm-task-property-sep";
     sep.textContent = ": ";
-    sep.setAttribute("title", TASK_PROPERTY_TOOLTIP);
     const valEl = document.createElement("span");
     valEl.className = "tpm-task-property-value";
     valEl.textContent = value;
-    valEl.setAttribute("title", TASK_PROPERTY_TOOLTIP);
     span.appendChild(keyEl);
     span.appendChild(sep);
     span.appendChild(valEl);

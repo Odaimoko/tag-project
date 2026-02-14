@@ -43,3 +43,18 @@ If your plugin does not need CSS, delete this file.
 .tpm-task-property-value {
     color: var(--text-normal);
 }
+
+/* Short-delay custom tooltip for task property */
+.tpm-task-property-tooltip {
+    position: fixed;
+    z-index: 9999;
+    padding: 4px 8px;
+    font-size: 12px;
+    line-height: 1.3;
+    white-space: nowrap;
+    background: var(--background-primary);
+    color: var(--text-normal);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}

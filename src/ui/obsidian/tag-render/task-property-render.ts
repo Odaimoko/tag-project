@@ -4,7 +4,7 @@
  */
 
 import { livePreviewState } from "obsidian";
-import { RangeSetBuilder } from "@codemirror/state";
+import { EditorSelection, RangeSetBuilder } from "@codemirror/state";
 import {
     Decoration,
     DecorationSet,
@@ -23,7 +23,47 @@ export const TASK_PROPERTY_CLASS = "tpm-task-property";
 const PROPERTY_PATTERN = /\`\{([^}:]+)\s*:\s*([^}]*)\}\`/g;
 
 /** Shown on hover; used in both editor widget and reading-view span. */
-export const TASK_PROPERTY_TOOLTIP = "可以键盘方向键移动上去或点击此处显示原文";
+export const TASK_PROPERTY_TOOLTIP = "Use arrow keys to move here or click to show raw text";
+
+const TOOLTIP_DELAY_MS = 200;
+
+/** Attach a short-delay tooltip; hide when mouse leaves the element or the tooltip. */
+export function attachShortDelayTooltip(el: HTMLElement, text: string, delayMs: number = TOOLTIP_DELAY_MS): void {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let tipEl: HTMLElement | null = null;
+
+    function hide() {
+        if (timer) {
+            clearTimeout(timer);
+            timer = null;
+        }
+        if (tipEl?.parentNode) {
+            tipEl.parentNode.removeChild(tipEl);
+            tipEl = null;
+        }
+    }
+
+    el.addEventListener("mouseenter", () => {
+        timer = setTimeout(() => {
+            timer = null;
+            tipEl = document.createElement("div");
+            tipEl.className = "tpm-task-property-tooltip";
+            tipEl.textContent = text;
+            document.body.appendChild(tipEl);
+            const rect = el.getBoundingClientRect();
+            tipEl.style.left = `${rect.left}px`;
+            tipEl.style.top = `${rect.top - 4}px`;
+            tipEl.style.transform = "translateY(-100%)";
+            tipEl.addEventListener("mouseleave", hide);
+        }, delayMs);
+    });
+    el.addEventListener("mouseleave", (e: MouseEvent) => {
+        const related = e.relatedTarget as Node | null;
+        if (tipEl && related && tipEl.contains(related)) return;
+        hide();
+    });
+    el.addEventListener("click", hide);
+}
 
 function* matchAllInText(text: string): Generator<{ index: number; length: number; key: string; value: string }> {
     PROPERTY_PATTERN.lastIndex = 0;
@@ -53,21 +93,17 @@ class TaskPropertyWidget extends WidgetType {
         span.className = TASK_PROPERTY_CLASS;
         span.setAttribute("data-key", this.key);
         span.setAttribute("data-value", this.value);
-        span.setAttribute("title", TASK_PROPERTY_TOOLTIP);
-        span.setAttribute("aria-label", TASK_PROPERTY_TOOLTIP);
         span.style.cursor = "pointer";
+        attachShortDelayTooltip(span, TASK_PROPERTY_TOOLTIP);
         const keyEl = document.createElement("span");
         keyEl.className = "tpm-task-property-key";
         keyEl.textContent = this.key;
-        keyEl.setAttribute("title", TASK_PROPERTY_TOOLTIP);
         const sep = document.createElement("span");
         sep.className = "tpm-task-property-sep";
         sep.textContent = ": ";
-        sep.setAttribute("title", TASK_PROPERTY_TOOLTIP);
         const valEl = document.createElement("span");
         valEl.className = "tpm-task-property-value";
         valEl.textContent = this.value;
-        valEl.setAttribute("title", TASK_PROPERTY_TOOLTIP);
         span.appendChild(keyEl);
         span.appendChild(sep);
         span.appendChild(valEl);
@@ -80,12 +116,24 @@ class TaskPropertyWidget extends WidgetType {
     }
 }
 
+/** True if selection overlaps [start, end). */
+function selectionOverlapsRange(
+    selection: readonly { from: number; to: number }[],
+    start: number,
+    end: number,
+): boolean {
+    for (const range of selection) {
+        if (start < range.to && range.from < end) return true;
+    }
+    return false;
+}
+
 class TaskPropertyRenderEditorPlugin implements PluginValue {
     decorations: DecorationSet;
     private getLeaf: () => WorkspaceLeafEditModeWrapper | null;
     private view: EditorView;
-    /** Ranges (by start position) that should not be beautified; click adds here, doc change clears. */
-    private skipFromSet = new Set<number>();
+    /** Ranges that should not be beautified (click = show raw). When cursor leaves, remove so beautify restores. */
+    private skipRangeMap = new Map<number, number>(); // start -> end
     /** Set by widget click callback so next update() rebuilds decorations. */
     private needRebuildForUnbeautify = false;
 
@@ -99,8 +147,19 @@ class TaskPropertyRenderEditorPlugin implements PluginValue {
     }
 
     update(update: ViewUpdate): void {
-        if (update.docChanged) this.skipFromSet.clear();
-        // After click "unbeautify this one", rebuild first so only that range is skipped; avoid map() with empty transaction clearing all.
+        if (update.docChanged) this.skipRangeMap.clear();
+        // When selection or viewport changes, restore beautify for ranges the cursor no longer overlaps.
+        if (update.selectionSet || update.viewportChanged) {
+            const sel = update.view.state.selection.ranges;
+            const toDelete: number[] = [];
+            for (const [start, end] of this.skipRangeMap) {
+                if (!selectionOverlapsRange(sel, start, end)) toDelete.push(start);
+            }
+            if (toDelete.length > 0) {
+                toDelete.forEach((start) => this.skipRangeMap.delete(start));
+                this.needRebuildForUnbeautify = true; // force rebuild so restored ranges get decorations again
+            }
+        }
         if (this.needRebuildForUnbeautify) {
             this.needRebuildForUnbeautify = false;
             this.decorations = this.buildDecorations(update.view);
@@ -128,7 +187,7 @@ class TaskPropertyRenderEditorPlugin implements PluginValue {
             for (const match of matchAllInText(slice)) {
                 const start = from + match.index;
                 const end = start + match.length;
-                if (this.skipFromSet.has(start)) continue;
+                if (this.skipRangeMap.has(start)) continue;
                 let inSelection = false;
                 for (const range of view.state.selection.ranges) {
                     if (start < range.to && range.from < end) {
@@ -147,7 +206,9 @@ class TaskPropertyRenderEditorPlugin implements PluginValue {
                             match.value,
                             start,
                             () => {
-                                self.skipFromSet.add(start);
+                                self.view.dispatch({ selection: EditorSelection.cursor(start) });
+                                self.view.focus();
+                                self.skipRangeMap.set(start, end);
                                 self.needRebuildForUnbeautify = true;
                                 self.view.dispatch({});
                             },

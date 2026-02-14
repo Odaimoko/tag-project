@@ -68,6 +68,8 @@ export default class OdaPmToolPlugin extends Plugin {
         // console.log('unloading plugin')
         SettingsProvider.remove();
         if (this.inited) {
+            this.taskPropertyRenderPlugin?.onunload();
+            this.tagRenderer?.onunload();
             this.pmDb.stopInitRetryTimer();
             OdaPmDbProvider.remove();
             removePluginEnv();
