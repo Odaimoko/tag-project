@@ -20,6 +20,7 @@ import {OdaPmTask, setTaskPriority} from "./data-model/OdaPmTask";
 import {ProjectSuggestionModal} from "./ui/obsidian/project-suggestion-modal";
 import {assertOnPluginInit} from "./test_runtime/assertDatabase";
 import TagRenderer from "./ui/obsidian/tag-render/tag-render";
+import TaskPropertyRenderPlugin from "./ui/obsidian/tag-render/task-property-render-plugin";
 import {TPMSettingsTab} from "./settings/TPMSettingsTab";
 import {PrioritySuggestionModal} from "./ui/obsidian/priority-suggestion-modal";
 import {addTagText} from "./data-model/tag-text-manipulate";
@@ -43,6 +44,7 @@ export default class OdaPmToolPlugin extends Plugin {
     pmDb: OdaPmDb
     inited: boolean;
     tagRenderer: TagRenderer;
+    taskPropertyRenderPlugin: TaskPropertyRenderPlugin;
 
     async onload() {
         addBlacklistTag("TagRender")
@@ -82,6 +84,8 @@ export default class OdaPmToolPlugin extends Plugin {
         OdaPmDbProvider.add(this.pmDb);
         this.tagRenderer = new TagRenderer(this.app, this.manifest);
         await this.tagRenderer.onload();
+        this.taskPropertyRenderPlugin = new TaskPropertyRenderPlugin(this.app, this.manifest);
+        await this.taskPropertyRenderPlugin.onload();
         this.regPluginListener()
 
         this.initCommands();

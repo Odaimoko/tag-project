@@ -23,3 +23,23 @@ If your plugin does not need CSS, delete this file.
     --dropdown-selected: var(--link-color);
     width: 100%;
 }
+
+/* Task property syntax `` `{key:value}` `` in editor */
+.tpm-task-property {
+    font-family: var(--font-monospace);
+    font-size: 0.9em;
+    padding: 0.1em 0.35em;
+    border-radius: 4px;
+    background: var(--background-secondary-alt);
+    color: var(--text-muted);
+}
+.tpm-task-property-key {
+    color: var(--interactive-accent);
+    font-weight: 500;
+}
+.tpm-task-property-sep {
+    opacity: 0.8;
+}
+.tpm-task-property-value {
+    color: var(--text-normal);
+}
