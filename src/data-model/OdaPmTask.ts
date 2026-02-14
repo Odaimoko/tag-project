@@ -1,5 +1,5 @@
-import {STask} from "obsidian-dataview";
-import {OdaPmProject, ProjectName_Unclassified, Tag_Prefix_Project} from "./OdaPmProject";
+import { STask } from "obsidian-dataview";
+import { OdaPmProject, ProjectName_Unclassified, Tag_Prefix_Project } from "./OdaPmProject";
 import {
     getProjectPathFromSTask,
     getProjectTagFromSTask,
@@ -9,14 +9,15 @@ import {
     trimTagsFromTask,
     trimTextBySettings
 } from "./workflow-def";
-import {BaseDatabaseObject} from "./BaseDatabaseObject";
-import {getOrCreateStep} from "./OdaPmStep";
-import {rewriteTask, setProjectTagToTask} from "../utils/io-util";
-import {ModuleId_Unclassified} from "./OdaPmModule";
-import {DefaultTaskPriority, MoreThanOnePriority} from "../settings/settings";
-import {Plugin} from "obsidian";
-import {addTagText, removeTagText} from "./tag-text-manipulate";
-import {I_GetTaskSource, TaskSource} from "./TaskSource";
+import { BaseDatabaseObject } from "./BaseDatabaseObject";
+import { getOrCreateStep } from "./OdaPmStep";
+import { rewriteTask, setProjectTagToTask } from "../utils/io-util";
+import { ModuleId_Unclassified } from "./OdaPmModule";
+import { DefaultTaskPriority, MoreThanOnePriority } from "../settings/settings";
+import { Plugin } from "obsidian";
+import { addTagText, removeTagText } from "./tag-text-manipulate";
+import { I_GetTaskSource, TaskSource } from "./TaskSource";
+import { parseTaskPropertiesFromSTask } from "../utils/task-property-parser";
 
 export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble, I_GetTaskSource {
     boundTask: STask;
@@ -33,6 +34,8 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble, I_G
     source: TaskSource;
     // UUID for selection usage
     uuid: string;
+    /** Parsed from task text and sublist via `{key:value}` syntax (e.g. completion_time, due_time, task_id). */
+    taskProperties: Record<string, string>;
 
 
     constructor(type: I_OdaPmWorkflow, task: STask) {
@@ -55,6 +58,8 @@ export class OdaPmTask extends BaseDatabaseObject implements I_OdaPmTaskble, I_G
         this.source = TaskSource.fromSTask(task);
         // Generate UUID
         this.uuid = crypto.randomUUID();
+        // Parse {key:value} from task.text and sublist
+        this.taskProperties = parseTaskPropertiesFromSTask(task);
     }
 
     getSource(): TaskSource | null {
