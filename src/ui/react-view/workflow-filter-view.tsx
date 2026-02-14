@@ -28,6 +28,7 @@ import { toggleValueInArray } from "../pure-react/utils/toggle-value-in-array";
 import { isDevMode } from "../../utils/env-util";
 import { I_GetTaskSource } from "../../data-model/TaskSource";
 import { TaskSource } from "../../data-model/TaskSource";
+import { OdaPmDbProvider } from "../../data-model/OdaPmDb";
 
 export function WorkflowTypeLegend({ type, style }: { type: WorkflowType } & I_Stylable) {
     return <span style={style}>
@@ -175,11 +176,14 @@ export const ClickableWorkflowView = ({ workflow, displayNames, setDisplayNames,
 
     // inline-block: make this check box a whole element. It won't be split into multiple sub-elements when layout.
     // block will start a new line, inline will not, so we use inline-block
+    const db = OdaPmDbProvider.get();
+    const taskCount = db?.pmTasks?.filter((t) => t.type === workflow).length ?? 0;
     const content = <>
         <InternalLinkView
             content={<span style={iconViewAsAWholeStyle}>
                 {showWorkflowIcon ? getIconByWorkflow(workflow) : null}
                 <label style={taskCheckBoxMargin}>{wfName}</label>
+                <label style={{ marginLeft: 6, opacity: 0.8, fontSize: "0.9em" }}>({taskCount})</label>
             </span>}
             onIconClicked={openThisWorkflow}
             onContentClicked={tickCheckbox} />
