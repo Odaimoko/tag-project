@@ -68,7 +68,7 @@ export default class OdaPmToolPlugin extends Plugin {
         // console.log('unloading plugin')
         SettingsProvider.remove();
         if (this.inited) {
-            this.taskPropertyRenderPlugin?.onunload();
+            this.taskPropertyRenderPlugin?.onunload(); // Editor extension + events; post-processor is on this plugin.
             this.tagRenderer?.onunload();
             this.pmDb.stopInitRetryTimer();
             OdaPmDbProvider.remove();
@@ -86,9 +86,11 @@ export default class OdaPmToolPlugin extends Plugin {
         OdaPmDbProvider.add(this.pmDb);
         this.tagRenderer = new TagRenderer(this.app, this.manifest);
         await this.tagRenderer.onload();
+        // Task property render: editor extension + Reading view post-processor (see below).
         this.taskPropertyRenderPlugin = new TaskPropertyRenderPlugin(this.app, this.manifest);
         await this.taskPropertyRenderPlugin.onload();
-        // Reading view: register post processor on root plugin so Obsidian runs it when rendering
+        // Register Reading/Preview markdown post-processor on this (root) plugin so Obsidian
+        // actually invokes it when rendering; sub-plugins are not in the app's loaded plugin list.
         registerTaskPropertyReadingViewPostProcessor(this);
         this.regPluginListener()
 
