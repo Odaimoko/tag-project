@@ -785,7 +785,7 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
 
     return (
         <VStack spacing={diffGroupSpacing}>
-            <HStack style={{ ...centerChildren, ...toolbarStyle }} spacing={10}>
+            <HStack style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", ...toolbarStyle }} spacing={10}>
                 <span style={searchWrapStyle}>
                     <input
                         style={taskSearchInputStyle}
@@ -795,7 +795,7 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
                         onChange={(evt) => setSearchText(evt.target.value)}
                     />
                     <ClickableObsidianIconView
-                        style={{ marginLeft: -28, paddingTop: 5 }}
+                        style={{ marginLeft: -28, alignSelf: "center" }}
                         onIconClicked={() => setSearchText("")}
                         iconName="x-circle"
                     />
