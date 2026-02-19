@@ -4,7 +4,7 @@ import { I_OdaPmWorkflow, Workflow_Type_Enum_Array, WorkflowType } from "../../d
 import React, { MouseEvent, useContext, useState } from "react";
 import { PluginContext } from "../obsidian/manage-page-view";
 import { ExternalControlledCheckbox } from "../pure-react/view-template/checkbox";
-import { InternalLinkView } from "./obsidian-icon-view";
+import { InternalLinkView, LinkRowWithHover } from "./obsidian-icon-view";
 import { iconViewAsAWholeStyle } from "../pure-react/style-def";
 import {
     filterButtonStyle,
@@ -178,16 +178,19 @@ export const ClickableWorkflowView = ({ workflow, displayNames, setDisplayNames,
     // block will start a new line, inline will not, so we use inline-block
     const db = OdaPmDbProvider.get();
     const taskCount = db?.pmTasks?.filter((t) => t.type === workflow).length ?? 0;
-    const content = <>
-        <InternalLinkView
-            content={<span style={iconViewAsAWholeStyle}>
-                {showWorkflowIcon ? getIconByWorkflow(workflow) : null}
-                <label style={taskCheckBoxMargin}>{wfName}</label>
-                <label style={{ marginLeft: 6, opacity: 0.8, fontSize: "0.9em" }}>({taskCount})</label>
-            </span>}
-            onIconClicked={openThisWorkflow}
-            onContentClicked={tickCheckbox} />
-    </>;
+    const content = (
+        <LinkRowWithHover>
+            <InternalLinkView
+                content={<span style={iconViewAsAWholeStyle}>
+                    {showWorkflowIcon ? getIconByWorkflow(workflow) : null}
+                    <label style={taskCheckBoxMargin}>{wfName}</label>
+                    <label style={{ marginLeft: 6, opacity: 0.8, fontSize: "0.9em" }}>({taskCount})</label>
+                </span>}
+                onIconClicked={openThisWorkflow}
+                onContentClicked={tickCheckbox}
+            />
+        </LinkRowWithHover>
+    );
 
     function openThisWorkflow(e: MouseEvent) {
         const forceNewTab = getForceNewTabOnClick(plugin, e);

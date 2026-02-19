@@ -31,7 +31,7 @@ import {
 import {Evt_JumpTask, Evt_JumpWorkflow} from "../../typing/dataview-event";
 import {initialToUpper, isStringNullOrEmpty, simpleFilter} from "../../utils/format-util";
 import {HStack, VStack} from "../pure-react/view-template/h-stack";
-import {ClickableObsidianIconView, InternalLinkView} from "./obsidian-icon-view";
+import {ClickableObsidianIconView, InternalLinkView, LinkRowWithHover} from "./obsidian-icon-view";
 import {ExternalControlledCheckbox} from "../pure-react/view-template/checkbox";
 import {PaginatedDataTable} from "../pure-react/view-template/data-table";
 import {IRenderable} from "../pure-react/props-typing/i-renderable";
@@ -186,16 +186,15 @@ export const OdaTaskSummaryCell = ({oTask, taskFirstColumn, showCheckBox, showPr
         })
     }, [oTask, plugin, taskFirstColumn]);
 
-    const checkBoxContent = showCheckBox ? <span>
-        <InternalLinkView content={summaryView}/>
-    </span> // click event is handled in ExternalControlledCheckbox, so handling it here will cause double click.
-        : <span>
-            <InternalLinkView 
-                content={summaryView} 
-                onIconClicked={disableInteractions ? undefined : openThisTask} 
+    const checkBoxContent = showCheckBox
+        ? <LinkRowWithHover><InternalLinkView content={summaryView}/></LinkRowWithHover>
+        : <LinkRowWithHover>
+            <InternalLinkView
+                content={summaryView}
+                onIconClicked={disableInteractions ? undefined : openThisTask}
                 onContentClicked={disableInteractions ? undefined : openThisTask}
             />
-        </span>;
+          </LinkRowWithHover>;
     const cellContent = (
         <span style={summaryCellInnerStyle}>
             <HStack style={centerChildren} spacing={6}>

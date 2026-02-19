@@ -1,7 +1,7 @@
 import {OdaPmProject, OdaPmProjectDefinition} from "../../data-model/OdaPmProject";
 import React, {MouseEvent, useContext} from "react";
 import {PluginContext} from "../obsidian/manage-page-view";
-import {ClickableObsidianIconView, InternalLinkView, ObsidianIconView} from "./obsidian-icon-view";
+import {ClickableObsidianIconView, InternalLinkView, LinkRowWithHover, ObsidianIconView} from "./obsidian-icon-view";
 import {iconViewAsAWholeStyle} from "../pure-react/style-def";
 import {openProjectPrecisely} from "../../utils/io-util";
 import {VStack} from "../pure-react/view-template/h-stack";
@@ -26,33 +26,20 @@ const definedAtListStyle: React.CSSProperties = {
 
 export const IconName_Project = "folder";
 
-const definedAtLinkRowStyle: React.CSSProperties = {
-    marginLeft: -4,
-    marginRight: -4,
-    padding: "4px 6px",
-    borderRadius: 6,
-    transition: "background-color 0.15s ease",
-};
-
 function ProjectLinkView(props: {
     project: OdaPmProject,
     def: OdaPmProjectDefinition
 }) {
     const plugin = useContext(PluginContext);
     return (
-        <div
-            className="defined-at-link-row"
-            style={definedAtLinkRowStyle}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "var(--background-modifier-hover)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = ""; }}
-        >
+        <LinkRowWithHover>
             <InternalLinkView
                 style={iconViewAsAWholeStyle}
                 onIconClicked={openProject}
                 onContentClicked={openProject}
                 content={<label style={{ whiteSpace: "nowrap" }}>{props.def.getLinkText()}</label>}
             />
-        </div>
+        </LinkRowWithHover>
     );
 
     function openProject(e: MouseEvent) {

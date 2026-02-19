@@ -28,6 +28,16 @@ export const diffGroupSpacing = 10;
 export const warningColor = "var(--text-warning)";
 export const CssClass_Link = "cm-underline";
 
+/** Hover background wrapper for task/workflow/definition links. Use with LinkRowWithHover. */
+export const linkRowHoverWrapperStyle: React.CSSProperties = {
+    marginLeft: -4,
+    marginRight: -4,
+    padding: "4px 6px",
+    borderRadius: 6,
+    transition: "background-color 0.15s ease",
+    display: "inline-block",
+};
+
 /**
  * Expand/collapse animation (shared by Workflow Filter, Filters panel, etc.)
  * Use the get*Style helpers so all panels share the same duration and easing.
