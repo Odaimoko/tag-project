@@ -1,23 +1,59 @@
 import {OdaPmProject, OdaPmProjectDefinition} from "../../data-model/OdaPmProject";
 import React, {MouseEvent, useContext} from "react";
 import {PluginContext} from "../obsidian/manage-page-view";
-import {ClickableObsidianIconView, InternalLinkView} from "./obsidian-icon-view";
+import {ClickableObsidianIconView, InternalLinkView, ObsidianIconView} from "./obsidian-icon-view";
 import {iconViewAsAWholeStyle} from "../pure-react/style-def";
 import {openProjectPrecisely} from "../../utils/io-util";
 import {VStack} from "../pure-react/view-template/h-stack";
 import {HoveringPopup, usePopup} from "../pure-react/view-template/hovering-popup";
 import {getForceNewTabOnClick} from "../../settings/settings";
 
+const DEFINED_AT_TITLE_ICON = "map-pin";
+const definedAtTitleStyle: React.CSSProperties = {
+    whiteSpace: "nowrap",
+    fontSize: "0.85em",
+    fontWeight: 600,
+    color: "var(--text-muted)",
+    letterSpacing: "0.02em",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+};
+
+const definedAtListStyle: React.CSSProperties = {
+    paddingTop: 2,
+};
+
 export const IconName_Project = "folder";
+
+const definedAtLinkRowStyle: React.CSSProperties = {
+    marginLeft: -4,
+    marginRight: -4,
+    padding: "4px 6px",
+    borderRadius: 6,
+    transition: "background-color 0.15s ease",
+};
 
 function ProjectLinkView(props: {
     project: OdaPmProject,
     def: OdaPmProjectDefinition
 }) {
     const plugin = useContext(PluginContext);
-    return <InternalLinkView style={iconViewAsAWholeStyle} onIconClicked={openProject}
-                             onContentClicked={openProject}
-                             content={<label style={{whiteSpace: "nowrap"}}>{props.def.getLinkText()}</label>}/>
+    return (
+        <div
+            className="defined-at-link-row"
+            style={definedAtLinkRowStyle}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "var(--background-modifier-hover)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = ""; }}
+        >
+            <InternalLinkView
+                style={iconViewAsAWholeStyle}
+                onIconClicked={openProject}
+                onContentClicked={openProject}
+                content={<label style={{ whiteSpace: "nowrap" }}>{props.def.getLinkText()}</label>}
+            />
+        </div>
+    );
 
     function openProject(e: MouseEvent) {
         const forceNewTab = getForceNewTabOnClick(plugin, e);
@@ -43,20 +79,24 @@ export function ProjectView(props: {
                                                       iconName={IconName_Project}
                                                       content={projectContent}
                                                       clickable={showableDefinitions.length > 0}/>;
-    // if showableDefinitions.length === 0, we don't show the popup
-    const popupContent = showableDefinitions.length > 0 ?
-        <div>
-            <div>
+    const definedAtTitle = (
+        <span style={definedAtTitleStyle}>
+            <ObsidianIconView iconName={DEFINED_AT_TITLE_ICON} yOffset={false}/>
+            Defined At
+        </span>
+    );
 
-                <VStack>
-                    {showableDefinitions.map((def, i) => {
-                        return <ProjectLinkView key={i} project={project} def={def}/>
-                    })}
-                </VStack>
-            </div>
+    const popupContent = showableDefinitions.length > 0 ?
+        <div style={definedAtListStyle}>
+            <VStack spacing={4}>
+                {showableDefinitions.map((def, i) => (
+                    <ProjectLinkView key={i} project={project} def={def}/>
+                ))}
+            </VStack>
         </div>
         : null;
-    return <HoveringPopup {...popupProps} title={"Defined At"}
+
+    return <HoveringPopup {...popupProps} title={definedAtTitle}
                           hoveredContent={hoveredContent} popupContent={popupContent}/>
 
 }
