@@ -3,14 +3,14 @@ import {ObsidianIconView} from "./obsidian-icon-view";
 import React from "react";
 import {Color_Workflow_Checkbox, Color_WorkflowChain} from "../pure-react/style-def";
 
-function getColorByWorkflow(type: I_OdaPmWorkflow) {
-    switch (type.type) {
+export function getColorByWorkflow(workflow: I_OdaPmWorkflow) {
+    switch (workflow.type) {
         case "chain":
             return Color_WorkflowChain;
-        case "checkbox" :
+        case "checkbox":
             return Color_Workflow_Checkbox;
     }
-    return "currentColor"
+    return "currentColor";
 }
 
 function getIconNameByWorkflowType(type: WorkflowType) {
@@ -24,4 +24,25 @@ export function getIconViewByWorkflowType(type: WorkflowType) {
 
 export function getIconByWorkflow(workflow: I_OdaPmWorkflow) {
     return getIconViewByWorkflowType(workflow.type);
+}
+
+/** Shared workflow chip style: compact pill, adapts to text length. Use with getColorByWorkflow(workflow). */
+export function getWorkflowChipStyle(accentColor: string): React.CSSProperties {
+    return {
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 3,
+        fontSize: "0.6rem",
+        fontWeight: 600,
+        padding: "2px 6px",
+        borderRadius: 4,
+        color: accentColor,
+        backgroundColor: `${accentColor}18`,
+        border: "1px solid " + `${accentColor}40`,
+        boxSizing: "border-box",
+        maxWidth: 160,
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap",
+    };
 }

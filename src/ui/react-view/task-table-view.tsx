@@ -53,7 +53,7 @@ import {I_GetTaskSource} from "../../data-model/TaskSource";
 import {TaskSource} from "../../data-model/TaskSource";
 import {I_Stylable} from "../pure-react/props-typing/i-stylable";
 import {loopIndex} from "../pure-react/utils/loop-index";
-import {getIconByWorkflow} from "./tag-project-style";
+import {getColorByWorkflow, getIconByWorkflow, getWorkflowChipStyle} from "./tag-project-style";
 import {ClickableView} from "../pure-react/view-template/clickable-view";
 import {addTagText} from "../../data-model/tag-text-manipulate";
 import {Tag_Prefix_Project} from "../../data-model/OdaPmProject";
@@ -114,7 +114,6 @@ const stepCellCheckboxStyle: React.CSSProperties = {
     margin: 0,
     padding: 0,
 };
-
 function getIconByTask(oTask: OdaPmTask) {
     return getIconByWorkflow(oTask.type)
 }
@@ -196,22 +195,31 @@ export const OdaTaskSummaryCell = ({oTask, taskFirstColumn, showCheckBox, showPr
                 onContentClicked={disableInteractions ? undefined : openThisTask}
             />
         </span>;
+    const workflowLabel = showWorkflowIcon ? (
+        <span style={getWorkflowChipStyle(getColorByWorkflow(oTask.type))} title={oTask.type.name}>
+            {getIconByTask(oTask)}
+            <span>{oTask.type.name}</span>
+        </span>
+    ) : null;
+
     const cellContent = (
         <span style={summaryCellInnerStyle}>
-            <HStack style={centerChildren} spacing={6}>
-                {showWorkflowIcon ? getIconByTask(oTask) : null}
-                {showPriority && <TaskPriorityIcon oTask={oTask} />}
-                {showCheckBox ? (
-                    <ExternalControlledCheckbox
-                        content={checkBoxContent}
-                        onChange={disableInteractions ? () => {} : tickSummary}
-                        onContentClicked={disableInteractions ? undefined : openThisTask}
-                        externalControl={oTask.stepCompleted()}
-                    />
-                ) : (
-                    checkBoxContent
-                )}
-            </HStack>
+            <VStack spacing={3} style={{ alignItems: "flex-start" }}>
+                <HStack style={centerChildren} spacing={6}>
+                    {showPriority && <TaskPriorityIcon oTask={oTask} />}
+                    {showCheckBox ? (
+                        <ExternalControlledCheckbox
+                            content={checkBoxContent}
+                            onChange={disableInteractions ? () => {} : tickSummary}
+                            onContentClicked={disableInteractions ? undefined : openThisTask}
+                            externalControl={oTask.stepCompleted()}
+                        />
+                    ) : (
+                        checkBoxContent
+                    )}
+                </HStack>
+                {workflowLabel}
+            </VStack>
         </span>
     );
     const sourceTitle = isDevMode() ? TaskSource.formatForTooltip((oTask as I_GetTaskSource).getSource() ?? null) : undefined;

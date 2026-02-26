@@ -5,7 +5,6 @@ import React, { MouseEvent, useContext, useState } from "react";
 import { PluginContext } from "../obsidian/manage-page-view";
 import { ExternalControlledCheckbox } from "../pure-react/view-template/checkbox";
 import { InternalLinkView } from "./obsidian-icon-view";
-import { iconViewAsAWholeStyle } from "../pure-react/style-def";
 import {
     filterButtonStyle,
     filterCardStyle,
@@ -18,12 +17,11 @@ import { openTaskPrecisely } from "../../utils/io-util";
 import { initialToUpper } from "../../utils/format-util";
 import { NameableFilterHeading } from "./nameable-filter-heading";
 import { INameable } from "../pure-react/props-typing/i-nameable";
-import { taskCheckBoxMargin } from "./task-table-view";
 import { ExternalToggleView } from "../pure-react/view-template/toggle-view";
 import { OptionValueType, SearchableDropdown } from "../pure-react/view-template/searchable-dropdown";
 import { getForceNewTabOnClick } from "../../settings/settings";
 import { I_Stylable } from "../pure-react/props-typing/i-stylable";
-import { getIconByWorkflow, getIconViewByWorkflowType } from "./tag-project-style";
+import { getColorByWorkflow, getIconByWorkflow, getIconViewByWorkflowType, getWorkflowChipStyle } from "./tag-project-style";
 import { toggleValueInArray } from "../pure-react/utils/toggle-value-in-array";
 import { isDevMode } from "../../utils/env-util";
 import { I_GetTaskSource } from "../../data-model/TaskSource";
@@ -174,12 +172,12 @@ export const ClickableWorkflowView = ({ workflow, displayNames, setDisplayNames,
     }
 
     // inline-block: make this check box a whole element. It won't be split into multiple sub-elements when layout.
-    // block will start a new line, inline will not, so we use inline-block
+    const chipStyle = getWorkflowChipStyle(getColorByWorkflow(workflow));
     const content = <>
         <InternalLinkView
-            content={<span style={iconViewAsAWholeStyle}>
+            content={<span style={chipStyle} title={wfName}>
                 {showWorkflowIcon ? getIconByWorkflow(workflow) : null}
-                <label style={taskCheckBoxMargin}>{wfName}</label>
+                <span>{wfName}</span>
             </span>}
             onIconClicked={openThisWorkflow}
             onContentClicked={tickCheckbox} />
