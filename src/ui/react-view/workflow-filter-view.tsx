@@ -55,7 +55,7 @@ function DropdownWorkflowView(props: {
     const name = props.item.name;
     const { displayNames, handleSetDisplayNames, workflow } = props;
     return <div>
-        <ClickableWorkflowView key={name} workflow={workflow} showCheckBox={false} />
+        <ClickableWorkflowView key={name} workflow={workflow} showCheckBox={false} useChipStyle={false} />
     </div>
 }
 
@@ -152,15 +152,18 @@ export const WorkflowFilterView = (props: {
  * A clickable view that can be used to jump to its definition.
  * If showCheckBox is true, it will also show a checkbox that can be used to select the workflow, in which case displayNames and setDisplayNames must be defined.
  */
-export const ClickableWorkflowView = ({ workflow, displayNames, setDisplayNames, showCheckBox, showWorkflowIcon }: {
+export const ClickableWorkflowView = ({ workflow, displayNames, setDisplayNames, showCheckBox, showWorkflowIcon, useChipStyle }: {
     workflow: I_OdaPmWorkflow,
     displayNames?: string[],
     setDisplayNames?: React.Dispatch<React.SetStateAction<string[]>>,
     showCheckBox?: boolean,
-    showWorkflowIcon?: boolean
+    showWorkflowIcon?: boolean,
+    /** When false, render as plain link (icon + name) without chip styling. Use in dropdowns for clarity. */
+    useChipStyle?: boolean
 }) => {
     showCheckBox = showCheckBox ?? true; // backward compatibility.
     showWorkflowIcon = showWorkflowIcon ?? true;
+    useChipStyle = useChipStyle ?? true;
     // if showCheckBox, displayNames and setDisplayNames must be defined
     console.assert(!showCheckBox || (displayNames !== undefined && setDisplayNames !== undefined))
     const plugin = useContext(PluginContext);
@@ -171,11 +174,12 @@ export const ClickableWorkflowView = ({ workflow, displayNames, setDisplayNames,
         toggleValueInArray(wfName, displayNames, setDisplayNames);
     }
 
-    // inline-block: make this check box a whole element. It won't be split into multiple sub-elements when layout.
-    const chipStyle = { ...getWorkflowChipStyle(getColorByWorkflow(workflow)), marginLeft: 6 };
+    const contentStyle = useChipStyle
+        ? { ...getWorkflowChipStyle(getColorByWorkflow(workflow)), marginLeft: 6 }
+        : { display: "inline-flex" as const, alignItems: "center", gap: 4, marginLeft: 6 };
     const content = <>
         <InternalLinkView
-            content={<span style={chipStyle} title={wfName}>
+            content={<span style={contentStyle} title={wfName}>
                 {showWorkflowIcon ? getIconByWorkflow(workflow) : null}
                 <span>{wfName}</span>
             </span>}
