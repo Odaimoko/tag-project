@@ -41,10 +41,7 @@ export class ProjectInspectorModal extends Modal {
     }
 }
 
-const {cellStyleGetter, headStyleGetter} = getDefaultTableStyleGetters(
-    "unset", "unset",
-    0, false
-);
+const {cellStyleGetter, headStyleGetter} = getDefaultTableStyleGetters(undefined, 0, false);
 
 /** Project Inspector specific styles (extends shared filter styles) */
 const projectTableContainerStyle: React.CSSProperties = {

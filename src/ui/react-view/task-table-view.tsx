@@ -263,42 +263,67 @@ function rectifyOdaTaskOnMdTaskChanged(oTask: OdaPmTask, plugin: OdaPmToolPlugin
     }
 }
 
-export function getDefaultTableStyleGetters(minSummaryWidth: number | string = 300, maxSummaryWidth: number | string = 300, summaryColumn = 0, isCellCentered = true) {
-    const summaryCellStyle: React.CSSProperties = {
-        ...summaryCellBase,
-        minWidth: minSummaryWidth,
-        maxWidth: maxSummaryWidth,
-    };
-    const summaryEvenCellStyle = { ...summaryCellStyle, ...tableRowEvenBg };
-    const summaryOddCellStyle = { ...summaryCellStyle, ...tableRowOddBg };
+const DEFAULT_STEP_COLUMN_WIDTH = 80;
+const MIN_COLUMN_WIDTH = 60;
+const MAX_SUMMARY_WIDTH = 600;
+const MAX_STEP_COLUMN_WIDTH = 400;
+const SUMMARY_COLUMN_INDEX = 0;
 
-    const stepCellStyle: React.CSSProperties = {
-        ...stepCellBase,
-        textAlign: isCellCentered ? "center" : "inherit",
-    };
-    const stepEvenCellStyle = { ...stepCellStyle, ...tableRowEvenBg };
-    const stepOddCellStyle = { ...stepCellStyle, ...tableRowOddBg };
+function padColumnWidths(widths: number[], columnCount: number): number[] {
+    const w = [...(widths || [300])];
+    while (w.length < columnCount) w.push(DEFAULT_STEP_COLUMN_WIDTH);
+    return w.slice(0, columnCount);
+}
+
+export function getDefaultTableStyleGetters(
+    columnWidths?: number[],
+    summaryColumn = 0,
+    isCellCentered = true
+) {
+    function getColumnWidth(columnIndex: number): number {
+        if (columnWidths && columnWidths[columnIndex] != null) return columnWidths[columnIndex];
+        return columnIndex === summaryColumn ? 300 : DEFAULT_STEP_COLUMN_WIDTH;
+    }
 
     function cellStyleGetter(column: number, row: number): React.CSSProperties {
         const even = row % 2 === 0;
+        const w = getColumnWidth(column);
+        const widthStyle: React.CSSProperties = {
+            width: w,
+            minWidth: w,
+            maxWidth: column === summaryColumn ? MAX_SUMMARY_WIDTH : w,
+        };
+        const stepCellStyle: React.CSSProperties = {
+            ...stepCellBase,
+            textAlign: isCellCentered ? "center" : "inherit",
+            ...widthStyle,
+        };
+        const summaryCellStyle: React.CSSProperties = {
+            ...summaryCellBase,
+            ...widthStyle,
+        };
+        const stepEvenCellStyle = { ...stepCellStyle, ...tableRowEvenBg };
+        const stepOddCellStyle = { ...stepCellStyle, ...tableRowOddBg };
+        const summaryEvenCellStyle = { ...summaryCellStyle, ...tableRowEvenBg };
+        const summaryOddCellStyle = { ...summaryCellStyle, ...tableRowOddBg };
         const cellStyle = even ? stepEvenCellStyle : stepOddCellStyle;
         const summaryStyle = even ? summaryEvenCellStyle : summaryOddCellStyle;
-        if (column === summaryColumn) {
-            return summaryStyle;
-        }
+        if (column === summaryColumn) return summaryStyle;
         return cellStyle;
     }
 
     function headStyleGetter(columnIndex: number): React.CSSProperties {
+        const w = getColumnWidth(columnIndex);
         return {
-            ...getStickyHeaderStyle(1, 0), // top: 0 so header sticks to page top, not just table
+            ...getStickyHeaderStyle(1, 0),
             ...tableHeaderBase,
-            maxWidth: (columnIndex === summaryColumn ? maxSummaryWidth : "unset"),
-            width: "auto",
+            width: w,
+            minWidth: w,
+            maxWidth: columnIndex === summaryColumn ? MAX_SUMMARY_WIDTH : w,
         } as React.CSSProperties;
     }
 
-    return { cellStyleGetter, headStyleGetter };
+    return { cellStyleGetter, headStyleGetter, getColumnWidth };
 }
 
 /** Table wrapper and table element styles for PaginatedTaskTable */
@@ -381,7 +406,7 @@ function TaskPriorityIcon({oTask}: { oTask: OdaPmTask }): React.JSX.Element {
     </div>} title={"Choose priority..."}/>;
 }
 
-function PaginatedTaskTable({ curWfName, headers, taskRows, setSortToColumn, headStyleGetter, cellStyleGetter, taskData, onRowContextMenu, onSelectionChange, onSelectionModeChange, clearSelectionTrigger, selectedRowIndices, tableStyle }: {
+function PaginatedTaskTable({ curWfName, headers, taskRows, setSortToColumn, headStyleGetter, cellStyleGetter, taskData, onRowContextMenu, onSelectionChange, onSelectionModeChange, clearSelectionTrigger, selectedRowIndices, tableStyle, columnWidths, onColumnResize, onColumnResizeEnd }: {
     curWfName: string,
     headers: React.JSX.Element[],
     taskRows: IRenderable[][],
@@ -395,6 +420,9 @@ function PaginatedTaskTable({ curWfName, headers, taskRows, setSortToColumn, hea
     clearSelectionTrigger?: number,
     selectedRowIndices?: number[],
     tableStyle?: React.CSSProperties,
+    columnWidths?: number[],
+    onColumnResize?: (columnIndex: number, widthPx: number) => void,
+    onColumnResizeEnd?: () => void,
 }) {
     const [tasksPerPage, setTasksPerPage,] = usePluginSettings<number>("display_tasks_count_per_page");
     const [maxPageButtonCount] = usePluginSettings<number>("max_page_buttons_count");
@@ -434,6 +462,9 @@ function PaginatedTaskTable({ curWfName, headers, taskRows, setSortToColumn, hea
             clearSelectionTrigger={clearSelectionTrigger}
             selectedRowIndices={selectedRowIndices}
             tableStyle={tableStyle}
+            columnWidths={columnWidths}
+            onColumnResize={onColumnResize}
+            onColumnResizeEnd={onColumnResizeEnd}
         />
     );
 }
@@ -460,6 +491,10 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
     const [isSelectionMode, setIsSelectionMode] = useState(false);
     // trigger to clear DataTable selection
     const [clearSelectionTrigger, setClearSelectionTrigger] = useState(0);
+    // column widths for task table (persisted in settings)
+    const [savedColumnWidths, setSavedColumnWidths] = usePluginSettings<number[]>("task_table_column_widths");
+    const [columnWidths, setColumnWidths] = useState<number[]>([]);
+    const columnWidthsRef = useRef<number[]>([]);
 
     function onJumpToTask(oTask: OdaPmTask) {
         setSearchText(oTask.summary)
@@ -623,6 +658,12 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
             </div>
         ) : [])];
 
+    const columnCount = headers.length;
+    useEffect(() => {
+        setColumnWidths(prev => padColumnWidths(savedColumnWidths ?? [300], columnCount));
+    }, [savedColumnWidths, columnCount]);
+    columnWidthsRef.current = columnWidths;
+    const effectiveColumnWidths = columnWidths.length === columnCount ? columnWidths : padColumnWidths(savedColumnWidths ?? [300], columnCount);
 
     const taskRows = displayedTasks.map(function (oTask: OdaPmTask) {
         const row = odaTaskToTableRow(displayStepTags, oTask)
@@ -641,8 +682,9 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
         return row
     });
 
-    const { cellStyleGetter, headStyleGetter } = getDefaultTableStyleGetters();
+    const { cellStyleGetter, headStyleGetter } = getDefaultTableStyleGetters(effectiveColumnWidths);
     const { tableContainerStyle, tableElementStyle } = getTaskTableLayoutStyles();
+    const tableStyleWithLayout = { ...tableElementStyle, tableLayout: "fixed" as const };
 
     // Handle selection mode changes - clear selection when exiting mode
     // Must be defined at component top level (hooks rule)
@@ -653,6 +695,19 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
             clearSelection();
         }
     }, [clearSelection]);
+
+    const handleColumnResize = useCallback((columnIndex: number, widthPx: number) => {
+        setColumnWidths(prev => {
+            const n = [...prev];
+            const maxW = columnIndex === SUMMARY_COLUMN_INDEX ? MAX_SUMMARY_WIDTH : MAX_STEP_COLUMN_WIDTH;
+            const clamped = Math.min(maxW, Math.max(MIN_COLUMN_WIDTH, widthPx));
+            n[columnIndex] = clamped;
+            return n;
+        });
+    }, []);
+    const handleColumnResizeEnd = useCallback(() => {
+        setSavedColumnWidths(columnWidthsRef.current);
+    }, [setSavedColumnWidths]);
 
     function handleRowContextMenu(rowIndex: number, event: React.MouseEvent) {
         const selectedTasks = [displayedTasks[rowIndex]];
@@ -852,7 +907,10 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
                                 onSelectionModeChange={handleTableSelectionModeChange}
                                 clearSelectionTrigger={clearSelectionTrigger}
                                 selectedRowIndices={selectedRowIndices}
-                                tableStyle={tableElementStyle}
+                                tableStyle={tableStyleWithLayout}
+                                columnWidths={effectiveColumnWidths}
+                                onColumnResize={columnWidths.length === columnCount ? handleColumnResize : undefined}
+                                onColumnResizeEnd={columnWidths.length === columnCount ? handleColumnResizeEnd : undefined}
                             />
                         </SelectionModeContext.Provider>
                     </div>

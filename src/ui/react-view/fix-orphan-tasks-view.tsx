@@ -55,10 +55,7 @@ function OrphanTasksFixPanel({orphanTasks}: { orphanTasks: OdaPmTask[] }) {
         </HStack>
         </VStack>,]
     })
-    const {cellStyleGetter, headStyleGetter} = getDefaultTableStyleGetters(
-        "unset", "unset",
-        0, false
-    );
+    const {cellStyleGetter, headStyleGetter} = getDefaultTableStyleGetters(undefined, 0, false);
     return <div>
         <DataTable tableTitle={"Orphan Tasks"} headers={headers} rows={rows}
                    thStyleGetter={headStyleGetter}

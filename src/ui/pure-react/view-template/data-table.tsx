@@ -23,6 +23,10 @@ interface DataTableParams {
     rowRange?: [number, number]; // [begin, end], if end is -1, means the end is the last row
     onRowContextMenu?: (rowIndex: number, event: React.MouseEvent) => void;
     rowData?: any[]; // Additional data for each row (e.g., task objects)
+    // Resizable columns: when both set, header shows resize handles
+    columnWidths?: number[];
+    onColumnResize?: (columnIndex: number, widthPx: number) => void;
+    onColumnResizeEnd?: () => void;
     // Selection mode props
     enableSelectionMode?: boolean; // Enable selection mode feature
     selectionMode?: boolean; // External control of selection mode (controlled component)
@@ -159,6 +163,10 @@ const TableRow = React.memo(({
  * @constructor
  */
     // We cannot interact in Dataview Table, so we create our own.
+const RESIZE_HANDLE_WIDTH = 6;
+const MIN_COLUMN_WIDTH = 48;
+const MAX_COLUMN_WIDTH = 800;
+
 export const DataTable = ({
                               tableTitle,
                               headers, rows,
@@ -171,6 +179,9 @@ export const DataTable = ({
                               rowRange,
                               onRowContextMenu,
                               rowData,
+                              columnWidths,
+                              onColumnResize,
+                              onColumnResizeEnd,
                               enableSelectionMode = false,
                               selectionMode: externalSelectionMode,
                               onSelectionChange,
@@ -179,6 +190,26 @@ export const DataTable = ({
                               selectedRowIndices: externalSelectedRowIndices
                           }: DataTableParams) => {
         const tableRef = useRef<HTMLTableElement>(null);
+        const [resizing, setResizing] = useState<{ columnIndex: number; startX: number; startWidth: number } | null>(null);
+
+        useEffect(() => {
+            if (resizing == null) return;
+            const onMove = (e: MouseEvent) => {
+                const delta = e.clientX - resizing.startX;
+                const newWidth = Math.min(MAX_COLUMN_WIDTH, Math.max(MIN_COLUMN_WIDTH, resizing.startWidth + delta));
+                onColumnResize?.(resizing.columnIndex, newWidth);
+            };
+            const onUp = () => {
+                onColumnResizeEnd?.();
+                setResizing(null);
+            };
+            window.addEventListener("mousemove", onMove);
+            window.addEventListener("mouseup", onUp);
+            return () => {
+                window.removeEventListener("mousemove", onMove);
+                window.removeEventListener("mouseup", onUp);
+            };
+        }, [resizing, onColumnResize, onColumnResizeEnd]);
 
         // Use selection mode hook for state management
         const {
@@ -279,11 +310,33 @@ export const DataTable = ({
                         {isSelectionMode && <th style={{width: "40px", padding: "8px 4px"}}></th>}
                         {headers.map((header: IRenderable, index) => {
                             const headerStyle = thStyleGetter ? thStyleGetter(index) : thStyle;
-                            return <th style={headerStyle} key={index}>
-                                <div onClick={() => {
-                                    onHeaderClicked?.(index)
-                                }}>{header}</div>
-                            </th>;
+                            const canResize = columnWidths != null && onColumnResize && index < (columnWidths?.length ?? 0);
+                            return (
+                                <th style={{ ...headerStyle, position: "relative" }} key={index}>
+                                    <div onClick={() => onHeaderClicked?.(index)}>{header}</div>
+                                    {canResize && (
+                                        <div
+                                            style={{
+                                                position: "absolute",
+                                                right: 0,
+                                                top: 0,
+                                                bottom: 0,
+                                                width: RESIZE_HANDLE_WIDTH,
+                                                cursor: "col-resize",
+                                            }}
+                                            onMouseDown={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                setResizing({
+                                                    columnIndex: index,
+                                                    startX: e.clientX,
+                                                    startWidth: columnWidths[index] ?? 100,
+                                                });
+                                            }}
+                                        />
+                                    )}
+                                </th>
+                            );
                         })}
                     </tr>
                     </thead>
@@ -384,8 +437,8 @@ export const PaginatedDataTable = (props: Omit<DataTableParams, "rowRange"> & Se
                 />
             )}
 
-            <DataTable 
-                {...props} 
+            <DataTable
+                {...props}
                 rowRange={rowRange}
                 enableSelectionMode={props.enableSelectionMode}
                 selectionMode={isSelectionMode}
@@ -393,6 +446,9 @@ export const PaginatedDataTable = (props: Omit<DataTableParams, "rowRange"> & Se
                 onSelectionChange={handleSelectionChange}
                 clearSelectionTrigger={props.clearSelectionTrigger}
                 selectedRowIndices={pageRelativeSelectedIndices}
+                columnWidths={props.columnWidths}
+                onColumnResize={props.onColumnResize}
+                onColumnResizeEnd={props.onColumnResizeEnd}
             />
         </VStack>
     )
