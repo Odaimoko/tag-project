@@ -4,7 +4,8 @@ import { I_OdaPmWorkflow, Workflow_Type_Enum_Array, WorkflowType } from "../../d
 import React, { MouseEvent, useContext, useState } from "react";
 import { PluginContext } from "../obsidian/manage-page-view";
 import { ExternalControlledCheckbox } from "../pure-react/view-template/checkbox";
-import { InternalLinkView } from "./obsidian-icon-view";
+import { InternalLinkView, LinkRowWithHover } from "./obsidian-icon-view";
+import { iconViewAsAWholeStyle } from "../pure-react/style-def";
 import {
     filterButtonStyle,
     filterCardStyle,
@@ -26,6 +27,7 @@ import { toggleValueInArray } from "../pure-react/utils/toggle-value-in-array";
 import { isDevMode } from "../../utils/env-util";
 import { I_GetTaskSource } from "../../data-model/TaskSource";
 import { TaskSource } from "../../data-model/TaskSource";
+import { OdaPmDbProvider } from "../../data-model/OdaPmDb";
 
 export function WorkflowTypeLegend({ type, style }: { type: WorkflowType } & I_Stylable) {
     return <span style={style}>
@@ -176,16 +178,22 @@ export const ClickableWorkflowView = ({ workflow, displayNames, setDisplayNames,
 
     const contentStyle = useChipStyle
         ? { ...getWorkflowChipStyle(getColorByWorkflow(workflow)), marginLeft: 6 }
-        : { display: "inline-flex" as const, alignItems: "center", gap: 4, marginLeft: 6 };
-    const content = <>
-        <InternalLinkView
-            content={<span style={contentStyle} title={wfName}>
-                {showWorkflowIcon ? getIconByWorkflow(workflow) : null}
-                <span>{wfName}</span>
-            </span>}
-            onIconClicked={openThisWorkflow}
-            onContentClicked={tickCheckbox} />
-    </>;
+        : { ...iconViewAsAWholeStyle, marginLeft: 6 };
+    const db = OdaPmDbProvider.get();
+    const taskCount = db?.pmTasks?.filter((t) => t.type === workflow).length ?? 0;
+    const content = (
+        <LinkRowWithHover>
+            <InternalLinkView
+                content={<span style={contentStyle} title={wfName}>
+                    {showWorkflowIcon ? getIconByWorkflow(workflow) : null}
+                    <span>{wfName}</span>
+                    <label style={{ marginLeft: 6, opacity: 0.8, fontSize: "0.9em" }}>({taskCount})</label>
+                </span>}
+                onIconClicked={openThisWorkflow}
+                onContentClicked={tickCheckbox}
+            />
+        </LinkRowWithHover>
+    );
 
     function openThisWorkflow(e: MouseEvent) {
         const forceNewTab = getForceNewTabOnClick(plugin, e);

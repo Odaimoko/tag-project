@@ -1,11 +1,12 @@
 import {IRenderable} from "../pure-react/props-typing/i-renderable";
-import React from "react";
+import React, {ReactNode} from "react";
 import {getIcon} from "obsidian";
 import {HtmlStringComponent} from "../pure-react/view-template/html-string-component";
 import {I_InteractableId} from "../pure-react/props-typing/i-interactable-id";
 import {GeneralMouseEventHandler} from "../pure-react/view-template/event-handling/general-mouse-event-handler";
 import {I_Stylable} from "../pure-react/props-typing/i-stylable";
 import {ClickableView, I_IconClickable} from "../pure-react/view-template/clickable-view";
+import {linkRowHoverWrapperStyle} from "../pure-react/style-def";
 // Obsidian's icon will offset by 4px upwards, so we drive it down.
 const clickableIconTransform = {transform: `translateY(2px)`};
 
@@ -25,6 +26,21 @@ export function ObsidianIconView({iconName, style, yOffset}: { iconName: string,
     }
     const htmlString = icon?.outerHTML
     return <HtmlStringComponent style={clickableIconTransform} htmlString={htmlString}/>;
+}
+
+const HOVER_BG = "var(--background-modifier-hover)";
+
+/** Wraps link content with hover background (task/workflow/Defined At links). */
+export function LinkRowWithHover({ children, style }: { children: ReactNode; style?: React.CSSProperties }) {
+    return (
+        <span
+            style={{ ...linkRowHoverWrapperStyle, ...style }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = HOVER_BG; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = ""; }}
+        >
+            {children}
+        </span>
+    );
 }
 
 /**

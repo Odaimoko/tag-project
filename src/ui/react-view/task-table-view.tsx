@@ -31,7 +31,7 @@ import {
 import {Evt_JumpTask, Evt_JumpWorkflow} from "../../typing/dataview-event";
 import {initialToUpper, isStringNullOrEmpty, simpleFilter} from "../../utils/format-util";
 import {HStack, VStack} from "../pure-react/view-template/h-stack";
-import {ClickableObsidianIconView, InternalLinkView} from "./obsidian-icon-view";
+import {ClickableObsidianIconView, InternalLinkView, LinkRowWithHover} from "./obsidian-icon-view";
 import {ExternalControlledCheckbox} from "../pure-react/view-template/checkbox";
 import {PaginatedDataTable} from "../pure-react/view-template/data-table";
 import {IRenderable} from "../pure-react/props-typing/i-renderable";
@@ -185,23 +185,21 @@ export const OdaTaskSummaryCell = ({oTask, taskFirstColumn, showCheckBox, showPr
         })
     }, [oTask, plugin, taskFirstColumn]);
 
-    const checkBoxContent = showCheckBox ? <span>
-        <InternalLinkView content={summaryView}/>
-    </span> // click event is handled in ExternalControlledCheckbox, so handling it here will cause double click.
-        : <span>
-            <InternalLinkView 
-                content={summaryView} 
-                onIconClicked={disableInteractions ? undefined : openThisTask} 
+    const checkBoxContent = showCheckBox
+        ? <LinkRowWithHover><InternalLinkView content={summaryView}/></LinkRowWithHover>
+        : <LinkRowWithHover>
+            <InternalLinkView
+                content={summaryView}
+                onIconClicked={disableInteractions ? undefined : openThisTask}
                 onContentClicked={disableInteractions ? undefined : openThisTask}
             />
-        </span>;
+        </LinkRowWithHover>;
     const workflowLabel = showWorkflowIcon ? (
         <span style={getWorkflowChipStyle(getColorByWorkflow(oTask.type))} title={oTask.type.name}>
             {getIconByTask(oTask)}
             <span>{oTask.type.name}</span>
         </span>
     ) : null;
-
     const cellContent = (
         <span style={summaryCellInnerStyle}>
             <VStack spacing={3} style={{ alignItems: "flex-start" }}>
@@ -222,16 +220,13 @@ export const OdaTaskSummaryCell = ({oTask, taskFirstColumn, showCheckBox, showPr
             </VStack>
         </span>
     );
-    const sourceTitle = isDevMode() ? TaskSource.formatForTooltip((oTask as I_GetTaskSource).getSource() ?? null) : undefined;
-    return <span title={sourceTitle || undefined}>{cellContent}</span>;
-
     function openThisTask(event: MouseEvent) {
         const forceNewTab = getForceNewTabOnClick(plugin, event);
         devLog(`[taskview] Open this task alt: ${event.altKey} shift: ${event.shiftKey} ctrl: ${event.ctrlKey} meta: ${event.metaKey} forceNewTab: ${forceNewTab}`)
         openTaskPrecisely(workspace, oTask.boundTask, forceNewTab);
     }
-
-
+    const sourceTitle = isDevMode() ? TaskSource.formatForTooltip((oTask as I_GetTaskSource).getSource() ?? null) : undefined;
+    return <span title={sourceTitle || undefined}>{cellContent}</span>;
 };
 
 /**
@@ -850,7 +845,7 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
 
     return (
         <VStack spacing={diffGroupSpacing}>
-            <HStack style={{ ...centerChildren, ...toolbarStyle }} spacing={10}>
+            <HStack style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", ...toolbarStyle }} spacing={10}>
                 <span style={searchWrapStyle}>
                     <input
                         style={taskSearchInputStyle}
@@ -860,7 +855,7 @@ export function TaskTableView({displayWorkflows, filteredTasks, alwaysShowComple
                         onChange={(evt) => setSearchText(evt.target.value)}
                     />
                     <ClickableObsidianIconView
-                        style={{ marginLeft: -28, paddingTop: 5 }}
+                        style={{ marginLeft: -28, alignSelf: "center" }}
                         onIconClicked={() => setSearchText("")}
                         iconName="x-circle"
                     />

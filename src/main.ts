@@ -20,6 +20,7 @@ import {OdaPmTask, setTaskPriority} from "./data-model/OdaPmTask";
 import {ProjectSuggestionModal} from "./ui/obsidian/project-suggestion-modal";
 import {assertOnPluginInit} from "./test_runtime/assertDatabase";
 import TagRenderer from "./ui/obsidian/tag-render/tag-render";
+import TaskPropertyRenderPlugin, { registerTaskPropertyReadingViewPostProcessor } from "./ui/obsidian/tag-render/task-property-render-plugin";
 import {TPMSettingsTab} from "./settings/TPMSettingsTab";
 import {PrioritySuggestionModal} from "./ui/obsidian/priority-suggestion-modal";
 import {addTagText} from "./data-model/tag-text-manipulate";
@@ -43,6 +44,7 @@ export default class OdaPmToolPlugin extends Plugin {
     pmDb: OdaPmDb
     inited: boolean;
     tagRenderer: TagRenderer;
+    taskPropertyRenderPlugin: TaskPropertyRenderPlugin;
 
     async onload() {
         addBlacklistTag("TagRender")
@@ -66,6 +68,9 @@ export default class OdaPmToolPlugin extends Plugin {
         // console.log('unloading plugin')
         SettingsProvider.remove();
         if (this.inited) {
+            this.taskPropertyRenderPlugin?.onunload(); // Editor extension + events; post-processor is on this plugin.
+            this.tagRenderer?.onunload();
+            this.pmDb.stopInitRetryTimer();
             OdaPmDbProvider.remove();
             removePluginEnv();
             this.emitter.removeAllListeners()
@@ -81,6 +86,12 @@ export default class OdaPmToolPlugin extends Plugin {
         OdaPmDbProvider.add(this.pmDb);
         this.tagRenderer = new TagRenderer(this.app, this.manifest);
         await this.tagRenderer.onload();
+        // Task property render: editor extension + Reading view post-processor (see below).
+        this.taskPropertyRenderPlugin = new TaskPropertyRenderPlugin(this.app, this.manifest);
+        await this.taskPropertyRenderPlugin.onload();
+        // Register Reading/Preview markdown post-processor on this (root) plugin so Obsidian
+        // actually invokes it when rendering; sub-plugins are not in the app's loaded plugin list.
+        registerTaskPropertyReadingViewPostProcessor(this);
         this.regPluginListener()
 
         this.initCommands();

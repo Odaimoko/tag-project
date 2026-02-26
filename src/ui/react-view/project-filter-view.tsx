@@ -74,7 +74,7 @@ export function ProjectFilterView(props: {
                                     placeholder={"Search/Select Project"}/>
                 <h2>
                     <HStack spacing={5}>
-                        Project: {displayingProject ? displayingProject &&
+                        {displayingProject ? displayingProject &&
                         <ProjectView project={displayingProject}/> : projectDisplayName}
                     </HStack>
                 </h2>

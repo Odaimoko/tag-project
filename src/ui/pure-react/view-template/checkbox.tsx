@@ -23,8 +23,11 @@ export const ExternalControlledCheckbox = ({externalControl, onChange, onContent
     // Click the label won't trigger the checkbox change event. When no content (e.g. step cell), remove input margin and hide label for centering.
     const inputStyle = content == null ? { margin: 0 } : undefined;
     const labelStyle = content == null ? { width: 0, height: 0, overflow: "hidden", margin: 0, padding: 0, display: "block" } : undefined;
+    const wrapperStyle = content != null
+        ? { display: "inline-flex" as const, alignItems: "center", ...style }
+        : style;
     return (
-        <span style={style}>
+        <span style={wrapperStyle}>
             <input
                 type="checkbox"
                 checked={externalControl}

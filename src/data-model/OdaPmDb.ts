@@ -238,12 +238,35 @@ export class OdaPmDb implements I_EvtListener {
     rateLimiter: RateLimiter = new RateLimiter(3, 1 / 3, 3)
 
 // endregion
+    /** Whether reloadDb has completed successfully at least once (handles ratelimit / dataview not ready) */
+    private dbInitialized = false;
+    private initRetryTimer: ReturnType<typeof setInterval> | null = null;
+    private static readonly INIT_RETRY_INTERVAL_MS = 1000;
 
     constructor(emitter: EventEmitter, plugin: OdaPmToolPlugin) {
         this.emitter = emitter;
         this.plugin = plugin;
         this.boundReloadWorkflows = this.reloadDb.bind(this)
-        this.reloadDb()
+        this.reloadDb();
+        this.startInitRetryTimer();
+    }
+
+    /** Every 1s check if database is initialized; retry if not (handles ratelimit causing initial failure) */
+    private startInitRetryTimer() {
+        if (this.initRetryTimer != null) return;
+        this.initRetryTimer = setInterval(() => {
+            if (!this.dbInitialized) {
+                this.reloadDb();
+            }
+        }, OdaPmDb.INIT_RETRY_INTERVAL_MS);
+    }
+
+    /** Stop the init-retry timer (call after successful init or on plugin unload) */
+    stopInitRetryTimer() {
+        if (this.initRetryTimer != null) {
+            clearInterval(this.initRetryTimer);
+            this.initRetryTimer = null;
+        }
     }
 
     // bind: https://fettblog.eu/this-in-javascript-and-typescript/
@@ -309,6 +332,8 @@ export class OdaPmDb implements I_EvtListener {
         devTime("Event", `[Timed] orphanTasks`)
         this.orphanTasks = this.initOrphanTasks(this.pmTasks);
         devTimeEnd("Event", `[Timed] orphanTasks`)
+        this.dbInitialized = true;
+        this.stopInitRetryTimer();
         this.emit(Evt_DbReloaded)
         assertDatabase(this);
         devTimeEnd("Event", "[Timed] reloadDb")

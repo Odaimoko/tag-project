@@ -3,7 +3,7 @@ import React from "react";
 
 export const Color_WorkflowChain = "#6289bb"
 export const Color_Workflow_Checkbox = "#5eb95f"
-export const iconViewAsAWholeStyle = {display: "inline-flex", justifyItems: "center"};
+export const iconViewAsAWholeStyle = { display: "inline-flex", alignItems: "center", justifyItems: "center" };
 
 export const varBackgroundPrimary = "var(--background-primary)";
 export const varBackgroundSecondary = "var(--background-secondary)"; // -16 is the padding of the obsidian leaf view container. The content will overflow the container's box.
@@ -27,6 +27,16 @@ export const sameGroupSpacing = 5;
 export const diffGroupSpacing = 10;
 export const warningColor = "var(--text-warning)";
 export const CssClass_Link = "cm-underline";
+
+/** Hover background wrapper for task/workflow/definition links. Use with LinkRowWithHover. */
+export const linkRowHoverWrapperStyle: React.CSSProperties = {
+    marginLeft: -4,
+    marginRight: -4,
+    padding: "4px 6px",
+    borderRadius: 6,
+    transition: "background-color 0.15s ease",
+    display: "inline-block",
+};
 
 /**
  * Expand/collapse animation (shared by Workflow Filter, Filters panel, etc.)
