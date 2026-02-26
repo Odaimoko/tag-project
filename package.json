@@ -1,6 +1,6 @@
 {
     "name": "tag-project",
-    "version": "0.12.4",
+    "version": "1.0.0",
     "description": "This is a sample plugin for Obsidian (https://obsidian.md)",
     "main": "main.js",
     "scripts": {
