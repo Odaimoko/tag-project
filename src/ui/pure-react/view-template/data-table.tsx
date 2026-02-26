@@ -163,7 +163,7 @@ const TableRow = React.memo(({
  * @constructor
  */
     // We cannot interact in Dataview Table, so we create our own.
-const RESIZE_HANDLE_WIDTH = 6;
+const RESIZE_HANDLE_WIDTH = 8;
 const MIN_COLUMN_WIDTH = 48;
 const MAX_COLUMN_WIDTH = 800;
 
@@ -316,6 +316,7 @@ export const DataTable = ({
                                     <div onClick={() => onHeaderClicked?.(index)}>{header}</div>
                                     {canResize && (
                                         <div
+                                            className="data-table-resize-handle"
                                             style={{
                                                 position: "absolute",
                                                 right: 0,
@@ -323,6 +324,11 @@ export const DataTable = ({
                                                 bottom: 0,
                                                 width: RESIZE_HANDLE_WIDTH,
                                                 cursor: "col-resize",
+                                                display: "flex",
+                                                alignItems: "stretch",
+                                                justifyContent: "center",
+                                                background: "transparent",
+                                                borderRight: "2px solid var(--background-modifier-border)",
                                             }}
                                             onMouseDown={(e) => {
                                                 e.preventDefault();

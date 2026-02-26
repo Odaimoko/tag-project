@@ -58,3 +58,16 @@ If your plugin does not need CSS, delete this file.
     border-radius: 4px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
+
+/* Data table column resize handle (splitter) */
+.data-table-resize-handle {
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.data-table-resize-handle:hover {
+    background: var(--background-modifier-hover);
+    border-right-color: var(--interactive-accent) !important;
+}
+.data-table-resize-handle:active {
+    background: var(--background-modifier-active);
+    border-right-color: var(--interactive-accent) !important;
+}
