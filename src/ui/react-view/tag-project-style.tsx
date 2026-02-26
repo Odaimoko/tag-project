@@ -28,6 +28,9 @@ export function getIconByWorkflow(workflow: I_OdaPmWorkflow) {
 
 /** Shared workflow chip style: compact pill, adapts to text length. Use with getColorByWorkflow(workflow). */
 export function getWorkflowChipStyle(accentColor: string): React.CSSProperties {
+    const isHex = /^#[0-9A-Fa-f]{6}$/.test(accentColor);
+    const backgroundColor = isHex ? `${accentColor}18` : "var(--background-modifier-border)";
+    const borderColor = isHex ? `${accentColor}40` : "var(--background-modifier-border)";
     return {
         display: "inline-flex",
         alignItems: "center",
@@ -37,8 +40,8 @@ export function getWorkflowChipStyle(accentColor: string): React.CSSProperties {
         padding: "2px 6px",
         borderRadius: 4,
         color: accentColor,
-        backgroundColor: `${accentColor}18`,
-        border: "1px solid " + `${accentColor}40`,
+        backgroundColor,
+        border: `1px solid ${borderColor}`,
         boxSizing: "border-box",
         maxWidth: 160,
         overflow: "hidden",

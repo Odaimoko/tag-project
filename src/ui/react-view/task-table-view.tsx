@@ -264,7 +264,8 @@ function rectifyOdaTaskOnMdTaskChanged(oTask: OdaPmTask, plugin: OdaPmToolPlugin
 }
 
 const DEFAULT_STEP_COLUMN_WIDTH = 80;
-const MIN_COLUMN_WIDTH = 60;
+/** Must match data-table.tsx MIN_COLUMN_WIDTH to avoid snap during resize. */
+const MIN_COLUMN_WIDTH = 48;
 const MAX_SUMMARY_WIDTH = 600;
 const MAX_STEP_COLUMN_WIDTH = 400;
 const SUMMARY_COLUMN_INDEX = 0;
