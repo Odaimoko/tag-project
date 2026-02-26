@@ -298,9 +298,8 @@ export function ReactManagePage({eventCenter}: {
                 />
             </HStack>
             <VStack spacing={sameGroupSpacing}>
-                <HStack spacing={diffGroupSpacing}>
-                    <FixOrphanTasksView db={db}/>
-                    <button
+                <HStack style={{ justifyContent: "flex-start",  }} spacing={diffGroupSpacing}>
+                <button
                         onClick={() => setPanelShown(!panelShown)}
                         style={{
                             display: "inline-flex",
@@ -328,6 +327,7 @@ export function ReactManagePage({eventCenter}: {
                         </span>
                         Filters
                     </button>
+                    <FixOrphanTasksView db={db}/>
                 </HStack>
 
                 <div style={getExpandCollapseContentStyle(panelShown)}>

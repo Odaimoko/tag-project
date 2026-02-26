@@ -172,7 +172,7 @@ export const ClickableWorkflowView = ({ workflow, displayNames, setDisplayNames,
     }
 
     // inline-block: make this check box a whole element. It won't be split into multiple sub-elements when layout.
-    const chipStyle = getWorkflowChipStyle(getColorByWorkflow(workflow));
+    const chipStyle = { ...getWorkflowChipStyle(getColorByWorkflow(workflow)), marginLeft: 6 };
     const content = <>
         <InternalLinkView
             content={<span style={chipStyle} title={wfName}>
